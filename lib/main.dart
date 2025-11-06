@@ -1,122 +1,357 @@
+import 'dart:async';
+import 'dart:math';
+
+import 'package:dashboard/dashboard.dart';
+import 'storage.dart';
+
 import 'package:flutter/material.dart';
 
+import 'add_dialog.dart';
+import 'data_widget.dart';
+
+///
 void main() {
+  ///
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+///
+class MyApp extends StatefulWidget {
+  ///
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  ///
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ///
+  Color getRandomColor() {
+    var r = Random();
+    return Color.fromRGBO(r.nextInt(256), r.nextInt(256), r.nextInt(256), 1);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      title: 'Dashboard online demo',
+      onGenerateInitialRoutes: (r) {
+        return r == "/dashboard"
+            ? [
+                MaterialPageRoute(
+                  builder: (c) {
+                    return const DashboardWidget();
+                  },
+                ),
+              ]
+            : [
+                MaterialPageRoute(
+                  builder: (c) {
+                    return const MainPage();
+                  },
+                ),
+              ];
+      },
+      initialRoute: "/",
+      routes: {
+        "/": (c) => const MainPage(),
+        "/dashboard": (c) => const DashboardWidget(),
+      },
+      theme: ThemeData(primarySwatch: Colors.blue),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainPageState extends State<MainPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            "style_dart framework documentation coming soon...",
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            alignment: Alignment.center,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, "/dashboard");
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 30),
+                child: Text("Try dashboard demo"),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-  void _incrementCounter() {
+class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
+  @override
+  Widget? buildBackground(
+    BuildContext context,
+    ColoredDashboardItem? item,
+    int x,
+    int y,
+    bool editing,
+  ) {
+    if (item != null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(),
+          borderRadius: BorderRadius.circular(10),
+        ),
+      );
+    }
+
+    return null;
+  }
+}
+
+class DashboardWidget extends StatefulWidget {
+  ///
+  const DashboardWidget({Key? key}) : super(key: key);
+
+  ///
+  @override
+  State<DashboardWidget> createState() => _DashboardWidgetState();
+}
+
+class _DashboardWidgetState extends State<DashboardWidget> {
+  ///
+  final ScrollController scrollController = ScrollController();
+
+  ///
+  late var _itemController =
+      DashboardItemController<ColoredDashboardItem>.withDelegate(
+        itemStorageDelegate: storage,
+      );
+
+  bool refreshing = false;
+
+  var storage = MyItemStorage();
+
+  //var dummyItemController =
+  //    DashboardItemController<ColoredDashboardItem>(items: []);
+
+  DashboardItemController<ColoredDashboardItem> get itemController =>
+      _itemController;
+
+  int? slot;
+
+  setSlot() {
+    var w = MediaQuery.of(context).size.width;
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      slot = w > 600
+          ? w > 900
+                ? 8
+                : 6
+          : 4;
     });
   }
 
+  List<String> d = [];
+
+  ///
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    var w = MediaQuery.of(context).size.width;
+    slot = w > 600
+        ? w > 900
+              ? 8
+              : 6
+        : 4;
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        backgroundColor: const Color(0xFF4285F4),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await storage.clear();
+              setState(() {
+                refreshing = true;
+              });
+              storage = MyItemStorage();
+              _itemController = DashboardItemController.withDelegate(
+                itemStorageDelegate: storage,
+              );
+              Future.delayed(const Duration(milliseconds: 150)).then((value) {
+                setState(() {
+                  refreshing = false;
+                });
+              });
+            },
+            icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
+            onPressed: () {
+              itemController.clear();
+            },
+            icon: const Icon(Icons.delete),
+          ),
+          IconButton(
+            onPressed: () {
+              add(context);
+            },
+            icon: const Icon(Icons.add),
+          ),
+          IconButton(
+            onPressed: () {
+              itemController.isEditing = !itemController.isEditing;
+              setState(() {});
+            },
+            icon: const Icon(Icons.edit),
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      body: SafeArea(
+        child: refreshing
+            ? const Center(child: CircularProgressIndicator())
+            : Dashboard<ColoredDashboardItem>(
+                shrinkToPlace: false,
+                slideToTop: true,
+                absorbPointer: false,
+                slotBackgroundBuilder: SlotBackgroundBuilder.withFunction((
+                  context,
+                  item,
+                  x,
+                  y,
+                  editing,
+                ) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black12, width: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  );
+                }),
+                padding: const EdgeInsets.all(8),
+                horizontalSpace: 8,
+                verticalSpace: 8,
+                slotAspectRatio: 1,
+                animateEverytime: true,
+                dashboardItemController: itemController,
+                slotCount: slot!,
+                errorPlaceholder: (e, s) {
+                  return Text("$e , $s");
+                },
+                emptyPlaceholder: const Center(child: Text("Empty")),
+                itemStyle: ItemStyle(
+                  color: Colors.transparent,
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                physics: const RangeMaintainingScrollPhysics(),
+                editModeSettings: EditModeSettings(
+                  draggableOutside: false,
+                  paintBackgroundLines: false,
+                  autoScroll: true,
+                  resizeCursorSide: 15,
+                  curve: Curves.easeOut,
+                  duration: const Duration(milliseconds: 300),
+                  backgroundStyle: const EditModeBackgroundStyle(
+                    lineColor: Colors.black38,
+                    lineWidth: 0.5,
+                    dualLineHorizontal: false,
+                    dualLineVertical: false,
+                  ),
+                ),
+                itemBuilder: (ColoredDashboardItem item) {
+                  var layout = item.layoutData;
+
+                  if (item.data != null) {
+                    return DataWidget(item: item);
+                  }
+
+                  return LayoutBuilder(
+                    builder: (_, c) {
+                      return Stack(
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: item.color,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: double.infinity,
+                              child: Text(
+                                "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          if (itemController.isEditing)
+                            Positioned(
+                              right: 5,
+                              top: 5,
+                              child: InkResponse(
+                                radius: 20,
+                                onTap: () {
+                                  itemController.delete(item.identifier);
+                                },
+                                child: const Icon(
+                                  Icons.clear,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  Future<void> add(BuildContext context) async {
+    var res = await showDialog(
+      context: context,
+      builder: (c) {
+        return const AddDialog();
+      },
+    );
+
+    if (res != null) {
+      itemController.add(
+        ColoredDashboardItem(
+          color: res[6],
+          width: res[0],
+          height: res[1],
+          startX: 0,
+          startY: 0,
+          identifier: (Random().nextInt(100000) + 4).toString(),
+          minWidth: res[2],
+          minHeight: res[3],
+          maxWidth: res[4] == 0 ? null : res[4],
+          maxHeight: res[5] == 0 ? null : res[5],
+        ),
+        mountToTop: false,
+      );
+    }
   }
 }
