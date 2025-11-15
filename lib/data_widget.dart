@@ -11,7 +11,7 @@ const Color yellow = Color(0xFFFBBC05);
 const Color green = Color(0xFF34A853);
 
 class DataWidget extends StatelessWidget {
-  DataWidget({Key? key, required this.item}) : super(key: key);
+  DataWidget({super.key, required this.item});
 
   final ColoredDashboardItem item;
 
@@ -38,7 +38,7 @@ class DataWidget extends StatelessWidget {
 }
 
 class Pub extends StatelessWidget {
-  const Pub({Key? key}) : super(key: key);
+  const Pub({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class Pub extends StatelessWidget {
 }
 
 class LinkedIn extends StatelessWidget {
-  const LinkedIn({Key? key}) : super(key: key);
+  const LinkedIn({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class LinkedIn extends StatelessWidget {
 }
 
 class Twitter extends StatelessWidget {
-  const Twitter({Key? key}) : super(key: key);
+  const Twitter({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +109,7 @@ class Twitter extends StatelessWidget {
 }
 
 class Github extends StatelessWidget {
-  const Github({Key? key}) : super(key: key);
+  const Github({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +141,7 @@ class Github extends StatelessWidget {
 }
 
 class BuyMee extends StatelessWidget {
-  const BuyMee({Key? key}) : super(key: key);
+  const BuyMee({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +150,7 @@ class BuyMee extends StatelessWidget {
 }
 
 class InfoAdvice extends StatelessWidget {
-  const InfoAdvice({Key? key, required this.layout}) : super(key: key);
+  const InfoAdvice({super.key, required this.layout});
 
   final ItemLayout layout;
 
@@ -202,7 +202,7 @@ class InfoAdvice extends StatelessWidget {
 }
 
 class DefaultAdvice extends StatelessWidget {
-  const DefaultAdvice({Key? key}) : super(key: key);
+  const DefaultAdvice({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +230,7 @@ class DefaultAdvice extends StatelessWidget {
 }
 
 class ClearAdvice extends StatelessWidget {
-  const ClearAdvice({Key? key}) : super(key: key);
+  const ClearAdvice({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +255,7 @@ class ClearAdvice extends StatelessWidget {
 }
 
 class AddAdvice extends StatelessWidget {
-  const AddAdvice({Key? key}) : super(key: key);
+  const AddAdvice({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +280,7 @@ class AddAdvice extends StatelessWidget {
 }
 
 class TransformAdvice extends StatelessWidget {
-  const TransformAdvice({Key? key}) : super(key: key);
+  const TransformAdvice({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +328,7 @@ class TransformAdvice extends StatelessWidget {
 }
 
 class WelcomeWidget extends StatelessWidget {
-  const WelcomeWidget({Key? key}) : super(key: key);
+  const WelcomeWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -362,7 +362,7 @@ class WelcomeWidget extends StatelessWidget {
 }
 
 class BasicDescription extends StatelessWidget {
-  const BasicDescription({Key? key}) : super(key: key);
+  const BasicDescription({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -414,7 +414,7 @@ class BasicDescription extends StatelessWidget {
 }
 
 class AdviceResize extends StatelessWidget {
-  const AdviceResize({Key? key, required this.size}) : super(key: key);
+  const AdviceResize({super.key, required this.size});
 
   final int size;
 
@@ -441,20 +441,7 @@ class AdviceResize extends StatelessWidget {
                   maxLines: 2,
                   style: TextStyle(color: Colors.white, fontSize: 13),
                   textAlign: TextAlign.center,
-                ),
-                AutoSizeText(
-                  "To try resizing, hold (or long press) the line on the left"
-                  " and drag it to the left.",
-                  maxLines: 5,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-                AutoSizeText(
-                  "Don't forget switch to edit mode.",
-                  maxLines: 3,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
+                )
               ],
             ),
           ),
