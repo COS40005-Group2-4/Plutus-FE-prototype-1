@@ -18,7 +18,7 @@ void main() {
 ///
 class MyApp extends StatefulWidget {
   ///
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   ///
   @override
@@ -65,7 +65,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
+  const MainPage({super.key});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -78,10 +78,7 @@ class _MainPageState extends State<MainPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            "style_dart framework documentation coming soon...",
-            textAlign: TextAlign.center,
-          ),
+          const Text("Plutus", textAlign: TextAlign.center),
           const SizedBox(height: 20),
           Container(
             alignment: Alignment.center,
@@ -91,7 +88,7 @@ class _MainPageState extends State<MainPage> {
               },
               child: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8, horizontal: 30),
-                child: Text("Try dashboard demo"),
+                child: Text("Log in"),
               ),
             ),
           ),
@@ -125,7 +122,7 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
 
 class DashboardWidget extends StatefulWidget {
   ///
-  const DashboardWidget({Key? key}) : super(key: key);
+  const DashboardWidget({super.key});
 
   ///
   @override
