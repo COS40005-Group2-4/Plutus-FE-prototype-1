@@ -2,7 +2,15 @@
 
 A new Flutter project.
 
-## Getting Started
+## Checklist
+
+- [] Add widget menu tab
+- [] Add default widget
+- [] Run on Android emulator and compile .apk
+- [] Proceed FE and BE integration
+- [] Add splash page
+
+## Sample Resoureces
 
 This project is a starting point for a Flutter application.
 
