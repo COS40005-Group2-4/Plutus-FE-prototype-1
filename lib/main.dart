@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'add_dialog.dart';
 import 'data_widget.dart';
+import 'sidebar_menu.dart';
 
 ///
 void main() {
@@ -150,6 +151,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
       _itemController;
 
   int? slot;
+  String? _selectedWidget;
 
   setSlot() {
     var w = MediaQuery.of(context).size.width;
@@ -164,6 +166,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
 
   List<String> d = [];
 
+  void _onMenuItemSelected(String widgetId) {
+    setState(() {
+      _selectedWidget = widgetId;
+    });
+  }
+
   ///
   @override
   Widget build(BuildContext context) {
@@ -174,9 +182,16 @@ class _DashboardWidgetState extends State<DashboardWidget> {
               : 6
         : 4;
     return Scaffold(
+      drawer: SidebarMenu(
+        onMenuItemSelected: (widgetId) {
+          setState(() {
+            _selectedWidget = widgetId;
+          });
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF4285F4),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         actions: [
           IconButton(
             onPressed: () async {
@@ -218,110 +233,166 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ],
       ),
       body: SafeArea(
-        child: refreshing
-            ? const Center(child: CircularProgressIndicator())
-            : Dashboard<ColoredDashboardItem>(
-                shrinkToPlace: false,
-                slideToTop: true,
-                absorbPointer: false,
-                slotBackgroundBuilder: SlotBackgroundBuilder.withFunction((
-                  context,
-                  item,
-                  x,
-                  y,
-                  editing,
-                ) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12, width: 0.5),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  );
-                }),
-                padding: const EdgeInsets.all(8),
-                horizontalSpace: 8,
-                verticalSpace: 8,
-                slotAspectRatio: 1,
-                animateEverytime: true,
-                dashboardItemController: itemController,
-                slotCount: slot!,
-                errorPlaceholder: (e, s) {
-                  return Text("$e , $s");
-                },
-                emptyPlaceholder: const Center(child: Text("Empty")),
-                itemStyle: ItemStyle(
-                  color: Colors.transparent,
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                physics: const RangeMaintainingScrollPhysics(),
-                editModeSettings: EditModeSettings(
-                  draggableOutside: false,
-                  paintBackgroundLines: false,
-                  autoScroll: true,
-                  resizeCursorSide: 15,
-                  curve: Curves.easeOut,
-                  duration: const Duration(milliseconds: 300),
-                  backgroundStyle: const EditModeBackgroundStyle(
-                    lineColor: Colors.black38,
-                    lineWidth: 0.5,
-                    dualLineHorizontal: false,
-                    dualLineVertical: false,
-                  ),
-                ),
-                itemBuilder: (ColoredDashboardItem item) {
-                  var layout = item.layoutData;
-
-                  if (item.data != null) {
-                    return DataWidget(item: item);
-                  }
-
-                  return LayoutBuilder(
-                    builder: (_, c) {
-                      return Stack(
-                        children: [
-                          Container(
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.all(10),
+        child: _selectedWidget != null
+            ? _buildWidgetPreview(_selectedWidget!)
+            : (refreshing
+                  ? const Center(child: CircularProgressIndicator())
+                  : Dashboard<ColoredDashboardItem>(
+                      shrinkToPlace: false,
+                      slideToTop: true,
+                      absorbPointer: false,
+                      slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
+                        (context, item, x, y, editing) {
+                          return Container(
                             decoration: BoxDecoration(
-                              color: item.color,
+                              border: Border.all(
+                                color: Colors.black12,
+                                width: 0.5,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: double.infinity,
-                              child: Text(
-                                "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                          if (itemController.isEditing)
-                            Positioned(
-                              right: 5,
-                              top: 5,
-                              child: InkResponse(
-                                radius: 20,
-                                onTap: () {
-                                  itemController.delete(item.identifier);
-                                },
-                                child: const Icon(
-                                  Icons.clear,
-                                  color: Colors.white,
-                                  size: 20,
+                          );
+                        },
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      horizontalSpace: 8,
+                      verticalSpace: 8,
+                      slotAspectRatio: 1,
+                      animateEverytime: true,
+                      dashboardItemController: itemController,
+                      slotCount: slot!,
+                      errorPlaceholder: (e, s) {
+                        return Text("$e , $s");
+                      },
+                      emptyPlaceholder: const Center(child: Text("Empty")),
+                      itemStyle: ItemStyle(
+                        color: Colors.transparent,
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      physics: const RangeMaintainingScrollPhysics(),
+                      editModeSettings: EditModeSettings(
+                        draggableOutside: false,
+                        paintBackgroundLines: false,
+                        autoScroll: true,
+                        resizeCursorSide: 15,
+                        curve: Curves.easeOut,
+                        duration: const Duration(milliseconds: 300),
+                        backgroundStyle: const EditModeBackgroundStyle(
+                          lineColor: Colors.black38,
+                          lineWidth: 0.5,
+                          dualLineHorizontal: false,
+                          dualLineVertical: false,
+                        ),
+                      ),
+                      itemBuilder: (ColoredDashboardItem item) {
+                        var layout = item.layoutData;
+
+                        if (item.data != null) {
+                          return DataWidget(item: item);
+                        }
+
+                        return LayoutBuilder(
+                          builder: (_, c) {
+                            return Stack(
+                              children: [
+                                Container(
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: item.color,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    child: Text(
+                                      "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  );
+                                if (itemController.isEditing)
+                                  Positioned(
+                                    right: 5,
+                                    top: 5,
+                                    child: InkResponse(
+                                      radius: 20,
+                                      onTap: () {
+                                        itemController.delete(item.identifier);
+                                      },
+                                      child: const Icon(
+                                        Icons.clear,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    )),
+      ),
+    );
+  }
+
+  Widget _buildWidgetPreview(String widgetId) {
+    // Create a dummy ColoredDashboardItem for preview
+    final dummyItem = ColoredDashboardItem(
+      color: Colors.blue,
+      width: 2,
+      height: 2,
+      startX: 0,
+      startY: 0,
+      identifier: 'preview',
+      minWidth: 1,
+      minHeight: 1,
+      data: widgetId,
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Widget Preview: $widgetId',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _selectedWidget = null;
+                  });
                 },
               ),
-      ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DataWidget(item: dummyItem),
+          ),
+        ),
+      ],
     );
   }
 
