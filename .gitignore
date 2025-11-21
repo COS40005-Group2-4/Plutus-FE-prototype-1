@@ -1,47 +1,121 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
 # Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
+.packages
 .pub/
-/build/
-/coverage/
+build/
+flutter_*.png
+flutter_*.jpeg
+flutter_*.jpg
+flutter_*.webp
+flutter_*.bmp
+flutter_*.gif
+flutter_export_environment.sh
+.ephemeral/
+GeneratedPluginRegistrant.java
+GeneratedPluginRegistrant.h
+GeneratedPluginRegistrant.m
+GeneratedPluginRegistrant.swift
 
-# Symbolication related
-app.*.symbols
+# Android related
+android/.gradle/
+android/local.properties
+android/**/build/
+android/**/app/build/
+android/**/.cxx/
+android/app/src/main/gen/
+android/app/src/debug/gen/
+android/app/src/profile/gen/
 
-# Obfuscation related
-app.*.map.json
+# iOS related
+ios/Flutter/.last_build_id
+ios/Flutter/flutter_export_environment.sh
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcworkspace/xcshareddata/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcodeproj/xcshareddata/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# macOS related
+macos/Flutter/ephemeral/
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/Flutter.framework/
+macos/Flutter/Flutter.podspec
+macos/Runner.xcworkspace/xcuserdata/
+macos/Runner.xcworkspace/xcshareddata/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcodeproj/xcshareddata/
 
-/docs
+# Linux related
+linux/flutter/ephemeral/
+linux/.dart_tool/
+linux/build/
+
+# Windows related
+windows/flutter/ephemeral/
+windows/.dart_tool/
+windows/build/
+windows/**/*.exe
+windows/**/*.exe~
+windows/**/*.dll
+windows/**/*.so
+windows/**/*.dylib
+windows/**/Debug/
+windows/**/Release/
+windows/**/x64/
+windows/**/x86/
+windows/**/CMakeFiles/
+windows/**/*.sln
+windows/**/*.vcxproj
+windows/**/*.vcxproj.filters
+windows/**/*.cmake
+
+# Web related
+web/build/
+web/.dart_tool/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Coverage
+coverage/
+*.lcov
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package manager lock files (optional - uncomment if you want to ignore)
+# pubspec.lock
+
+# Test results
+test-results/
+integration_test/.test_coverage.dart
