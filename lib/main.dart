@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'add_dialog.dart';
 import 'data_widget.dart';
 import 'sidebar_menu.dart';
+import 'transaction_history_page.dart';
+import 'import_transaction_page.dart';
 
 ///
 void main() {
@@ -58,7 +60,9 @@ class _MyAppState extends State<MyApp> {
       initialRoute: "/",
       routes: {
         "/": (c) => const MainPage(),
-        "/dashboard": (c) => const DashboardWidget(),
+        "/dashboard": (c) => const MainNavigationPage(),
+        "/history": (c) => const TransactionHistoryPage(),
+        "/import": (c) => const ImportTransactionPage(),
       },
       theme: ThemeData(primarySwatch: Colors.blue),
     );
@@ -121,6 +125,93 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
   }
 }
 
+class MainNavigationPage extends StatefulWidget {
+  const MainNavigationPage({super.key});
+
+  @override
+  State<MainNavigationPage> createState() => _MainNavigationPageState();
+}
+
+class _MainNavigationPageState extends State<MainNavigationPage> {
+  int _currentIndex = 0;
+  final GlobalKey<TransactionHistoryPageState> _historyKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            const DashboardWidget(),
+            TransactionHistoryPage(key: _historyKey),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          BottomNavigationBar(
+            currentIndex: _currentIndex == 2 ? 0 : _currentIndex,
+            onTap: (index) {
+              if (index == 1) {
+                setState(() => _currentIndex = 1);
+              } else {
+                setState(() => _currentIndex = 0);
+              }
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                label: 'History',
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 20,
+            child: Material(
+              elevation: 8,
+              shape: const CircleBorder(),
+              child: GestureDetector(
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ImportTransactionPage(),
+                    ),
+                  );
+                  if (result == true) {
+                    _historyKey.currentState?.refresh();
+                  }
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class DashboardWidget extends StatefulWidget {
   ///
   const DashboardWidget({super.key});
@@ -165,12 +256,6 @@ class _DashboardWidgetState extends State<DashboardWidget> {
   }
 
   List<String> d = [];
-
-  void _onMenuItemSelected(String widgetId) {
-    setState(() {
-      _selectedWidget = widgetId;
-    });
-  }
 
   ///
   @override
