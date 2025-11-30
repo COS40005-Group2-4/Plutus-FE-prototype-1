@@ -1,9 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'transaction_service.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -16,19 +15,10 @@ class DataWidget extends StatelessWidget {
   final ColoredDashboardItem item;
 
   final Map<String, Widget Function(ColoredDashboardItem i)> _map = {
-    "welcome": (l) => const WelcomeWidget(),
-    "resize": (l) => AdviceResize(size: l.layoutData.width),
-    "description": (l) => const BasicDescription(),
-    "transform": (l) => const TransformAdvice(),
-    "add": (l) => const AddAdvice(),
-    "buy_mee": (l) => const BuyMee(),
-    "delete": (l) => const ClearAdvice(),
-    "refresh": (l) => const DefaultAdvice(),
-    "info": (l) => InfoAdvice(layout: l.layoutData),
-    "github": (l) => const Github(),
-    "twitter": (l) => const Twitter(),
-    "linkedin": (l) => const LinkedIn(),
-    "pub": (l) => const Pub(),
+    "budget": (l) => const BudgetTrackingWidget(),
+    "history": (l) => const TransactionHistoryWidget(),
+    "import": (l) => const ReportImportWidget(),
+    "export": (l) => const ReportExportWidget(),
   };
 
   @override
@@ -37,322 +27,321 @@ class DataWidget extends StatelessWidget {
   }
 }
 
-class Pub extends StatelessWidget {
-  const Pub({super.key});
+// Budget Tracking Display Widget
+class BudgetTrackingWidget extends StatefulWidget {
+  const BudgetTrackingWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        launchUrlString("https://pub.dev/packages/dashboard");
-      },
-      child: Container(
-        color: Colors.white,
-        child: Container(alignment: Alignment.center),
-      ),
-    );
-  }
+  State<BudgetTrackingWidget> createState() => _BudgetTrackingWidgetState();
 }
 
-class LinkedIn extends StatelessWidget {
-  const LinkedIn({super.key});
+class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
+  late TransactionService _transactionService;
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Container(
-        color: const Color(0xFF0A66C2),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  "Connect Me!",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            Expanded(child: Container(alignment: Alignment.center)),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _transactionService = TransactionService();
   }
-}
-
-class Twitter extends StatelessWidget {
-  const Twitter({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Container(
-        color: const Color(0xFF1DA0F1),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  "Follow Me!",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            Expanded(child: Container(alignment: Alignment.center)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class Github extends StatelessWidget {
-  const Github({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Container(
-        color: Colors.white,
-        child: Row(
-          children: [
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  "Create Issue!",
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(5),
-                alignment: Alignment.center,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BuyMee extends StatelessWidget {
-  const BuyMee({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(child: Container(alignment: Alignment.center));
-  }
-}
-
-class InfoAdvice extends StatelessWidget {
-  const InfoAdvice({super.key, required this.layout});
-
-  final ItemLayout layout;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: blue,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Column(
-        children: [
-          const Text(
-            "Example dimensions and locations. (showing this)",
-            style: TextStyle(color: Colors.white),
-          ),
-          Expanded(
-            child: Container(
-              alignment: Alignment.center,
-              child: DataTable(
-                headingRowHeight: 25,
-                border: const TableBorder(
-                  horizontalInside: BorderSide(color: Colors.white),
-                ),
-                headingTextStyle: const TextStyle(color: Colors.white),
-                dataTextStyle: const TextStyle(color: Colors.white),
-                columns: const [
-                  DataColumn(label: Text("startX")),
-                  DataColumn(label: Text("startY")),
-                  DataColumn(label: Text("width")),
-                  DataColumn(label: Text("height")),
-                ],
-                rows: [
-                  DataRow(
-                    cells: [
-                      DataCell(Text(layout.startX.toString())),
-                      DataCell(Text(layout.startY.toString())),
-                      DataCell(Text(layout.width.toString())),
-                      DataCell(Text(layout.height.toString())),
-                    ],
-                  ),
-                ],
+      padding: const EdgeInsets.all(16),
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _transactionService.getTransactions(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'No transactions yet',
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+            );
+          }
 
-class DefaultAdvice extends StatelessWidget {
-  const DefaultAdvice({super.key});
+          final transactions = snapshot.data!;
+          double totalIncome = 0;
+          double totalExpense = 0;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: yellow,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.refresh, size: 30, color: Colors.white),
-          Expanded(
-            child: Text(
-              "Your layout changes saved locally."
-              " Set default with this button.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+          for (var transaction in transactions) {
+            double amount = 0;
+            try {
+              final amountValue = transaction['amount'];
+              if (amountValue is String) {
+                amount = double.parse(amountValue);
+              } else if (amountValue is num) {
+                amount = amountValue.toDouble();
+              }
+            } catch (e) {
+              amount = 0;
+            }
+            if (transaction['type'] == 'income') {
+              totalIncome += amount;
+            } else {
+              totalExpense += amount;
+            }
+          }
 
-class ClearAdvice extends StatelessWidget {
-  const ClearAdvice({super.key});
+          final balance = totalIncome - totalExpense;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: green,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.delete, size: 30, color: Colors.white),
-          Text(
-            "Delete all widgets.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AddAdvice extends StatelessWidget {
-  const AddAdvice({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: blue,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.add, size: 30, color: Colors.white),
-          Text(
-            "Add own colored widget with custom sizes.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TransformAdvice extends StatelessWidget {
-  const TransformAdvice({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: red,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            "Users can move widgets.",
-            style: TextStyle(color: Colors.white, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            "To try moving, hold (or long press) the widget and move.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 13),
-          ),
-          Row(
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
-                child: Text(
-                  "While moving, it shrinks if possible according to the "
-                  "minimum width and height values.\n(This min w: 2 , h: 2)",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                ),
-              ),
-              /*
-                Icon(
-                  Icons.arrow_right_alt,
+              const Text(
+                'Budget Overview',
+                style: TextStyle(
                   color: Colors.white,
-                  size: 30,
-                )
-*/
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Income:',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        Text(
+                          '\$${totalIncome.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Expense:',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        Text(
+                          '\$${totalExpense.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Colors.white30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Balance:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '\$${balance.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: balance >= 0 ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-class WelcomeWidget extends StatelessWidget {
-  const WelcomeWidget({super.key});
+// Transaction History Display Widget
+class TransactionHistoryWidget extends StatefulWidget {
+  const TransactionHistoryWidget({super.key});
+
+  @override
+  State<TransactionHistoryWidget> createState() =>
+      _TransactionHistoryWidgetState();
+}
+
+class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
+  late TransactionService _transactionService;
+
+  @override
+  void initState() {
+    super.initState();
+    _transactionService = TransactionService();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: red,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(color: Colors.white, fontSize: 20),
-              children: [
-                const TextSpan(text: "Welcome to "),
-                TextSpan(
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      launchUrlString("https://pub.dev/packages/dashboard");
-                    },
-                  text: "dashboard",
-                  style: const TextStyle(decoration: TextDecoration.underline),
+      color: green,
+      padding: const EdgeInsets.all(12),
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _transactionService.getTransactions(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'No transaction history',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            );
+          }
+
+          final transactions = snapshot.data!.take(10).toList();
+
+          return Column(
+            children: [
+              const Text(
+                'Recent Transactions',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-                const TextSpan(text: " online demo!"),
-              ],
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: transactions.length,
+                  itemBuilder: (context, index) {
+                    final transaction = transactions[index];
+                    final isIncome = transaction['type'] == 'income';
+                    double amount = 0;
+                    try {
+                      final amountValue = transaction['amount'];
+                      if (amountValue is String) {
+                        amount = double.parse(amountValue);
+                      } else if (amountValue is num) {
+                        amount = amountValue.toDouble();
+                      }
+                    } catch (e) {
+                      amount = 0;
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  transaction['description'] ?? 'Transaction',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  transaction['date'] ?? '',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isIncome ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Report Import Button Widget
+class ReportImportWidget extends StatelessWidget {
+  const ReportImportWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: yellow,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.upload_file, size: 40, color: Colors.white),
+          const SizedBox(height: 12),
+          const Text(
+            'Import Report',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Click to import transactions from a file',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, "/import");
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Import'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: yellow,
             ),
           ),
         ],
@@ -361,88 +350,46 @@ class WelcomeWidget extends StatelessWidget {
   }
 }
 
-class BasicDescription extends StatelessWidget {
-  const BasicDescription({super.key});
+// Report Export Button Widget
+class ReportExportWidget extends StatelessWidget {
+  const ReportExportWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: yellow,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      color: red,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AutoSizeText(
-            "Each widget on the screen is called \"DashboardItem\"",
-            maxLines: 4,
-            style: TextStyle(color: Colors.white, fontSize: 13),
+          const Icon(Icons.download, size: 40, color: Colors.white),
+          const SizedBox(height: 12),
+          const Text(
+            'Export Report',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Click to export all transactions to a file',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
             textAlign: TextAlign.center,
           ),
-          AutoSizeText(
-            "Each has a location and dimensions by slots.",
-            maxLines: 3,
-            style: TextStyle(color: Colors.white, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: AutoSizeText(
-                  "You can switch to edit mode to see these slots.",
-                  maxLines: 4,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(width: 8),
-              Column(
-                children: [
-                  Text(
-                    "Tap: ",
-                    style: TextStyle(color: Colors.white, fontSize: 10),
-                  ),
-                  Icon(Icons.edit, color: Colors.white),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AdviceResize extends StatelessWidget {
-  const AdviceResize({super.key, required this.size});
-
-  final int size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: green,
-      alignment: Alignment.center,
-      child: Row(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 5),
-            height: double.infinity,
-            width: 1,
-            color: Colors.white,
-          ),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                AutoSizeText(
-                  "Users can resize widgets.",
-                  maxLines: 2,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                  textAlign: TextAlign.center,
-                )
-              ],
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Export feature coming soon!')),
+              );
+            },
+            icon: const Icon(Icons.save_alt),
+            label: const Text('Export'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: red,
             ),
           ),
         ],

@@ -14,56 +14,29 @@ class _SidebarMenuState extends State<SidebarMenu> {
   String? _selectedMenuItem;
 
   final List<MenuItemData> _menuItems = [
-    MenuItemData(id: 'welcome', label: 'Welcome', icon: Icons.home, color: red),
     MenuItemData(
-      id: 'description',
-      label: 'Description',
-      icon: Icons.description,
-      color: yellow,
+      id: 'budget',
+      label: 'Budget Tracking',
+      icon: Icons.account_balance_wallet,
+      color: blue,
     ),
     MenuItemData(
-      id: 'transform',
-      label: 'Transform',
-      icon: Icons.transform,
-      color: red,
-    ),
-    MenuItemData(id: 'add', label: 'Add', icon: Icons.add, color: blue),
-    MenuItemData(
-      id: 'delete',
-      label: 'Delete',
-      icon: Icons.delete,
+      id: 'history',
+      label: 'Transaction History',
+      icon: Icons.history,
       color: green,
     ),
     MenuItemData(
-      id: 'refresh',
-      label: 'Refresh',
-      icon: Icons.refresh,
+      id: 'import',
+      label: 'Import Report',
+      icon: Icons.upload_file,
       color: yellow,
     ),
-    MenuItemData(id: 'info', label: 'Info', icon: Icons.info, color: blue),
     MenuItemData(
-      id: 'github',
-      label: 'GitHub',
-      icon: Icons.code,
-      color: Colors.white,
-    ),
-    MenuItemData(
-      id: 'twitter',
-      label: 'Twitter',
-      icon: Icons.share,
-      color: const Color(0xFF1DA0F1),
-    ),
-    MenuItemData(
-      id: 'linkedin',
-      label: 'LinkedIn',
-      icon: Icons.people,
-      color: const Color(0xFF0A66C2),
-    ),
-    MenuItemData(
-      id: 'pub',
-      label: 'Pub.dev',
-      icon: Icons.public,
-      color: Colors.white,
+      id: 'export',
+      label: 'Export Report',
+      icon: Icons.download,
+      color: red,
     ),
   ];
 
@@ -82,7 +55,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'Menu',
+                    'Plutus Menu',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
