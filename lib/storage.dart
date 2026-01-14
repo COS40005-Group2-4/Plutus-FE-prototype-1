@@ -216,15 +216,32 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
           }
 
           await _preferences.setBool("init", true);
+        } else {
+          // Load existing layout data or use defaults
+          _localItems = {};
+          for (var s in _slotCounts) {
+            var layoutDataStr = _preferences.getString("layout_data_$s");
+            if (layoutDataStr != null) {
+              var js = json.decode(layoutDataStr) as Map<String, dynamic>;
+              _localItems![s] = js.map<String, ColoredDashboardItem>(
+                (key, value) => MapEntry(key, ColoredDashboardItem.fromMap(value)),
+              );
+            } else {
+              // Use default if data doesn't exist
+              _localItems![s] = _default[s]!.asMap().map(
+                (key, value) => MapEntry(value.identifier, value),
+              );
+            }
+          }
         }
 
-        var js = json.decode(_preferences.getString("layout_data_$slotCount")!);
+        var layoutData = _localItems![slotCount];
+        if (layoutData != null) {
+          return layoutData.values.toList();
+        }
 
-        return js!.values
-            .map<ColoredDashboardItem>(
-              (value) => ColoredDashboardItem.fromMap(value),
-            )
-            .toList();
+        // Fallback to default if slot count not found
+        return _default[slotCount] ?? [];
       });
     } on Exception {
       rethrow;

@@ -249,9 +249,9 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     setState(() {
       slot = w > 600
           ? w > 900
-                ? 8
-                : 6
-          : 4;
+                ? 6
+                : 4
+          : 3;
     });
   }
 
@@ -263,9 +263,9 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     var w = MediaQuery.of(context).size.width;
     slot = w > 600
         ? w > 900
-              ? 8
-              : 6
-        : 4;
+              ? 6
+              : 4
+        : 3;
     return Scaffold(
       drawer: SidebarMenu(
         onMenuItemSelected: (widgetId) {
