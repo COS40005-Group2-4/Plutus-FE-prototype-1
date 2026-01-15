@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'data_widget.dart';
+import 'providers/auth_provider.dart';
 
 class SidebarMenu extends StatefulWidget {
   final Function(String)? onMenuItemSelected;
@@ -140,8 +142,70 @@ class _SidebarMenuState extends State<SidebarMenu> {
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
             ),
+            const Divider(color: Colors.white24),
+            // Settings
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: ListTile(
+                leading: const Icon(Icons.settings, color: Colors.white70),
+                title: const Text(
+                  'Settings',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/settings');
+                },
+                hoverColor: Colors.blue.withOpacity(0.2),
+              ),
+            ),
+            // Sign Out
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: const Text(
+                  'Sign Out',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleSignOut(context);
+                },
+                hoverColor: Colors.red.withOpacity(0.1),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleSignOut(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final authProvider =
+                  Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.signOut();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (route) => false);
+              }
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
       ),
     );
   }

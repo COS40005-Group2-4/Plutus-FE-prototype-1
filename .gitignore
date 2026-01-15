@@ -119,3 +119,4 @@ coverage/
 # Test results
 test-results/
 integration_test/.test_coverage.dart
+OAUTH_SETUP_GUIDE.md

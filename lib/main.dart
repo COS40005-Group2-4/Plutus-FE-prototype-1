@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
+import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,9 @@ import 'data_widget.dart';
 import 'sidebar_menu.dart';
 import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/settings_screen.dart';
 
 ///
 void main() {
@@ -29,6 +33,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late AuthProvider _authProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _authProvider = AuthProvider();
+    _initializeAuth();
+  }
+
+  Future<void> _initializeAuth() async {
+    await _authProvider.initialize();
+    setState(() {});
+  }
+
   ///
   Color getRandomColor() {
     var r = Random();
@@ -37,34 +55,41 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Dashboard online demo',
-      onGenerateInitialRoutes: (r) {
-        return r == "/dashboard"
-            ? [
-                MaterialPageRoute(
-                  builder: (c) {
-                    return const DashboardWidget();
-                  },
-                ),
-              ]
-            : [
-                MaterialPageRoute(
-                  builder: (c) {
-                    return const MainPage();
-                  },
-                ),
-              ];
-      },
-      initialRoute: "/",
-      routes: {
-        "/": (c) => const MainPage(),
-        "/dashboard": (c) => const MainNavigationPage(),
-        "/history": (c) => const TransactionHistoryPage(),
-        "/import": (c) => const ImportTransactionPage(),
-      },
-      theme: ThemeData(primarySwatch: Colors.blue),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _authProvider),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Dashboard online demo',
+        onGenerateInitialRoutes: (r) {
+          return r == "/dashboard"
+              ? [
+                  MaterialPageRoute(
+                    builder: (c) {
+                      return const DashboardWidget();
+                    },
+                  ),
+                ]
+              : [
+                  MaterialPageRoute(
+                    builder: (c) {
+                      return const MainPage();
+                    },
+                  ),
+                ];
+        },
+        initialRoute: "/",
+        routes: {
+          "/": (c) => const MainPage(),
+          "/login": (c) => const LoginScreen(),
+          "/dashboard": (c) => const MainNavigationPage(),
+          "/history": (c) => const TransactionHistoryPage(),
+          "/import": (c) => const ImportTransactionPage(),
+          "/settings": (c) => const SettingsScreen(),
+        },
+        theme: ThemeData(primarySwatch: Colors.blue),
+      ),
     );
   }
 }
@@ -78,26 +103,24 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   @override
+  void initState() {
+    super.initState();
+    // Redirect based on authentication status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isAuthenticated) {
+        Navigator.pushReplacementNamed(context, "/dashboard");
+      } else {
+        Navigator.pushReplacementNamed(context, "/login");
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("Plutus", textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          Container(
-            alignment: Alignment.center,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, "/dashboard");
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 30),
-                child: Text("Log in"),
-              ),
-            ),
-          ),
-        ],
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
