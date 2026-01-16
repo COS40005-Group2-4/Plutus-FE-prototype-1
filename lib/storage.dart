@@ -21,7 +21,7 @@ class ColoredDashboardItem extends DashboardItem {
   });
 
   ColoredDashboardItem.fromMap(Map<String, dynamic> map)
-    : color = map["color"] != null ? Color(map["color"]) : null,
+    : color = map["color"] != null ? Color((map["color"] is int ? map["color"] : (map["color"] as double).toInt())) : null,
       data = map["data"],
       super.withLayout(map["item_id"], ItemLayout.fromMap(map["layout"]));
 
@@ -33,7 +33,7 @@ class ColoredDashboardItem extends DashboardItem {
   Map<String, dynamic> toMap() {
     var sup = super.toMap();
     if (color != null) {
-      sup["color"] = color?.r;
+      sup["color"] = color!.value;
     }
     if (data != null) {
       sup["data"] = data;

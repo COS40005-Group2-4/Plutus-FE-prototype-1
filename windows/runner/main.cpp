@@ -26,7 +26,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(432, 768);
+  Win32Window::Size size(400, 768);
   if (!window.Create(L"plutus_fe_prototype", origin, size)) {
     return EXIT_FAILURE;
   }
@@ -37,7 +37,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }
-
+x
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }
