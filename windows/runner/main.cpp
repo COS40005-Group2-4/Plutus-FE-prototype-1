@@ -37,7 +37,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }
-x
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

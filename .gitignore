@@ -128,3 +128,6 @@ docs/
 /.cursor/rules
 /.cursor
 *.mdc
+*.mdc
+.cursor/rules/flutter-rule.mdc
+/.cursor
