@@ -1,7 +1,7 @@
 class GoogleOAuthConfig {
   // Client ID
   static const String clientId = '611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com';
-  
+  const String AMPLIFY_REDIRECT_URL = 'https://main.d3adjr6i7jedcz.amplifyapp.com';
   // Client Secret
   static const String clientSecret = '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';
   
