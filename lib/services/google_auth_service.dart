@@ -11,11 +11,20 @@ class GoogleAuthService {
   static const String _userInfoKey = 'google_user_info';
 
   GoogleAuthService() {
+    // Determine redirect URI based on platform
+    String? redirectUri;
+    if (kIsWeb) {
+      // For web, use the production URL or detect current origin
+      redirectUri = GoogleOAuthConfig.redirectUrl;
+    }
+    
     _googleSignIn = GoogleSignIn(
       params: GoogleSignInParams(
         clientId: GoogleOAuthConfig.clientId,
         clientSecret: GoogleOAuthConfig.clientSecret,
         scopes: GoogleOAuthConfig.scopes,
+        // Note: redirectPort is for desktop platforms, not web
+        // Web uses the redirectUri from the OAuth config
       ),
     );
     
