@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/google_auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -14,10 +15,36 @@ class AuthProvider extends ChangeNotifier {
   String get userEmail => _userEmail;
   String get userName => _userName;
   
+  /// Get the sign-in button widget (for web platform)
+  Widget? getSignInButton() => _authService.getSignInButton();
+  
+  /// Get the authentication state stream (for web platform)
+  Stream get authenticationState => _authService.authenticationState;
+  
   // Initialize - check if already logged in
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
+    
+    // On web, listen to authentication state changes
+    if (kIsWeb) {
+      _authService.authenticationState.listen((credentials) async {
+        if (credentials != null) {
+          _isAuthenticated = true;
+          final userInfo = await _authService.getUserInfo();
+          _userEmail = userInfo['email'] ?? '';
+          _userName = userInfo['name'] ?? '';
+          _isLoading = false;
+          notifyListeners();
+        } else {
+          _isAuthenticated = false;
+          _userEmail = '';
+          _userName = '';
+          _isLoading = false;
+          notifyListeners();
+        }
+      });
+    }
     
     _isAuthenticated = await _authService.isAuthenticated();
     

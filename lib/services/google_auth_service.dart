@@ -2,6 +2,8 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 import '../config/google_oauth_config.dart';
 
 class GoogleAuthService {
@@ -16,7 +18,27 @@ class GoogleAuthService {
         scopes: GoogleOAuthConfig.scopes,
       ),
     );
+    
+    // Listen to authentication state changes (especially important for web)
+    _googleSignIn.authenticationState.listen((credentials) async {
+      if (credentials != null) {
+        // User signed in, fetch and store user info
+        await _fetchAndStoreUserInfo(credentials.accessToken);
+      }
+    });
   }
+
+  /// Get the sign-in button widget (required for web platform)
+  Widget? getSignInButton() {
+    if (kIsWeb) {
+      return _googleSignIn.signInButton();
+    }
+    return null;
+  }
+
+  /// Get the authentication state stream
+  Stream<GoogleSignInCredentials?> get authenticationState => 
+      _googleSignIn.authenticationState;
 
   /// Check if user is currently authenticated
   Future<bool> isAuthenticated() async {
@@ -59,8 +81,17 @@ class GoogleAuthService {
   }
 
   /// Sign in with Google
+  /// Note: On web, this will throw UnimplementedError. Use getSignInButton() instead.
   Future<bool> signIn() async {
     try {
+      // On web, sign-in must be triggered via the sign-in button widget
+      if (kIsWeb) {
+        throw UnimplementedError(
+          'Use the signInButton() widget to trigger sign-in on web. '
+          'Call getSignInButton() to get the widget.',
+        );
+      }
+      
       // Use the intelligent fallback strategy (lightweight -> full flow)
       final credentials = await _googleSignIn.signIn();
       
