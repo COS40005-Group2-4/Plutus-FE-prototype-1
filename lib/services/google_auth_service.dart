@@ -54,9 +54,14 @@ class GoogleAuthService {
   static const String _accessTokenKey = 'google_access_token';
 
   GoogleAuthService() {
+    // Use the correct ClientID based on platform
+    final clientId = kIsWeb 
+        ? GoogleOAuthConfig.webClientId 
+        : GoogleOAuthConfig.androidClientId;
+    
     _googleSignIn = GoogleSignIn(
       params: GoogleSignInParams(
-        clientId: GoogleOAuthConfig.clientId,
+        clientId: clientId,
         clientSecret: GoogleOAuthConfig.clientSecret,
         scopes: GoogleOAuthConfig.scopes,
       ),
@@ -149,7 +154,7 @@ class GoogleAuthService {
         },
         body: {
           'code': code,
-          'client_id': GoogleOAuthConfig.clientId,
+          'client_id': GoogleOAuthConfig.webClientId,
           'client_secret': GoogleOAuthConfig.clientSecret,
           'redirect_uri': redirectUri,
           'grant_type': 'authorization_code',
@@ -183,7 +188,7 @@ class GoogleAuthService {
     // Get current origin for redirect URI
     final currentOrigin = web.window.location.origin;
     final redirectUri = Uri.encodeComponent(currentOrigin);
-    final clientId = Uri.encodeComponent(GoogleOAuthConfig.clientId);
+    final clientId = Uri.encodeComponent(GoogleOAuthConfig.webClientId);
     final scopes = GoogleOAuthConfig.scopes.join('%20');
     final state = Uri.encodeComponent(DateTime.now().millisecondsSinceEpoch.toString());
     

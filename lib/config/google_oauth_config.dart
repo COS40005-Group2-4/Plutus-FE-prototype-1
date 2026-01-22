@@ -1,6 +1,9 @@
 class GoogleOAuthConfig {
-  // Client ID
-  static const String clientId = '611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com';
+  // Web Client ID
+  static const String webClientId = '611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com';
+
+  // Android Client ID
+  static const String androidClientId = '611876522758-embicif9ls5drv85b576i5693uamuksj.apps.googleusercontent.com';
 
   // Client Secret 
   static const String clientSecret = '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';
