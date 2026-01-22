@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing Flutter dependencies..."
+        - if [ ! -d flutter ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
+        - export PATH=$PATH:$PWD/flutter/bin
+        - flutter pub get
+    build:
+      commands:
+        - echo "Building Flutter web application..."
+        - flutter build web --release --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define=REDIRECT_URL=https://main.d3adjr6i7jedcz.amplifyapp.com
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - '/root/.pub-cache/**/*'
+      - 'flutter/**/*'
+
