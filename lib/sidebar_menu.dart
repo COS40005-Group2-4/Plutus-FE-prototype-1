@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data_widget.dart';
 import 'providers/auth_provider.dart';
+import 'providers/widget_visibility_provider.dart';
 
 class SidebarMenu extends StatefulWidget {
   final Function(String)? onMenuItemSelected;
@@ -13,8 +14,6 @@ class SidebarMenu extends StatefulWidget {
 }
 
 class _SidebarMenuState extends State<SidebarMenu> {
-  String? _selectedMenuItem;
-
   final List<MenuItemData> _menuItems = [
     MenuItemData(
       id: 'budget',
@@ -44,113 +43,138 @@ class _SidebarMenuState extends State<SidebarMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Container(
-        color: const Color(0xFF2C3E50),
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF4285F4)),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Plutus Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+    return Consumer<WidgetVisibilityProvider>(
+      builder: (context, visibilityProvider, _) {
+        return Drawer(
+          child: Container(
+            color: const Color(0xFF2C3E50),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: Color(0xFF4285F4)),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Plutus Menu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Toggle Dashboard Widgets',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Dashboard Widgets',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ..._menuItems.map((item) {
+                        final isVisible = visibilityProvider.isWidgetVisible(item.id);
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: isVisible
+                                ? item.color.withValues(alpha: 0.2)
+                                : Colors.transparent,
+                          ),
+                          child: CheckboxListTile(
+                            value: isVisible,
+                            onChanged: (value) {
+                              if (value == true) {
+                                visibilityProvider.showWidget(item.id);
+                              } else {
+                                visibilityProvider.hideWidget(item.id);
+                              }
+                            },
+                            title: Text(
+                              item.label,
+                              style: TextStyle(
+                                color: isVisible ? item.color : Colors.white,
+                                fontWeight: isVisible
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            secondary: Icon(
+                              item.icon,
+                              color: isVisible ? item.color : Colors.white54,
+                            ),
+                            activeColor: item.color,
+                            checkColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const Divider(color: Colors.white24),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Visible: ${visibilityProvider.visibleWidgetsCount}/${_menuItems.length}',
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ),
+                const Divider(color: Colors.white24),
+                // Settings
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ListTile(
+                    leading: const Icon(Icons.settings, color: Colors.white70),
+                    title: const Text(
+                      'Settings',
+                      style: TextStyle(color: Colors.white),
                     ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/settings');
+                    },
+                    hoverColor: Colors.blue.withValues(alpha: 0.2),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Dashboard Widgets',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            ..._menuItems.map((item) {
-              final isSelected = _selectedMenuItem == item.id;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: isSelected
-                      ? item.color.withValues(alpha: 0.3)
-                      : Colors.transparent,
                 ),
-                child: ListTile(
-                  leading: Icon(
-                    item.icon,
-                    color: isSelected ? item.color : Colors.white70,
-                  ),
-                  title: Text(
-                    item.label,
-                    style: TextStyle(
-                      color: isSelected ? item.color : Colors.white,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                // Sign Out
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.redAccent),
+                    title: const Text(
+                      'Sign Out',
+                      style: TextStyle(color: Colors.redAccent),
                     ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _handleSignOut(context);
+                    },
+                    hoverColor: Colors.red.withValues(alpha: 0.1),
                   ),
-                  onTap: () {
-                    setState(() {
-                      _selectedMenuItem = item.id;
-                    });
-                    widget.onMenuItemSelected?.call(item.id);
-                    Navigator.pop(context);
-                  },
-                  hoverColor: item.color.withValues(alpha: 0.2),
                 ),
-              );
-            }).toList(),
-            const Divider(color: Colors.white24),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Widgets: ${_menuItems.length}',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
-              ),
+              ],
             ),
-            const Divider(color: Colors.white24),
-            // Settings
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: const Icon(Icons.settings, color: Colors.white70),
-                title: const Text(
-                  'Settings',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/settings');
-                },
-                hoverColor: Colors.blue.withOpacity(0.2),
-              ),
-            ),
-            // Sign Out
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: const Icon(Icons.logout, color: Colors.redAccent),
-                title: const Text(
-                  'Sign Out',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleSignOut(context);
-                },
-                hoverColor: Colors.red.withOpacity(0.1),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

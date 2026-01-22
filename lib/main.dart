@@ -7,12 +7,12 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
 
-import 'add_dialog.dart';
 import 'data_widget.dart';
 import 'sidebar_menu.dart';
 import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
+import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 
@@ -58,6 +58,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
+        ChangeNotifierProvider(create: (_) => WidgetVisibilityProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -280,6 +281,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
 
   List<String> d = [];
 
+  void _updateHiddenItems(WidgetVisibilityProvider visibilityProvider) {
+    // This method is called to ensure visibility provider is up to date
+    // The actual filtering happens in the Consumer builder
+    visibilityProvider.getVisibleWidgets();
+  }
+
   ///
   @override
   Widget build(BuildContext context) {
@@ -321,19 +328,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
           ),
           IconButton(
             onPressed: () {
-              itemController.clear();
-            },
-            icon: const Icon(Icons.delete),
-          ),
-          IconButton(
-            onPressed: () {
-              add(context);
-            },
-            icon: const Icon(Icons.add),
-          ),
-          IconButton(
-            onPressed: () {
-              itemController.isEditing = !itemController.isEditing;
+              _itemController.isEditing = !_itemController.isEditing;
               setState(() {});
             },
             icon: const Icon(Icons.edit),
@@ -341,112 +336,148 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ],
       ),
       body: SafeArea(
-        child: _selectedWidget != null
-            ? _buildWidgetPreview(_selectedWidget!)
-            : (refreshing
-                  ? const Center(child: CircularProgressIndicator())
-                  : Dashboard<ColoredDashboardItem>(
-                      shrinkToPlace: false,
-                      slideToTop: true,
-                      absorbPointer: false,
-                      slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
-                        (context, item, x, y, editing) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.black12,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          );
-                        },
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      horizontalSpace: 8,
-                      verticalSpace: 8,
-                      slotAspectRatio: 1,
-                      animateEverytime: true,
-                      dashboardItemController: itemController,
-                      slotCount: slot!,
-                      errorPlaceholder: (e, s) {
-                        return Text("$e , $s");
-                      },
-                      emptyPlaceholder: const Center(child: Text("Empty")),
-                      itemStyle: ItemStyle(
-                        color: Colors.transparent,
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      physics: const RangeMaintainingScrollPhysics(),
-                      editModeSettings: EditModeSettings(
-                        draggableOutside: false,
-                        paintBackgroundLines: false,
-                        autoScroll: true,
-                        resizeCursorSide: 15,
-                        curve: Curves.easeOut,
-                        duration: const Duration(milliseconds: 300),
-                        backgroundStyle: const EditModeBackgroundStyle(
-                          lineColor: Colors.black38,
-                          lineWidth: 0.5,
-                          dualLineHorizontal: false,
-                          dualLineVertical: false,
-                        ),
-                      ),
-                      itemBuilder: (ColoredDashboardItem item) {
-                        var layout = item.layoutData;
-
-                        if (item.data != null) {
-                          return DataWidget(item: item);
-                        }
-
-                        return LayoutBuilder(
-                          builder: (_, c) {
-                            return Stack(
-                              children: [
-                                Container(
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: item.color,
-                                    borderRadius: BorderRadius.circular(10),
+        child: Consumer<WidgetVisibilityProvider>(
+          builder: (context, visibilityProvider, _) {
+            _updateHiddenItems(visibilityProvider);
+            final visibleWidgets = visibilityProvider.getVisibleWidgets();
+            
+            return _selectedWidget != null
+                ? _buildWidgetPreview(_selectedWidget!)
+                : (refreshing
+                      ? const Center(child: CircularProgressIndicator())
+                      : Dashboard<ColoredDashboardItem>(
+                          shrinkToPlace: true,
+                          slideToTop: true,
+                          absorbPointer: false,
+                          slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
+                            (context, item, x, y, editing) {
+                              // Don't show background for hidden items
+                              if (item != null && item.data != null && !visibleWidgets.contains(item.data)) {
+                                return const SizedBox.shrink();
+                              }
+                              return Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.black12,
+                                    width: 0.5,
                                   ),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    child: Text(
-                                      "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                if (itemController.isEditing)
-                                  Positioned(
-                                    right: 5,
-                                    top: 5,
-                                    child: InkResponse(
-                                      radius: 20,
-                                      onTap: () {
-                                        itemController.delete(item.identifier);
-                                      },
-                                      child: const Icon(
-                                        Icons.clear,
-                                        color: Colors.white,
-                                        size: 20,
+                              );
+                            },
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          horizontalSpace: 8,
+                          verticalSpace: 8,
+                          slotAspectRatio: 1,
+                          animateEverytime: true,
+                          dashboardItemController: itemController,
+                          slotCount: slot!,
+                          errorPlaceholder: (e, s) {
+                            return Text("$e , $s");
+                          },
+                          emptyPlaceholder: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.dashboard_customize,
+                                    size: 48, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text(
+                                  "No widgets selected",
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  "Open the menu to enable widgets",
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                          itemStyle: ItemStyle(
+                            color: Colors.transparent,
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            elevation: 5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          physics: const RangeMaintainingScrollPhysics(),
+                          editModeSettings: EditModeSettings(
+                            draggableOutside: false,
+                            paintBackgroundLines: false,
+                            autoScroll: true,
+                            resizeCursorSide: 15,
+                            curve: Curves.easeOut,
+                            duration: const Duration(milliseconds: 300),
+                            backgroundStyle: const EditModeBackgroundStyle(
+                              lineColor: Colors.black38,
+                              lineWidth: 0.5,
+                              dualLineHorizontal: false,
+                              dualLineVertical: false,
+                            ),
+                          ),
+                          itemBuilder: (ColoredDashboardItem item) {
+                            // Hide items that are not visible
+                            if (item.data != null && !visibleWidgets.contains(item.data)) {
+                              return const SizedBox.shrink();
+                            }
+
+                            var layout = item.layoutData;
+
+                            if (item.data != null) {
+                              return DataWidget(item: item);
+                            }
+
+                            return LayoutBuilder(
+                              builder: (_, c) {
+                                return Stack(
+                                  children: [
+                                    Container(
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: item.color,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        child: Text(
+                                          "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              ],
+                                    if (_itemController.isEditing)
+                                      Positioned(
+                                        right: 5,
+                                        top: 5,
+                                        child: InkResponse(
+                                          radius: 20,
+                                          onTap: () {
+                                            _itemController.delete(item.identifier);
+                                          },
+                                          child: const Icon(
+                                            Icons.clear,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    )),
+                        ));
+          },
+        ),
       ),
     );
   }
@@ -504,30 +535,4 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     );
   }
 
-  Future<void> add(BuildContext context) async {
-    var res = await showDialog(
-      context: context,
-      builder: (c) {
-        return const AddDialog();
-      },
-    );
-
-    if (res != null) {
-      itemController.add(
-        ColoredDashboardItem(
-          color: res[6],
-          width: res[0],
-          height: res[1],
-          startX: 0,
-          startY: 0,
-          identifier: (Random().nextInt(100000) + 4).toString(),
-          minWidth: res[2],
-          minHeight: res[3],
-          maxWidth: res[4] == 0 ? null : res[4],
-          maxHeight: res[5] == 0 ? null : res[5],
-        ),
-        mountToTop: false,
-      );
-    }
-  }
 }
