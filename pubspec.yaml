@@ -40,7 +40,7 @@ dependencies:
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
   http: ^1.1.0
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0
   
   # OAuth2 & Authentication
   google_sign_in: ^6.2.1
@@ -53,7 +53,7 @@ dependencies:
   
   # Device & Network Info
   connectivity_plus: ^5.0.2
-  device_info_plus: ^10.1.0
+  device_info_plus: ^11.0.0
   
   # Utils
   uuid: ^4.0.0

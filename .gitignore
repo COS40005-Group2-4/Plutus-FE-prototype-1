@@ -1,4 +1,5 @@
 # Flutter/Dart/Pub related
+.cursor/
 .dart_tool/
 .packages
 .pub/
@@ -121,3 +122,6 @@ test-results/
 integration_test/.test_coverage.dart
 OAUTH_SETUP_GUIDE.md
 docs/
+.cursor/rules/flutter-rule.mdc
+/.cursor
+.cursor/rules/flutter-rule.mdc
