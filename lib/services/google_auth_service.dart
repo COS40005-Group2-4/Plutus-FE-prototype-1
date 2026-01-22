@@ -51,6 +51,7 @@ class _CustomGoogleSignInButton extends StatelessWidget {
 class GoogleAuthService {
   late final GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
+  static const String _accessTokenKey = 'google_access_token';
 
   GoogleAuthService() {
     _googleSignIn = GoogleSignIn(
@@ -68,27 +69,27 @@ class GoogleAuthService {
         await _fetchAndStoreUserInfo(credentials.accessToken);
       }
     });
+    
+    // Handle OAuth callback on web
+    if (kIsWeb) {
+      _handleOAuthCallback();
+    }
   }
 
   /// Get the sign-in button widget (required for web platform)
   /// Returns a custom Flutter button that triggers Google Sign-In via redirect flow
   Widget? getSignInButton() {
     if (kIsWeb) {
+      // Check if we're returning from OAuth callback
+      _handleOAuthCallback();
+      
       // Return a custom button that uses redirect flow instead of popup
       // This avoids the email display issue and popup blocking
       return _CustomGoogleSignInButton(
         onPressed: () async {
           try {
-            // Use the package's signInButton widget but trigger it programmatically
-            // For web, we'll use redirect flow by calling signInOnline
-            // If that doesn't work, fall back to manual OAuth URL
-            try {
-              await _googleSignIn.signInOnline();
-            } catch (e) {
-              // Fallback: manually construct OAuth URL and redirect
-              print('signInOnline failed, trying manual redirect: $e');
-              await _manualWebSignIn();
-            }
+            // Use pure OAuth redirect flow to avoid CORS issues
+            await _manualWebSignIn();
           } catch (e) {
             print('Error signing in: $e');
           }
@@ -96,6 +97,83 @@ class GoogleAuthService {
       );
     }
     return null;
+  }
+  
+  /// Handle OAuth callback when returning from Google authorization
+  void _handleOAuthCallback() {
+    if (!kIsWeb) return;
+    
+    final uri = Uri.parse(web.window.location.href);
+    final code = uri.queryParameters['code'];
+    final error = uri.queryParameters['error'];
+    
+    if (error != null) {
+      print('OAuth error: $error');
+      // Clear URL parameters
+      web.window.history.replaceState(null, '', web.window.location.pathname);
+      return;
+    }
+    
+    if (code != null) {
+      // Exchange authorization code for access token
+      _exchangeCodeForToken(code).then((credentials) async {
+        if (credentials != null && credentials['access_token'] != null) {
+          // Store credentials and fetch user info
+          await _fetchAndStoreUserInfo(credentials['access_token'] as String);
+          
+          // Clear the URL parameters
+          web.window.history.replaceState(null, '', web.window.location.pathname);
+          
+          // Trigger a page reload to update the auth state
+          // This ensures the auth provider picks up the new authentication
+          web.window.location.reload();
+        }
+      }).catchError((e) {
+        print('Error exchanging code for token: $e');
+        // Clear URL parameters even on error
+        web.window.history.replaceState(null, '', web.window.location.pathname);
+      });
+    }
+  }
+  
+  /// Exchange authorization code for access token
+  Future<Map<String, dynamic>?> _exchangeCodeForToken(String code) async {
+    try {
+      final currentOrigin = web.window.location.origin;
+      final redirectUri = currentOrigin;
+      
+      final response = await http.post(
+        Uri.parse(GoogleOAuthConfig.tokenEndpoint),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'code': code,
+          'client_id': GoogleOAuthConfig.clientId,
+          'client_secret': GoogleOAuthConfig.clientSecret,
+          'redirect_uri': redirectUri,
+          'grant_type': 'authorization_code',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        
+        // Store access token
+        final prefs = await SharedPreferences.getInstance();
+        if (data['access_token'] != null) {
+          await prefs.setString(_accessTokenKey, data['access_token'] as String);
+        }
+        
+        return data;
+      } else {
+        print('Token exchange failed: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error exchanging code: $e');
+      return null;
+    }
   }
 
   /// Manual OAuth redirect flow for web (fallback)
@@ -132,34 +210,49 @@ class GoogleAuthService {
   /// Check if user is currently authenticated
   Future<bool> isAuthenticated() async {
     try {
+      // On web, check for stored access token first (from manual OAuth flow)
+      if (kIsWeb) {
+        final prefs = await SharedPreferences.getInstance();
+        final accessToken = prefs.getString(_accessTokenKey);
+        if (accessToken != null && accessToken.isNotEmpty) {
+          // Verify token is still valid by checking user info
+          try {
+            final userInfo = await _fetchAndStoreUserInfo(accessToken);
+            if (userInfo['email'] != null && userInfo['email']!.isNotEmpty) {
+              return true;
+            }
+          } catch (e) {
+            // Token might be expired, clear it
+            await prefs.remove(_accessTokenKey);
+            await prefs.remove(_userInfoKey);
+          }
+        }
+      }
+      
       // Try silent sign-in first (no user interaction)
-      final credentials = await _googleSignIn.silentSignIn();
-      if (credentials != null) {
-        // Fetch user info and store it
-        await _fetchAndStoreUserInfo(credentials.accessToken);
-        return true;
+      try {
+        final credentials = await _googleSignIn.silentSignIn();
+        if (credentials != null) {
+          // Fetch user info and store it
+          await _fetchAndStoreUserInfo(credentials.accessToken);
+          return true;
+        }
+      } catch (e) {
+        // Silent sign-in failed, continue to check stored info
       }
 
       // Also check stored user info
       final prefs = await SharedPreferences.getInstance();
       final userInfoStr = prefs.getString(_userInfoKey);
       if (userInfoStr != null && userInfoStr.isNotEmpty) {
-        // User info exists, but try to verify with silent sign-in
-        try {
-          final restoredCredentials = await _googleSignIn.silentSignIn();
-          if (restoredCredentials != null) {
-            await _fetchAndStoreUserInfo(restoredCredentials.accessToken);
+        // User info exists, verify token if available
+        if (kIsWeb) {
+          final accessToken = prefs.getString(_accessTokenKey);
+          if (accessToken != null && accessToken.isNotEmpty) {
             return true;
-          } else {
-            // Clear invalid stored info
-            await prefs.remove(_userInfoKey);
-            return false;
           }
-        } catch (e) {
-          // If silent sign-in fails, clear stored info
-          await prefs.remove(_userInfoKey);
-          return false;
         }
+        return true; // Assume authenticated if user info exists
       }
 
       return false;
@@ -203,6 +296,7 @@ class GoogleAuthService {
       await _googleSignIn.signOut();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userInfoKey);
+      await prefs.remove(_accessTokenKey);
     } catch (e) {
       print('Error signing out: $e');
     }
@@ -211,11 +305,28 @@ class GoogleAuthService {
   /// Get user information
   Future<Map<String, String>> getUserInfo() async {
     try {
+      // On web, try stored access token first
+      if (kIsWeb) {
+        final prefs = await SharedPreferences.getInstance();
+        final accessToken = prefs.getString(_accessTokenKey);
+        if (accessToken != null && accessToken.isNotEmpty) {
+          try {
+            return await _fetchAndStoreUserInfo(accessToken);
+          } catch (e) {
+            print('Error fetching user info with stored token: $e');
+          }
+        }
+      }
+      
       // First try to get credentials via silent sign-in
-      final credentials = await _googleSignIn.silentSignIn();
-      if (credentials != null) {
-        // Fetch fresh user info
-        return await _fetchAndStoreUserInfo(credentials.accessToken);
+      try {
+        final credentials = await _googleSignIn.silentSignIn();
+        if (credentials != null) {
+          // Fetch fresh user info
+          return await _fetchAndStoreUserInfo(credentials.accessToken);
+        }
+      } catch (e) {
+        // Silent sign-in failed, continue to check stored info
       }
 
       // If no current credentials, try to restore from storage
