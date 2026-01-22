@@ -1,137 +1,155 @@
-import 'dart:async';
+import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:google_sign_in/google_sign_in.dart' as official;
-import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as all_platforms;
 import 'package:http/http.dart' as http;
 import '../config/google_oauth_config.dart';
-import 'secure_storage_service.dart';
 
 class GoogleAuthService {
-  final SecureStorageService _storage = SecureStorageService();
-  
-  // Official for Mobile/Web
-  final official.GoogleSignIn _officialGoogleSignIn = official.GoogleSignIn.instance;
-  
-  // All platforms for Desktop (specifically Windows)
-  all_platforms.GoogleSignIn? _allPlatformsGoogleSignIn;
-  
-  bool _initialized = false;
-  
-  bool get _isWindows => !kIsWeb && Platform.isWindows;
+  late final GoogleSignIn _googleSignIn;
+  static const String _userInfoKey = 'google_user_info';
 
-  Future<void> _ensureInitialized() async {
-    if (_initialized) return;
-
-    if (_isWindows) {
-      _allPlatformsGoogleSignIn = all_platforms.GoogleSignIn(
-        params: all_platforms.GoogleSignInParams(
-          clientId: GoogleOAuthConfig.clientId,
-          clientSecret: GoogleOAuthConfig.clientSecret,
-          scopes: GoogleOAuthConfig.scopes,
-          redirectPort: 8080,
-        ),
-      );
-    } else {
-      await _officialGoogleSignIn.initialize(
+  GoogleAuthService() {
+    _googleSignIn = GoogleSignIn(
+      params: GoogleSignInParams(
         clientId: GoogleOAuthConfig.clientId,
-      );
-    }
-    _initialized = true;
+        clientSecret: GoogleOAuthConfig.clientSecret,
+        scopes: GoogleOAuthConfig.scopes,
+      ),
+    );
   }
 
-  // Start OAuth flow
-  Future<bool> signIn() async {
+  /// Check if user is currently authenticated
+  Future<bool> isAuthenticated() async {
     try {
-      await _ensureInitialized();
-      
-      String? accessToken;
-      String? email;
-      String? name;
+      // Try silent sign-in first (no user interaction)
+      final credentials = await _googleSignIn.silentSignIn();
+      if (credentials != null) {
+        // Fetch user info and store it
+        await _fetchAndStoreUserInfo(credentials.accessToken);
+        return true;
+      }
 
-      if (_isWindows) {
-        final result = await _allPlatformsGoogleSignIn!.signIn();
-        if (result == null) return false;
-        
-        accessToken = result.accessToken;
-        
-        // Fetch user info manually using the access token
+      // Also check stored user info
+      final prefs = await SharedPreferences.getInstance();
+      final userInfoStr = prefs.getString(_userInfoKey);
+      if (userInfoStr != null && userInfoStr.isNotEmpty) {
+        // User info exists, but try to verify with silent sign-in
         try {
-          final response = await http.get(
-            Uri.parse('https://www.googleapis.com/oauth2/v3/userinfo'),
-            headers: {'Authorization': 'Bearer $accessToken'},
-          );
-          
-          if (response.statusCode == 200) {
-            final userInfo = json.decode(response.body);
-            email = userInfo['email'];
-            name = userInfo['name'] ?? userInfo['given_name'] ?? '';
+          final restoredCredentials = await _googleSignIn.silentSignIn();
+          if (restoredCredentials != null) {
+            await _fetchAndStoreUserInfo(restoredCredentials.accessToken);
+            return true;
+          } else {
+            // Clear invalid stored info
+            await prefs.remove(_userInfoKey);
+            return false;
           }
         } catch (e) {
-          print('Error fetching user info on Windows: $e');
+          // If silent sign-in fails, clear stored info
+          await prefs.remove(_userInfoKey);
+          return false;
         }
-      } else {
-        // In v7+, authenticate() is used instead of signIn()
-        // It throws instead of returning null if failed or cancelled
-        final official.GoogleSignInAccount account = await _officialGoogleSignIn.authenticate(
-          scopeHint: GoogleOAuthConfig.scopes,
-        );
-        
-        // In v7+, tokens are obtained via authorizationClient
-        final authorizedUser = await account.authorizationClient.authorizeScopes(
-          GoogleOAuthConfig.scopes,
-        );
-        accessToken = authorizedUser.accessToken;
-        email = account.email;
-        name = account.displayName;
       }
-      
-      // Save tokens
-      await _storage.saveTokens(
-        accessToken: accessToken,
-        refreshToken: null, 
-      );
-      
-      // Save user info
-      await _storage.saveUserInfo(
-        email: email ?? '',
-        name: name ?? '',
-      );
-      
-      return true;
+
+      return false;
     } catch (e) {
-      print('Error during sign in: $e');
+      print('Error checking authentication: $e');
       return false;
     }
   }
-  
-  // Check if user is authenticated
-  Future<bool> isAuthenticated() async {
-    final token = await _storage.getAccessToken();
-    if (token != null && token.isNotEmpty) return true;
-    
-    return false;
-  }
-  
-  // Sign out
-  Future<void> signOut() async {
-    await _ensureInitialized();
-    if (_isWindows) {
-      await _allPlatformsGoogleSignIn?.signOut();
-    } else {
-      await _officialGoogleSignIn.signOut();
+
+  /// Sign in with Google
+  Future<bool> signIn() async {
+    try {
+      // Use the intelligent fallback strategy (lightweight -> full flow)
+      final credentials = await _googleSignIn.signIn();
+      
+      if (credentials != null) {
+        // Fetch user info and store it
+        await _fetchAndStoreUserInfo(credentials.accessToken);
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      print('Error signing in: $e');
+      return false;
     }
-    await _storage.clearAll();
   }
-  
-  // Get current user info
+
+  /// Sign out from Google
+  Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_userInfoKey);
+    } catch (e) {
+      print('Error signing out: $e');
+    }
+  }
+
+  /// Get user information
   Future<Map<String, String>> getUserInfo() async {
-    final email = await _storage.getUserEmail();
-    final name = await _storage.getUserName();
-    return {
-      'email': email ?? '',
-      'name': name ?? '',
-    };
+    try {
+      // First try to get credentials via silent sign-in
+      final credentials = await _googleSignIn.silentSignIn();
+      if (credentials != null) {
+        // Fetch fresh user info
+        return await _fetchAndStoreUserInfo(credentials.accessToken);
+      }
+
+      // If no current credentials, try to restore from storage
+      final prefs = await SharedPreferences.getInstance();
+      final userInfoStr = prefs.getString(_userInfoKey);
+      if (userInfoStr != null && userInfoStr.isNotEmpty) {
+        final userInfo = json.decode(userInfoStr) as Map<String, dynamic>;
+        return {
+          'email': userInfo['email'] as String? ?? '',
+          'name': userInfo['name'] as String? ?? '',
+          'id': userInfo['id'] as String? ?? '',
+          'photoUrl': userInfo['photoUrl'] as String? ?? '',
+        };
+      }
+
+      return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
+    } catch (e) {
+      print('Error getting user info: $e');
+      return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
+    }
+  }
+
+  /// Fetch user information from Google API and store it
+  Future<Map<String, String>> _fetchAndStoreUserInfo(String accessToken) async {
+    try {
+      // Fetch user info from Google OAuth2 userinfo endpoint
+      final response = await http.get(
+        Uri.parse('https://www.googleapis.com/oauth2/v2/userinfo'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        
+        final userInfo = {
+          'email': data['email'] as String? ?? '',
+          'name': data['name'] as String? ?? '',
+          'id': data['id'] as String? ?? '',
+          'photoUrl': data['picture'] as String? ?? '',
+        };
+
+        // Store user info locally
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_userInfoKey, json.encode(userInfo));
+
+        return userInfo;
+      }
+
+      return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
+    } catch (e) {
+      print('Error fetching user info: $e');
+      return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
+    }
   }
 }
