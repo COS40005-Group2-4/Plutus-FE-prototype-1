@@ -15,8 +15,4 @@ frontend:
     baseDirectory: build/web
     files:
       - '**/*'
-  cache:
-    paths:
-      - '/root/.pub-cache/**/*'
-      - 'flutter/**/*'
 
