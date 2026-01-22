@@ -1,8 +1,8 @@
 class GoogleOAuthConfig {
-  // Web Client ID
+  // Web Client ID (Authorized JavaScript Origin required)
   static const String webClientId = '611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com';
 
-  // Android Client ID
+  // Android Client ID (Package name and SHA-1 required)
   static const String androidClientId = '611876522758-embicif9ls5drv85b576i5693uamuksj.apps.googleusercontent.com';
 
   // Client Secret 
