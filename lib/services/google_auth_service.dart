@@ -145,7 +145,10 @@ class GoogleAuthService {
   Future<Map<String, dynamic>?> _exchangeCodeForToken(String code) async {
     try {
       final currentOrigin = web.window.location.origin;
-      final redirectUri = currentOrigin;
+      // Ensure redirectUri matches EXACTLY what was sent in _manualWebSignIn
+      final redirectUri = currentOrigin.endsWith('/') 
+          ? currentOrigin.substring(0, currentOrigin.length - 1) 
+          : currentOrigin;
       
       final response = await http.post(
         Uri.parse(GoogleOAuthConfig.tokenEndpoint),
@@ -187,25 +190,27 @@ class GoogleAuthService {
     
     // Get current origin for redirect URI
     final currentOrigin = web.window.location.origin;
-    final redirectUri = Uri.encodeComponent(currentOrigin);
+    // Ensure no trailing slash for the redirect URI
+    final redirectUri = currentOrigin.endsWith('/') 
+        ? currentOrigin.substring(0, currentOrigin.length - 1) 
+        : currentOrigin;
+        
+    final encodedRedirectUri = Uri.encodeComponent(redirectUri);
     final clientId = Uri.encodeComponent(GoogleOAuthConfig.webClientId);
     final scopes = GoogleOAuthConfig.scopes.join('%20');
     final state = Uri.encodeComponent(DateTime.now().millisecondsSinceEpoch.toString());
     
     final authUrl = '${GoogleOAuthConfig.authorizationEndpoint}?'
         'client_id=$clientId&'
-        'redirect_uri=$redirectUri&'
+        'redirect_uri=$encodedRedirectUri&'
         'response_type=code&'
         'scope=$scopes&'
         'state=$state&'
         'access_type=offline&'
-        'prompt=consent';
-    
-    print('OAuth URL: $authUrl');
-    print('Redirect URI: $currentOrigin');
-    
-    // Direct window navigation for web (redirect flow)
-    web.window.location.href = authUrl;
+        'prompt=select_account'; // Changed from 'consent' to 'select_account'
+
+    print('Attempting OAuth redirect to: $authUrl');
+    web.window.location.assign(authUrl); // Use assign instead of href for better history handling
   }
 
   /// Get the authentication state stream
