@@ -72,8 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 40),
         // Use sign-in button widget on web, regular button on other platforms
         if (kIsWeb)
-          authProvider.getSignInButton() ?? 
-          const SizedBox.shrink()
+          authProvider.getSignInButton() ?? const SizedBox.shrink()
         else
           ElevatedButton.icon(
             onPressed: () async {

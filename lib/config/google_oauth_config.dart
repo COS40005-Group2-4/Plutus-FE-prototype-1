@@ -1,12 +1,21 @@
 class GoogleOAuthConfig {
   // Web Client ID (Authorized JavaScript Origin required)
-  static const String webClientId = '611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com';
+  static const String webClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '',
+  );
 
   // Android Client ID (Package name and SHA-1 required)
-  static const String androidClientId = '611876522758-embicif9ls5drv85b576i5693uamuksj.apps.googleusercontent.com';
+  static const String androidClientId = String.fromEnvironment(
+    'GOOGLE_ANDROID_CLIENT_ID',
+    defaultValue: '',
+  );
 
   // Client Secret 
-  static const String clientSecret = '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';
+  static const String clientSecret = String.fromEnvironment(
+    'GOOGLE_CLIENT_SECRET',
+    defaultValue: '',
+  );
   
   // Production redirect URL (Amplify)
   static const String redirectUrlProduction = 'https://main.d3adjr6i7jedcz.amplifyapp.com';
