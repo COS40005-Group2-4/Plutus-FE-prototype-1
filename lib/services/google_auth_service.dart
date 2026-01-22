@@ -6,25 +6,58 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../config/google_oauth_config.dart';
 
+// Conditional import for web
+import 'package:web/web.dart' as web;
+
+/// Custom Google Sign-In button widget for web
+class _CustomGoogleSignInButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _CustomGoogleSignInButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Image.network(
+        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+        width: 20,
+        height: 20,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.login, size: 20);
+        },
+      ),
+      label: const Text(
+        'Sign in with Google',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 12,
+        ),
+        side: const BorderSide(color: Colors.grey, width: 1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  }
+}
+
 class GoogleAuthService {
   late final GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
 
   GoogleAuthService() {
-    // Determine redirect URI based on platform
-    String? redirectUri;
-    if (kIsWeb) {
-      // For web, use the production URL or detect current origin
-      redirectUri = GoogleOAuthConfig.redirectUrl;
-    }
-    
     _googleSignIn = GoogleSignIn(
       params: GoogleSignInParams(
         clientId: GoogleOAuthConfig.clientId,
         clientSecret: GoogleOAuthConfig.clientSecret,
         scopes: GoogleOAuthConfig.scopes,
-        // Note: redirectPort is for desktop platforms, not web
-        // Web uses the redirectUri from the OAuth config
       ),
     );
     
@@ -38,11 +71,53 @@ class GoogleAuthService {
   }
 
   /// Get the sign-in button widget (required for web platform)
+  /// Returns a custom Flutter button that triggers Google Sign-In via redirect flow
   Widget? getSignInButton() {
     if (kIsWeb) {
-      return _googleSignIn.signInButton();
+      // Return a custom button that uses redirect flow instead of popup
+      // This avoids the email display issue and popup blocking
+      return _CustomGoogleSignInButton(
+        onPressed: () async {
+          try {
+            // Use the package's signInButton widget but trigger it programmatically
+            // For web, we'll use redirect flow by calling signInOnline
+            // If that doesn't work, fall back to manual OAuth URL
+            try {
+              await _googleSignIn.signInOnline();
+            } catch (e) {
+              // Fallback: manually construct OAuth URL and redirect
+              print('signInOnline failed, trying manual redirect: $e');
+              await _manualWebSignIn();
+            }
+          } catch (e) {
+            print('Error signing in: $e');
+          }
+        },
+      );
     }
     return null;
+  }
+
+  /// Manual OAuth redirect flow for web (fallback)
+  Future<void> _manualWebSignIn() async {
+    if (!kIsWeb) return;
+    
+    final redirectUri = Uri.encodeComponent(GoogleOAuthConfig.redirectUrl);
+    final clientId = Uri.encodeComponent(GoogleOAuthConfig.clientId);
+    final scopes = GoogleOAuthConfig.scopes.join('%20');
+    final state = Uri.encodeComponent(DateTime.now().millisecondsSinceEpoch.toString());
+    
+    final authUrl = '${GoogleOAuthConfig.authorizationEndpoint}?'
+        'client_id=$clientId&'
+        'redirect_uri=$redirectUri&'
+        'response_type=code&'
+        'scope=$scopes&'
+        'state=$state&'
+        'access_type=offline&'
+        'prompt=consent';
+    
+    // Direct window navigation for web (redirect flow)
+    web.window.location.href = authUrl;
   }
 
   /// Get the authentication state stream
