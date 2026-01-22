@@ -102,7 +102,9 @@ class GoogleAuthService {
   Future<void> _manualWebSignIn() async {
     if (!kIsWeb) return;
     
-    final redirectUri = Uri.encodeComponent(GoogleOAuthConfig.redirectUrl);
+    // Get current origin for redirect URI
+    final currentOrigin = web.window.location.origin;
+    final redirectUri = Uri.encodeComponent(currentOrigin);
     final clientId = Uri.encodeComponent(GoogleOAuthConfig.clientId);
     final scopes = GoogleOAuthConfig.scopes.join('%20');
     final state = Uri.encodeComponent(DateTime.now().millisecondsSinceEpoch.toString());
@@ -115,6 +117,9 @@ class GoogleAuthService {
         'state=$state&'
         'access_type=offline&'
         'prompt=consent';
+    
+    print('OAuth URL: $authUrl');
+    print('Redirect URI: $currentOrigin');
     
     // Direct window navigation for web (redirect flow)
     web.window.location.href = authUrl;
