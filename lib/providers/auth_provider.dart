@@ -18,6 +18,9 @@ class AuthProvider extends ChangeNotifier {
   String get userEmail => _userEmail;
   String get userName => _userName;
   
+  // Get authentication service for direct access to session info
+  GoogleAuthService get authService => _authService;
+  
   /// Get the sign-in button widget (for web platform)
   Widget? getSignInButton() => _authService.getSignInButton();
   
@@ -108,5 +111,40 @@ class AuthProvider extends ChangeNotifier {
     _userEmail = '';
     _userName = '';
     notifyListeners();
+  }
+  
+  /// Get session information
+  Future<Map<String, dynamic>> getSessionInfo() async {
+    return await _authService.getSessionInfo();
+  }
+  
+  /// Manually refresh authentication (when coming back online)
+  Future<bool> refreshAuthentication() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      
+      final wasAuthenticated = await _authService.isAuthenticated();
+      
+      if (wasAuthenticated) {
+        _isAuthenticated = true;
+        final userInfo = await _authService.getUserInfo();
+        _userEmail = userInfo['email'] ?? '';
+        _userName = userInfo['name'] ?? '';
+      } else {
+        _isAuthenticated = false;
+        _userEmail = '';
+        _userName = '';
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return _isAuthenticated;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

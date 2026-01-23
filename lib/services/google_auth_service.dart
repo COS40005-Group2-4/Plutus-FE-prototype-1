@@ -2,7 +2,7 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import '../config/google_oauth_config.dart';
 
@@ -15,7 +15,14 @@ class GoogleAuthService {
   late final GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
   static const String _accessTokenKey = 'google_access_token';
+  static const String _sessionExpiryKey = 'session_expiry';
+  static const String _lastVerifiedKey = 'last_verified';
   bool _isHandlingCallback = false;
+  
+  // Session stays valid for 30 days without online verification
+  static const Duration _sessionDuration = Duration(days: 30);
+  // Re-verify token every 7 days when online
+  static const Duration _verificationInterval = Duration(days: 7);
 
   GoogleAuthService() {
     // Determine the correct Client ID and Secret based on platform.
@@ -56,38 +63,114 @@ class GoogleAuthService {
   /// Check if user is currently authenticated
   Future<bool> isAuthenticated() async {
     try {
-      // On web, check for stored access token first (from manual OAuth flow)
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Check if we have stored session data
+      final userInfoStr = prefs.getString(_userInfoKey);
+      final sessionExpiryStr = prefs.getString(_sessionExpiryKey);
+      final lastVerifiedStr = prefs.getString(_lastVerifiedKey);
+      
+      if (userInfoStr == null) {
+        // No session at all
+        return false;
+      }
+      
+      // Parse session expiry
+      DateTime? sessionExpiry;
+      if (sessionExpiryStr != null) {
+        sessionExpiry = DateTime.tryParse(sessionExpiryStr);
+      }
+      
+      // Check if session has expired (30 days without any activity)
+      if (sessionExpiry != null && DateTime.now().isAfter(sessionExpiry)) {
+        // Session expired, clear everything
+        await _clearSession();
+        return false;
+      }
+      
+      // Session is valid based on time - user can work offline
+      // Now check if we should verify the token online (if we haven't in the last 7 days)
+      DateTime? lastVerified;
+      if (lastVerifiedStr != null) {
+        lastVerified = DateTime.tryParse(lastVerifiedStr);
+      }
+      
+      final shouldVerify = lastVerified == null || 
+          DateTime.now().difference(lastVerified) > _verificationInterval;
+      
+      if (shouldVerify) {
+        // Try to verify token online (but don't fail if offline)
+        await _attemptTokenVerification(prefs);
+      }
+      
+      // Extend session on each check
+      await _extendSession(prefs);
+      
+      return true;
+    } catch (e) {
+      // On error, check if we have valid stored info for offline use
+      final prefs = await SharedPreferences.getInstance();
+      final userInfoStr = prefs.getString(_userInfoKey);
+      final sessionExpiryStr = prefs.getString(_sessionExpiryKey);
+      
+      if (userInfoStr != null && sessionExpiryStr != null) {
+        final sessionExpiry = DateTime.tryParse(sessionExpiryStr);
+        if (sessionExpiry != null && DateTime.now().isBefore(sessionExpiry)) {
+          return true; // Valid offline session
+        }
+      }
+      
+      return false;
+    }
+  }
+  
+  /// Attempt to verify token online without failing the auth check
+  Future<void> _attemptTokenVerification(SharedPreferences prefs) async {
+    try {
+      // On web, check stored access token
       if (kIsWeb) {
-        final prefs = await SharedPreferences.getInstance();
         final accessToken = prefs.getString(_accessTokenKey);
         if (accessToken != null && accessToken.isNotEmpty) {
-          // Verify token is still valid by checking user info
-          try {
-            final userInfo = await _fetchAndStoreUserInfo(accessToken);
-            if (userInfo['email'] != null && userInfo['email']!.isNotEmpty) {
-              return true;
-            }
-          } catch (e) {
-            // Token might be expired, clear it
-            await prefs.remove(_accessTokenKey);
-            await prefs.remove(_userInfoKey);
+          final userInfo = await _fetchAndStoreUserInfo(accessToken)
+              .timeout(const Duration(seconds: 5));
+          if (userInfo['email'] != null && userInfo['email']!.isNotEmpty) {
+            // Update last verified timestamp
+            await prefs.setString(_lastVerifiedKey, DateTime.now().toIso8601String());
+            await _extendSession(prefs);
+            return;
           }
         }
       }
 
-      // Try to sign in silently to check for existing credentials
-      final credentials = await _googleSignIn.silentSignIn();
+      // Try to sign in silently (non-web platforms)
+      final credentials = await _googleSignIn.silentSignIn()
+          .timeout(const Duration(seconds: 5));
       if (credentials != null) {
         await _fetchAndStoreUserInfo(credentials.accessToken);
-        return true;
+        await prefs.setString(_lastVerifiedKey, DateTime.now().toIso8601String());
+        await _extendSession(prefs);
       }
-
-      // Fallback check for stored info
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_userInfoKey) != null;
     } catch (e) {
-      return false;
+      // Verification failed (likely offline) - this is OK, session is still valid
+      if (kDebugMode) {
+        print('Token verification skipped (offline or error): $e');
+      }
     }
+  }
+  
+  /// Extend session expiry
+  Future<void> _extendSession(SharedPreferences prefs) async {
+    final newExpiry = DateTime.now().add(_sessionDuration);
+    await prefs.setString(_sessionExpiryKey, newExpiry.toIso8601String());
+  }
+  
+  /// Clear all session data
+  Future<void> _clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userInfoKey);
+    await prefs.remove(_accessTokenKey);
+    await prefs.remove(_sessionExpiryKey);
+    await prefs.remove(_lastVerifiedKey);
   }
 
   /// Sign in with Google
@@ -119,26 +202,11 @@ class GoogleAuthService {
     } catch (e) {
       print('Sign-out Error: $e');
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userInfoKey);
-    await prefs.remove(_accessTokenKey);
+    await _clearSession();
   }
 
   /// Get user info from storage
   Future<Map<String, String>> getUserInfo() async {
-    // On web, try to refresh info with stored token if possible
-    if (kIsWeb) {
-      final prefs = await SharedPreferences.getInstance();
-      final accessToken = prefs.getString(_accessTokenKey);
-      if (accessToken != null && accessToken.isNotEmpty) {
-        try {
-          await _fetchAndStoreUserInfo(accessToken);
-        } catch (e) {
-          print('Error refreshing user info on web: $e');
-        }
-      }
-    }
-
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString(_userInfoKey);
     if (data != null) {
@@ -150,6 +218,38 @@ class GoogleAuthService {
       }
     }
     return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
+  }
+  
+  /// Get session info for display
+  Future<Map<String, dynamic>> getSessionInfo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionExpiryStr = prefs.getString(_sessionExpiryKey);
+      final lastVerifiedStr = prefs.getString(_lastVerifiedKey);
+      
+      DateTime? sessionExpiry;
+      DateTime? lastVerified;
+      
+      if (sessionExpiryStr != null) {
+        sessionExpiry = DateTime.tryParse(sessionExpiryStr);
+      }
+      
+      if (lastVerifiedStr != null) {
+        lastVerified = DateTime.tryParse(lastVerifiedStr);
+      }
+      
+      return {
+        'sessionExpiry': sessionExpiry,
+        'lastVerified': lastVerified,
+        'daysUntilExpiry': sessionExpiry != null 
+            ? sessionExpiry.difference(DateTime.now()).inDays 
+            : null,
+        'isVerificationDue': lastVerified == null || 
+            DateTime.now().difference(lastVerified) > _verificationInterval,
+      };
+    } catch (e) {
+      return {};
+    }
   }
 
   /// Get the sign-in button widget (required for web platform)
@@ -287,6 +387,12 @@ class GoogleAuthService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_userInfoKey, json.encode(userInfo));
         await prefs.setString(_accessTokenKey, accessToken);
+        
+        // Initialize session expiry and last verified timestamp
+        final now = DateTime.now();
+        await prefs.setString(_sessionExpiryKey, now.add(_sessionDuration).toIso8601String());
+        await prefs.setString(_lastVerifiedKey, now.toIso8601String());
+        
         return userInfo;
       }
     } catch (e) {

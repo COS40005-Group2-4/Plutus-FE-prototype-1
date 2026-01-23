@@ -54,7 +54,58 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 20),
+        // Session info
+        FutureBuilder<Map<String, dynamic>>(
+          future: authProvider.getSessionInfo(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              final sessionInfo = snapshot.data!;
+              final daysUntilExpiry = sessionInfo['daysUntilExpiry'] as int?;
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Card(
+                  color: Colors.blue.withOpacity(0.1),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.offline_bolt, color: Colors.blue),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Offline Session',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (daysUntilExpiry != null)
+                          Text(
+                            'Your session remains valid for $daysUntilExpiry more days while offline',
+                            style: const TextStyle(fontSize: 14, color: Colors.black87),
+                          ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'You can use the app offline. Your session will be verified when you\'re back online.',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        const SizedBox(height: 20),
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text(
