@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/google_auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _authService = GoogleAuthService();
   
   bool _isAuthenticated = false;
+  bool _isGuest = false;
   bool _isLoading = false;
   String _userEmail = '';
   String _userName = '';
   
   bool get isAuthenticated => _isAuthenticated;
+  bool get isGuest => _isGuest;
   bool get isLoading => _isLoading;
   String get userEmail => _userEmail;
   String get userName => _userName;
@@ -25,6 +28,9 @@ class AuthProvider extends ChangeNotifier {
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
+    
+    final prefs = await SharedPreferences.getInstance();
+    _isGuest = prefs.getBool('is_guest') ?? false;
     
     // On web, listen to authentication state changes
     if (kIsWeb) {
@@ -67,6 +73,9 @@ class AuthProvider extends ChangeNotifier {
     
     if (success) {
       _isAuthenticated = true;
+      _isGuest = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_guest', false);
       final userInfo = await _authService.getUserInfo();
       _userEmail = userInfo['email'] ?? '';
       _userName = userInfo['name'] ?? '';
@@ -78,10 +87,24 @@ class AuthProvider extends ChangeNotifier {
     return success;
   }
   
+  // Set guest mode
+  Future<void> setGuestMode(bool isGuest) async {
+    _isGuest = isGuest;
+    if (isGuest) {
+      _isAuthenticated = false;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_guest', isGuest);
+    notifyListeners();
+  }
+  
   // Sign out
   Future<void> signOut() async {
     await _authService.signOut();
     _isAuthenticated = false;
+    _isGuest = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_guest', false);
     _userEmail = '';
     _userName = '';
     notifyListeners();

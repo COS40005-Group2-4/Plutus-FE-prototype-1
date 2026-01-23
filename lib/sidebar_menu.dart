@@ -51,26 +51,33 @@ class _SidebarMenuState extends State<SidebarMenu> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
+                // User Info or Guest status
                 DrawerHeader(
                   decoration: const BoxDecoration(color: Color(0xFF4285F4)),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Plutus Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Toggle Dashboard Widgets',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
+                  child: Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            auth.isAuthenticated ? 'Plutus Menu' : 'Plutus (Guest)',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            auth.isAuthenticated 
+                                ? 'Welcome, ${auth.userName}'
+                                : 'Toggle Dashboard Widgets',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -154,20 +161,36 @@ class _SidebarMenuState extends State<SidebarMenu> {
                     hoverColor: Colors.blue.withValues(alpha: 0.2),
                   ),
                 ),
-                // Sign Out
+                const Divider(color: Colors.white24),
+                // Sign Out / Sign In
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.redAccent),
-                    title: const Text(
-                      'Sign Out',
-                      style: TextStyle(color: Colors.redAccent),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _handleSignOut(context);
+                  child: Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return ListTile(
+                        leading: Icon(
+                          auth.isAuthenticated ? Icons.logout : Icons.login,
+                          color: auth.isAuthenticated ? Colors.redAccent : Colors.greenAccent,
+                        ),
+                        title: Text(
+                          auth.isAuthenticated ? 'Sign Out' : 'Sign In',
+                          style: TextStyle(
+                            color: auth.isAuthenticated ? Colors.redAccent : Colors.greenAccent,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (auth.isAuthenticated) {
+                            _handleSignOut(context);
+                          } else {
+                            Navigator.pushNamed(context, '/login');
+                          }
+                        },
+                        hoverColor: auth.isAuthenticated 
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.green.withValues(alpha: 0.1),
+                      );
                     },
-                    hoverColor: Colors.red.withValues(alpha: 0.1),
                   ),
                 ),
               ],

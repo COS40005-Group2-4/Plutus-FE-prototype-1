@@ -68,7 +68,7 @@ class _MyAppState extends State<MyApp> {
               ? [
                   MaterialPageRoute(
                     builder: (c) {
-                      return const DashboardWidget();
+                      return const MainNavigationPage();
                     },
                   ),
                 ]
@@ -104,25 +104,27 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   @override
-  void initState() {
-    super.initState();
-    // Redirect based on authentication status
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.isAuthenticated) {
-        Navigator.pushReplacementNamed(context, "/dashboard");
-      } else {
-        Navigator.pushReplacementNamed(context, "/login");
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        if (!authProvider.isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              if (authProvider.isAuthenticated || authProvider.isGuest) {
+                Navigator.pushReplacementNamed(context, "/dashboard");
+              } else {
+                Navigator.pushReplacementNamed(context, "/login");
+              }
+            }
+          });
+        }
+        
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 }

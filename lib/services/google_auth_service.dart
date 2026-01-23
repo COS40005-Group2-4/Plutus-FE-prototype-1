@@ -15,6 +15,7 @@ class GoogleAuthService {
   late final GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
   static const String _accessTokenKey = 'google_access_token';
+  bool _isHandlingCallback = false;
 
   GoogleAuthService() {
     // Determine the correct Client ID and Secret based on platform.
@@ -163,12 +164,16 @@ class GoogleAuthService {
 
   /// Handle OAuth callback when returning from Google authorization
   void _handleOAuthCallback() {
-    if (!kIsWeb) return;
+    if (!kIsWeb || _isHandlingCallback) return;
     
     final uri = Uri.parse(WebHelper.currentUrl);
     final code = uri.queryParameters['code'];
     final error = uri.queryParameters['error'];
     
+    if (error != null || code != null) {
+      _isHandlingCallback = true;
+    }
+
     if (error != null) {
       print('OAuth error: $error');
       // Clear URL parameters

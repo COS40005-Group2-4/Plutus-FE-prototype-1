@@ -11,6 +11,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _hasRedirected = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 stream: authProvider.authenticationState,
                 builder: (context, snapshot) {
                   // If authenticated, navigate to dashboard
-                  if (snapshot.hasData && snapshot.data != null) {
+                  if (snapshot.hasData && snapshot.data != null && !_hasRedirected) {
+                    _hasRedirected = true;
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {
                         Navigator.pushReplacementNamed(context, '/dashboard');
@@ -96,6 +99,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+        const SizedBox(height: 20),
+        TextButton(
+          onPressed: () async {
+            await authProvider.setGuestMode(true);
+            if (context.mounted) {
+              Navigator.pushReplacementNamed(context, '/dashboard');
+            }
+          },
+          child: const Text(
+            'Continue as Guest',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
       ],
     );
   }
