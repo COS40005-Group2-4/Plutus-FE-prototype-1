@@ -2,9 +2,11 @@ customHeaders:
   - pattern: '**/*'
     headers:
       - key: 'Cross-Origin-Opener-Policy'
-        value: 'unsafe-none'
+        value: 'same-origin-allow-popups'
       - key: 'Cross-Origin-Embedder-Policy'
-        value: 'unsafe-none'
+        value: 'require-corp'
+      - key: 'Access-Control-Allow-Origin'
+        value: '*'
       - key: 'X-Frame-Options'
         value: 'SAMEORIGIN'
       - key: 'X-Content-Type-Options'
