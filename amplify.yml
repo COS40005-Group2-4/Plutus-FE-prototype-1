@@ -10,7 +10,7 @@ frontend:
     build:
       commands:
         - echo "Building Flutter web application..."
-        - flutter build web --release --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define=REDIRECT_URL=https://main.d3adjr6i7jedcz.amplifyapp.com
+        - flutter build web --release --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define=REDIRECT_URL=https://main.d3adjr6i7jedcz.amplifyapp.com --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID --dart-define=GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID --dart-define=GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
   artifacts:
     baseDirectory: build/web
     files:
