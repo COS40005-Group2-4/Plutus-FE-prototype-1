@@ -1,6 +1,7 @@
-import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
+import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as gsi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
@@ -12,12 +13,15 @@ import 'web_helper_stub.dart'
     if (dart.library.html) 'web_helper_web.dart';
 
 class GoogleAuthService {
-  late final GoogleSignIn _googleSignIn;
+  late final gsi.GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
   static const String _accessTokenKey = 'google_access_token';
   static const String _sessionExpiryKey = 'session_expiry';
   static const String _lastVerifiedKey = 'last_verified';
   bool _isHandlingCallback = false;
+  
+  // Create a broadcast controller for authentication state that we can manually trigger on web
+  final _authStateController = StreamController<gsi.GoogleSignInCredentials?>.broadcast();
   
   // Session stays valid for 30 days without online verification
   static const Duration _sessionDuration = Duration(days: 30);
@@ -58,13 +62,16 @@ class GoogleAuthService {
       }
     }
 
-    _googleSignIn = GoogleSignIn(
-      params: GoogleSignInParams(
+    _googleSignIn = gsi.GoogleSignIn(
+      params: gsi.GoogleSignInParams(
         clientId: clientId,
         clientSecret: clientSecret,
         scopes: GoogleOAuthConfig.scopes,
       ),
     );
+
+    // Forward internal state to our broadcast stream
+    _googleSignIn.authenticationState.listen(_authStateController.add);
 
     if (kDebugMode) {
       print('✓ GoogleAuthService initialized');
@@ -77,7 +84,7 @@ class GoogleAuthService {
   }
 
   /// Get the authentication state stream
-  Stream<GoogleSignInCredentials?> get authenticationState => _googleSignIn.authenticationState;
+  Stream<gsi.GoogleSignInCredentials?> get authenticationState => _authStateController.stream;
 
   /// Check if user is currently authenticated
   Future<bool> isAuthenticated() async {
@@ -156,6 +163,12 @@ class GoogleAuthService {
             // Update last verified timestamp
             await prefs.setString(_lastVerifiedKey, DateTime.now().toIso8601String());
             await _extendSession(prefs);
+            
+            // On web, if we verified stored token, notify listeners with manual credentials
+            _authStateController.add(gsi.GoogleSignInCredentials(
+              accessToken: accessToken,
+              idToken: null, // We don't necessarily have idToken here
+            ));
             return;
           }
         }
@@ -190,6 +203,7 @@ class GoogleAuthService {
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_sessionExpiryKey);
     await prefs.remove(_lastVerifiedKey);
+    _authStateController.add(null);
   }
 
   /// Sign in with Google
@@ -321,16 +335,21 @@ class GoogleAuthService {
       // Exchange authorization code for access token
       _exchangeCodeForToken(code).then((data) async {
         if (data != null && data['access_token'] != null) {
+          final accessToken = data['access_token'] as String;
           // Store credentials and fetch user info
-          await _fetchAndStoreUserInfo(data['access_token'] as String);
+          await _fetchAndStoreUserInfo(accessToken);
           
           // Clear the URL parameters
           WebHelper.replaceState(WebHelper.currentPath);
           
-          // IMPORTANT: Do NOT reload the page - let the StreamBuilder in LoginScreen
-          // detect the authentication state change and navigate automatically
+          // Manually trigger auth state update for listeners on web
+          _authStateController.add(gsi.GoogleSignInCredentials(
+            accessToken: accessToken,
+            idToken: data['id_token'] as String?,
+          ));
+
           if (kDebugMode) {
-            print('OAuth login successful, credentials stored');
+            print('OAuth login successful, credentials stored and state updated');
           }
         } else {
           if (kDebugMode) {

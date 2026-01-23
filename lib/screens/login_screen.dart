@@ -1,3 +1,4 @@
+import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as gsi;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
@@ -22,14 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, authProvider, child) {
             // Listen to authentication state changes on web
             if (kIsWeb) {
-              return StreamBuilder(
+              return StreamBuilder<gsi.GoogleSignInCredentials?>(
                 stream: authProvider.authenticationState,
                 builder: (context, snapshot) {
                   // If authenticated, navigate to dashboard
                   if (snapshot.hasData && snapshot.data != null && !_hasRedirected) {
                     _hasRedirected = true;
                     if (kDebugMode) {
-                      print('Authentication state changed - navigating to dashboard');
+                      print('Authentication state changed (snapshot has data) - navigating to dashboard');
                     }
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {
@@ -143,41 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          // Debug info
-          if (kDebugMode)
-            Padding(
-              padding: const EdgeInsets.only(top: 40),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                color: Colors.grey[200],
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Debug Info (Development Only):',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text('Platform: ${kIsWeb ? "Web" : "Mobile"}'),
-                    FutureBuilder(
-                      future: authProvider.getSessionInfo(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final info = snapshot.data as Map<String, dynamic>;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Session Expiry: ${info["sessionExpiry"]}'),
-                              Text('Days Until Expiry: ${info["daysUntilExpiry"]}'),
-                            ],
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

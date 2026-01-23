@@ -1,3 +1,4 @@
+import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as gsi;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +26,8 @@ class AuthProvider extends ChangeNotifier {
   Widget? getSignInButton() => _authService.getSignInButton();
   
   /// Get the authentication state stream (for web platform)
-  Stream get authenticationState => _authService.authenticationState;
+  Stream<gsi.GoogleSignInCredentials?> get authenticationState => 
+      _authService.authenticationState;
   
   // Initialize - check if already logged in
   Future<void> initialize() async {
