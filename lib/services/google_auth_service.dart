@@ -25,6 +25,12 @@ class GoogleAuthService {
   static const Duration _verificationInterval = Duration(days: 7);
 
   GoogleAuthService() {
+    // Validate configuration first
+    final configError = GoogleOAuthConfig.validateConfiguration(isWeb: kIsWeb);
+    if (configError != null && kDebugMode) {
+      print('⚠️ OAuth Configuration Warning: $configError');
+    }
+
     // Determine the correct Client ID and Secret based on platform.
     String clientId;
     String clientSecret;
@@ -32,15 +38,24 @@ class GoogleAuthService {
     if (kIsWeb) {
       clientId = GoogleOAuthConfig.webClientId;
       clientSecret = GoogleOAuthConfig.clientSecret;
+      if (kDebugMode) {
+        print('🌐 Web Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+      }
     } else if (defaultTargetPlatform == TargetPlatform.windows ||
                defaultTargetPlatform == TargetPlatform.linux ||
                defaultTargetPlatform == TargetPlatform.macOS) {
       clientId = GoogleOAuthConfig.desktopClientId;
       clientSecret = GoogleOAuthConfig.desktopClientSecret;
+      if (kDebugMode) {
+        print('🖥️  Desktop Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+      }
     } else {
       // Android/iOS
       clientId = GoogleOAuthConfig.androidClientId;
       clientSecret = GoogleOAuthConfig.clientSecret;
+      if (kDebugMode) {
+        print('📱 Mobile Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+      }
     }
 
     _googleSignIn = GoogleSignIn(
@@ -50,6 +65,10 @@ class GoogleAuthService {
         scopes: GoogleOAuthConfig.scopes,
       ),
     );
+
+    if (kDebugMode) {
+      print('✓ GoogleAuthService initialized');
+    }
 
     // Handle OAuth callback on web
     if (kIsWeb) {
@@ -183,14 +202,28 @@ class GoogleAuthService {
         );
       }
 
+      if (kDebugMode) {
+        print('Starting Google Sign-in with client ID: ${GoogleOAuthConfig.androidClientId}');
+      }
+
       final credentials = await _googleSignIn.signIn();
       if (credentials != null) {
+        if (kDebugMode) {
+          print('Sign-in successful, fetching user info...');
+        }
         await _fetchAndStoreUserInfo(credentials.accessToken);
         return true;
+      } else {
+        if (kDebugMode) {
+          print('Sign-in cancelled by user or failed silently');
+        }
       }
       return false;
     } catch (e) {
-      print('Sign-in Error: $e');
+      if (kDebugMode) {
+        print('Sign-in Error: $e');
+        print('Stack trace: ${StackTrace.current}');
+      }
       return false;
     }
   }
@@ -275,8 +308,11 @@ class GoogleAuthService {
     }
 
     if (error != null) {
-      print('OAuth error: $error');
-      // Clear URL parameters
+      if (kDebugMode) {
+        print('OAuth error: $error');
+      }
+      // Clear URL parameters but stay on the page
+      // User can retry login
       WebHelper.replaceState(WebHelper.currentPath);
       return;
     }
@@ -291,11 +327,21 @@ class GoogleAuthService {
           // Clear the URL parameters
           WebHelper.replaceState(WebHelper.currentPath);
           
-          // Trigger a page reload to update the auth state
-          WebHelper.reload();
+          // IMPORTANT: Do NOT reload the page - let the StreamBuilder in LoginScreen
+          // detect the authentication state change and navigate automatically
+          if (kDebugMode) {
+            print('OAuth login successful, credentials stored');
+          }
+        } else {
+          if (kDebugMode) {
+            print('Failed to get access token from authorization code');
+          }
+          WebHelper.replaceState(WebHelper.currentPath);
         }
       }).catchError((e) {
-        print('Error exchanging code for token: $e');
+        if (kDebugMode) {
+          print('Error exchanging code for token: $e');
+        }
         WebHelper.replaceState(WebHelper.currentPath);
       });
     }

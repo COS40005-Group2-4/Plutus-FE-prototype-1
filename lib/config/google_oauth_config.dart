@@ -52,4 +52,20 @@ class GoogleOAuthConfig {
     'email',
     'profile',
   ];
+  
+  /// Validate configuration - returns error message if config is missing
+  static String? validateConfiguration({required bool isWeb}) {
+    if (isWeb) {
+      if (webClientId.isEmpty) {
+        return 'GOOGLE_WEB_CLIENT_ID environment variable is not set. '
+               'Check your build configuration.';
+      }
+    } else {
+      if (androidClientId.isEmpty) {
+        return 'GOOGLE_ANDROID_CLIENT_ID environment variable is not set. '
+               'Check your build configuration.';
+      }
+    }
+    return null;
+  }
 }

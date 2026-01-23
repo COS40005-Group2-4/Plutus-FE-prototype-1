@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -12,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _hasRedirected = false;
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // If authenticated, navigate to dashboard
                   if (snapshot.hasData && snapshot.data != null && !_hasRedirected) {
                     _hasRedirected = true;
+                    if (kDebugMode) {
+                      print('Authentication state changed - navigating to dashboard');
+                    }
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {
                         Navigator.pushReplacementNamed(context, '/dashboard');
@@ -56,67 +60,126 @@ class _LoginScreenState extends State<LoginScreen> {
   }
   
   Widget _buildLoginUI(BuildContext context, AuthProvider authProvider) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.account_balance_wallet,
-          size: 100,
-          color: Colors.blue,
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Welcome to Plutus',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.account_balance_wallet,
+            size: 100,
+            color: Colors.blue,
           ),
-        ),
-        const SizedBox(height: 40),
-        // Use sign-in button widget on web, regular button on other platforms
-        if (kIsWeb)
-          authProvider.getSignInButton() ?? const SizedBox.shrink()
-        else
-          ElevatedButton.icon(
-            onPressed: () async {
-              final success = await authProvider.signIn();
-              if (success && context.mounted) {
-                Navigator.pushReplacementNamed(context, '/dashboard');
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Login failed. Please try again.'),
+          const SizedBox(height: 20),
+          const Text(
+            'Welcome to Plutus',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Show error message if present
+          if (_errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[100],
+                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    color: Colors.red[900],
+                    fontSize: 14,
                   ),
-                );
+                ),
+              ),
+            ),
+          // Use sign-in button widget on web, regular button on other platforms
+          if (kIsWeb)
+            authProvider.getSignInButton() ?? const SizedBox.shrink()
+          else
+            ElevatedButton.icon(
+              onPressed: () async {
+                setState(() => _errorMessage = null);
+                final success = await authProvider.signIn();
+                if (success && context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/dashboard');
+                } else if (context.mounted) {
+                  setState(() => _errorMessage = 'Login failed. Please check your Google credentials and try again.');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Login failed. Please try again.'),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.login),
+              label: const Text('Sign in with Google'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 15,
+                ),
+              ),
+            ),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: () async {
+              await authProvider.setGuestMode(true);
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/dashboard');
               }
             },
-            icon: const Icon(Icons.login),
-            label: const Text('Sign in with Google'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 15,
+            child: const Text(
+              'Continue as Guest',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                decoration: TextDecoration.underline,
               ),
             ),
           ),
-        const SizedBox(height: 20),
-        TextButton(
-          onPressed: () async {
-            await authProvider.setGuestMode(true);
-            if (context.mounted) {
-              Navigator.pushReplacementNamed(context, '/dashboard');
-            }
-          },
-          child: const Text(
-            'Continue as Guest',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              decoration: TextDecoration.underline,
+          // Debug info
+          if (kDebugMode)
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                color: Colors.grey[200],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Debug Info (Development Only):',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text('Platform: ${kIsWeb ? "Web" : "Mobile"}'),
+                    FutureBuilder(
+                      future: authProvider.getSessionInfo(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          final info = snapshot.data as Map<String, dynamic>;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Session Expiry: ${info["sessionExpiry"]}'),
+                              Text('Days Until Expiry: ${info["daysUntilExpiry"]}'),
+                            ],
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
