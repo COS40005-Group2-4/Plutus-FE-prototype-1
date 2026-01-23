@@ -2,7 +2,7 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import '../config/google_oauth_config.dart';
 
@@ -11,60 +11,34 @@ import 'web_helper_stub.dart'
     if (dart.library.js_util) 'web_helper_web.dart'
     if (dart.library.html) 'web_helper_web.dart';
 
-/// Custom Google Sign-In button widget for web
-class _CustomGoogleSignInButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _CustomGoogleSignInButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Image.network(
-        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-        width: 20,
-        height: 20,
-        errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.login, size: 20);
-        },
-      ),
-      label: const Text(
-        'Sign in with Google',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 12,
-        ),
-        side: const BorderSide(color: Colors.grey, width: 1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ),
-    );
-  }
-}
-
 class GoogleAuthService {
   late final GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
   static const String _accessTokenKey = 'google_access_token';
 
   GoogleAuthService() {
-    // Determine the correct Client ID. 
-    final String clientId = kIsWeb 
-        ? GoogleOAuthConfig.webClientId 
-        : GoogleOAuthConfig.androidClientId;
+    // Determine the correct Client ID and Secret based on platform.
+    String clientId;
+    String clientSecret;
+
+    if (kIsWeb) {
+      clientId = GoogleOAuthConfig.webClientId;
+      clientSecret = GoogleOAuthConfig.clientSecret;
+    } else if (defaultTargetPlatform == TargetPlatform.windows ||
+               defaultTargetPlatform == TargetPlatform.linux ||
+               defaultTargetPlatform == TargetPlatform.macOS) {
+      clientId = GoogleOAuthConfig.desktopClientId;
+      clientSecret = GoogleOAuthConfig.desktopClientSecret;
+    } else {
+      // Android/iOS
+      clientId = GoogleOAuthConfig.androidClientId;
+      clientSecret = GoogleOAuthConfig.clientSecret;
+    }
 
     _googleSignIn = GoogleSignIn(
       params: GoogleSignInParams(
         clientId: clientId,
-        clientSecret: GoogleOAuthConfig.clientSecret,
+        clientSecret: clientSecret,
         scopes: GoogleOAuthConfig.scopes,
       ),
     );
@@ -180,16 +154,9 @@ class GoogleAuthService {
   /// Get the sign-in button widget (required for web platform)
   Widget? getSignInButton() {
     if (kIsWeb) {
-      // Return a custom button that uses redirect flow instead of popup
-      return _CustomGoogleSignInButton(
-        onPressed: () async {
-          try {
-            await _manualWebSignIn();
-          } catch (e) {
-            print('Error starting manual web sign in: $e');
-          }
-        },
-      );
+      // Use the official Google Identity Services (GIS) button.
+      // This handles security requirements automatically and avoids the "Loopback flow blocked" error.
+      return WebHelper.renderButton();
     }
     return null;
   }
@@ -270,6 +237,7 @@ class GoogleAuthService {
     }
   }
 
+  /*
   /// Manual OAuth redirect flow for web
   Future<void> _manualWebSignIn() async {
     if (!kIsWeb) return;
@@ -295,6 +263,7 @@ class GoogleAuthService {
 
     WebHelper.assign(authUrl);
   }
+  */
 
   Future<Map<String, String>> _fetchAndStoreUserInfo(String accessToken) async {
     try {

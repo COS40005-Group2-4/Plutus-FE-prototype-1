@@ -11,9 +11,21 @@ class GoogleOAuthConfig {
     defaultValue: '',
   );
 
-  // Client Secret 
+  // Desktop Client ID
+  static const String desktopClientId = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_ID',
+    defaultValue: '',
+  );
+
+  // Client Secret (General/Web)
   static const String clientSecret = String.fromEnvironment(
     'GOOGLE_CLIENT_SECRET',
+    defaultValue: '',
+  );
+
+  // Desktop Client Secret
+  static const String desktopClientSecret = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_SECRET',
     defaultValue: '',
   );
   
