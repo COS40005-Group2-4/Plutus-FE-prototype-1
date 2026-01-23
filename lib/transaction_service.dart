@@ -16,6 +16,16 @@ class TransactionService {
   Future<List<Map<String, dynamic>>> getTransactions() async {
     // Try to fetch from backend if available
     try {
+      // Check if we're on HTTPS trying to hit HTTP (will fail due to mixed content)
+      if (kIsWeb && 
+          Uri.base.scheme == 'https' && 
+          _baseUrl.startsWith('http:')) {
+        if (kDebugMode) {
+          print('⚠️ Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
+        }
+        throw Exception('Mixed content blocked');
+      }
+
       final response = await http
           .get(Uri.parse('$_baseUrl/api/transactions'))
           .timeout(_apiTimeout);
