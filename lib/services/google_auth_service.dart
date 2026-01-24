@@ -302,9 +302,30 @@ class GoogleAuthService {
   /// Get the sign-in button widget (required for web platform)
   Widget? getSignInButton() {
     if (kIsWeb) {
-      // Use the official Google Identity Services (GIS) button.
-      // This handles security requirements automatically and avoids the "Loopback flow blocked" error.
-      return WebHelper.renderButton();
+      // For web with COOP/COEP, we use a manual redirect flow to avoid popup blocking
+      return ElevatedButton.icon(
+        onPressed: _manualWebSignIn,
+        icon: Image.network(
+          'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg',
+          height: 24,
+          width: 24,
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.login),
+        ),
+        label: const Text('Sign in with Google'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 12,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+            side: const BorderSide(color: Colors.grey),
+          ),
+        ),
+      );
     }
     return null;
   }
@@ -313,57 +334,51 @@ class GoogleAuthService {
   void _handleOAuthCallback() {
     if (!kIsWeb || _isHandlingCallback) return;
     
-    final uri = Uri.parse(WebHelper.currentUrl);
-    final code = uri.queryParameters['code'];
-    final error = uri.queryParameters['error'];
-    
-    if (error != null || code != null) {
-      _isHandlingCallback = true;
-    }
-
-    if (error != null) {
-      if (kDebugMode) {
-        print('OAuth error: $error');
+    // Use a small delay to ensure the URL is fully updated and listeners are ready
+    Future.delayed(const Duration(milliseconds: 100), () {
+      final uri = Uri.parse(WebHelper.currentUrl);
+      final code = uri.queryParameters['code'];
+      final error = uri.queryParameters['error'];
+      
+      if (error != null || code != null) {
+        _isHandlingCallback = true;
       }
-      // Clear URL parameters but stay on the page
-      // User can retry login
-      WebHelper.replaceState(WebHelper.currentPath);
-      return;
-    }
-    
-    if (code != null) {
-      // Exchange authorization code for access token
-      _exchangeCodeForToken(code).then((data) async {
-        if (data != null && data['access_token'] != null) {
-          final accessToken = data['access_token'] as String;
-          // Store credentials and fetch user info
-          await _fetchAndStoreUserInfo(accessToken);
-          
-          // Clear the URL parameters
-          WebHelper.replaceState(WebHelper.currentPath);
-          
-          // Manually trigger auth state update for listeners on web
-          _authStateController.add(gsi.GoogleSignInCredentials(
-            accessToken: accessToken,
-            idToken: data['id_token'] as String?,
-          ));
 
-          if (kDebugMode) {
-            print('OAuth login successful, credentials stored and state updated');
-          }
-        } else {
-          if (kDebugMode) {
-            print('Failed to get access token from authorization code');
-          }
-          WebHelper.replaceState(WebHelper.currentPath);
-        }
-      }).catchError((e) {
+      if (error != null) {
         if (kDebugMode) {
-          print('Error exchanging code for token: $e');
+          print('OAuth error: $error');
         }
         WebHelper.replaceState(WebHelper.currentPath);
-      });
-    }
+        return;
+      }
+      
+      if (code != null) {
+        _exchangeCodeForToken(code).then((data) async {
+          if (data != null && data['access_token'] != null) {
+            final accessToken = data['access_token'] as String;
+            await _fetchAndStoreUserInfo(accessToken);
+            
+            WebHelper.replaceState(WebHelper.currentPath);
+            
+            _authStateController.add(gsi.GoogleSignInCredentials(
+              accessToken: accessToken,
+              idToken: data['id_token'] as String?,
+            ));
+
+            if (kDebugMode) {
+              print('OAuth login successful');
+            }
+          } else {
+            WebHelper.replaceState(WebHelper.currentPath);
+          }
+        }).catchError((e) {
+          if (kDebugMode) {
+            print('Error exchanging code: $e');
+          }
+          WebHelper.replaceState(WebHelper.currentPath);
+        });
+      }
+    });
   }
 
   /// Exchange authorization code for access token
@@ -398,21 +413,26 @@ class GoogleAuthService {
         
         return data;
       } else {
-        print('Token exchange failed: ${response.statusCode} - ${response.body}');
+        if (kDebugMode) {
+          print('Token exchange failed: ${response.statusCode} - ${response.body}');
+        }
         return null;
       }
     } catch (e) {
-      print('Error exchanging code: $e');
+      if (kDebugMode) {
+        print('Error exchanging code: $e');
+      }
       return null;
     }
   }
 
-  /*
   /// Manual OAuth redirect flow for web
   Future<void> _manualWebSignIn() async {
     if (!kIsWeb) return;
     
     final currentOrigin = WebHelper.currentOrigin;
+    // Ensure redirect URI matches what's configured in Google Cloud Console
+    // Usually it's the base origin without trailing slash
     final redirectUri = currentOrigin.endsWith('/') 
         ? currentOrigin.substring(0, currentOrigin.length - 1) 
         : currentOrigin;
@@ -431,9 +451,12 @@ class GoogleAuthService {
         'access_type=offline&'
         'prompt=select_account';
 
+    if (kDebugMode) {
+      print('🌐 Redirecting to Google Auth: $authUrl');
+    }
+    
     WebHelper.assign(authUrl);
   }
-  */
 
   Future<Map<String, String>> _fetchAndStoreUserInfo(String accessToken) async {
     try {

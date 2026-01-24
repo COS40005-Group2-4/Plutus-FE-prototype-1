@@ -6,6 +6,7 @@ frontend:
         - echo "Installing Flutter dependencies..."
         - if [ ! -d flutter ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
         - export PATH=$PATH:$PWD/flutter/bin
+        - flutter clean
         - flutter pub get
     build:
       commands:
