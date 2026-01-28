@@ -12,6 +12,7 @@ import 'sidebar_menu.dart';
 import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
@@ -59,37 +60,52 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider(create: (_) => WidgetVisibilityProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Dashboard online demo',
-        onGenerateInitialRoutes: (r) {
-          return r == "/dashboard"
-              ? [
-                  MaterialPageRoute(
-                    builder: (c) {
-                      return const MainNavigationPage();
-                    },
-                  ),
-                ]
-              : [
-                  MaterialPageRoute(
-                    builder: (c) {
-                      return const MainPage();
-                    },
-                  ),
-                ];
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Dashboard online demo',
+            onGenerateInitialRoutes: (r) {
+              return r == "/dashboard"
+                  ? [
+                      MaterialPageRoute(
+                        builder: (c) {
+                          return const MainNavigationPage();
+                        },
+                      ),
+                    ]
+                  : [
+                      MaterialPageRoute(
+                        builder: (c) {
+                          return const MainPage();
+                        },
+                      ),
+                    ];
+            },
+            initialRoute: "/",
+            routes: {
+              "/": (c) => const MainPage(),
+              "/login": (c) => const LoginScreen(),
+              "/dashboard": (c) => const MainNavigationPage(),
+              "/history": (c) => const TransactionHistoryPage(),
+              "/import": (c) => const ImportTransactionPage(),
+              "/settings": (c) => const SettingsScreen(),
+            },
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              brightness: Brightness.light,
+            ),
+            darkTheme: ThemeData.dark().copyWith(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: Brightness.dark,
+              ),
+            ),
+            themeMode: themeProvider.themeMode,
+          );
         },
-        initialRoute: "/",
-        routes: {
-          "/": (c) => const MainPage(),
-          "/login": (c) => const LoginScreen(),
-          "/dashboard": (c) => const MainNavigationPage(),
-          "/history": (c) => const TransactionHistoryPage(),
-          "/import": (c) => const ImportTransactionPage(),
-          "/settings": (c) => const SettingsScreen(),
-        },
-        theme: ThemeData(primarySwatch: Colors.blue),
       ),
     );
   }

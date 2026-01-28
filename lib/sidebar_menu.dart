@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data_widget.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'providers/widget_visibility_provider.dart';
 
 class SidebarMenu extends StatefulWidget {
@@ -142,6 +143,35 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   child: Text(
                     'Visible: ${visibilityProvider.visibleWidgetsCount}/${_menuItems.length}',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ),
+                const Divider(color: Colors.white24),
+                // Theme toggle
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Consumer<ThemeProvider>(
+                    builder: (context, themeProvider, _) {
+                      final isDarkMode = themeProvider.isDarkMode;
+                      return SwitchListTile(
+                        value: isDarkMode,
+                        onChanged: (value) {
+                          themeProvider.setThemeMode(
+                            value ? ThemeMode.dark : ThemeMode.light,
+                          );
+                        },
+                        title: Text(
+                          isDarkMode ? 'Dark Mode' : 'Light Mode',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        secondary: Icon(
+                          isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                          color: Colors.white70,
+                        ),
+                        activeColor: Colors.blueAccent,
+                        inactiveThumbColor: Colors.white70,
+                        inactiveTrackColor: Colors.white24,
+                      );
+                    },
                   ),
                 ),
                 const Divider(color: Colors.white24),
