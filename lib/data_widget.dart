@@ -23,7 +23,12 @@ class DataWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _map[item.data]!(item);
+    final dataKey = item.data;
+    final builder = dataKey != null ? _map[dataKey] : null;
+    if (builder == null) {
+      return const SizedBox.shrink();
+    }
+    return builder(item);
   }
 }
 

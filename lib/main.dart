@@ -390,7 +390,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           slotAspectRatio: 1,
                           animateEverytime: true,
                           dashboardItemController: itemController,
-                          slotCount: slot!,
+                          slotCount: slot ?? 3,
                           errorPlaceholder: (e, s) {
                             return Text("$e , $s");
                           },

@@ -92,13 +92,14 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "export",
       ),
     ],
-    6: <ColoredDashboardItem>[
+  8: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
         width: 3,
         startX: 0,
         startY: 0,
         minHeight: 2,
+        minWidth: 2,
         identifier: "budget",
         data: "budget",
       ),
@@ -188,7 +189,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   FutureOr<List<ColoredDashboardItem>> getAllItems(int slotCount) {
     try {
       if (_localItems != null) {
-        return _localItems![slotCount]!.values.toList();
+        return _localItems?[slotCount]?.values.toList() ?? <ColoredDashboardItem>[];
       }
 
       return Future.microtask(() async {
@@ -235,7 +236,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
           }
         }
 
-        var layoutData = _localItems![slotCount];
+        var layoutData = _localItems?[slotCount];
         if (layoutData != null) {
           return layoutData.values.toList();
         }
@@ -259,13 +260,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       _localItems?[slotCount]?[item.identifier] = item;
     }
 
-    var js = json.encode(
-      _localItems![slotCount]!.map(
-        (key, value) => MapEntry(key, value.toMap()),
-      ),
-    );
+    final slotItems = _localItems?[slotCount];
+    if (slotItems != null) {
+      var js = json.encode(
+        slotItems.map(
+          (key, value) => MapEntry(key, value.toMap()),
+        ),
+      );
 
-    await _preferences.setString("layout_data_$slotCount", js);
+      await _preferences.setString("layout_data_$slotCount", js);
+    }
   }
 
   @override
@@ -296,15 +300,18 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
     _setLocal();
     for (var s in _slotCounts) {
       for (var i in items) {
-        _localItems![s]?.remove(i.identifier);
+        _localItems?[s]?.remove(i.identifier);
       }
 
-      await _preferences.setString(
-        "layout_data_$s",
-        json.encode(
-          _localItems![s]!.map((key, value) => MapEntry(key, value.toMap())),
-        ),
-      );
+      final slotItems = _localItems?[s];
+      if (slotItems != null) {
+        await _preferences.setString(
+          "layout_data_$s",
+          json.encode(
+            slotItems.map((key, value) => MapEntry(key, value.toMap())),
+          ),
+        );
+      }
     }
   }
 
