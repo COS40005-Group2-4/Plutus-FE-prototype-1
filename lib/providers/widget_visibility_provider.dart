@@ -86,7 +86,7 @@ class WidgetVisibilityProvider extends ChangeNotifier {
 
   Future<void> toggleWidget(String widgetId) async {
     if (_visibleWidgets.containsKey(widgetId)) {
-      _visibleWidgets[widgetId] = !_visibleWidgets[widgetId]!;
+      _visibleWidgets[widgetId] = !(_visibleWidgets[widgetId] ?? true);
       await _saveVisibility();
       notifyListeners();
     }
