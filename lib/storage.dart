@@ -92,7 +92,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "export",
       ),
     ],
-  8: <ColoredDashboardItem>[
+    6: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
         width: 3,

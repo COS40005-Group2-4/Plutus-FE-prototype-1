@@ -1,0 +1,28 @@
+{
+  "expense": {
+    "accounts": {
+      "Expenses:Groceries": {
+        "VND": 150000
+      },
+      "Expenses:Dining": {
+        "VND": 45000
+      },
+      "Expenses:Transportation": {
+        "VND": 85000
+      }
+    }
+  },
+  "income": {
+    "accounts": {
+      "Income:Salary": {
+        "VND": 20000000
+      },
+      "Income:Bonus": {
+        "VND": 5000000
+      }
+    }
+  },
+  "tally": {
+    "VND": 24720000
+  }
+}

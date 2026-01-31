@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Transactions>
+  <Transaction>
+    <Date>2023-10-30</Date>
+    <Payee>Shopee</Payee>
+    <Amount>-250000</Amount>
+    <Currency>VND</Currency>
+    <Category>Shopping</Category>
+    <Description>Mua quần áo</Description>
+  </Transaction>
+  <Transaction>
+    <Date>2023-10-31</Date>
+    <Payee>Tiền Lương</Payee>
+    <Amount>15000000</Amount>
+    <Currency>VND</Currency>
+    <Category>Salary</Category>
+    <Description>Lương tháng 10</Description>
+  </Transaction>
+  <Transaction>
+    <Date>2023-11-01</Date>
+    <Payee>GrabFood</Payee>
+    <Amount>-65000</Amount>
+    <Currency>VND</Currency>
+    <Category>Dining</Category>
+    <Description>Đặt cơm trưa</Description>
+  </Transaction>
+</Transactions>
