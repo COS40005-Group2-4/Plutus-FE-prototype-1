@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'widgets/glass_container.dart';
 import 'data_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
@@ -47,14 +48,18 @@ class _SidebarMenuState extends State<SidebarMenu> {
     return Consumer<WidgetVisibilityProvider>(
       builder: (context, visibilityProvider, _) {
         return Drawer(
-          child: Container(
+          backgroundColor: Colors.transparent,
+          child: GlassContainer(
+            borderRadius: 0,
             color: const Color(0xFF2C3E50),
+            opacity: 0.6,
+            blur: 15,
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
                 // User Info or Guest status
                 DrawerHeader(
-                  decoration: const BoxDecoration(color: Color(0xFF4285F4)),
+                  decoration: BoxDecoration(color: const Color(0xFF4285F4).withValues(alpha: 0.3)),
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       return Column(
@@ -97,14 +102,13 @@ class _SidebarMenuState extends State<SidebarMenu> {
                       const SizedBox(height: 12),
                       ..._menuItems.map((item) {
                         final isVisible = visibilityProvider.isWidgetVisible(item.id);
-                        return Container(
+                        return GlassContainer(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: isVisible
-                                ? item.color.withValues(alpha: 0.2)
-                                : Colors.transparent,
-                          ),
+                          borderRadius: 8,
+                          color: isVisible ? item.color : Colors.transparent,
+                          opacity: isVisible ? 0.2 : 0,
+                          blur: isVisible ? 5 : 0,
+                          borderOpacity: isVisible ? 0.2 : 0,
                           child: CheckboxListTile(
                             value: isVisible,
                             onChanged: (value) {

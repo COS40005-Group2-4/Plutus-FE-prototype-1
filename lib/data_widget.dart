@@ -2,7 +2,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'transaction_service.dart';
+import 'widgets/glass_container.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -51,8 +53,10 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassContainer(
       color: blue,
+      opacity: 0.2,
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
       child: FutureBuilder<List<Map<String, dynamic>>>(
         future: _transactionService.getTransactions(),
@@ -75,6 +79,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
           final transactions = snapshot.data!;
           double totalIncome = 0;
           double totalExpense = 0;
+          final formatter = NumberFormat("#,##0.00", "en_US");
 
           for (var transaction in transactions) {
             double amount = 0;
@@ -89,9 +94,9 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
               amount = 0;
             }
             if (transaction['type'] == 'income') {
-              totalIncome += amount;
+              totalIncome += amount.abs();
             } else {
-              totalExpense += amount;
+              totalExpense += amount.abs();
             }
           }
 
@@ -108,12 +113,11 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Container(
+              GlassContainer(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                color: Colors.white,
+                opacity: 0.1,
+                borderRadius: 8,
                 child: Column(
                   children: [
                     Row(
@@ -124,7 +128,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                           style: TextStyle(color: Colors.white70),
                         ),
                         Text(
-                          '\$${totalIncome.toStringAsFixed(2)}',
+                          '\$${formatter.format(totalIncome)}',
                           style: const TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
@@ -142,7 +146,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                           style: TextStyle(color: Colors.white70),
                         ),
                         Text(
-                          '\$${totalExpense.toStringAsFixed(2)}',
+                          '\$${formatter.format(totalExpense)}',
                           style: const TextStyle(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
@@ -163,7 +167,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                           ),
                         ),
                         Text(
-                          '\$${balance.toStringAsFixed(2)}',
+                          '\$${formatter.format(balance)}',
                           style: TextStyle(
                             color: balance >= 0 ? Colors.green : Colors.red,
                             fontWeight: FontWeight.bold,
@@ -203,8 +207,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassContainer(
       color: green,
+      opacity: 0.2,
+      borderRadius: 16,
       padding: const EdgeInsets.all(12),
       child: FutureBuilder<List<Map<String, dynamic>>>(
         future: _transactionService.getTransactions(),
@@ -224,7 +230,14 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             );
           }
 
-          final transactions = snapshot.data!.take(10).toList();
+          final allTransactions = List<Map<String, dynamic>>.from(snapshot.data!);
+          allTransactions.sort((a, b) {
+            final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(0);
+            final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(0);
+            return dateB.compareTo(dateA);
+          });
+          final transactions = allTransactions.take(10).toList();
+          final formatter = NumberFormat("#,##0.00", "en_US");
 
           return Column(
             children: [
@@ -255,13 +268,12 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                       amount = 0;
                     }
 
-                    return Container(
+                    return GlassContainer(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                      color: Colors.white,
+                      opacity: 0.1,
+                      borderRadius: 6,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -288,9 +300,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                             ),
                           ),
                           Text(
-                            '${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(2)}',
+                            '${isIncome ? '+' : '-'}\$${formatter.format(amount.abs())}',
                             style: TextStyle(
-                              color: isIncome ? Colors.green : Colors.red,
+                              color: isIncome ? Colors.white : Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -315,8 +327,10 @@ class ReportImportWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassContainer(
       color: yellow,
+      opacity: 0.2,
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -361,8 +375,10 @@ class ReportExportWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassContainer(
       color: red,
+      opacity: 0.2,
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

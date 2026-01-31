@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:plutus_fe_prototype/services/ocr_service.dart';
 import 'transaction_service.dart';
+import 'widgets/glass_container.dart';
 
 class ImportTransactionPage extends StatefulWidget {
   const ImportTransactionPage({super.key});
@@ -186,6 +187,13 @@ class _ManualImportTabState extends State<ManualImportTab> {
     setState(() => _loading = true);
     
     try {
+      double amount = double.tryParse(_amountController.text) ?? 0.0;
+      if (_type == 'expense') {
+        amount = -amount.abs();
+      } else {
+        amount = amount.abs();
+      }
+
       final transaction = {
         'date': _selectedDate.toIso8601String(),
         'payee': _payeeController.text,
@@ -196,7 +204,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
         //   {'account': _accountController.text, 'amount': -amount, 'commodity': _currencyController.text},
         //   {'account': _categoryController.text, 'amount': amount, 'commodity': _currencyController.text}
         // ]
-        'amount': double.tryParse(_amountController.text) ?? 0.0,
+        'amount': amount,
         'currency': _currencyController.text,
         'account': _accountController.text,
         'type': _type,
@@ -235,7 +243,11 @@ class _ManualImportTabState extends State<ManualImportTab> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Form(
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
+        borderRadius: 16,
+        opacity: 0.1,
+        child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -428,6 +440,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -545,7 +558,11 @@ class _FileImportTabState extends State<FileImportTab> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
+        borderRadius: 16,
+        opacity: 0.1,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ElevatedButton.icon(
@@ -583,6 +600,7 @@ class _FileImportTabState extends State<FileImportTab> {
           ] else if (_fileContent != null && !_loading)
             const Text('No transactions found or parse failed.'),
         ],
+      ),
       ),
     );
   }
@@ -654,7 +672,11 @@ class _ScanImportTabState extends State<ScanImportTab> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
+        borderRadius: 16,
+        opacity: 0.1,
+        child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -713,6 +735,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
             ),
           ]
         ],
+      ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
+import '../widgets/glass_container.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -62,9 +63,17 @@ class _LoginScreenState extends State<LoginScreen> {
   
   Widget _buildLoginUI(BuildContext context, AuthProvider authProvider) {
     return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      child: Center(
+        child: GlassContainer(
+          margin: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(30),
+          borderRadius: 20,
+          opacity: 0.1,
+          blur: 15,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
           const Icon(
             Icons.account_balance_wallet,
             size: 100,
@@ -144,7 +153,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
@@ -18,6 +19,8 @@ import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'widgets/glass_background.dart';
+import 'widgets/glass_container.dart';
 
 ///
 void main() async {
@@ -100,14 +103,29 @@ class _MyAppState extends State<MyApp> {
             theme: ThemeData(
               primarySwatch: Colors.blue,
               brightness: Brightness.light,
+              scaffoldBackgroundColor: Colors.transparent,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+              ),
+              dialogBackgroundColor: Colors.transparent,
             ),
             darkTheme: ThemeData.dark().copyWith(
+              scaffoldBackgroundColor: Colors.transparent,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+              ),
+              dialogBackgroundColor: Colors.transparent,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.blue,
                 brightness: Brightness.dark,
               ),
             ),
             themeMode: themeProvider.themeMode,
+            builder: (context, child) {
+              return GlassBackground(child: child!);
+            },
           );
         },
       ),
@@ -159,11 +177,10 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
     bool editing,
   ) {
     if (item != null) {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(),
-          borderRadius: BorderRadius.circular(10),
-        ),
+      return GlassContainer(
+        color: Colors.red,
+        opacity: 0.2,
+        borderRadius: 10,
       );
     }
 
@@ -327,7 +344,13 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         },
       ),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4285F4),
+        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
+        flexibleSpace: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(color: Colors.transparent),
+          ),
+        ),
         automaticallyImplyLeading: true,
         actions: [
           IconButton(
@@ -373,18 +396,13 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           absorbPointer: false,
                           slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                             (context, item, x, y, editing) {
-                              // Don't show background for hidden items
                               if (item != null && item.data != null && !visibleWidgets.contains(item.data)) {
                                 return const SizedBox.shrink();
                               }
-                              return Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.black12,
-                                    width: 0.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                              return const GlassContainer(
+                                borderRadius: 10,
+                                borderOpacity: 0.1,
+                                opacity: 0.05,
                               );
                             },
                           ),
@@ -458,13 +476,11 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                               builder: (_, c) {
                                 return Stack(
                                   children: [
-                                    Container(
-                                      alignment: Alignment.center,
+                                    GlassContainer(
                                       padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: item.color,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
+                                      color: item.color,
+                                      opacity: 0.3,
+                                      borderRadius: 10,
                                       child: SizedBox(
                                         width: double.infinity,
                                         height: double.infinity,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/glass_container.dart';
 import '../providers/auth_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: const Color(0xFF4285F4),
+        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
       ),
       body: authProvider.isAuthenticated 
         ? _buildAuthenticatedSettings(context, authProvider)
@@ -65,8 +66,10 @@ class SettingsScreen extends StatelessWidget {
               
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Card(
-                  color: Colors.blue.withOpacity(0.1),
+                child: GlassContainer(
+                  borderRadius: 12,
+                  color: Colors.blue,
+                  opacity: 0.1,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(

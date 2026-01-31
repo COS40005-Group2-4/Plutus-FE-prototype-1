@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'transaction_service.dart';
+import 'widgets/glass_container.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
@@ -45,15 +46,22 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                     itemCount: _transactions.length,
                     itemBuilder: (context, index) {
                       final transaction = _transactions[index];
-                      return ListTile(
-                        title: Text(transaction['account'] ?? 'Unknown'),
-                        subtitle: Text(
-                          '${transaction['type'] ?? 'unknown'} - ${transaction['currency'] ?? ''} ${transaction['amount'] ?? ''}',
-                        ),
-                        trailing: Text(
-                          DateTime.parse(transaction['date'] ?? DateTime.now().toIso8601String())
-                              .toString()
-                              .split(' ')[0],
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: GlassContainer(
+                          borderRadius: 12,
+                          opacity: 0.2,
+                          child: ListTile(
+                            title: Text(transaction['account'] ?? 'Unknown'),
+                            subtitle: Text(
+                              '${transaction['type'] ?? 'unknown'} - ${transaction['currency'] ?? ''} ${transaction['amount'] ?? ''}',
+                            ),
+                            trailing: Text(
+                              DateTime.parse(transaction['date'] ?? DateTime.now().toIso8601String())
+                                  .toString()
+                                  .split(' ')[0],
+                            ),
+                          ),
                         ),
                       );
                     },

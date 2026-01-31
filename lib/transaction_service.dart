@@ -144,7 +144,7 @@ class TransactionService {
             'type': 'expense',
             'account': account,
             'currency': currency,
-            'amount': amount,
+            'amount': -amount.abs(),
             'date': DateTime.now().toIso8601String(),
           });
         });
@@ -207,7 +207,7 @@ class TransactionService {
         'currency': currency,
         'category': category,
         'description': description,
-        'type': amount < 0 ? 'expense' : 'income', // Simple heuristic
+        'type': amount < 0 ? 'expense' : 'income', 
       });
     }
 
