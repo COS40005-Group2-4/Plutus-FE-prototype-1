@@ -7,8 +7,15 @@ import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:flutter_tesseract_ocr/flutter_tesseract_ocr.dart';
 import 'package:http/http.dart' as http;
 import 'package:plutus_fe_prototype/config/aws_config.dart';
+
+enum OCRMode {
+  offline,
+  online,
+  auto,
+}
 
 class OCRService {
   TextRecognizer? _textRecognizer;
@@ -19,9 +26,11 @@ class OCRService {
     }
   }
 
-  /// Main entry point: tries to use AWS Textract if available/online, 
-  /// otherwise falls back to ML Kit (mobile only) with heuristics.
-  Future<Map<String, dynamic>?> processInvoice(String imagePath) async {
+  /// Main entry point: process invoice with specified OCR mode.
+  /// mode: OCRMode.offline - Use TesseractOCR (offline with Vietnamese support)
+  /// mode: OCRMode.online - Use AWS Textract (online with Vietnamese support)
+  /// mode: OCRMode.auto - Automatically choose based on connectivity and config
+  Future<Map<String, dynamic>?> processInvoice(String imagePath, {OCRMode mode = OCRMode.auto}) async {
     // 1. Check Connectivity
     bool hasInternet = false;
     try {
@@ -35,17 +44,30 @@ class OCRService {
     // 2. Check AWS Config
     bool awsConfigured = AWSConfig.accessKeyId != 'YOUR_ACCESS_KEY_ID';
 
-    // 3. Decide Strategy
-    // Desktop/Web must use Cloud (no offline OCR lib installed/configured for them yet).
-    // Mobile uses Cloud if available & configured for better accuracy, else Offline.
-    
+    // 3. Decide Strategy based on mode
     bool useCloud = false;
-    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+    
+    if (mode == OCRMode.online) {
+      // Force online mode
       useCloud = true;
+      if (!awsConfigured) {
+        return {'error': 'AWS Keys not configured for online OCR'};
+      }
+      if (!hasInternet) {
+        return {'error': 'No internet connection for online OCR'};
+      }
+    } else if (mode == OCRMode.offline) {
+      // Force offline mode
+      useCloud = false;
     } else {
-      // On mobile, prefer cloud if internet + keys exist
-      if (hasInternet && awsConfigured) {
+      // Auto mode: Decide based on platform and availability
+      if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
         useCloud = true;
+      } else {
+        // On mobile, prefer cloud if internet + keys exist
+        if (hasInternet && awsConfigured) {
+          useCloud = true;
+        }
       }
     }
 
@@ -54,16 +76,166 @@ class OCRService {
         debugPrint('AWS Not Configured. Cannot use Cloud OCR.');
         // If on mobile, fallback to offline even if internet exists (but keys missing)
         if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-          return _analyzeWithMLKit(imagePath);
+          return _analyzeWithTesseract(imagePath);
         }
         return {'error': 'AWS Keys not configured'};
       }
       return await _analyzeWithTextract(imagePath);
     } else {
-      return await _analyzeWithMLKit(imagePath);
+      return await _analyzeWithTesseract(imagePath);
     }
   }
 
+  /// Analyze image using TesseractOCR (offline mode) with Vietnamese language support
+  Future<Map<String, dynamic>?> _analyzeWithTesseract(String imagePath) async {
+    // Check if platform is supported for offline OCR
+    if (kIsWeb) {
+      return {'error': 'Offline OCR is not supported on Web. Please use Online mode.'};
+    }
+    
+    // Windows: Use Tesseract via command-line if installed
+    if (!kIsWeb && Platform.isWindows) {
+      return await _runTesseractWindows(imagePath);
+    }
+    
+    // Linux/macOS desktop: Try command-line Tesseract
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return await _runTesseractWindows(imagePath); // Same approach for Linux/macOS
+    }
+    
+    // Android/iOS: Use flutter_tesseract_ocr package
+    try {
+      // Use Tesseract with Vietnamese language support (vie)
+      // Languages: 'eng' for English, 'vie' for Vietnamese, 'eng+vie' for both
+      String text = await FlutterTesseractOcr.extractText(
+        imagePath,
+        language: 'eng+vie', // Support both English and Vietnamese
+        args: {
+          "psm": "4", // Page segmentation mode: Assume a single column of text of variable sizes
+          "preserve_interword_spaces": "1",
+        },
+      );
+      
+      debugPrint('TesseractOCR extracted text: $text');
+      return extractTransactionDetails(text);
+    } catch (e) {
+      debugPrint('Error processing image with TesseractOCR: $e');
+      return {'error': 'TesseractOCR processing failed: $e'};
+    }
+  }
+
+  /// Run Tesseract via command-line on Windows/Linux/macOS
+  Future<Map<String, dynamic>?> _runTesseractWindows(String imagePath) async {
+    try {
+      // Create temporary output file path
+      final outputPath = '${imagePath}_ocr';
+      
+      // Determine tesseract executable path
+      String tesseractCmd = 'tesseract';
+      
+      // On Windows, try common installation paths if 'tesseract' is not in PATH
+      if (Platform.isWindows) {
+        final commonPaths = [
+          'tesseract', // Try PATH first
+          'C:\\Program Files\\Tesseract-OCR\\tesseract.exe',
+          'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe',
+        ];
+        
+        // Test which path works
+        for (final path in commonPaths) {
+          try {
+            final testResult = await Process.run(path, ['--version']);
+            if (testResult.exitCode == 0) {
+              tesseractCmd = path;
+              debugPrint('Found Tesseract at: $path');
+              break;
+            }
+          } catch (e) {
+            // Continue to next path
+            continue;
+          }
+        }
+      }
+      
+      // Run tesseract command
+      // tesseract image.jpg output -l eng+vie --psm 4
+      final result = await Process.run(
+        tesseractCmd,
+        [
+          imagePath,
+          outputPath,
+          '-l', 'eng+vie', // English + Vietnamese
+          '--psm', '4', // Page segmentation mode
+        ],
+      );
+      
+      if (result.exitCode != 0) {
+        final errorMsg = result.stderr.toString();
+        debugPrint('Tesseract command error: $errorMsg');
+        
+        // Check for common errors
+        if (errorMsg.contains('not found') || errorMsg.contains('not recognized')) {
+          return {
+            'error': 'Tesseract is not found in PATH.\n\n'
+                'Please make sure:\n'
+                '1. Tesseract is installed at: C:\\Program Files\\Tesseract-OCR\n'
+                '2. Added to PATH (requires restart after adding)\n'
+                '3. Try restarting this app'
+          };
+        } else if (errorMsg.contains('vie.traineddata') || errorMsg.contains('language')) {
+          return {
+            'error': 'Vietnamese language data not found.\n\n'
+                'Please download Vietnamese tessdata:\n'
+                '1. Go to: https://github.com/tesseract-ocr/tessdata\n'
+                '2. Download: vie.traineddata\n'
+                '3. Place in: C:\\Program Files\\Tesseract-OCR\\tessdata\\'
+          };
+        }
+        
+        return {'error': 'Tesseract error: $errorMsg'};
+      }
+      
+      // Read the output text file
+      final textFile = File('$outputPath.txt');
+      if (!await textFile.exists()) {
+        return {'error': 'Tesseract did not generate output file'};
+      }
+      
+      final text = await textFile.readAsString();
+      
+      // Clean up temporary file
+      try {
+        await textFile.delete();
+      } catch (e) {
+        debugPrint('Could not delete temp file: $e');
+      }
+      
+      debugPrint('TesseractOCR extracted text: $text');
+      
+      if (text.trim().isEmpty) {
+        return {'error': 'No text detected in image. Please try a clearer image.'};
+      }
+      
+      return extractTransactionDetails(text);
+    } catch (e) {
+      debugPrint('Error running Tesseract: $e');
+      
+      if (e.toString().contains('No such file or directory') || 
+          e.toString().contains('cannot run executable')) {
+        return {
+          'error': 'Tesseract is not found in PATH.\n\n'
+              'Please make sure:\n'
+              '1. Tesseract is installed at: C:\\Program Files\\Tesseract-OCR\n'
+              '2. Added to PATH (requires system restart)\n'
+              '3. Restart this app after adding to PATH'
+        };
+      }
+      
+      return {'error': 'Error running Tesseract: $e'};
+    }
+  }
+
+  /// Legacy ML Kit method - kept for backward compatibility
   Future<Map<String, dynamic>?> _analyzeWithMLKit(String imagePath) async {
     if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
       debugPrint('Offline OCR only supported on Android/iOS.');

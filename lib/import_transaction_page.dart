@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:plutus_fe_prototype/services/ocr_service.dart';
+import 'services/ocr_service.dart';
 import 'transaction_service.dart';
 import 'widgets/glass_container.dart';
 import 'providers/auth_provider.dart';
@@ -79,12 +79,11 @@ class _ManualImportTabState extends State<ManualImportTab> {
   
   late TextEditingController _payeeController;
   late TextEditingController _amountController;
-  late TextEditingController _currencyController;
-  late TextEditingController _accountController;
   late TextEditingController _categoryController;
   late TextEditingController _descController;
   
   String _type = 'expense';
+  String _currency = 'VND';
   DateTime _selectedDate = DateTime.now();
   bool _loading = false;
   
@@ -106,13 +105,19 @@ class _ManualImportTabState extends State<ManualImportTab> {
     final data = widget.initialData ?? {};
     _payeeController = TextEditingController(text: data['payee']?.toString() ?? '');
     _amountController = TextEditingController(text: data['amount']?.toString() ?? '');
-    _currencyController = TextEditingController(text: data['currency']?.toString() ?? 'VND');
-    _accountController = TextEditingController(text: data['account']?.toString() ?? '');
     _categoryController = TextEditingController(text: data['category']?.toString() ?? '');
     _descController = TextEditingController(text: data['description']?.toString() ?? '');
     
     if (data['type'] != null) {
       _type = data['type'].toString().toLowerCase();
+    }
+    
+    // Set currency from data or default to VND
+    final currencyFromData = data['currency']?.toString().toUpperCase() ?? 'VND';
+    if (['VND', 'USD', 'EUR'].contains(currencyFromData)) {
+      _currency = currencyFromData;
+    } else {
+      _currency = 'VND'; // Default if invalid currency
     }
     
     if (data['date'] != null) {
@@ -142,8 +147,6 @@ class _ManualImportTabState extends State<ManualImportTab> {
   void dispose() {
     _payeeController.dispose();
     _amountController.dispose();
-    _currencyController.dispose();
-    _accountController.dispose();
     _categoryController.dispose();
     _descController.dispose();
     super.dispose();
@@ -208,12 +211,11 @@ class _ManualImportTabState extends State<ManualImportTab> {
         // Using a flatter structure for now, but keeping in mind the backend needs postings
         // Ideally we would structure this as:
         // 'postings': [
-        //   {'account': _accountController.text, 'amount': -amount, 'commodity': _currencyController.text},
-        //   {'account': _categoryController.text, 'amount': amount, 'commodity': _currencyController.text}
+        //   {'account': 'assets:general', 'amount': -amount, 'commodity': _currency},
+        //   {'account': _categoryController.text, 'amount': amount, 'commodity': _currency}
         // ]
         'amount': amount,
-        'currency': _currencyController.text,
-        'account': _accountController.text,
+        'currency': _currency,
         'type': _type,
         'category': _categoryController.text,
         'items': _items,
@@ -304,12 +306,18 @@ class _ManualImportTabState extends State<ManualImportTab> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
-                    controller: _currencyController,
+                  child: DropdownButtonFormField<String>(
+                    value: _currency,
                     decoration: const InputDecoration(
                       labelText: 'Currency',
                       border: OutlineInputBorder(),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: 'VND', child: Text('VND')),
+                      DropdownMenuItem(value: 'USD', child: Text('USD')),
+                      DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                    ],
+                    onChanged: (val) => setState(() => _currency = val!),
                   ),
                 ),
               ],
@@ -331,30 +339,14 @@ class _ManualImportTabState extends State<ManualImportTab> {
             ),
             const SizedBox(height: 16),
             
-            // Account & Category
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _accountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Account',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _categoryController,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
+            // Category
+            TextFormField(
+              controller: _categoryController,
+              decoration: const InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(),
+                helperText: 'e.g., Food, Transportation, Salary, etc.',
+              ),
             ),
             const SizedBox(height: 16),
             
@@ -633,6 +625,14 @@ class _ScanImportTabState extends State<ScanImportTab> {
   XFile? _imageFile;
   Map<String, dynamic>? _scannedData;
   bool _scanning = false;
+  OCRMode _ocrMode = OCRMode.auto;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Default to auto mode for all platforms
+    _ocrMode = OCRMode.auto;
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     // Platform check removed for file picking to allow Desktop testing (even if OCR lib is limited)
@@ -656,7 +656,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
     setState(() => _scanning = true);
     
     try {
-      final details = await _ocrService.processInvoice(_imageFile!.path);
+      final details = await _ocrService.processInvoice(_imageFile!.path, mode: _ocrMode);
       
       if (details != null && !details.containsKey('error')) {
         setState(() {
@@ -664,13 +664,52 @@ class _ScanImportTabState extends State<ScanImportTab> {
         });
       } else {
         if (mounted) {
-           final error = details?['error'] ?? 'Could not read text from image';
-           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+          final error = details?['error'] ?? 'Could not read text from image';
+          // Show error in a dialog for better visibility
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('OCR Error'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Text(error),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('OCR Error: $e')));
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red),
+                SizedBox(width: 8),
+                Text('OCR Error'),
+              ],
+            ),
+            content: Text('Unexpected error: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
       }
     } finally {
       setState(() => _scanning = false);
@@ -687,6 +726,82 @@ class _ScanImportTabState extends State<ScanImportTab> {
         opacity: 0.1,
         child: Column(
         children: [
+          // OCR Mode Selector
+          const Text(
+            'OCR Mode',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<OCRMode>(
+            segments: [
+              ButtonSegment<OCRMode>(
+                value: OCRMode.offline,
+                label: const Text('Offline'),
+                icon: const Icon(Icons.computer),
+                enabled: !kIsWeb,
+              ),
+              const ButtonSegment<OCRMode>(
+                value: OCRMode.online,
+                label: Text('Online'),
+                icon: Icon(Icons.cloud),
+              ),
+              const ButtonSegment<OCRMode>(
+                value: OCRMode.auto,
+                label: Text('Auto'),
+                icon: Icon(Icons.auto_mode),
+              ),
+            ],
+            selected: {_ocrMode},
+            onSelectionChanged: (Set<OCRMode> newSelection) {
+              setState(() {
+                _ocrMode = newSelection.first;
+              });
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _ocrMode == OCRMode.offline
+                ? 'Uses TesseractOCR (Vietnamese support)'
+                : _ocrMode == OCRMode.online
+                    ? 'Uses AWS Textract (requires internet & AWS config)'
+                    : 'Automatically chooses best option',
+            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+            textAlign: TextAlign.center,
+          ),
+          if (!kIsWeb && Platform.isWindows && _ocrMode == OCRMode.offline)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Windows Offline Mode',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Requires Tesseract OCR installed and added to PATH.\n'
+                      'Vietnamese language data (vie.traineddata) must be in tessdata folder.',
+                      style: TextStyle(fontSize: 11, color: Colors.blue),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
