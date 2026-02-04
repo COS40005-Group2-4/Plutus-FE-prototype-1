@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,15 +19,52 @@ class TransactionService {
   
   // Short timeout for offline-first behavior
   static const Duration _apiTimeout = Duration(seconds: 3);
-
+  
+  // Singleton instance
+  static final TransactionService _instance = TransactionService._internal();
+  
   final BackendFfiService _ffiService = BackendFfiService();
   final DatabaseService _db = DatabaseService();
   
   int? _currentUserId;
   
+  // Stream controller for transaction updates
+  late StreamController<List<Transaction>> _transactionStreamController;
+  List<Transaction> _lastTransactions = [];
+  
+  Stream<List<Transaction>> get transactionStream => _transactionStreamController.stream;
+
+  // Private constructor
+  TransactionService._internal() {
+    _transactionStreamController = StreamController<List<Transaction>>.broadcast();
+  }
+  
+  // Factory constructor that returns singleton instance
+  factory TransactionService() {
+    return _instance;
+  }
+  
   void setCurrentUser(int userId) {
     _currentUserId = userId;
   }
+  
+  void dispose() {
+    // Don't dispose - this is a singleton
+    // _transactionStreamController.close();
+  }
+  
+  void notifyTransactionUpdate() async {
+    if (_currentUserId != null) {
+      final transactions = await getTransactions();
+      _lastTransactions = transactions;
+      if (!_transactionStreamController.isClosed) {
+        _transactionStreamController.add(transactions);
+      }
+    }
+  }
+  
+  /// Get the last cached transactions without waiting for async
+  List<Transaction> getLastCachedTransactions() => _lastTransactions;
   
   // Helper to flatten transaction with postings into flat structure for database
   Map<String, dynamic> _flattenTransaction(Map<String, dynamic> tx) {
@@ -265,6 +303,9 @@ class TransactionService {
           await _syncWithBackend(_currentUserId!);
         }
         
+        // Notify listeners of transaction update
+        notifyTransactionUpdate();
+        
         if (kDebugMode) {
           print('Transaction file imported successfully via FFI');
         }
@@ -311,6 +352,9 @@ class TransactionService {
         for (final tx in transactions) {
           await _db.insertTransaction(_currentUserId!, tx);
         }
+        
+        // Notify listeners of transaction update
+        notifyTransactionUpdate();
         
         if (kDebugMode) {
           print('Imported ${transactions.length} transactions from $extension file');
@@ -483,6 +527,9 @@ class TransactionService {
       if (kDebugMode) {
         print('Transaction imported successfully: $transaction');
       }
+      
+      // Notify listeners of transaction update
+      notifyTransactionUpdate();
       
       // Try to sync with backend in the background (non-blocking)
       _syncTransactionToBackend(transaction);

@@ -1,9 +1,7 @@
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:dashboard/dashboard.dart';
-import 'storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'storage.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
@@ -56,6 +54,16 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
     if (authProvider.currentUserId != null) {
       _transactionService.setCurrentUser(authProvider.currentUserId!);
     }
+    // Load initial transactions on next frame to ensure stream subscription is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _transactionService.notifyTransactionUpdate();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Don't dispose - service is a singleton
+    super.dispose();
   }
 
   @override
@@ -65,10 +73,10 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      child: FutureBuilder<List<Transaction>>(
-        future: _transactionService.getTransactions(),
+      child: StreamBuilder<List<Transaction>>(
+        stream: _transactionService.transactionStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(color: Colors.white),
             );
@@ -203,6 +211,16 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     if (authProvider.currentUserId != null) {
       _transactionService.setCurrentUser(authProvider.currentUserId!);
     }
+    // Load initial transactions on next frame to ensure stream subscription is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _transactionService.notifyTransactionUpdate();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Don't dispose - service is a singleton
+    super.dispose();
   }
 
   @override
@@ -212,10 +230,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),
-      child: FutureBuilder<List<Transaction>>(
-        future: _transactionService.getTransactions(),
+      child: StreamBuilder<List<Transaction>>(
+        stream: _transactionService.transactionStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(color: Colors.white),
             );

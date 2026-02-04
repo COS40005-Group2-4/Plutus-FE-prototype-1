@@ -258,6 +258,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   );
                   if (result == true) {
                     _historyKey.currentState?.refresh();
+                    // Notify transaction service to emit update to all listeners
+                    TransactionService().notifyTransactionUpdate();
                   }
                 },
                 child: Container(
@@ -304,9 +306,6 @@ class _DashboardWidgetState extends State<DashboardWidget> {
   bool refreshing = false;
 
   var storage = MyItemStorage();
-
-  //var dummyItemController =
-  //    DashboardItemController<ColoredDashboardItem>(items: []);
 
   DashboardItemController<ColoredDashboardItem> get itemController =>
       _itemController;
@@ -398,6 +397,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                 : (refreshing
                       ? const Center(child: CircularProgressIndicator())
                       : Dashboard<ColoredDashboardItem>(
+                          key: ValueKey(visibleWidgets.join(',')),
                           shrinkToPlace: true,
                           slideToTop: true,
                           absorbPointer: false,
