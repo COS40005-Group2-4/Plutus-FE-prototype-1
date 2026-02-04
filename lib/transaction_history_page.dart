@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
+import 'widgets/export_dialog.dart';
+import 'widgets/export_preview_dialog.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
+import 'services/export_service.dart';
+import 'services/user_service.dart';
 import 'utils/date_time_formatter.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
@@ -17,6 +21,8 @@ class TransactionHistoryPage extends StatefulWidget {
 
 class TransactionHistoryPageState extends State<TransactionHistoryPage> {
   late TransactionService _service;
+  final ExportService _exportService = ExportService();
+  final UserService _userService = UserService();
   List<Transaction> _transactions = [];
   bool _loading = true;
 
@@ -45,11 +51,86 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
     });
   }
 
+  Future<void> _showExportDialog() async {
+    final options = await showDialog<ExportOptions>(
+      context: context,
+      builder: (context) => const ExportDialog(),
+    );
+
+    if (options == null || !mounted) return;
+
+    try {
+      // Show loading indicator
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 16),
+              Text('Generating export...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.currentUserId != null
+          ? await _userService.getUserById(authProvider.currentUserId!)
+          : null;
+
+      final result = await _exportService.exportData(
+        options: options,
+        transactions: _transactions,
+        user: user,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Show preview dialog
+      await showDialog(
+        context: context,
+        builder: (context) => ExportPreviewDialog(
+          filePath: result.filePath,
+          format: result.format,
+          pdfDocument: result.pdfDocument,
+          txtContent: result.txtContent,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Export failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return Scaffold(
+          appBar: AppBar(
+            title: const Text('Transaction History'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.download),
+                tooltip: 'Export',
+                onPressed: _showExportDialog,
+              ),
+            ],
+          ),
           body: _loading
               ? const Center(child: CircularProgressIndicator())
               : _transactions.isEmpty

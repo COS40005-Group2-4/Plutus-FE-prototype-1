@@ -4,9 +4,13 @@ import 'storage.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
+import 'widgets/export_dialog.dart';
+import 'widgets/export_preview_dialog.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
+import 'services/export_service.dart';
+import 'services/user_service.dart';
 import 'utils/date_time_formatter.dart';
 
 const Color blue = Color(0xFF4285F4);
@@ -583,8 +587,94 @@ class ReportImportWidget extends StatelessWidget {
 }
 
 // Report Export Button Widget
-class ReportExportWidget extends StatelessWidget {
+class ReportExportWidget extends StatefulWidget {
   const ReportExportWidget({super.key});
+
+  @override
+  State<ReportExportWidget> createState() => _ReportExportWidgetState();
+}
+
+class _ReportExportWidgetState extends State<ReportExportWidget> {
+  final TransactionService _transactionService = TransactionService();
+  final ExportService _exportService = ExportService();
+  final UserService _userService = UserService();
+  bool _isExporting = false;
+
+  Future<void> _showExportDialog() async {
+    final options = await showDialog<ExportOptions>(
+      context: context,
+      builder: (context) => const ExportDialog(),
+    );
+
+    if (options == null || !mounted) return;
+
+    setState(() => _isExporting = true);
+
+    try {
+      // Show loading indicator
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 16),
+              Text('Generating export...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+
+      // Get current user
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.currentUserId != null
+          ? await _userService.getUserById(authProvider.currentUserId!)
+          : null;
+
+      // Get transactions
+      final transactions = await _transactionService.getTransactions();
+
+      // Generate export
+      final result = await _exportService.exportData(
+        options: options,
+        transactions: transactions,
+        user: user,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Show preview dialog
+      await showDialog(
+        context: context,
+        builder: (context) => ExportPreviewDialog(
+          filePath: result.filePath,
+          format: result.format,
+          pdfDocument: result.pdfDocument,
+          txtContent: result.txtContent,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Export failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -614,13 +704,18 @@ class ReportExportWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Export feature coming soon!')),
-              );
-            },
-            icon: const Icon(Icons.save_alt),
-            label: const Text('Export'),
+            onPressed: _isExporting ? null : _showExportDialog,
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(red),
+                    ),
+                  )
+                : const Icon(Icons.save_alt),
+            label: Text(_isExporting ? 'Exporting...' : 'Export'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: red,
