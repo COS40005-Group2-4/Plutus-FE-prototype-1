@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'storage.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
 import 'providers/auth_provider.dart';
+import 'providers/settings_provider.dart';
+import 'services/currency_service.dart';
+import 'utils/date_time_formatter.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -68,125 +70,226 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      color: blue,
-      opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: StreamBuilder<List<Transaction>>(
-        stream: _transactionService.transactionStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          }
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        return GlassContainer(
+          color: blue,
+          opacity: 0.2,
+          borderRadius: 16,
+          padding: const EdgeInsets.all(16),
+          child: StreamBuilder<List<Transaction>>(
+            stream: _transactionService.transactionStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text(
-                'No transactions yet',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            );
-          }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No transactions yet',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                );
+              }
 
-          final transactions = snapshot.data!;
-          double totalIncome = 0;
-          double totalExpense = 0;
-          final formatter = NumberFormat("#,##0.00", "en_US");
+              final transactions = snapshot.data!;
 
-          for (var transaction in transactions) {
-            if (transaction.isExpense) {
-              totalExpense += transaction.totalAmount;
-            } else {
-              totalIncome += transaction.totalAmount;
-            }
-          }
+              return _BudgetContent(
+                key: ValueKey('budget_${settings.currency.code}'),
+                transactions: transactions,
+                settings: settings,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
 
-          final balance = totalIncome - totalExpense;
+class _BudgetContent extends StatefulWidget {
+  final List<Transaction> transactions;
+  final SettingsProvider settings;
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  const _BudgetContent({
+    super.key,
+    required this.transactions,
+    required this.settings,
+  });
+
+  @override
+  State<_BudgetContent> createState() => _BudgetContentState();
+}
+
+class _BudgetContentState extends State<_BudgetContent> {
+  final CurrencyService _currencyService = CurrencyService();
+  double _totalIncome = 0;
+  double _totalExpense = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTotals();
+  }
+
+  @override
+  void didUpdateWidget(_BudgetContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.transactions != widget.transactions) {
+      _calculateTotals();
+    }
+  }
+
+  Future<void> _calculateTotals() async {
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    double income = 0;
+    double expense = 0;
+
+    for (var transaction in widget.transactions) {
+      double amount = transaction.totalAmount;
+
+      // Convert if needed
+      final sourceCurrency = transaction.currency.toUpperCase();
+      final targetCurrency = widget.settings.currency.code.toUpperCase();
+      
+      if (sourceCurrency != targetCurrency) {
+        try {
+          amount = await _currencyService.convert(
+            amount: transaction.totalAmount,
+            fromCurrency: sourceCurrency,
+            toCurrency: targetCurrency,
+          );
+        } catch (e) {
+          // If conversion fails, use original amount
+          amount = transaction.totalAmount;
+        }
+      }
+
+      if (transaction.isExpense) {
+        expense += amount;
+      } else {
+        income += amount;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _totalIncome = income;
+        _totalExpense = expense;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    final balance = _totalIncome - _totalExpense;
+    final currencyService = CurrencyService();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        const Text(
+          'Budget Overview',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        GlassContainer(
+          padding: const EdgeInsets.all(12),
+          color: Colors.white,
+          opacity: 0.1,
+          borderRadius: 8,
+          child: Column(
             children: [
-              const Text(
-                'Budget Overview',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Income:',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    currencyService.formatCurrency(
+                      amount: _totalIncome,
+                      currencyCode: widget.settings.currency.code,
+                      symbol: widget.settings.currency.symbol,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-              GlassContainer(
-                padding: const EdgeInsets.all(12),
-                color: Colors.white,
-                opacity: 0.1,
-                borderRadius: 8,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Income:',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        Text(
-                          '\$${formatter.format(totalIncome)}',
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Expense:',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    currencyService.formatCurrency(
+                      amount: _totalExpense,
+                      currencyCode: widget.settings.currency.code,
+                      symbol: widget.settings.currency.symbol,
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Expense:',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        Text(
-                          '\$${formatter.format(totalExpense)}',
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    const Divider(color: Colors.white30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Balance:',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '\$${formatter.format(balance)}',
-                          style: TextStyle(
-                            color: balance >= 0 ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
+                  ),
+                ],
+              ),
+              const Divider(color: Colors.white30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Balance:',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    currencyService.formatCurrency(
+                      amount: balance,
+                      currencyCode: widget.settings.currency.code,
+                      symbol: widget.settings.currency.symbol,
+                    ),
+                    style: TextStyle(
+                      color: balance >= 0 ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
             ],
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -225,100 +328,207 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      color: green,
-      opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(12),
-      child: StreamBuilder<List<Transaction>>(
-        stream: _transactionService.transactionStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          }
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        return GlassContainer(
+          color: green,
+          opacity: 0.2,
+          borderRadius: 16,
+          padding: const EdgeInsets.all(12),
+          child: StreamBuilder<List<Transaction>>(
+            stream: _transactionService.transactionStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text(
-                'No transaction history',
-                style: TextStyle(color: Colors.white, fontSize: 14),
-              ),
-            );
-          }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No transaction history',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                );
+              }
 
-          final allTransactions = List<Transaction>.from(snapshot.data!);
-          allTransactions.sort((a, b) => b.dateTime.compareTo(a.dateTime));
-          final transactions = allTransactions.take(10).toList();
-          final formatter = NumberFormat("#,##0.00", "en_US");
+              final allTransactions = List<Transaction>.from(snapshot.data!);
+              allTransactions.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+              final transactions = allTransactions.take(10).toList();
 
-          return Column(
-            children: [
-              const Text(
-                'Recent Transactions',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = transactions[index];
-                    final isExpense = transaction.isExpense;
-
-                    return GlassContainer(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.all(8),
+              return Column(
+                children: [
+                  const Text(
+                    'Recent Transactions',
+                    style: TextStyle(
                       color: Colors.white,
-                      opacity: 0.1,
-                      borderRadius: 6,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  transaction.label,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
+
+                        return GlassContainer(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(8),
+                          color: Colors.white,
+                          opacity: 0.1,
+                          borderRadius: 6,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      transaction.label,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      DateTimeFormatter.formatDateTimeShort(
+                                        transaction.dateTime,
+                                        settings.dateFormat,
+                                        settings.timeFormat,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  transaction.formattedDate,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                              _DashboardTransactionAmount(
+                                key: ValueKey('dashboard_${transaction.dateTime}_${settings.currency.code}'),
+                                transaction: transaction,
+                                settings: settings,
+                              ),
+                            ],
                           ),
-                          Text(
-                            '${isExpense ? '-' : '+'} ${transaction.currency}${formatter.format(transaction.totalAmount)}',
-                            style: TextStyle(
-                              color: isExpense ? Colors.red : Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardTransactionAmount extends StatefulWidget {
+  final Transaction transaction;
+  final SettingsProvider settings;
+
+  const _DashboardTransactionAmount({
+    super.key,
+    required this.transaction,
+    required this.settings,
+  });
+
+  @override
+  State<_DashboardTransactionAmount> createState() => _DashboardTransactionAmountState();
+}
+
+class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount> {
+  final CurrencyService _currencyService = CurrencyService();
+  double? _convertedAmount;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _convertAmount();
+  }
+
+  @override
+  void didUpdateWidget(_DashboardTransactionAmount oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.transaction != widget.transaction) {
+      _convertAmount();
+    }
+  }
+
+  Future<void> _convertAmount() async {
+    final sourceCurrency = widget.transaction.currency.toUpperCase();
+    final targetCurrency = widget.settings.currency.code.toUpperCase();
+
+    // No conversion needed if same currency
+    if (sourceCurrency == targetCurrency) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.transaction.totalAmount;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    try {
+      final converted = await _currencyService.convert(
+        amount: widget.transaction.totalAmount,
+        fromCurrency: sourceCurrency,
+        toCurrency: targetCurrency,
+      );
+
+      if (mounted) {
+        setState(() {
+          _convertedAmount = converted;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.transaction.totalAmount;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(strokeWidth: 1, color: Colors.white),
+      );
+    }
+
+    final displayAmount = _convertedAmount ?? widget.transaction.totalAmount;
+    final formatted = _currencyService.formatCurrency(
+      amount: displayAmount,
+      currencyCode: widget.settings.currency.code,
+      symbol: widget.settings.currency.symbol,
+    );
+
+    return Text(
+      '${widget.transaction.isExpense ? '-' : '+'}$formatted',
+      style: TextStyle(
+        color: widget.transaction.isExpense ? Colors.red : Colors.green,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
       ),
     );
   }

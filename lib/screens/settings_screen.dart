@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/glass_container.dart';
 import '../providers/auth_provider.dart';
+import '../providers/settings_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -9,10 +11,11 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final l10n = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settings),
         backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
       ),
       body: authProvider.isAuthenticated 
@@ -23,6 +26,8 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildAuthenticatedSettings(BuildContext context, AuthProvider authProvider) {
     final currentUser = authProvider.currentUser;
+    final l10n = AppLocalizations.of(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
     
     return ListView(
       children: [
@@ -89,13 +94,13 @@ class SettingsScreen extends StatelessWidget {
                     color: Colors.blue.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.cloud, size: 14, color: Colors.blue),
-                      SizedBox(width: 4),
+                      const Icon(Icons.cloud, size: 14, color: Colors.blue),
+                      const SizedBox(width: 4),
                       Text(
-                        'Google Linked',
-                        style: TextStyle(
+                        l10n.googleLinked,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.blue,
                         ),
@@ -113,9 +118,9 @@ class SettingsScreen extends StatelessWidget {
                     color: Colors.grey.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Guest Account',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.guestMode,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
                     ),
@@ -131,9 +136,9 @@ class SettingsScreen extends StatelessWidget {
                     color: Colors.green.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Local Account',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.localAccount,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.green,
                     ),
@@ -196,11 +201,44 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         const SizedBox(height: 20),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        
+        // Appearance Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Text(
-            'Account Settings',
-            style: TextStyle(
+            l10n.appearance,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        _buildThemeModeSelector(context, settingsProvider, l10n),
+        const Divider(),
+        
+        // Preferences Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            l10n.preferences,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        _buildLanguageSelector(context, settingsProvider, l10n),
+        _buildCurrencySelector(context, settingsProvider, l10n),
+        _buildDateFormatSelector(context, settingsProvider, l10n),
+        _buildTimeFormatSelector(context, settingsProvider, l10n),
+        const Divider(),
+        
+        // Account Settings Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            l10n.accountSettings,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -209,21 +247,21 @@ class SettingsScreen extends StatelessWidget {
         if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
           ListTile(
             leading: const Icon(Icons.link, color: Colors.blue),
-            title: const Text('Link Google Account'),
+            title: Text(l10n.linkGoogle),
             subtitle: const Text('Enable cloud backup and sync'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Link Google Account'),
+                  title: Text(l10n.linkGoogle),
                   content: const Text(
                     'Link your Google account to enable cloud sync and backup across devices.',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.cancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
@@ -252,26 +290,26 @@ class SettingsScreen extends StatelessWidget {
         if (currentUser?.hasOAuth == true)
           ListTile(
             leading: const Icon(Icons.link_off, color: Colors.orange),
-            title: const Text('Unlink Google Account'),
+            title: Text(l10n.unlinkGoogle),
             subtitle: const Text('Switch to local-only mode'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Unlink Google Account'),
+                  title: Text(l10n.unlinkGoogle),
                   content: const Text(
                     'Are you sure you want to unlink your Google account? You can still use the app with local data only.',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.cancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Unlink'),
                       style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                      child: const Text('Unlink'),
                     ),
                   ],
                 ),
@@ -292,7 +330,7 @@ class SettingsScreen extends StatelessWidget {
         const Divider(),
         ListTile(
           leading: const Icon(Icons.switch_account, color: Colors.blue),
-          title: const Text('Switch User'),
+          title: Text(l10n.switchUser),
           trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () {
             Navigator.pushReplacementNamed(context, '/user_selection');
@@ -300,24 +338,24 @@ class SettingsScreen extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
-          title: const Text(
-            'Sign Out',
-            style: TextStyle(color: Colors.red),
+          title: Text(
+            l10n.signOut,
+            style: const TextStyle(color: Colors.red),
           ),
           onTap: () async {
             final confirm = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('Sign Out'),
+                title: Text(l10n.signOut),
                 content: const Text('Are you sure you want to sign out?'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: Text(l10n.cancel),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Sign Out'),
+                    child: Text(l10n.signOut),
                   ),
                 ],
               ),
@@ -336,6 +374,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildGuestSettings(BuildContext context, AuthProvider authProvider) {
+    final l10n = AppLocalizations.of(context);
+    
     return ListView(
       children: [
         const SizedBox(height: 40),
@@ -347,10 +387,10 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const Center(
+        Center(
           child: Text(
-            'Guest Mode',
-            style: TextStyle(
+            l10n.guestMode,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -376,7 +416,7 @@ class SettingsScreen extends StatelessWidget {
               Navigator.pushNamed(context, '/login');
             },
             icon: const Icon(Icons.login),
-            label: const Text('Sign In with Google'),
+            label: Text(l10n.signIn),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
               backgroundColor: const Color(0xFF4285F4),
@@ -385,6 +425,120 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildThemeModeSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+    return ListTile(
+      leading: const Icon(Icons.brightness_6),
+      title: Text(l10n.themeMode),
+      trailing: SegmentedButton<ThemeMode>(
+        segments: [
+          ButtonSegment(
+            value: ThemeMode.light,
+            icon: const Icon(Icons.light_mode, size: 16),
+            label: Text(l10n.themeLight),
+          ),
+          ButtonSegment(
+            value: ThemeMode.dark,
+            icon: const Icon(Icons.dark_mode, size: 16),
+            label: Text(l10n.themeDark),
+          ),
+          ButtonSegment(
+            value: ThemeMode.system,
+            icon: const Icon(Icons.brightness_auto, size: 16),
+            label: Text(l10n.themeSystem),
+          ),
+        ],
+        selected: {settingsProvider.themeMode},
+        onSelectionChanged: (Set<ThemeMode> newSelection) {
+          settingsProvider.setThemeMode(newSelection.first);
+        },
+      ),
+    );
+  }
+
+  Widget _buildLanguageSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+    return ListTile(
+      leading: const Icon(Icons.language),
+      title: Text(l10n.language),
+      trailing: DropdownButton<AppLanguage>(
+        value: settingsProvider.language,
+        items: AppLanguage.values.map((language) {
+          return DropdownMenuItem(
+            value: language,
+            child: Text(language.displayName),
+          );
+        }).toList(),
+        onChanged: (AppLanguage? newLanguage) {
+          if (newLanguage != null) {
+            settingsProvider.setLanguage(newLanguage);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildCurrencySelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+    return ListTile(
+      leading: const Icon(Icons.attach_money),
+      title: Text(l10n.currency),
+      trailing: DropdownButton<AppCurrency>(
+        value: settingsProvider.currency,
+        items: AppCurrency.values.map((currency) {
+          return DropdownMenuItem(
+            value: currency,
+            child: Text('${currency.symbol} ${currency.code}'),
+          );
+        }).toList(),
+        onChanged: (AppCurrency? newCurrency) {
+          if (newCurrency != null) {
+            settingsProvider.setCurrency(newCurrency);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildDateFormatSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+    return ListTile(
+      leading: const Icon(Icons.calendar_today),
+      title: Text(l10n.dateFormat),
+      trailing: DropdownButton<DateFormatType>(
+        value: settingsProvider.dateFormat,
+        items: DateFormatType.values.map((format) {
+          return DropdownMenuItem(
+            value: format,
+            child: Text(format.displayName),
+          );
+        }).toList(),
+        onChanged: (DateFormatType? newFormat) {
+          if (newFormat != null) {
+            settingsProvider.setDateFormat(newFormat);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildTimeFormatSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+    return ListTile(
+      leading: const Icon(Icons.access_time),
+      title: Text(l10n.timeFormat),
+      trailing: DropdownButton<TimeFormatType>(
+        value: settingsProvider.timeFormat,
+        items: TimeFormatType.values.map((format) {
+          return DropdownMenuItem(
+            value: format,
+            child: Text(format.displayName),
+          );
+        }).toList(),
+        onChanged: (TimeFormatType? newFormat) {
+          if (newFormat != null) {
+            settingsProvider.setTimeFormat(newFormat);
+          }
+        },
+      ),
     );
   }
 }

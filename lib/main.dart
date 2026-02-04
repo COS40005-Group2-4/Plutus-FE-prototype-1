@@ -7,18 +7,20 @@ import 'storage.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data_widget.dart';
 import 'sidebar_menu.dart';
 import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
-import 'providers/theme_provider.dart';
+import 'providers/settings_provider.dart';
 import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
 import 'transaction_service.dart';
+import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'widgets/glass_background.dart';
@@ -69,13 +71,13 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider(create: (_) => WidgetVisibilityProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+      child: Consumer<SettingsProvider>(
+        builder: (context, settingsProvider, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Dashboard online demo',
+            title: 'Plutus',
             onGenerateInitialRoutes: (r) {
               return r == "/dashboard"
                   ? [
@@ -103,6 +105,17 @@ class _MyAppState extends State<MyApp> {
               "/import": (c) => const ImportTransactionPage(),
               "/settings": (c) => const SettingsScreen(),
             },
+            locale: settingsProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('vi', ''),
+            ],
             theme: ThemeData(
               primarySwatch: Colors.blue,
               brightness: Brightness.light,
@@ -125,7 +138,7 @@ class _MyAppState extends State<MyApp> {
                 brightness: Brightness.dark,
               ),
             ),
-            themeMode: themeProvider.themeMode,
+            themeMode: settingsProvider.themeMode,
             builder: (context, child) {
               return GlassBackground(child: child!);
             },

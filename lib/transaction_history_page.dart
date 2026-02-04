@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
 import 'providers/auth_provider.dart';
+import 'providers/settings_provider.dart';
+import 'services/currency_service.dart';
+import 'utils/date_time_formatter.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
@@ -45,101 +47,323 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _transactions.isEmpty
-              ? const Center(child: Text('No transactions found'))
-              : RefreshIndicator(
-                  onRefresh: _loadTransactions,
-                  child: ListView.builder(
-                    itemCount: _transactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = _transactions[index];
-                      final formatter = NumberFormat("#,##0.00", "en_US");
-                      
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: GlassContainer(
-                          borderRadius: 12,
-                          opacity: 0.2,
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        return Scaffold(
+          body: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _transactions.isEmpty
+                  ? const Center(child: Text('No transactions found'))
+                  : RefreshIndicator(
+                      onRefresh: _loadTransactions,
+                      child: ListView.builder(
+                        key: ValueKey('transaction_list_${settings.currency.code}'),
+                        itemCount: _transactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = _transactions[index];
+                          
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: GlassContainer(
+                              borderRadius: 12,
+                              opacity: 0.2,
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      transaction.label,
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          transaction.label,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      _TransactionAmount(
+                                        key: ValueKey('${transaction.dateTime}_${settings.currency.code}'),
+                                        transaction: transaction,
+                                        settings: settings,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    DateTimeFormatter.formatDateTime(
+                                      transaction.dateTime,
+                                      settings.dateFormat,
+                                      settings.timeFormat,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  if (transaction.postings.length > 1) ...[
+                                    const SizedBox(height: 8),
+                                    const Divider(),
+                                    const Text(
+                                      'Postings:',
+                                      style: TextStyle(
+                                        fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  Text(
-                                    '${transaction.isExpense ? '-' : '+'} ${transaction.currency}${formatter.format(transaction.totalAmount)}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: transaction.isExpense ? Colors.red : Colors.green,
-                                    ),
-                                  ),
+                                    ...transaction.postings.asMap().entries.map((entry) {
+                                      return _PostingRow(
+                                        key: ValueKey('${transaction.dateTime}_posting_${entry.key}_${settings.currency.code}'),
+                                        posting: entry.value,
+                                        settings: settings,
+                                      );
+                                    }),
+                                  ],
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                transaction.formattedDate,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              if (transaction.postings.length > 1) ...[
-                                const SizedBox(height: 8),
-                                const Divider(),
-                                const Text(
-                                  'Postings:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                ...transaction.postings.map((posting) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(left: 8, top: 4),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            posting.account,
-                                            style: const TextStyle(fontSize: 12),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${posting.commodity} ${posting.formattedAmount}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+        );
+      },
+    );
+  }
+}
+
+class _TransactionAmount extends StatefulWidget {
+  final Transaction transaction;
+  final SettingsProvider settings;
+
+  const _TransactionAmount({
+    super.key,
+    required this.transaction,
+    required this.settings,
+  });
+
+  @override
+  State<_TransactionAmount> createState() => _TransactionAmountState();
+}
+
+class _TransactionAmountState extends State<_TransactionAmount> {
+  final CurrencyService _currencyService = CurrencyService();
+  double? _convertedAmount;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _convertAmount();
+  }
+
+  @override
+  void didUpdateWidget(_TransactionAmount oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.transaction != widget.transaction) {
+      _convertAmount();
+    }
+  }
+
+  Future<void> _convertAmount() async {
+    final sourceCurrency = widget.transaction.currency.toUpperCase();
+    final targetCurrency = widget.settings.currency.code.toUpperCase();
+
+    // No conversion needed if same currency
+    if (sourceCurrency == targetCurrency) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.transaction.totalAmount;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    try {
+      final converted = await _currencyService.convert(
+        amount: widget.transaction.totalAmount,
+        fromCurrency: sourceCurrency,
+        toCurrency: targetCurrency,
+      );
+
+      if (mounted) {
+        setState(() {
+          _convertedAmount = converted;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.transaction.totalAmount;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    final displayAmount = _convertedAmount ?? widget.transaction.totalAmount;
+    final formatted = _currencyService.formatCurrency(
+      amount: displayAmount,
+      currencyCode: widget.settings.currency.code,
+      symbol: widget.settings.currency.symbol,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          '${widget.transaction.isExpense ? '-' : '+'}$formatted',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: widget.transaction.isExpense ? Colors.red : Colors.green,
+          ),
+        ),
+        if (widget.transaction.currency != widget.settings.currency.code)
+          Text(
+            '(${widget.transaction.currency})',
+            style: const TextStyle(
+              fontSize: 10,
+              color: Colors.grey,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PostingRow extends StatefulWidget {
+  final Posting posting;
+  final SettingsProvider settings;
+
+  const _PostingRow({
+    super.key,
+    required this.posting,
+    required this.settings,
+  });
+
+  @override
+  State<_PostingRow> createState() => _PostingRowState();
+}
+
+class _PostingRowState extends State<_PostingRow> {
+  final CurrencyService _currencyService = CurrencyService();
+  double? _convertedAmount;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _convertAmount();
+  }
+
+  @override
+  void didUpdateWidget(_PostingRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.posting != widget.posting) {
+      _convertAmount();
+    }
+  }
+
+  Future<void> _convertAmount() async {
+    final sourceCurrency = widget.posting.commodity.toUpperCase();
+    final targetCurrency = widget.settings.currency.code.toUpperCase();
+
+    // No conversion needed if same currency
+    if (sourceCurrency == targetCurrency) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.posting.amount;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
+    try {
+      final converted = await _currencyService.convert(
+        amount: widget.posting.amount.abs(),
+        fromCurrency: sourceCurrency,
+        toCurrency: targetCurrency,
+      );
+
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.posting.amount < 0 ? -converted : converted;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.posting.amount;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayAmount = _convertedAmount ?? widget.posting.amount;
+    final formatted = _currencyService.formatCurrency(
+      amount: displayAmount.abs(),
+      currencyCode: widget.settings.currency.code,
+      symbol: widget.settings.currency.symbol,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, top: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              widget.posting.account,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (_isLoading)
+            const SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(strokeWidth: 1),
+            )
+          else
+            Text(
+              '${displayAmount >= 0 ? '+' : '-'}$formatted',
+              style: const TextStyle(
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
