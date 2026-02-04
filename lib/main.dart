@@ -298,20 +298,28 @@ class _DashboardWidgetState extends State<DashboardWidget> {
   final ScrollController scrollController = ScrollController();
 
   ///
-  late var _itemController =
-      DashboardItemController<ColoredDashboardItem>.withDelegate(
-        itemStorageDelegate: storage,
-      );
+  late DashboardItemController<ColoredDashboardItem> _itemController;
 
   bool refreshing = false;
 
-  var storage = MyItemStorage();
+  late MyItemStorage storage;
 
   DashboardItemController<ColoredDashboardItem> get itemController =>
       _itemController;
 
   int? slot;
   String? _selectedWidget;
+
+  List<String> _lastVisibilityKey = [];
+
+  @override
+  void initState() {
+    super.initState();
+    storage = MyItemStorage();
+    _itemController = DashboardItemController<ColoredDashboardItem>.withDelegate(
+      itemStorageDelegate: storage,
+    );
+  }
 
   setSlot() {
     var w = MediaQuery.of(context).size.width;
@@ -324,12 +332,29 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     });
   }
 
-  List<String> d = [];
-
-  void _updateHiddenItems(WidgetVisibilityProvider visibilityProvider) {
-    // This method is called to ensure visibility provider is up to date
-    // The actual filtering happens in the Consumer builder
-    visibilityProvider.getVisibleWidgets();
+  void _updateHiddenItems(List<String> visibleWidgets) async {
+    // Show loading state
+    setState(() {
+      refreshing = true;
+    });
+    
+    // Create new storage with updated filter
+    storage = MyItemStorage();
+    storage.setVisibilityFilter(visibleWidgets);
+    
+    // Create new controller with new storage
+    _itemController = DashboardItemController.withDelegate(
+      itemStorageDelegate: storage,
+    );
+    
+    // Wait for controller to initialize
+    await Future.delayed(const Duration(milliseconds: 200));
+    
+    if (mounted) {
+      setState(() {
+        refreshing = false;
+      });
+    }
   }
 
   ///
@@ -389,8 +414,21 @@ class _DashboardWidgetState extends State<DashboardWidget> {
       body: SafeArea(
         child: Consumer<WidgetVisibilityProvider>(
           builder: (context, visibilityProvider, _) {
-            _updateHiddenItems(visibilityProvider);
             final visibleWidgets = visibilityProvider.getVisibleWidgets();
+            final visibilityKey = visibleWidgets.join(',');
+            
+            // Detect visibility changes and update
+            final oldKey = _lastVisibilityKey.isNotEmpty ? _lastVisibilityKey.first : '';
+            if (oldKey != visibilityKey) {
+              _lastVisibilityKey = [visibilityKey];
+              
+              // Only trigger update if key actually changed and not first load
+              if (oldKey.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _updateHiddenItems(visibleWidgets);
+                });
+              }
+            }
             
             return _selectedWidget != null
                 ? _buildWidgetPreview(_selectedWidget!)
@@ -403,9 +441,6 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           absorbPointer: false,
                           slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                             (context, item, x, y, editing) {
-                              if (item != null && item.data != null && !visibleWidgets.contains(item.data)) {
-                                return const SizedBox.shrink();
-                              }
                               return const GlassContainer(
                                 borderRadius: 10,
                                 borderOpacity: 0.1,
@@ -455,24 +490,19 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           physics: const RangeMaintainingScrollPhysics(),
                           editModeSettings: EditModeSettings(
                             draggableOutside: false,
-                            paintBackgroundLines: false,
+                            paintBackgroundLines: true,
                             autoScroll: true,
                             resizeCursorSide: 15,
                             curve: Curves.easeOut,
-                            duration: const Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 150),
                             backgroundStyle: const EditModeBackgroundStyle(
-                              lineColor: Colors.black38,
-                              lineWidth: 0.5,
+                              lineColor: Colors.white24,
+                              lineWidth: 1,
                               dualLineHorizontal: false,
                               dualLineVertical: false,
                             ),
                           ),
                           itemBuilder: (ColoredDashboardItem item) {
-                            // Hide items that are not visible
-                            if (item.data != null && !visibleWidgets.contains(item.data)) {
-                              return const SizedBox.shrink();
-                            }
-
                             var layout = item.layoutData;
 
                             if (item.data != null) {

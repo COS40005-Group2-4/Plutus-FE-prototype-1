@@ -46,6 +46,12 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   late SharedPreferences _preferences;
 
   final List<int> _slotCounts = [4, 6, 8];
+  
+  List<String> visibilityFilter = ['budget', 'history', 'import', 'export'];
+
+  void setVisibilityFilter(List<String> visibleWidgets) {
+    visibilityFilter = visibleWidgets;
+  }
 
   final Map<int, List<ColoredDashboardItem>> _default = {
     4: <ColoredDashboardItem>[
@@ -189,7 +195,11 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   FutureOr<List<ColoredDashboardItem>> getAllItems(int slotCount) {
     try {
       if (_localItems != null) {
-        return _localItems?[slotCount]?.values.toList() ?? <ColoredDashboardItem>[];
+        final allItems = _localItems?[slotCount]?.values.toList() ?? <ColoredDashboardItem>[];
+        return allItems.where((item) {
+          if (item.data == null) return true;
+          return visibilityFilter.contains(item.data);
+        }).toList();
       }
 
       return Future.microtask(() async {
@@ -238,11 +248,19 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
         var layoutData = _localItems?[slotCount];
         if (layoutData != null) {
-          return layoutData.values.toList();
+          final allItems = layoutData.values.toList();
+          return allItems.where((item) {
+            if (item.data == null) return true;
+            return visibilityFilter.contains(item.data);
+          }).toList();
         }
 
         // Fallback to default if slot count not found
-        return _default[slotCount] ?? [];
+        final defaultItems = _default[slotCount] ?? [];
+        return defaultItems.where((item) {
+          if (item.data == null) return true;
+          return visibilityFilter.contains(item.data);
+        }).toList();
       });
     } on Exception {
       rethrow;
