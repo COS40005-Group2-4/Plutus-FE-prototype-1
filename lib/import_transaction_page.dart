@@ -459,97 +459,48 @@ class FileImportTab extends StatefulWidget {
 class _FileImportTabState extends State<FileImportTab> {
   final TransactionService _service = TransactionService();
   String? _fileName;
-  String? _fileContent;
-  String? _fileType; // 'json', 'csv', 'xml'
-  List<Map<String, dynamic>> _parsedTransactions = [];
+  String? _filePath;
   bool _loading = false;
 
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['json', 'csv', 'xml'],
+      allowedExtensions: ['json', 'csv', 'xml', 'ledger', 'txt'],
     );
 
     if (result != null) {
       final file = result.files.single;
-      final extension = file.extension?.toLowerCase();
-      
-      setState(() => _loading = true);
-      
-      try {
-        String content;
-        if (kIsWeb) {
-          content = utf8.decode(file.bytes!);
-        } else {
-          content = await File(file.path!).readAsString();
-        }
-
-        setState(() {
-          _fileName = file.name;
-          _fileContent = content;
-          _fileType = extension;
-          _parsedTransactions = [];
-        });
-        
-        await _parseFile();
-      } catch (e) {
-         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error reading file: $e')));
-        }
-      } finally {
-        setState(() => _loading = false);
-      }
-    }
-  }
-
-  Future<void> _parseFile() async {
-    if (_fileContent == null || _fileType == null) return;
-    
-    try {
-      List<Map<String, dynamic>> result = [];
-      if (_fileType == 'json') {
-        final parsed = await _service.parseJsonFile(_fileContent!);
-        // Handle old format vs new generic list format if needed
-        if (parsed.containsKey('transactions')) {
-          result = (parsed['transactions'] as List).cast<Map<String, dynamic>>();
-        }
-      } else if (_fileType == 'csv') {
-        result = await _service.parseCsvFile(_fileContent!);
-      } else if (_fileType == 'xml') {
-        result = await _service.parseXmlFile(_fileContent!);
-      }
       
       setState(() {
-        _parsedTransactions = result;
+        _fileName = file.name;
+        _filePath = file.path;
       });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Parse error: $e')));
-      }
     }
   }
 
-  Future<void> _importAll() async {
-    if (_parsedTransactions.isEmpty) return;
+  Future<void> _importFile() async {
+    if (_filePath == null) return;
     
     setState(() => _loading = true);
     try {
-      for (var t in _parsedTransactions) {
-        await _service.importTransaction(t);
-      }
+      await _service.importTransactionFile(_filePath!);
       setState(() {
         _loading = false;
-        _parsedTransactions = [];
         _fileName = null;
-        _fileContent = null;
+        _filePath = null;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All transactions imported!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File imported successfully!')),
+        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error importing: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error importing file: $e')),
+        );
       }
     }
   }
@@ -565,40 +516,55 @@ class _FileImportTabState extends State<FileImportTab> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Text(
+            'Import Transaction File',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Select a transaction file to import into the database. The backend will process and store the transactions.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _loading ? null : _pickFile,
             icon: const Icon(Icons.folder_open),
-            label: const Text('Select File (JSON, CSV, XML)'),
+            label: const Text('Select File'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
           ),
           if (_fileName != null) ...[
-            const SizedBox(height: 8),
-            Text('Selected: $_fileName', style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-          const SizedBox(height: 16),
-          if (_parsedTransactions.isNotEmpty) ...[
-            Text('Found ${_parsedTransactions.length} transactions:'),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.separated(
-                itemCount: _parsedTransactions.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final t = _parsedTransactions[index];
-                  return ListTile(
-                    title: Text('${t['amount']} ${t['currency']} - ${t['payee'] ?? ''}'),
-                    subtitle: Text('${t['date']} \n${t['description'] ?? ''}'),
-                    isThreeLine: true,
-                  );
-                },
+            const SizedBox(height: 16),
+            GlassContainer(
+              padding: const EdgeInsets.all(12),
+              borderRadius: 8,
+              opacity: 0.15,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selected File:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(_fileName!, overflow: TextOverflow.ellipsis),
+                ],
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loading ? null : _importAll,
-              child: _loading ? const CircularProgressIndicator() : const Text('Import All'),
+              onPressed: _loading ? null : _importFile,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.green,
+              ),
+              child: _loading 
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Import File', style: TextStyle(color: Colors.white)),
             ),
-          ] else if (_fileContent != null && !_loading)
-            const Text('No transactions found or parse failed.'),
+          ],
         ],
       ),
       ),

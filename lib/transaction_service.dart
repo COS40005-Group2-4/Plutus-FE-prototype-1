@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
 import 'services/backend_ffi_service.dart';
+import 'models/transaction_model.dart';
 
 class TransactionService {
   static const String _transactionsKey = 'transactions';
@@ -18,7 +19,7 @@ class TransactionService {
 
   final BackendFfiService _ffiService = BackendFfiService();
 
-  Future<List<Map<String, dynamic>>> getTransactions() async {
+  Future<List<Transaction>> getTransactions() async {
     // Try to fetch from backend FFI if available
     if (_ffiService.isAvailable) {
       try {
@@ -26,7 +27,7 @@ class TransactionService {
         // Cache the response locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_transactionsKey, json.encode(data));
-        return data;
+        return data.map((tx) => Transaction.fromJson(tx)).toList();
       } catch (e) {
         if (kDebugMode) {
           print('Backend FFI error: $e');
@@ -55,7 +56,7 @@ class TransactionService {
         // Cache the response locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_transactionsKey, json.encode(data));
-        return data.cast<Map<String, dynamic>>();
+        return data.map((tx) => Transaction.fromJson(tx as Map<String, dynamic>)).toList();
       }
     } catch (e) {
       // Silently fall back to local storage - this is expected for offline-first
@@ -68,51 +69,28 @@ class TransactionService {
     final String? transactionsJson = prefs.getString(_transactionsKey);
     if (transactionsJson != null) {
       final List<dynamic> data = json.decode(transactionsJson);
-      return data.cast<Map<String, dynamic>>();
+      return data.map((tx) => Transaction.fromJson(tx as Map<String, dynamic>)).toList();
     }
     return [];
   }
 
-  Future<void> importTransaction(Map<String, dynamic> transactionData) async {
-    // Always save locally first for offline-first approach
-    final prefs = await SharedPreferences.getInstance();
-    final List<Map<String, dynamic>> transactions = await getTransactions();
-    transactions.add(transactionData);
-    await prefs.setString(_transactionsKey, json.encode(transactions));
-    
-    // Try to sync with backend FFI if available
+  Future<void> importTransactionFile(String filePath) async {
+    // Call the FFI Import function to import the transaction file
     if (_ffiService.isAvailable) {
       try {
-        await _ffiService.saveTransaction(transactionData);
+        await _ffiService.importFile(filePath);
         if (kDebugMode) {
-          print('Transaction synced with backend FFI successfully');
+          print('Transaction file imported successfully via FFI');
         }
         return;
       } catch (e) {
         if (kDebugMode) {
-          print('Backend FFI unavailable or error: $e');
+          print('Backend FFI import error: $e');
         }
+        rethrow;
       }
-    }
-
-    // Try to sync with HTTP backend if FFI is unavailable
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/transactions'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(transactionData),
-      ).timeout(_apiTimeout);
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (kDebugMode) {
-          print('Transaction synced with backend successfully');
-        }
-      }
-    } catch (e) {
-      // Backend unavailable - data is already saved locally
-      if (kDebugMode) {
-        print('Backend unavailable, transaction saved locally only: $e');
-      }
+    } else {
+      throw Exception('Backend FFI not available for import');
     }
   }
 
@@ -252,6 +230,24 @@ class TransactionService {
     }
 
     return transactions;
+  }
+
+  Future<void> importTransaction(Map<String, dynamic> transaction) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? transactionsJson = prefs.getString(_transactionsKey);
+      final List<dynamic> transactions = transactionsJson != null ? json.decode(transactionsJson) : [];
+      transactions.add(transaction);
+      await prefs.setString(_transactionsKey, json.encode(transactions));
+      if (kDebugMode) {
+        print('Transaction imported successfully: $transaction');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error importing transaction: $e');
+      }
+      rethrow;
+    }
   }
 }
 

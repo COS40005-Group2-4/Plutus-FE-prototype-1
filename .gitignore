@@ -132,3 +132,4 @@ docs/
 *.mdc
 .cursor/rules/flutter-rule.mdc
 /.cursor
+.cursor/rules/flutter-rule.mdc

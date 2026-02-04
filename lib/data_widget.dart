@@ -4,6 +4,7 @@ import 'storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'transaction_service.dart';
+import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
 
 const Color blue = Color(0xFF4285F4);
@@ -58,7 +59,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
+      child: FutureBuilder<List<Transaction>>(
         future: _transactionService.getTransactions(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -82,21 +83,10 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
           final formatter = NumberFormat("#,##0.00", "en_US");
 
           for (var transaction in transactions) {
-            double amount = 0;
-            try {
-              final amountValue = transaction['amount'];
-              if (amountValue is String) {
-                amount = double.parse(amountValue);
-              } else if (amountValue is num) {
-                amount = amountValue.toDouble();
-              }
-            } catch (e) {
-              amount = 0;
-            }
-            if (transaction['type'] == 'income') {
-              totalIncome += amount.abs();
+            if (transaction.isExpense) {
+              totalExpense += transaction.totalAmount;
             } else {
-              totalExpense += amount.abs();
+              totalIncome += transaction.totalAmount;
             }
           }
 
@@ -212,7 +202,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
+      child: FutureBuilder<List<Transaction>>(
         future: _transactionService.getTransactions(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -230,12 +220,8 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
             );
           }
 
-          final allTransactions = List<Map<String, dynamic>>.from(snapshot.data!);
-          allTransactions.sort((a, b) {
-            final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(0);
-            final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(0);
-            return dateB.compareTo(dateA);
-          });
+          final allTransactions = List<Transaction>.from(snapshot.data!);
+          allTransactions.sort((a, b) => b.dateTime.compareTo(a.dateTime));
           final transactions = allTransactions.take(10).toList();
           final formatter = NumberFormat("#,##0.00", "en_US");
 
@@ -255,18 +241,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
                     final transaction = transactions[index];
-                    final isIncome = transaction['type'] == 'income';
-                    double amount = 0;
-                    try {
-                      final amountValue = transaction['amount'];
-                      if (amountValue is String) {
-                        amount = double.parse(amountValue);
-                      } else if (amountValue is num) {
-                        amount = amountValue.toDouble();
-                      }
-                    } catch (e) {
-                      amount = 0;
-                    }
+                    final isExpense = transaction.isExpense;
 
                     return GlassContainer(
                       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -282,7 +257,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  transaction['description'] ?? 'Transaction',
+                                  transaction.label,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w500,
@@ -290,7 +265,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  transaction['date'] ?? '',
+                                  transaction.formattedDate,
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 12,
@@ -300,9 +275,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                             ),
                           ),
                           Text(
-                            '${isIncome ? '+' : '-'}\$${formatter.format(amount.abs())}',
+                            '${isExpense ? '-' : '+'} ${transaction.currency}${formatter.format(transaction.totalAmount)}',
                             style: TextStyle(
-                              color: isIncome ? Colors.white : Colors.red,
+                              color: isExpense ? Colors.red : Colors.green,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),

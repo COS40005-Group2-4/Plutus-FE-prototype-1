@@ -121,4 +121,16 @@ class BackendFfiService {
       throw Exception(result);
     }
   }
+
+  Future<void> importFile(String filePath) async {
+    if (!isAvailable) throw Exception("Backend FFI not available");
+
+    final filePathPtr = filePath.toNativeUtf8();
+    
+    try {
+      _import(filePathPtr);
+    } finally {
+      malloc.free(filePathPtr);
+    }
+  }
 }
