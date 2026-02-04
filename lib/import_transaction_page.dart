@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -181,16 +180,6 @@ class _ManualImportTabState extends State<ManualImportTab> {
     });
   }
   
-  void _updateTotalFromItems() {
-    double total = 0.0;
-    for(var item in _items) {
-      total += (item['amount'] as num? ?? 0.0).toDouble();
-    }
-    if (total > 0) {
-      _amountController.text = total.toStringAsFixed(2);
-    }
-  }
-
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -226,16 +215,21 @@ class _ManualImportTabState extends State<ManualImportTab> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transaction saved successfully')),
+          const SnackBar(
+            content: Text('Transaction saved successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         
         if (widget.onSuccess != null) {
           widget.onSuccess!();
         } else {
-          // Clear form if strictly manual mode
-          _amountController.clear();
-          _descController.clear();
-          // Keep others
+          // Auto-redirect to dashboard after successful manual entry
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pop(true);
+            }
+          });
         }
       }
     } catch (e) {
@@ -851,9 +845,11 @@ class _ScanImportTabState extends State<ScanImportTab> {
             ManualImportTab(
               initialData: _scannedData,
               onSuccess: () {
-                setState(() {
-                  _imageFile = null;
-                  _scannedData = null;
+                // Auto-redirect to dashboard after successful OCR entry
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (mounted) {
+                    Navigator.of(context).pop(true);
+                  }
                 });
               },
             ),
