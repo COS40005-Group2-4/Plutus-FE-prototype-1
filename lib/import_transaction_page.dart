@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:plutus_fe_prototype/services/ocr_service.dart';
 import 'transaction_service.dart';
 import 'widgets/glass_container.dart';
+import 'providers/auth_provider.dart';
 
 class ImportTransactionPage extends StatefulWidget {
   const ImportTransactionPage({super.key});
@@ -73,7 +75,7 @@ class ManualImportTab extends StatefulWidget {
 
 class _ManualImportTabState extends State<ManualImportTab> {
   final _formKey = GlobalKey<FormState>();
-  final TransactionService _service = TransactionService();
+  late TransactionService _service;
   
   late TextEditingController _payeeController;
   late TextEditingController _amountController;
@@ -92,6 +94,11 @@ class _ManualImportTabState extends State<ManualImportTab> {
   @override
   void initState() {
     super.initState();
+    _service = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _service.setCurrentUser(authProvider.currentUserId!);
+    }
     _initControllers();
   }
 
@@ -415,9 +422,13 @@ class _ManualImportTabState extends State<ManualImportTab> {
                             },
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                          onPressed: () => _removeItem(index),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: IconButton(
+                            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                            onPressed: () => _removeItem(index),
+                          ),
                         ),
                       ],
                     ),
@@ -457,10 +468,20 @@ class FileImportTab extends StatefulWidget {
 }
 
 class _FileImportTabState extends State<FileImportTab> {
-  final TransactionService _service = TransactionService();
+  late TransactionService _service;
   String? _fileName;
   String? _filePath;
   bool _loading = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _service = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _service.setCurrentUser(authProvider.currentUserId!);
+    }
+  }
 
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -483,23 +504,45 @@ class _FileImportTabState extends State<FileImportTab> {
     
     setState(() => _loading = true);
     try {
+      if (kDebugMode) {
+        print('Starting file import: $_filePath');
+      }
+      
       await _service.importTransactionFile(_filePath!);
+      
+      if (kDebugMode) {
+        print('File import completed successfully');
+      }
+      
       setState(() {
         _loading = false;
         _fileName = null;
         _filePath = null;
       });
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File imported successfully!')),
+          const SnackBar(
+            content: Text('File imported successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
+        // Return true to signal successful import
         Navigator.pop(context, true);
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('File import error: $e');
+      }
+      
       setState(() => _loading = false);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error importing file: $e')),
+          SnackBar(
+            content: Text('Error importing file: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

@@ -106,3 +106,11 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# Copy libplutus.dll from project root to build directory
+set(LIBPLUTUS_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../libplutus.dll")
+if(EXISTS "${LIBPLUTUS_DLL}")
+  install(FILES "${LIBPLUTUS_DLL}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+  message(STATUS "Will copy libplutus.dll to build directory")
+endif()

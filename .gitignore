@@ -133,3 +133,5 @@ docs/
 .cursor/rules/flutter-rule.mdc
 /.cursor
 .cursor/rules/flutter-rule.mdc
+FFI_BACKEND_REQUIREMENTS.md
+LOCAL_DATA_STORAGE_IMPLEMENTATION.md

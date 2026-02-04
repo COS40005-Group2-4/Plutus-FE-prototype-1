@@ -4,11 +4,7 @@ A new Flutter project.
 
 ## Checklist
 
-- [] Add widget menu tab
-- [] Add default widget
-- [] Run on Android emulator and compile .apk
-- [] Proceed FE and BE integration
-- [] Add splash page
+go build -o libplutus.dll -buildmode=c-shared ./main.go
 
 ## Sample Resoureces
 

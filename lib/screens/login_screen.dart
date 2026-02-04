@@ -139,9 +139,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 20),
           TextButton(
             onPressed: () async {
-              await authProvider.setGuestMode(true);
+              // Navigate to user selection where they can create guest account
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/dashboard');
+                Navigator.pushReplacementNamed(context, '/user_selection');
               }
             },
             child: const Text(

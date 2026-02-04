@@ -1,23 +1,31 @@
 import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as gsi;
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/google_auth_service.dart';
+import '../services/user_service.dart';
+import '../services/settings_service.dart';
+import '../models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _authService = GoogleAuthService();
+  final UserService _userService = UserService();
+  final SettingsService _settingsService = SettingsService();
   
   bool _isAuthenticated = false;
   bool _isGuest = false;
   bool _isLoading = false;
   String _userEmail = '';
   String _userName = '';
+  User? _currentUser;
   
   bool get isAuthenticated => _isAuthenticated;
   bool get isGuest => _isGuest;
   bool get isLoading => _isLoading;
   String get userEmail => _userEmail;
   String get userName => _userName;
+  User? get currentUser => _currentUser;
+  int? get currentUserId => _currentUser?.id;
   
   // Get authentication service for direct access to session info
   GoogleAuthService get authService => _authService;
@@ -35,41 +43,76 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     
     final prefs = await SharedPreferences.getInstance();
-    _isGuest = prefs.getBool('is_guest') ?? false;
+    final lastUserId = prefs.getInt('last_user_id');
     
-    // On web, listen to authentication state changes
+    // Try to restore last logged-in user
+    if (lastUserId != null) {
+      final user = await _userService.getUserById(lastUserId);
+      if (user != null) {
+        _currentUser = user;
+        _userName = user.displayName;
+        _userEmail = user.email ?? '';
+        _isGuest = user.isGuest;
+        _isAuthenticated = !user.isGuest || user.hasOAuth;
+        
+        await _userService.updateLastLogin(user.id);
+      }
+    }
+    
+    // On web, listen to OAuth authentication state changes
     if (kIsWeb) {
       _authService.authenticationState.listen((credentials) async {
         if (credentials != null) {
-          _isAuthenticated = true;
-          final userInfo = await _authService.getUserInfo();
-          _userEmail = userInfo['email'] ?? '';
-          _userName = userInfo['name'] ?? '';
-          _isLoading = false;
-          notifyListeners();
+          await _handleOAuthSignIn();
         } else {
-          _isAuthenticated = false;
-          _userEmail = '';
-          _userName = '';
-          _isLoading = false;
+          // Don't clear local user on OAuth signout
+          if (_currentUser?.hasOAuth == true) {
+            _isAuthenticated = false;
+          }
           notifyListeners();
         }
       });
-    }
-    
-    _isAuthenticated = await _authService.isAuthenticated();
-    
-    if (_isAuthenticated) {
-      final userInfo = await _authService.getUserInfo();
-      _userEmail = userInfo['email'] ?? '';
-      _userName = userInfo['name'] ?? '';
     }
     
     _isLoading = false;
     notifyListeners();
   }
   
-  // Sign in
+  Future<void> _handleOAuthSignIn() async {
+    final userInfo = await _authService.getUserInfo();
+    final email = userInfo['email'] ?? '';
+    final name = userInfo['name'] ?? '';
+    final oauthId = email; // Use email as unique OAuth ID
+    
+    // Check if OAuth user exists
+    User? user = await _userService.getUserByOAuth('google', oauthId);
+    
+    if (user == null) {
+      // Create new OAuth user
+      user = await _userService.createOAuthUser(
+        username: email.split('@')[0],
+        displayName: name,
+        email: email,
+        oauthProvider: 'google',
+        oauthId: oauthId,
+      );
+    } else {
+      await _userService.updateLastLogin(user.id);
+    }
+    
+    _currentUser = user;
+    _isAuthenticated = true;
+    _isGuest = false;
+    _userEmail = email;
+    _userName = name;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_user_id', user.id);
+    
+    notifyListeners();
+  }
+  
+  // Sign in with OAuth
   Future<bool> signIn() async {
     _isLoading = true;
     notifyListeners();
@@ -77,13 +120,7 @@ class AuthProvider extends ChangeNotifier {
     final success = await _authService.signIn();
     
     if (success) {
-      _isAuthenticated = true;
-      _isGuest = false;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('is_guest', false);
-      final userInfo = await _authService.getUserInfo();
-      _userEmail = userInfo['email'] ?? '';
-      _userName = userInfo['name'] ?? '';
+      await _handleOAuthSignIn();
     }
     
     _isLoading = false;
@@ -92,27 +129,163 @@ class AuthProvider extends ChangeNotifier {
     return success;
   }
   
-  // Set guest mode
-  Future<void> setGuestMode(bool isGuest) async {
-    _isGuest = isGuest;
-    if (isGuest) {
-      _isAuthenticated = false;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_guest', isGuest);
+  // Sign in with local user
+  Future<bool> signInWithLocalUser(String username) async {
+    _isLoading = true;
     notifyListeners();
+    
+    try {
+      final user = await _userService.getUserByUsername(username);
+      
+      if (user == null) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      
+      _currentUser = user;
+      _userName = user.displayName;
+      _userEmail = user.email ?? '';
+      _isGuest = user.isGuest;
+      _isAuthenticated = !user.isGuest || user.hasOAuth;
+      
+      await _userService.updateLastLogin(user.id);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_user_id', user.id);
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Create new local user
+  Future<bool> createLocalUser(String username, String displayName, {bool isGuest = false}) async {
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      final user = await _userService.createLocalUser(
+        username: username,
+        displayName: displayName,
+        isGuest: isGuest,
+      );
+      
+      _currentUser = user;
+      _userName = user.displayName;
+      _userEmail = '';
+      _isGuest = isGuest;
+      _isAuthenticated = !isGuest;
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_user_id', user.id);
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Link OAuth account to current local user
+  Future<bool> linkOAuthAccount() async {
+    if (_currentUser == null || _currentUser!.hasOAuth) {
+      return false;
+    }
+    
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      final success = await _authService.signIn();
+      
+      if (success) {
+        final userInfo = await _authService.getUserInfo();
+        final email = userInfo['email'] ?? '';
+        final oauthId = email;
+        
+        await _userService.linkOAuthToUser(
+          userId: _currentUser!.id,
+          provider: 'google',
+          oauthId: oauthId,
+          email: email,
+        );
+        
+        // Reload user
+        _currentUser = await _userService.getUserById(_currentUser!.id);
+        _userEmail = email;
+        _isAuthenticated = true;
+        
+        _isLoading = false;
+        notifyListeners();
+        
+        return true;
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Unlink OAuth account from current user
+  Future<void> unlinkOAuthAccount() async {
+    if (_currentUser == null || !_currentUser!.hasOAuth) {
+      return;
+    }
+    
+    try {
+      await _userService.unlinkOAuthFromUser(_currentUser!.id);
+      await _authService.signOut();
+      
+      // Reload user
+      _currentUser = await _userService.getUserById(_currentUser!.id);
+      _userEmail = '';
+      _isAuthenticated = false;
+      
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error unlinking OAuth: $e');
+      }
+    }
   }
   
   // Sign out
   Future<void> signOut() async {
-    await _authService.signOut();
+    if (_currentUser?.hasOAuth == true) {
+      await _authService.signOut();
+    }
+    
     _isAuthenticated = false;
     _isGuest = false;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_guest', false);
+    _currentUser = null;
     _userEmail = '';
     _userName = '';
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('last_user_id');
+    
     notifyListeners();
+  }
+  
+  // Get all available local users
+  Future<List<User>> getAllUsers() async {
+    return await _userService.getAllUsers();
   }
   
   /// Get session information

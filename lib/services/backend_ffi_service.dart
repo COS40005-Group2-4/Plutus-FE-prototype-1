@@ -45,8 +45,33 @@ class BackendFfiService {
 
   void _init() {
     try {
+      String libPath;
       if (Platform.isWindows) {
-        _lib = DynamicLibrary.open('libplutus.dll');
+        // Try multiple locations for the DLL
+        final possiblePaths = [
+          'libplutus.dll', // Current directory
+          '../libplutus.dll', // Parent directory
+          '../../libplutus.dll', // Two levels up (from build/windows/x64/runner/Debug)
+          '../../../libplutus.dll', // Three levels up
+          '../../../../libplutus.dll', // Four levels up (project root from deep build)
+          Platform.resolvedExecutable.replaceAll('plutus_fe_prototype.exe', 'libplutus.dll'), // Same as exe
+        ];
+        
+        libPath = 'libplutus.dll';
+        for (final path in possiblePaths) {
+          try {
+            final file = File(path);
+            if (file.existsSync()) {
+              libPath = file.absolute.path;
+              print('Found DLL at: $libPath');
+              break;
+            }
+          } catch (e) {
+            // Continue to next path
+          }
+        }
+        
+        _lib = DynamicLibrary.open(libPath);
       } else if (Platform.isMacOS) {
         _lib = DynamicLibrary.open('libplutus.dylib');
       } else {

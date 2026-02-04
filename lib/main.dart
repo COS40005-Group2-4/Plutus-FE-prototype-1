@@ -17,6 +17,8 @@ import 'providers/theme_provider.dart';
 import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/user_selection_screen.dart';
+import 'transaction_service.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'widgets/glass_background.dart';
@@ -94,6 +96,7 @@ class _MyAppState extends State<MyApp> {
             initialRoute: "/",
             routes: {
               "/": (c) => const MainPage(),
+              "/user_selection": (c) => const UserSelectionScreen(),
               "/login": (c) => const LoginScreen(),
               "/dashboard": (c) => const MainNavigationPage(),
               "/history": (c) => const TransactionHistoryPage(),
@@ -148,10 +151,14 @@ class _MainPageState extends State<MainPage> {
         if (!authProvider.isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              if (authProvider.isAuthenticated || authProvider.isGuest) {
+              if (authProvider.currentUser != null) {
+                // User is logged in, set up transaction service and go to dashboard
+                final transactionService = TransactionService();
+                transactionService.setCurrentUser(authProvider.currentUserId!);
                 Navigator.pushReplacementNamed(context, "/dashboard");
               } else {
-                Navigator.pushReplacementNamed(context, "/login");
+                // No user logged in, show user selection screen
+                Navigator.pushReplacementNamed(context, "/user_selection");
               }
             }
           });

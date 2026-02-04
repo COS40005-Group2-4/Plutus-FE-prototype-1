@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
+import 'providers/auth_provider.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
@@ -12,13 +14,18 @@ class TransactionHistoryPage extends StatefulWidget {
 }
 
 class TransactionHistoryPageState extends State<TransactionHistoryPage> {
-  final TransactionService _service = TransactionService();
+  late TransactionService _service;
   List<Transaction> _transactions = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _service = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _service.setCurrentUser(authProvider.currentUserId!);
+    }
     _loadTransactions();
   }
 

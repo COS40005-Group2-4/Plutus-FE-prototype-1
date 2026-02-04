@@ -3,9 +3,11 @@ import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
+import 'providers/auth_provider.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -50,6 +52,10 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
   void initState() {
     super.initState();
     _transactionService = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    }
   }
 
   @override
@@ -193,6 +199,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   void initState() {
     super.initState();
     _transactionService = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    }
   }
 
   @override

@@ -22,12 +22,18 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildAuthenticatedSettings(BuildContext context, AuthProvider authProvider) {
+    final currentUser = authProvider.currentUser;
+    
     return ListView(
       children: [
         const SizedBox(height: 20),
         CircleAvatar(
           radius: 50,
-          backgroundColor: Colors.blue,
+          backgroundColor: currentUser?.hasOAuth == true 
+              ? Colors.blue 
+              : currentUser?.isGuest == true 
+                  ? Colors.grey 
+                  : Colors.green,
           child: Text(
             authProvider.userName.isNotEmpty 
                 ? authProvider.userName[0].toUpperCase() 
@@ -48,11 +54,92 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 10),
         Center(
           child: Text(
-            authProvider.userEmail,
+            currentUser?.username != null ? '@${currentUser!.username}' : '',
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: Colors.grey,
             ),
+          ),
+        ),
+        if (authProvider.userEmail.isNotEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                authProvider.userEmail,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: 10),
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (currentUser?.hasOAuth == true)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.cloud, size: 14, color: Colors.blue),
+                      SizedBox(width: 4),
+                      Text(
+                        'Google Linked',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (currentUser?.isGuest == true)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Guest Account',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Local Account',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -109,6 +196,108 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         const SizedBox(height: 20),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            'Account Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
+          ListTile(
+            leading: const Icon(Icons.link, color: Colors.blue),
+            title: const Text('Link Google Account'),
+            subtitle: const Text('Enable cloud backup and sync'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Link Google Account'),
+                  content: const Text(
+                    'Link your Google account to enable cloud sync and backup across devices.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Link Account'),
+                    ),
+                  ],
+                ),
+              );
+              
+              if (confirm == true && context.mounted) {
+                final success = await authProvider.linkOAuthAccount();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success 
+                            ? 'Google account linked successfully!' 
+                            : 'Failed to link account',
+                      ),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        if (currentUser?.hasOAuth == true)
+          ListTile(
+            leading: const Icon(Icons.link_off, color: Colors.orange),
+            title: const Text('Unlink Google Account'),
+            subtitle: const Text('Switch to local-only mode'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Unlink Google Account'),
+                  content: const Text(
+                    'Are you sure you want to unlink your Google account? You can still use the app with local data only.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Unlink'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                    ),
+                  ],
+                ),
+              );
+              
+              if (confirm == true && context.mounted) {
+                await authProvider.unlinkOAuthAccount();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Google account unlinked successfully'),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.switch_account, color: Colors.blue),
+          title: const Text('Switch User'),
+          trailing: const Icon(Icons.arrow_forward_ios),
+          onTap: () {
+            Navigator.pushReplacementNamed(context, '/user_selection');
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text(
@@ -137,7 +326,7 @@ class SettingsScreen extends StatelessWidget {
             if (confirm == true && context.mounted) {
               await authProvider.signOut();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
+                Navigator.pushReplacementNamed(context, '/user_selection');
               }
             }
           },
