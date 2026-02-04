@@ -45,7 +45,7 @@ class ColoredDashboardItem extends DashboardItem {
 class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   late SharedPreferences _preferences;
 
-  final List<int> _slotCounts = [4, 6, 8];
+  final List<int> _slotCounts = [3, 4, 6];
   
   List<String> visibilityFilter = ['budget', 'history', 'import', 'export'];
 
@@ -54,6 +54,50 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   }
 
   final Map<int, List<ColoredDashboardItem>> _default = {
+    3: <ColoredDashboardItem>[
+      ColoredDashboardItem(
+        height: 2,
+        width: 2,
+        startX: 0,
+        startY: 0,
+        minHeight: 2,
+        identifier: "budget",
+        data: "budget",
+      ),
+      ColoredDashboardItem(
+        startX: 0,
+        startY: 2,
+        minHeight: 2,
+        height: 2,
+        width: 2,
+        identifier: "history",
+        data: "history",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 0,
+        width: 1,
+        height: 1,
+        identifier: "import",
+        minHeight: 1,
+        minWidth: 1,
+        maxHeight: 1,
+        maxWidth: 1,
+        data: "import",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 1,
+        minHeight: 1,
+        minWidth: 1,
+        height: 1,
+        width: 1,
+        maxHeight: 1,
+        maxWidth: 1,
+        identifier: "export",
+        data: "export",
+      ),
+    ],
     4: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
@@ -132,50 +176,6 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 3,
-        startY: 2,
-        minHeight: 1,
-        minWidth: 1,
-        height: 1,
-        width: 1,
-        maxHeight: 1,
-        maxWidth: 1,
-        identifier: "export",
-        data: "export",
-      ),
-    ],
-    8: <ColoredDashboardItem>[
-      ColoredDashboardItem(
-        height: 2,
-        width: 4,
-        startX: 0,
-        startY: 0,
-        minHeight: 2,
-        identifier: "budget",
-        data: "budget",
-      ),
-      ColoredDashboardItem(
-        startX: 4,
-        startY: 0,
-        minHeight: 2,
-        height: 2,
-        width: 4,
-        identifier: "history",
-        data: "history",
-      ),
-      ColoredDashboardItem(
-        startX: 0,
-        startY: 2,
-        width: 1,
-        height: 1,
-        identifier: "import",
-        minHeight: 1,
-        minWidth: 1,
-        maxHeight: 1,
-        maxWidth: 1,
-        data: "import",
-      ),
-      ColoredDashboardItem(
-        startX: 4,
         startY: 2,
         minHeight: 1,
         minWidth: 1,

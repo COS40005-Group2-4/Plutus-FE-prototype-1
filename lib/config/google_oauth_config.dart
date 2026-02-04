@@ -1,32 +1,34 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class GoogleOAuthConfig {
   // Web Client ID (Authorized JavaScript Origin required)
-  static const String webClientId = String.fromEnvironment(
+  static String get webClientId => dotenv.get(
     'GOOGLE_WEB_CLIENT_ID',
-    defaultValue: '',
+    fallback: '',
   );
 
   // Android Client ID (Package name and SHA-1 required)
-  static const String androidClientId = String.fromEnvironment(
+  static String get androidClientId => dotenv.get(
     'GOOGLE_ANDROID_CLIENT_ID',
-    defaultValue: '',
+    fallback: '',
   );
 
   // Desktop Client ID
-  static const String desktopClientId = String.fromEnvironment(
+  static String get desktopClientId => dotenv.get(
     'GOOGLE_DESKTOP_CLIENT_ID',
-    defaultValue: '',
+    fallback: '',
   );
 
   // Client Secret (General/Web)
-  static const String clientSecret = String.fromEnvironment(
+  static String get clientSecret => dotenv.get(
     'GOOGLE_CLIENT_SECRET',
-    defaultValue: '',
+    fallback: '',
   );
 
   // Desktop Client Secret
-  static const String desktopClientSecret = String.fromEnvironment(
+  static String get desktopClientSecret => dotenv.get(
     'GOOGLE_DESKTOP_CLIENT_SECRET',
-    defaultValue: '',
+    fallback: '',
   );
   
   // Production redirect URL (Amplify)

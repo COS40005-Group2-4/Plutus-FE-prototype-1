@@ -28,6 +28,7 @@ import 'widgets/glass_container.dart';
 
 ///
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
   ///

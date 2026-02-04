@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WidgetVisibilityProvider extends ChangeNotifier {
-  late SharedPreferences _preferences;
+  SharedPreferences? _preferences;
+  bool _isInitialized = false;
+  
   final Map<String, bool> _visibleWidgets = {
     'budget': true,
     'history': true,
@@ -16,13 +18,24 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     _initialize();
   }
 
+  bool get isInitialized => _isInitialized;
+
   Future<void> _initialize() async {
-    _preferences = await SharedPreferences.getInstance();
-    await _loadVisibility();
+    try {
+      _preferences = await SharedPreferences.getInstance();
+      await _loadVisibility();
+      _isInitialized = true;
+    } catch (e) {
+      // If initialization fails, keep defaults and mark as initialized
+      _isInitialized = true;
+    }
+    notifyListeners();
   }
 
   Future<void> _loadVisibility() async {
-    final stored = _preferences.getString(_storageKey);
+    if (_preferences == null) return;
+    
+    final stored = _preferences!.getString(_storageKey);
     if (stored != null) {
       try {
         final parts = stored.split(',');
@@ -36,14 +49,15 @@ class WidgetVisibilityProvider extends ChangeNotifier {
         // If parsing fails, keep defaults
       }
     }
-    notifyListeners();
   }
 
   Future<void> _saveVisibility() async {
+    if (_preferences == null) return;
+    
     final visibility = _visibleWidgets.entries
         .map((e) => '${e.key}:${e.value}')
         .join(',');
-    await _preferences.setString(_storageKey, visibility);
+    await _preferences!.setString(_storageKey, visibility);
   }
 
   bool isWidgetVisible(String widgetId) {
