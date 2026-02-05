@@ -4,7 +4,11 @@ A new Flutter project.
 
 ## Checklist
 
+###Build libc
 go build -o libplutus.dll -buildmode=c-shared ./main.go
+
+###Build APK on emulatỏ
+flutter install -d emulator-5554
 
 ## Sample Resoureces
 
