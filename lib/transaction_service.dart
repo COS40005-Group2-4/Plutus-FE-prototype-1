@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
@@ -8,6 +7,7 @@ import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
 import 'services/backend_ffi_service.dart';
 import 'services/database_service.dart';
+import 'services/file_handler.dart';
 import 'models/transaction_model.dart';
 
 class TransactionService {
@@ -327,13 +327,12 @@ class TransactionService {
       }
       
       try {
-        final file = File(filePath);
-        if (!await file.exists()) {
+        if (!await FileHandler.exists(filePath)) {
           throw Exception('File not found: $filePath');
         }
         
         final extension = filePath.split('.').last.toLowerCase();
-        final content = await file.readAsString();
+        final content = await FileHandler.readAsString(filePath);
         
         List<Map<String, dynamic>> transactions = [];
         
