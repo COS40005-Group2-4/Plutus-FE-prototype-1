@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "949588499748",
+    "project_id": "pluwus-94f21",
+    "storage_bucket": "pluwus-94f21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949588499748:android:09b801ecf6ce7ca07c67b1",
+        "android_client_info": {
+          "package_name": "com.example.plutus_fe_prototype"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBquzRyuqw9c_w2el0LE4IHNqqVBvqWgl4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
