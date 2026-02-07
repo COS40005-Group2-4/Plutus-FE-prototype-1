@@ -1,12 +1,14 @@
 import 'package:intl/intl.dart';
 
 class Transaction {
+  final int? id;
   final int date;
   final String payee;
   final String description;
   final List<Posting> postings;
 
   Transaction({
+    this.id,
     required this.date,
     required this.payee,
     required this.description,
@@ -15,6 +17,7 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
+      id: json['id'] as int?,
       date: json['date'] as int,
       payee: json['payee'] as String? ?? '',
       description: json['description'] as String? ?? '',
@@ -27,6 +30,7 @@ class Transaction {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'date': date,
       'payee': payee,
       'description': description,

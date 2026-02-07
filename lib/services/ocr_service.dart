@@ -7,7 +7,6 @@ import 'package:aws_signature_v4/aws_signature_v4.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:flutter_tesseract_ocr/flutter_tesseract_ocr.dart';
 import 'package:http/http.dart' as http;
 import 'package:plutus_fe_prototype/config/aws_config.dart';
 
@@ -103,24 +102,12 @@ class OCRService {
       return await _runTesseractWindows(imagePath); // Same approach for Linux/macOS
     }
     
-    // Android/iOS: Use flutter_tesseract_ocr package
+    // Android/iOS: Use Google ML Kit for text recognition
     try {
-      // Use Tesseract with Vietnamese language support (vie)
-      // Languages: 'eng' for English, 'vie' for Vietnamese, 'eng+vie' for both
-      String text = await FlutterTesseractOcr.extractText(
-        imagePath,
-        language: 'eng+vie', // Support both English and Vietnamese
-        args: {
-          "psm": "4", // Page segmentation mode: Assume a single column of text of variable sizes
-          "preserve_interword_spaces": "1",
-        },
-      );
-      
-      debugPrint('TesseractOCR extracted text: $text');
-      return extractTransactionDetails(text);
+      return await _analyzeWithMLKit(imagePath);
     } catch (e) {
-      debugPrint('Error processing image with TesseractOCR: $e');
-      return {'error': 'TesseractOCR processing failed: $e'};
+      debugPrint('Error processing image with ML Kit: $e');
+      return {'error': 'ML Kit text recognition failed: $e'};
     }
   }
 

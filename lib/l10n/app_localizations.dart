@@ -120,6 +120,11 @@ class AppLocalizations {
       'import': 'Import',
       'no_widgets_selected': 'No widgets selected',
       'open_menu_enable_widgets': 'Open the menu to enable widgets',
+      'no_transaction_history': 'No transaction history',
+      'click_import_transactions': 'Click to import transactions from a file',
+      'click_export_transactions': 'Click to export all transactions to a file',
+      'export': 'Export',
+      'exporting': 'Exporting...',
       
       // User Selection
       'create_new_user': 'Create New User',
@@ -249,6 +254,11 @@ class AppLocalizations {
       'import': 'Nhập',
       'no_widgets_selected': 'Chưa chọn tiện ích',
       'open_menu_enable_widgets': 'Mở menu để bật tiện ích',
+      'no_transaction_history': 'Không có lịch sử giao dịch',
+      'click_import_transactions': 'Bấm để nhập giao dịch từ tệp',
+      'click_export_transactions': 'Bấm để xuất tất cả giao dịch vào tệp',
+      'export': 'Xuất',
+      'exporting': 'Đang xuất...',
       
       // User Selection
       'create_new_user': 'Tạo người dùng mới',
@@ -376,6 +386,11 @@ class AppLocalizations {
   String get import => translate('import');
   String get noWidgetsSelected => translate('no_widgets_selected');
   String get openMenuEnableWidgets => translate('open_menu_enable_widgets');
+  String get noTransactionHistory => translate('no_transaction_history');
+  String get clickImportTransactions => translate('click_import_transactions');
+  String get clickExportTransactions => translate('click_export_transactions');
+  String get export => translate('export');
+  String get exporting => translate('exporting');
 
   // User Selection
   String get createNewUser => translate('create_new_user');

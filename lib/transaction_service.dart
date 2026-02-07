@@ -160,6 +160,7 @@ class TransactionService {
         final account = map['account'] as String? ?? 'Assets:Cash';
         final category = map['category'] as String? ?? 'Expenses:Other';
         final type = map['type'] as String? ?? 'expense';
+        final dbId = map['id'] as int?;
         
         // Create postings array from flat structure
         final postings = <Map<String, dynamic>>[];
@@ -191,6 +192,7 @@ class TransactionService {
         }
         
         return Transaction.fromJson({
+          'id': dbId,
           'date': dateUnix,
           'payee': map['payee'] as String? ?? '',
           'description': map['description'] as String? ?? '',

@@ -313,7 +313,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   late TransactionService _transactionService;
   late DatabaseService _databaseService;
   bool _isEditMode = false;
-  final Set<int> _selectedTransactionIds = {};
+  final Set<dynamic> _selectedTransactionIds = {};
 
   @override
   void initState() {
@@ -339,7 +339,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     final count = _selectedTransactionIds.length;
     try {
       for (final txId in _selectedTransactionIds) {
-        await _databaseService.deleteTransaction(txId);
+        if (txId is int) {
+          await _databaseService.deleteTransaction(txId);
+        }
       }
       _selectedTransactionIds.clear();
       _isEditMode = false;
@@ -385,10 +387,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
-                    'No transaction history',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    AppLocalizations.of(context).noTransactionHistory,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 );
               }
@@ -454,7 +456,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                       itemCount: transactions.length,
                       itemBuilder: (context, index) {
                         final transaction = transactions[index];
-                        final txId = transaction.hashCode;
+                        final txId = transaction.id ?? transaction.hashCode;
                         final isSelected = _selectedTransactionIds.contains(txId);
 
                         return GestureDetector(
@@ -671,9 +673,9 @@ class ReportImportWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Click to import transactions from a file',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+          Text(
+            AppLocalizations.of(context).clickImportTransactions,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -805,9 +807,9 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Click to export all transactions to a file',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+          Text(
+            AppLocalizations.of(context).clickExportTransactions,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -823,7 +825,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
                     ),
                   )
                 : const Icon(Icons.save_alt),
-            label: Text(_isExporting ? 'Exporting...' : 'Export'),
+            label: Text(_isExporting ? AppLocalizations.of(context).exporting : AppLocalizations.of(context).export),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: red,

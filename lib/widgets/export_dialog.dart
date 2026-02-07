@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/export_service.dart';
 import 'glass_container.dart';
+import '../l10n/app_localizations.dart';
 
 class ExportDialog extends StatefulWidget {
   const ExportDialog({super.key});
@@ -85,7 +86,7 @@ class _ExportDialogState extends State<ExportDialog> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.file_download),
-                    label: Text(_isExporting ? 'Exporting...' : 'Export'),
+                    label: Text(_isExporting ? AppLocalizations.of(context).exporting : AppLocalizations.of(context).export),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
