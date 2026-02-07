@@ -11,6 +11,7 @@ import 'services/currency_service.dart';
 import 'services/export_service.dart';
 import 'services/user_service.dart';
 import 'utils/date_time_formatter.dart';
+import 'l10n/app_localizations.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
@@ -63,19 +64,19 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
       // Show loading indicator
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              SizedBox(width: 16),
-              Text('Generating export...'),
+              const SizedBox(width: 16),
+              Text(AppLocalizations.of(context).generatingExport),
             ],
           ),
-          duration: Duration(seconds: 30),
+          duration: const Duration(seconds: 30),
         ),
       );
 
@@ -108,7 +109,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Export failed: $e'),
+          content: Text('${AppLocalizations.of(context).exportFailed}$e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
@@ -122,7 +123,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
       builder: (context, settings, _) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Transaction History'),
+            title: Text(AppLocalizations.of(context).transactionHistory),
             actions: [
               IconButton(
                 icon: const Icon(Icons.download),
@@ -134,7 +135,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
           body: _loading
               ? const Center(child: CircularProgressIndicator())
               : _transactions.isEmpty
-                  ? const Center(child: Text('No transactions found'))
+                  ? Center(child: Text(AppLocalizations.of(context).noTransactionsFound))
                   : RefreshIndicator(
                       onRefresh: _loadTransactions,
                       child: ListView.builder(

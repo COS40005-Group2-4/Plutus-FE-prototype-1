@@ -58,6 +58,88 @@ class AppLocalizations {
       'guest_mode': 'Guest Mode',
       'local_account': 'Local Account',
       'google_linked': 'Google Linked',
+      
+      // Navigation
+      'dashboard': 'Dashboard',
+      'history': 'History',
+      
+      // Import Transaction Page
+      'import_transaction': 'Import Transaction',
+      'manual': 'Manual',
+      'file': 'File',
+      'scan_ocr': 'Scan (OCR)',
+      'transaction_saved_successfully': 'Transaction saved successfully',
+      'error_saving': 'Error saving: ',
+      'vnd': 'VND',
+      'usd': 'USD',
+      'eur': 'EUR',
+      'income': 'Income',
+      'expense': 'Expense',
+      'items_splits': 'Items / Splits',
+      'save_transaction': 'Save Transaction',
+      'file_imported_successfully': 'File imported successfully!',
+      'error_importing_file': 'Error importing file: ',
+      'select_file': 'Select File',
+      'import_file': 'Import File',
+      'error_picking_image': 'Error picking image: ',
+      'ocr_error': 'OCR Error',
+      'ok': 'OK',
+      'offline': 'Offline',
+      'online': 'Online',
+      'auto': 'Auto',
+      'select_invoice_image': 'Select Invoice Image',
+      
+      // Transaction History Page
+      'transaction_history': 'Transaction History',
+      'no_transactions_found': 'No transactions found',
+      'generating_export': 'Generating export...',
+      'export_failed': 'Export failed: ',
+      
+      // Sidebar Menu
+      'are_you_sure_sign_out': 'Are you sure you want to sign out?',
+      
+      // Settings Screen
+      'enable_cloud_backup_sync': 'Enable cloud backup and sync',
+      'link_account': 'Link Account',
+      'switch_to_local_only': 'Switch to local-only mode',
+      'unlink': 'Unlink',
+      'google_account_unlinked': 'Google account unlinked successfully',
+      'confirm_sign_out': 'Are you sure you want to sign out?',
+      
+      // Export Dialog
+      'clear_date_range': 'Clear Date Range',
+      'error_preparing_export': 'Error preparing export: ',
+      'done': 'Done',
+      'could_not_open_file': 'Could not open file: ',
+      'error_opening_file': 'Error opening file: ',
+      'open_in_external_app': 'Open in External App',
+      'pdf_not_available': 'PDF document not available for preview',
+      'text_not_available': 'Text content not available for preview',
+      
+      // Data Widget
+      'import': 'Import',
+      'no_widgets_selected': 'No widgets selected',
+      'open_menu_enable_widgets': 'Open the menu to enable widgets',
+      
+      // User Selection
+      'create_new_user': 'Create New User',
+      'select_user': 'Select User',
+      'please_fill_all_fields': 'Please fill in all fields',
+      'failed_create_user': 'Failed to create user. Username may already exist.',
+      'create': 'Create',
+      'continue_as_guest': 'Continue as Guest',
+      
+      // Login Screen
+      'login_failed': 'Login failed. Please try again.',
+      
+      // Widget Names (Dashboard Widgets - keep transactions intact)
+      'widget_budget_tracking': 'Budget Tracking',
+      'widget_transaction_history': 'Transaction History',
+      'widget_import_report': 'Import Report',
+      'widget_export_report': 'Export Report',
+      'widget_dashboard_widgets': 'Dashboard Widgets',
+      'widget_budget_overview': 'Budget Overview',
+      'widget_recent_transactions': 'Recent Transactions',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -105,6 +187,88 @@ class AppLocalizations {
       'guest_mode': 'Chế độ khách',
       'local_account': 'Tài khoản cục bộ',
       'google_linked': 'Đã liên kết Google',
+      
+      // Navigation
+      'dashboard': 'Bảng điều khiển',
+      'history': 'Lịch sử',
+      
+      // Import Transaction Page
+      'import_transaction': 'Nhập giao dịch',
+      'manual': 'Thủ công',
+      'file': 'Tệp',
+      'scan_ocr': 'Quét (OCR)',
+      'transaction_saved_successfully': 'Giao dịch đã được lưu thành công',
+      'error_saving': 'Lỗi lưu: ',
+      'vnd': 'VND',
+      'usd': 'USD',
+      'eur': 'EUR',
+      'income': 'Thu nhập',
+      'expense': 'Chi tiêu',
+      'items_splits': 'Mục / Chia nhỏ',
+      'save_transaction': 'Lưu giao dịch',
+      'file_imported_successfully': 'Tệp đã được nhập thành công!',
+      'error_importing_file': 'Lỗi nhập tệp: ',
+      'select_file': 'Chọn tệp',
+      'import_file': 'Nhập tệp',
+      'error_picking_image': 'Lỗi chọn ảnh: ',
+      'ocr_error': 'Lỗi OCR',
+      'ok': 'OK',
+      'offline': 'Ngoại tuyến',
+      'online': 'Trực tuyến',
+      'auto': 'Tự động',
+      'select_invoice_image': 'Chọn ảnh hóa đơn',
+      
+      // Transaction History Page
+      'transaction_history': 'Lịch sử giao dịch',
+      'no_transactions_found': 'Không tìm thấy giao dịch',
+      'generating_export': 'Đang tạo xuất...',
+      'export_failed': 'Xuất thất bại: ',
+      
+      // Sidebar Menu
+      'are_you_sure_sign_out': 'Bạn có chắc chắn muốn đăng xuất?',
+      
+      // Settings Screen
+      'enable_cloud_backup_sync': 'Bật sao lưu và đồng bộ hóa đám mây',
+      'link_account': 'Liên kết tài khoản',
+      'switch_to_local_only': 'Chuyển sang chế độ chỉ cục bộ',
+      'unlink': 'Hủy liên kết',
+      'google_account_unlinked': 'Tài khoản Google đã được hủy liên kết thành công',
+      'confirm_sign_out': 'Bạn có chắc chắn muốn đăng xuất?',
+      
+      // Export Dialog
+      'clear_date_range': 'Xóa phạm vi ngày',
+      'error_preparing_export': 'Lỗi chuẩn bị xuất: ',
+      'done': 'Xong',
+      'could_not_open_file': 'Không thể mở tệp: ',
+      'error_opening_file': 'Lỗi mở tệp: ',
+      'open_in_external_app': 'Mở trong ứng dụng bên ngoài',
+      'pdf_not_available': 'Tài liệu PDF không có sẵn để xem trước',
+      'text_not_available': 'Nội dung văn bản không có sẵn để xem trước',
+      
+      // Data Widget
+      'import': 'Nhập',
+      'no_widgets_selected': 'Chưa chọn tiện ích',
+      'open_menu_enable_widgets': 'Mở menu để bật tiện ích',
+      
+      // User Selection
+      'create_new_user': 'Tạo người dùng mới',
+      'select_user': 'Chọn người dùng',
+      'please_fill_all_fields': 'Vui lòng điền vào tất cả các trường',
+      'failed_create_user': 'Không thể tạo người dùng. Tên người dùng có thể đã tồn tại.',
+      'create': 'Tạo',
+      'continue_as_guest': 'Tiếp tục dưới dạng khách',
+      
+      // Login Screen
+      'login_failed': 'Đăng nhập không thành công. Vui lòng thử lại.',
+      
+      // Widget Names (Dashboard Widgets - keep transactions intact)
+      'widget_budget_tracking': 'Theo dõi ngân sách',
+      'widget_transaction_history': 'Lịch sử giao dịch',
+      'widget_import_report': 'Báo cáo nhập',
+      'widget_export_report': 'Báo cáo xuất',
+      'widget_dashboard_widgets': 'Tiện ích bảng điều khiển',
+      'widget_budget_overview': 'Tổng quan ngân sách',
+      'widget_recent_transactions': 'Giao dịch gần đây',
     },
   };
 
@@ -150,6 +314,88 @@ class AppLocalizations {
   String get guestMode => translate('guest_mode');
   String get localAccount => translate('local_account');
   String get googleLinked => translate('google_linked');
+
+  // Navigation
+  String get dashboard => translate('dashboard');
+  String get history => translate('history');
+
+  // Import Transaction Page
+  String get importTransaction => translate('import_transaction');
+  String get manual => translate('manual');
+  String get file => translate('file');
+  String get scanOcr => translate('scan_ocr');
+  String get transactionSavedSuccessfully => translate('transaction_saved_successfully');
+  String get errorSaving => translate('error_saving');
+  String get vnd => translate('vnd');
+  String get usd => translate('usd');
+  String get eur => translate('eur');
+  String get income => translate('income');
+  String get expense => translate('expense');
+  String get itemsSplits => translate('items_splits');
+  String get saveTransaction => translate('save_transaction');
+  String get fileImportedSuccessfully => translate('file_imported_successfully');
+  String get errorImportingFile => translate('error_importing_file');
+  String get selectFile => translate('select_file');
+  String get importFile => translate('import_file');
+  String get errorPickingImage => translate('error_picking_image');
+  String get ocrError => translate('ocr_error');
+  String get ok => translate('ok');
+  String get offline => translate('offline');
+  String get online => translate('online');
+  String get auto => translate('auto');
+  String get selectInvoiceImage => translate('select_invoice_image');
+
+  // Transaction History Page
+  String get transactionHistory => translate('transaction_history');
+  String get noTransactionsFound => translate('no_transactions_found');
+  String get generatingExport => translate('generating_export');
+  String get exportFailed => translate('export_failed');
+
+  // Sidebar Menu
+  String get areYouSureSignOut => translate('are_you_sure_sign_out');
+
+  // Settings Screen
+  String get enableCloudBackupSync => translate('enable_cloud_backup_sync');
+  String get linkAccount => translate('link_account');
+  String get switchToLocalOnly => translate('switch_to_local_only');
+  String get unlink => translate('unlink');
+  String get googleAccountUnlinked => translate('google_account_unlinked');
+  String get confirmSignOut => translate('confirm_sign_out');
+
+  // Export Dialog
+  String get clearDateRange => translate('clear_date_range');
+  String get errorPreparingExport => translate('error_preparing_export');
+  String get done => translate('done');
+  String get couldNotOpenFile => translate('could_not_open_file');
+  String get errorOpeningFile => translate('error_opening_file');
+  String get openInExternalApp => translate('open_in_external_app');
+  String get pdfNotAvailable => translate('pdf_not_available');
+  String get textNotAvailable => translate('text_not_available');
+
+  // Data Widget
+  String get import => translate('import');
+  String get noWidgetsSelected => translate('no_widgets_selected');
+  String get openMenuEnableWidgets => translate('open_menu_enable_widgets');
+
+  // User Selection
+  String get createNewUser => translate('create_new_user');
+  String get selectUser => translate('select_user');
+  String get pleaseFillAllFields => translate('please_fill_all_fields');
+  String get failedCreateUser => translate('failed_create_user');
+  String get create => translate('create');
+  String get continueAsGuest => translate('continue_as_guest');
+
+  // Login Screen
+  String get loginFailed => translate('login_failed');
+
+  // Widget Names (Dashboard Widgets - keep transactions intact)
+  String get widgetBudgetTracking => translate('widget_budget_tracking');
+  String get widgetTransactionHistory => translate('widget_transaction_history');
+  String get widgetImportReport => translate('widget_import_report');
+  String get widgetExportReport => translate('widget_export_report');
+  String get widgetDashboardWidgets => translate('widget_dashboard_widgets');
+  String get widgetBudgetOverview => translate('widget_budget_overview');
+  String get widgetRecentTransactions => translate('widget_recent_transactions');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

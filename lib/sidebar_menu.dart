@@ -4,6 +4,7 @@ import 'widgets/glass_container.dart';
 import 'data_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/widget_visibility_provider.dart';
+import 'l10n/app_localizations.dart';
 
 class SidebarMenu extends StatefulWidget {
   final Function(String)? onMenuItemSelected;
@@ -15,35 +16,40 @@ class SidebarMenu extends StatefulWidget {
 }
 
 class _SidebarMenuState extends State<SidebarMenu> {
-  final List<MenuItemData> _menuItems = [
-    MenuItemData(
-      id: 'budget',
-      label: 'Budget Tracking',
-      icon: Icons.account_balance_wallet,
-      color: blue,
-    ),
-    MenuItemData(
-      id: 'history',
-      label: 'Transaction History',
-      icon: Icons.history,
-      color: green,
-    ),
-    MenuItemData(
-      id: 'import',
-      label: 'Import Report',
-      icon: Icons.upload_file,
-      color: yellow,
-    ),
-    MenuItemData(
-      id: 'export',
-      label: 'Export Report',
-      icon: Icons.download,
-      color: red,
-    ),
-  ];
+  List<MenuItemData> _getMenuItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      MenuItemData(
+        id: 'budget',
+        label: l10n.widgetBudgetTracking,
+        icon: Icons.account_balance_wallet,
+        color: blue,
+      ),
+      MenuItemData(
+        id: 'history',
+        label: l10n.widgetTransactionHistory,
+        icon: Icons.history,
+        color: green,
+      ),
+      MenuItemData(
+        id: 'import',
+        label: l10n.widgetImportReport,
+        icon: Icons.upload_file,
+        color: yellow,
+      ),
+      MenuItemData(
+        id: 'export',
+        label: l10n.widgetExportReport,
+        icon: Icons.download,
+        color: red,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final menuItems = _getMenuItems(context);
     return Consumer<WidgetVisibilityProvider>(
       builder: (context, visibilityProvider, _) {
         return Drawer(
@@ -90,16 +96,16 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Dashboard Widgets',
-                        style: TextStyle(
+                      Text(
+                        l10n.widgetDashboardWidgets,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._menuItems.map((item) {
+                      ...menuItems.map((item) {
                         final isVisible = visibilityProvider.isWidgetVisible(item.id);
                         return GlassContainer(
                           margin: const EdgeInsets.symmetric(vertical: 4),
@@ -144,7 +150,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    'Visible: ${visibilityProvider.visibleWidgetsCount}/${_menuItems.length}',
+                    'Visible: ${visibilityProvider.visibleWidgetsCount}/${menuItems.length}',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ),
@@ -154,9 +160,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
                     leading: const Icon(Icons.settings, color: Colors.white70),
-                    title: const Text(
-                      'Settings',
-                      style: TextStyle(color: Colors.white),
+                    title: Text(
+                      l10n.settings,
+                      style: const TextStyle(color: Colors.white),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -177,7 +183,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                           color: auth.isAuthenticated ? Colors.redAccent : Colors.greenAccent,
                         ),
                         title: Text(
-                          auth.isAuthenticated ? 'Sign Out' : 'Sign In',
+                          auth.isAuthenticated ? l10n.signOut : l10n.signIn,
                           style: TextStyle(
                             color: auth.isAuthenticated ? Colors.redAccent : Colors.greenAccent,
                           ),
@@ -185,7 +191,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                         onTap: () {
                           Navigator.pop(context);
                           if (auth.isAuthenticated) {
-                            _handleSignOut(context);
+                            _handleSignOut(context, l10n);
                           } else {
                             Navigator.pushNamed(context, '/login');
                           }
@@ -205,16 +211,16 @@ class _SidebarMenuState extends State<SidebarMenu> {
     );
   }
 
-  void _handleSignOut(BuildContext context) {
+  void _handleSignOut(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOut),
+        content: Text(l10n.areYouSureSignOut),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -227,7 +233,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                     context, '/login', (route) => false);
               }
             },
-            child: const Text('Sign Out'),
+            child: Text(l10n.signOut),
           ),
         ],
       ),

@@ -9,6 +9,7 @@ import 'services/ocr_service.dart';
 import 'transaction_service.dart';
 import 'widgets/glass_container.dart';
 import 'providers/auth_provider.dart';
+import 'l10n/app_localizations.dart';
 
 class ImportTransactionPage extends StatefulWidget {
   const ImportTransactionPage({super.key});
@@ -36,13 +37,13 @@ class _ImportTransactionPageState extends State<ImportTransactionPage> with Sing
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Import Transaction'),
+        title: Text(AppLocalizations.of(context).importTransaction),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.edit), text: 'Manual'),
-            Tab(icon: Icon(Icons.upload_file), text: 'File'),
-            Tab(icon: Icon(Icons.camera_alt), text: 'Scan (OCR)'),
+          tabs: [
+            Tab(icon: const Icon(Icons.edit), text: AppLocalizations.of(context).manual),
+            Tab(icon: const Icon(Icons.upload_file), text: AppLocalizations.of(context).file),
+            Tab(icon: const Icon(Icons.camera_alt), text: AppLocalizations.of(context).scanOcr),
           ],
         ),
       ),
@@ -215,8 +216,8 @@ class _ManualImportTabState extends State<ManualImportTab> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaction saved successfully'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
             backgroundColor: Colors.green,
           ),
         );
@@ -236,7 +237,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).errorSaving}$e')),
         );
       }
     }
@@ -306,10 +307,10 @@ class _ManualImportTabState extends State<ManualImportTab> {
                       labelText: 'Currency',
                       border: OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'VND', child: Text('VND')),
-                      DropdownMenuItem(value: 'USD', child: Text('USD')),
-                      DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                    items: [
+                      DropdownMenuItem(value: 'VND', child: Text(AppLocalizations.of(context).vnd)),
+                      DropdownMenuItem(value: 'USD', child: Text(AppLocalizations.of(context).usd)),
+                      DropdownMenuItem(value: 'EUR', child: Text(AppLocalizations.of(context).eur)),
                     ],
                     onChanged: (val) => setState(() => _currency = val!),
                   ),
@@ -325,9 +326,9 @@ class _ManualImportTabState extends State<ManualImportTab> {
                 labelText: 'Type',
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 'income', child: Text('Income')),
-                DropdownMenuItem(value: 'expense', child: Text('Expense')),
+              items: [
+                DropdownMenuItem(value: 'income', child: Text(AppLocalizations.of(context).income)),
+                DropdownMenuItem(value: 'expense', child: Text(AppLocalizations.of(context).expense)),
               ],
               onChanged: (val) => setState(() => _type = val!),
             ),
@@ -359,7 +360,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Items / Splits', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context).itemsSplits, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 IconButton(
                   onPressed: _addItem,
                   icon: const Icon(Icons.add_circle),
@@ -432,7 +433,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
               ),
               child: _loading 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Save Transaction'),
+                  : Text(AppLocalizations.of(context).saveTransaction),
             ),
           ],
         ),
@@ -508,8 +509,8 @@ class _FileImportTabState extends State<FileImportTab> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File imported successfully!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).fileImportedSuccessfully),
             backgroundColor: Colors.green,
           ),
         );
@@ -526,7 +527,7 @@ class _FileImportTabState extends State<FileImportTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error importing file: $e'),
+            content: Text('${AppLocalizations.of(context).errorImportingFile}$e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -559,7 +560,7 @@ class _FileImportTabState extends State<FileImportTab> {
           ElevatedButton.icon(
             onPressed: _loading ? null : _pickFile,
             icon: const Icon(Icons.folder_open),
-            label: const Text('Select File'),
+            label: Text(AppLocalizations.of(context).selectFile),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
@@ -591,7 +592,7 @@ class _FileImportTabState extends State<FileImportTab> {
               ),
               child: _loading 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Import File', style: TextStyle(color: Colors.white)),
+                  : Text(AppLocalizations.of(context).importFile, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ],
@@ -640,7 +641,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
         _processImage();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context).errorPickingImage}$e')));
     }
   }
 
@@ -663,11 +664,11 @@ class _ScanImportTabState extends State<ScanImportTab> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('OCR Error'),
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context).ocrError),
                 ],
               ),
               content: SingleChildScrollView(
@@ -676,7 +677,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
+                  child: Text(AppLocalizations.of(context).ok),
                 ),
               ],
             ),
@@ -688,18 +689,18 @@ class _ScanImportTabState extends State<ScanImportTab> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.red),
-                SizedBox(width: 8),
-                Text('OCR Error'),
+                const Icon(Icons.error_outline, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context).ocrError),
               ],
             ),
             content: Text('Unexpected error: $e'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
+                child: Text(AppLocalizations.of(context).ok),
               ),
             ],
           ),
@@ -730,19 +731,19 @@ class _ScanImportTabState extends State<ScanImportTab> {
             segments: [
               ButtonSegment<OCRMode>(
                 value: OCRMode.offline,
-                label: const Text('Offline'),
+                label: Text(AppLocalizations.of(context).offline),
                 icon: const Icon(Icons.computer),
                 enabled: !kIsWeb,
               ),
-              const ButtonSegment<OCRMode>(
+              ButtonSegment<OCRMode>(
                 value: OCRMode.online,
-                label: Text('Online'),
+                label: Text(AppLocalizations.of(context).online),
                 icon: Icon(Icons.cloud),
               ),
-              const ButtonSegment<OCRMode>(
+              ButtonSegment<OCRMode>(
                 value: OCRMode.auto,
-                label: Text('Auto'),
-                icon: Icon(Icons.auto_mode),
+                label: Text(AppLocalizations.of(context).auto),
+                icon: const Icon(Icons.auto_mode),
               ),
             ],
             selected: {_ocrMode},
@@ -803,7 +804,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
               ElevatedButton.icon(
                 onPressed: _scanning ? null : () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.image),
-                label: const Text('Select Invoice Image'),
+                label: Text(AppLocalizations.of(context).selectInvoiceImage),
               ),
             ],
           ),

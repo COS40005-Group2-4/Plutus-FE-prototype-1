@@ -9,9 +9,11 @@ import 'widgets/export_preview_dialog.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
+import 'services/database_service.dart';
 import 'services/export_service.dart';
 import 'services/user_service.dart';
 import 'utils/date_time_formatter.dart';
+import 'l10n/app_localizations.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -91,10 +93,10 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
-                    'No transactions yet',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    AppLocalizations.of(context).noTransactionsFound,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 );
               }
@@ -207,9 +209,9 @@ class _BudgetContentState extends State<_BudgetContent> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        const Text(
-          'Budget Overview',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).widgetBudgetOverview,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -225,9 +227,9 @@ class _BudgetContentState extends State<_BudgetContent> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Income:',
-                    style: TextStyle(color: Colors.white70),
+                  Text(
+                    '${AppLocalizations.of(context).income}:',
+                    style: const TextStyle(color: Colors.white70),
                   ),
                   Text(
                     currencyService.formatCurrency(
@@ -247,9 +249,9 @@ class _BudgetContentState extends State<_BudgetContent> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Expense:',
-                    style: TextStyle(color: Colors.white70),
+                  Text(
+                    '${AppLocalizations.of(context).expense}:',
+                    style: const TextStyle(color: Colors.white70),
                   ),
                   Text(
                     currencyService.formatCurrency(
@@ -309,16 +311,19 @@ class TransactionHistoryWidget extends StatefulWidget {
 
 class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   late TransactionService _transactionService;
+  late DatabaseService _databaseService;
+  bool _isEditMode = false;
+  final Set<int> _selectedTransactionIds = {};
 
   @override
   void initState() {
     super.initState();
     _transactionService = TransactionService();
+    _databaseService = DatabaseService();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.currentUserId != null) {
       _transactionService.setCurrentUser(authProvider.currentUserId!);
     }
-    // Load initial transactions on next frame to ensure stream subscription is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
     });
@@ -326,8 +331,39 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   void dispose() {
-    // Don't dispose - service is a singleton
     super.dispose();
+  }
+
+  Future<void> _deleteSelectedTransactions() async {
+    if (_selectedTransactionIds.isEmpty) return;
+    final count = _selectedTransactionIds.length;
+    try {
+      for (final txId in _selectedTransactionIds) {
+        await _databaseService.deleteTransaction(txId);
+      }
+      _selectedTransactionIds.clear();
+      _isEditMode = false;
+      _transactionService.notifyTransactionUpdate();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Deleted $count transaction${count > 1 ? 's' : ''}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete transaction: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -363,13 +399,54 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
               return Column(
                 children: [
-                  const Text(
-                    'Recent Transactions',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context).widgetRecentTransactions,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (_isEditMode)
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  _isEditMode = false;
+                                  _selectedTransactionIds.clear();
+                                });
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            const SizedBox(width: 8),
+                            if (_selectedTransactionIds.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                onPressed: _deleteSelectedTransactions,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                          ],
+                        )
+                      else
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _isEditMode = true;
+                              _selectedTransactionIds.clear();
+                            });
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Expanded(
@@ -377,48 +454,79 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                       itemCount: transactions.length,
                       itemBuilder: (context, index) {
                         final transaction = transactions[index];
+                        final txId = transaction.hashCode;
+                        final isSelected = _selectedTransactionIds.contains(txId);
 
-                        return GlassContainer(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.all(8),
-                          color: Colors.white,
-                          opacity: 0.1,
-                          borderRadius: 6,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      transaction.label,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                        return GestureDetector(
+                          onTap: _isEditMode
+                              ? () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedTransactionIds.remove(txId);
+                                    } else {
+                                      _selectedTransactionIds.add(txId);
+                                    }
+                                  });
+                                }
+                              : null,
+                          child: GlassContainer(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(8),
+                            color: isSelected ? Colors.blue : Colors.white,
+                            opacity: isSelected ? 0.3 : 0.1,
+                            borderRadius: 6,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                if (_isEditMode)
+                                  Checkbox(
+                                    value: isSelected,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        if (value ?? false) {
+                                          _selectedTransactionIds.add(txId);
+                                        } else {
+                                          _selectedTransactionIds.remove(txId);
+                                        }
+                                      });
+                                    },
+                                    fillColor: MaterialStateProperty.resolveWith<Color>(
+                                      (states) => Colors.white,
                                     ),
-                                    Text(
-                                      DateTimeFormatter.formatDateTimeShort(
-                                        transaction.dateTime,
-                                        settings.dateFormat,
-                                        settings.timeFormat,
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        transaction.label,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 12,
+                                      Text(
+                                        DateTimeFormatter.formatDateTimeShort(
+                                          transaction.dateTime,
+                                          settings.dateFormat,
+                                          settings.timeFormat,
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              _DashboardTransactionAmount(
-                                key: ValueKey('dashboard_${transaction.dateTime}_${settings.currency.code}'),
-                                transaction: transaction,
-                                settings: settings,
-                              ),
-                            ],
+                                _DashboardTransactionAmount(
+                                  key: ValueKey('dashboard_${transaction.dateTime}_${settings.currency.code}'),
+                                  transaction: transaction,
+                                  settings: settings,
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -554,9 +662,9 @@ class ReportImportWidget extends StatelessWidget {
         children: [
           const Icon(Icons.upload_file, size: 40, color: Colors.white),
           const SizedBox(height: 12),
-          const Text(
-            'Import Report',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).widgetImportReport,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -574,7 +682,7 @@ class ReportImportWidget extends StatelessWidget {
               Navigator.pushNamed(context, "/import");
             },
             icon: const Icon(Icons.add),
-            label: const Text('Import'),
+            label: Text(AppLocalizations.of(context).import),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: yellow,
@@ -688,9 +796,9 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
         children: [
           const Icon(Icons.download, size: 40, color: Colors.white),
           const SizedBox(height: 12),
-          const Text(
-            'Export Report',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).widgetExportReport,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,

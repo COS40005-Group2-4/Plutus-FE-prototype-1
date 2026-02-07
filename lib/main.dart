@@ -246,14 +246,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                 setState(() => _currentIndex = 0);
               }
             },
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard),
-                label: 'Dashboard',
+                icon: const Icon(Icons.dashboard),
+                label: AppLocalizations.of(context).dashboard,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.history),
-                label: 'History',
+                icon: const Icon(Icons.history),
+                label: AppLocalizations.of(context).history,
               ),
             ],
           ),
@@ -472,22 +472,22 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           errorPlaceholder: (e, s) {
                             return Text("$e , $s");
                           },
-                          emptyPlaceholder: const Center(
+                          emptyPlaceholder: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.dashboard_customize,
+                                const Icon(Icons.dashboard_customize,
                                     size: 48, color: Colors.grey),
-                                SizedBox(height: 16),
+                                const SizedBox(height: 16),
                                 Text(
-                                  "No widgets selected",
-                                  style: TextStyle(
+                                  AppLocalizations.of(context).noWidgetsSelected,
+                                  style: const TextStyle(
                                       fontSize: 16, color: Colors.grey),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
-                                  "Open the menu to enable widgets",
-                                  style: TextStyle(
+                                  AppLocalizations.of(context).openMenuEnableWidgets,
+                                  style: const TextStyle(
                                       fontSize: 12, color: Colors.grey),
                                 ),
                               ],
