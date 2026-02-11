@@ -73,7 +73,12 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
               const SizedBox(width: 16),
-              Text(AppLocalizations.of(context).generatingExport),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context).generatingExport,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           duration: const Duration(seconds: 30),
@@ -166,10 +171,12 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      _TransactionAmount(
-                                        key: ValueKey('${transaction.dateTime}_${settings.currency.code}'),
-                                        transaction: transaction,
-                                        settings: settings,
+                                      Flexible(
+                                        child: _TransactionAmount(
+                                          key: ValueKey('${transaction.dateTime}_${settings.currency.code}'),
+                                          transaction: transaction,
+                                          settings: settings,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -180,6 +187,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                       settings.dateFormat,
                                       settings.timeFormat,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[600],
@@ -311,9 +319,11 @@ class _TransactionAmountState extends State<_TransactionAmount> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '${widget.transaction.isExpense ? '-' : '+'}$formatted',
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -323,6 +333,7 @@ class _TransactionAmountState extends State<_TransactionAmount> {
         if (widget.transaction.currency != widget.settings.currency.code)
           Text(
             '(${widget.transaction.currency})',
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 10,
               color: Colors.grey,
@@ -439,6 +450,7 @@ class _PostingRowState extends State<_PostingRow> {
           else
             Text(
               '${displayAmount >= 0 ? '+' : '-'}$formatted',
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 12,
                 fontFamily: 'monospace',

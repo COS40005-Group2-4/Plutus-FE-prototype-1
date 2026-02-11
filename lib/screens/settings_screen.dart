@@ -50,6 +50,7 @@ class SettingsScreen extends StatelessWidget {
         Center(
           child: Text(
             authProvider.userName,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -60,6 +61,7 @@ class SettingsScreen extends StatelessWidget {
         Center(
           child: Text(
             currentUser?.username != null ? '@${currentUser!.username}' : '',
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -72,6 +74,7 @@ class SettingsScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 5),
               child: Text(
                 authProvider.userEmail,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
@@ -81,8 +84,10 @@ class SettingsScreen extends StatelessWidget {
           ),
         const SizedBox(height: 10),
         Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               if (currentUser?.hasOAuth == true)
                 Container(
@@ -100,6 +105,7 @@ class SettingsScreen extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         l10n.googleLinked,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.blue,
@@ -120,6 +126,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     l10n.guestMode,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
@@ -138,6 +145,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     l10n.localAccount,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.green,

@@ -63,11 +63,15 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Edit Avatar',
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Edit Avatar',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -103,8 +107,10 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
             ),
             const SizedBox(height: 16),
             // Controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 _buildControlButton(
                   icon: Icons.rotate_right,
@@ -134,8 +140,10 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
             ),
             const SizedBox(height: 16),
             // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 ElevatedButton.icon(
                   onPressed: widget.onCancel,
@@ -169,6 +177,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
               ],
             ),
           ],
+          ),
         ),
       ),
     );
@@ -180,6 +189,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
     required VoidCallback onPressed,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           icon: Icon(icon, color: Colors.blue),
@@ -192,6 +202,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
             color: Colors.white,
             fontSize: 12,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -255,16 +266,22 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             const Text(
               'Choose Avatar Source',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 16,
+              runSpacing: 16,
               children: [
                 _buildSourceButton(
                   icon: Icons.camera_alt,
@@ -284,6 +301,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
               child: const Text('Cancel'),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -308,7 +326,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
             child: Icon(icon, color: Colors.white, size: 40),
           ),
           const SizedBox(height: 8),
-          Text(label),
+          Text(label, overflow: TextOverflow.ellipsis),
         ],
       ),
     );

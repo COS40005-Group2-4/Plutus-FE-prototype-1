@@ -112,6 +112,7 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
             Text(
               formatted,
               style: widget.textStyle,
+              overflow: TextOverflow.ellipsis,
             ),
             if (widget.showSourceCurrency && 
                 widget.sourceCurrency != null && 
@@ -122,6 +123,7 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
                   currencyCode: widget.sourceCurrency!,
                   symbol: AppCurrency.fromCode(widget.sourceCurrency!).symbol,
                 )})',
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 10,
                   color: Colors.grey,
@@ -130,6 +132,7 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
             if (_error != null)
               Text(
                 _error!,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 10,
                   color: Colors.orange,

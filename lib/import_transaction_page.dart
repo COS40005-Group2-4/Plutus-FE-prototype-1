@@ -360,7 +360,13 @@ class _ManualImportTabState extends State<ManualImportTab> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context).itemsSplits, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context).itemsSplits,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 IconButton(
                   onPressed: _addItem,
                   icon: const Icon(Icons.add_circle),
@@ -668,7 +674,12 @@ class _ScanImportTabState extends State<ScanImportTab> {
                 children: [
                   const Icon(Icons.error_outline, color: Colors.red),
                   const SizedBox(width: 8),
-                  Text(AppLocalizations.of(context).ocrError),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context).ocrError,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -688,15 +699,20 @@ class _ScanImportTabState extends State<ScanImportTab> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red),
-                const SizedBox(width: 8),
-                Text(AppLocalizations.of(context).ocrError),
-              ],
-            ),
-            content: Text('Unexpected error: $e'),
+            builder: (context) => AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context).ocrError,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: Text('Unexpected error: $e', overflow: TextOverflow.ellipsis),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -778,11 +794,14 @@ class _ScanImportTabState extends State<ScanImportTab> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Windows Offline Mode',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),
+                        const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                              'Windows Offline Mode',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),

@@ -209,11 +209,13 @@ class _BudgetContentState extends State<_BudgetContent> {
     final balance = _totalIncome - _totalExpense;
     final currencyService = CurrencyService();
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Text(
-          AppLocalizations.of(context).widgetBudgetOverview,
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppLocalizations.of(context).widgetBudgetOverview,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -230,75 +232,97 @@ class _BudgetContentState extends State<_BudgetContent> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${AppLocalizations.of(context).income}:',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  Text(
-                    currencyService.formatCurrency(
-                      amount: _totalIncome,
-                      currencyCode: widget.settings.currency.code,
-                      symbol: widget.settings.currency.symbol,
+                  Expanded(
+                    child: Text(
+                      '${AppLocalizations.of(context).income}:',
+                      style: const TextStyle(color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    style: const TextStyle(
+                  ),
+                  Expanded(
+                    child: Text(
+                      currencyService.formatCurrency(
+                        amount: _totalIncome,
+                        currencyCode: widget.settings.currency.code,
+                        symbol: widget.settings.currency.symbol,
+                      ),
+                      style: const TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${AppLocalizations.of(context).expense}:',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  Text(
-                    currencyService.formatCurrency(
-                      amount: _totalExpense,
-                      currencyCode: widget.settings.currency.code,
-                      symbol: widget.settings.currency.symbol,
+                  Expanded(
+                    child: Text(
+                      '${AppLocalizations.of(context).expense}:',
+                      style: const TextStyle(color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      currencyService.formatCurrency(
+                        amount: _totalExpense,
+                        currencyCode: widget.settings.currency.code,
+                        symbol: widget.settings.currency.symbol,
+                      ),
                     style: const TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
                 ],
               ),
               const Divider(color: Colors.white30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Balance:',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  const Expanded(
+                    child: Text(
+                      'Balance:',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text(
-                    currencyService.formatCurrency(
-                      amount: balance,
-                      currencyCode: widget.settings.currency.code,
-                      symbol: widget.settings.currency.symbol,
-                    ),
+                  Expanded(
+                    child: Text(
+                      currencyService.formatCurrency(
+                        amount: balance,
+                        currencyCode: widget.settings.currency.code,
+                        symbol: widget.settings.currency.symbol,
+                      ),
                     style: TextStyle(
                       color: balance >= 0 ? Colors.green : Colors.red,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
                 ],
               ),
             ],
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -402,19 +426,24 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
               allTransactions.sort((a, b) => b.dateTime.compareTo(a.dateTime));
               final transactions = allTransactions.take(10).toList();
 
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppLocalizations.of(context).widgetRecentTransactions,
-                        style: const TextStyle(
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).widgetRecentTransactions,
+                          style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ),
                       if (_isEditMode)
                         Row(
                           children: [
@@ -452,11 +481,12 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                           constraints: const BoxConstraints(),
                         ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: transactions.length,
+                    ),
+                    const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: transactions.length,
                       itemBuilder: (context, index) {
                         final transaction = transactions[index];
                         final txId = transaction.id ?? transaction.hashCode;
@@ -521,6 +551,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                                           color: Colors.white70,
                                           fontSize: 12,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -536,13 +567,13 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                         );
                       },
                     ),
-                  ),
                 ],
-              );
-            },
-          ),
-        );
-      },
+              ),
+            );
+          },
+        ),
+      );
+    },
     );
   }
 }
@@ -647,6 +678,7 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
         fontWeight: FontWeight.bold,
         fontSize: 14,
       ),
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -662,9 +694,11 @@ class ReportImportWidget extends StatelessWidget {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
           const Icon(Icons.upload_file, size: 40, color: Colors.white),
           const SizedBox(height: 12),
           Text(
@@ -694,6 +728,7 @@ class ReportImportWidget extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -727,16 +762,16 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
       // Show loading indicator
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              SizedBox(width: 16),
-              Text('Generating export...'),
+              const SizedBox(width: 16),
+              Expanded(child: Text('Generating export...', overflow: TextOverflow.ellipsis)),
             ],
           ),
           duration: Duration(seconds: 30),
@@ -796,9 +831,11 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
           const Icon(Icons.download, size: 40, color: Colors.white),
           const SizedBox(height: 12),
           Text(
@@ -835,6 +872,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -875,10 +913,12 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
-          child: ProfileWidget(
+          child: SingleChildScrollView(
+            child: ProfileWidget(
             user: currentUser,
             defaultAvatarAsset: 'lib/assets/avatar/default-avatar.jpg',
             isCompact: true,
+          ),
           ),
         );
       },

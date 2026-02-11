@@ -108,7 +108,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
@@ -125,12 +128,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 18 : 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 18 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
@@ -379,16 +385,21 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
           if (profileProvider.state == ProfileState.error) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    profileProvider.errorMessage,
-                    style: const TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      profileProvider.errorMessage,
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -398,6 +409,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     child: const Text('Retry'),
                   ),
                 ],
+                ),
               ),
             );
           }
@@ -536,13 +548,16 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'My Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: titleSize,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
+                    Expanded(
+                      child: Text(
+                        'My Profile',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Material(
@@ -585,31 +600,35 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: labelSize,
-              color: Colors.white.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.8,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: double.infinity),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: labelSize,
+                color: Colors.white.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.8,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: valueSize,
-              color: Colors.white,
-              fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: valueSize,
+                color: Colors.white,
+                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

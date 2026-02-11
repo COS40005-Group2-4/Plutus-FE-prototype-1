@@ -200,6 +200,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                                 ),
                                 title: Text(
                                   user.displayName,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
@@ -208,11 +209,12 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('@${user.username}'),
+                                    Text('@${user.username}', overflow: TextOverflow.ellipsis),
                                     if (user.email != null)
                                       Text(
                                         user.email!,
                                         style: const TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     const SizedBox(height: 4),
                                     Row(

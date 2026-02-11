@@ -27,20 +27,27 @@ class _ExportDialogState extends State<ExportDialog> {
         opacity: 0.15,
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          constraints: BoxConstraints(
+            maxWidth: 500,
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Row(
                 children: [
                   const Icon(Icons.download, size: 28),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Export Data',
-                    style: TextStyle(
+                  Expanded(
+                    child: Text(
+                      'Export Data',
+                      style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                    ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const Spacer(),
@@ -97,6 +104,7 @@ class _ExportDialogState extends State<ExportDialog> {
                 ],
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -193,9 +201,12 @@ class _ExportDialogState extends State<ExportDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _startDate != null ? dateFormat.format(_startDate!) : 'All',
-                          style: const TextStyle(fontSize: 14),
+                        Expanded(
+                          child: Text(
+                            _startDate != null ? dateFormat.format(_startDate!) : 'All',
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         const Icon(Icons.calendar_today, size: 16),
                       ],
@@ -219,9 +230,12 @@ class _ExportDialogState extends State<ExportDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _endDate != null ? dateFormat.format(_endDate!) : 'All',
-                          style: const TextStyle(fontSize: 14),
+                        Expanded(
+                          child: Text(
+                            _endDate != null ? dateFormat.format(_endDate!) : 'All',
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         const Icon(Icons.calendar_today, size: 16),
                       ],
@@ -277,6 +291,7 @@ class _ExportDialogState extends State<ExportDialog> {
             const SizedBox(height: 8),
             Text(
               title,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -286,6 +301,7 @@ class _ExportDialogState extends State<ExportDialog> {
             const SizedBox(height: 4),
             Text(
               description,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,

@@ -73,24 +73,33 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   decoration: BoxDecoration(color: const Color(0xFF4285F4).withValues(alpha: 0.3)),
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            auth.isAuthenticated ? 'Plutus Menu' : 'Plutus (Guest)',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  auth.isAuthenticated ? 'Plutus Menu' : 'Plutus (Guest)',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  auth.isAuthenticated 
+                                      ? 'Welcome, ${auth.userName}'
+                                      : 'Toggle Dashboard Widgets',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            auth.isAuthenticated 
-                                ? 'Welcome, ${auth.userName}'
-                                : 'Toggle Dashboard Widgets',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       );
@@ -131,6 +140,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                             },
                             title: Text(
                               item.label,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: isVisible ? item.color : Colors.white,
                                 fontWeight: isVisible
@@ -158,6 +168,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   child: Text(
                     'Visible: ${visibilityProvider.visibleWidgetsCount}/${menuItems.length}',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Divider(color: Colors.white24),
@@ -169,6 +180,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                     title: Text(
                       l10n.settings,
                       style: const TextStyle(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -190,6 +202,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                         ),
                         title: Text(
                           auth.isAuthenticated ? l10n.signOut : l10n.signIn,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: auth.isAuthenticated ? Colors.redAccent : Colors.greenAccent,
                           ),

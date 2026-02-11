@@ -134,6 +134,8 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                   Text(
                     'Error loading PDF preview: ${snapshot.error}',
                     textAlign: TextAlign.center,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

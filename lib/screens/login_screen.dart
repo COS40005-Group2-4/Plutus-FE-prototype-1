@@ -101,6 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Text(
                   _errorMessage!,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 5,
                   style: TextStyle(
                     color: Colors.red[900],
                     fontSize: 14,

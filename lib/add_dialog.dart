@@ -46,7 +46,7 @@ class _AddDialogState extends State<AddDialog> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text("Color: "),
+                    const Text("Color: ", overflow: TextOverflow.ellipsis),
                     Expanded(
                       child: Container(
                         alignment: Alignment.center,
@@ -121,7 +121,7 @@ class _AddDialogState extends State<AddDialog> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("$name: "),
+        Flexible(child: Text("$name: ", overflow: TextOverflow.ellipsis)),
         SizedBox(
           width: 100,
           child: DropdownButton<int>(

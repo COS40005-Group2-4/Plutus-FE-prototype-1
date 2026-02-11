@@ -473,9 +473,11 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                             return Text("$e , $s");
                           },
                           emptyPlaceholder: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
                                 const Icon(Icons.dashboard_customize,
                                     size: 48, color: Colors.grey),
                                 const SizedBox(height: 16),
@@ -491,6 +493,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                                       fontSize: 12, color: Colors.grey),
                                 ),
                               ],
+                              ),
                             ),
                           ),
                           itemStyle: ItemStyle(
@@ -592,11 +595,14 @@ class _DashboardWidgetState extends State<DashboardWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Widget Preview: $widgetId',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Widget Preview: $widgetId',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               IconButton(
