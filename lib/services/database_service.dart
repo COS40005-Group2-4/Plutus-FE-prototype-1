@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import '../models/profile_model.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -35,7 +36,7 @@ class DatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -124,10 +125,31 @@ class DatabaseService {
       )
     ''');
     
+    // Create profiles table
+    await db.execute('''
+      CREATE TABLE profiles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL UNIQUE,
+        avatar_path TEXT,
+        date_of_birth TEXT,
+        position TEXT,
+        place_of_employment TEXT,
+        show_name INTEGER DEFAULT 1,
+        show_email INTEGER DEFAULT 1,
+        show_date_of_birth INTEGER DEFAULT 0,
+        show_position INTEGER DEFAULT 0,
+        show_place_of_employment INTEGER DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+    
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_user_settings_user_id ON user_settings(user_id)');
+    await db.execute('CREATE INDEX idx_profiles_user_id ON profiles(user_id)');
     
     if (kDebugMode) {
       print('Database tables created successfully');
@@ -135,9 +157,52 @@ class DatabaseService {
   }
   
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database schema upgrades here
     if (kDebugMode) {
       print('Database upgraded from version $oldVersion to $newVersion');
+    }
+    
+    // Upgrade from version 1 to 2: Add profiles table
+    if (oldVersion < 2) {
+      try {
+        // Check if profiles table exists
+        final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='profiles'",
+        );
+        
+        if (tables.isEmpty) {
+          // Create profiles table if it doesn't exist
+          await db.execute('''
+            CREATE TABLE profiles (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER NOT NULL UNIQUE,
+              avatar_path TEXT,
+              date_of_birth TEXT,
+              position TEXT,
+              place_of_employment TEXT,
+              show_name INTEGER DEFAULT 1,
+              show_email INTEGER DEFAULT 1,
+              show_date_of_birth INTEGER DEFAULT 0,
+              show_position INTEGER DEFAULT 0,
+              show_place_of_employment INTEGER DEFAULT 0,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+          ''');
+          
+          // Create index
+          await db.execute('CREATE INDEX idx_profiles_user_id ON profiles(user_id)');
+          
+          if (kDebugMode) {
+            print('Profiles table created successfully during upgrade');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error creating profiles table during upgrade: $e');
+        }
+        rethrow;
+      }
     }
   }
   
@@ -361,11 +426,76 @@ class DatabaseService {
     );
   }
   
+  // Profile operations
+  Future<void> createProfile(Profile profile) async {
+    final db = await database;
+    await db.insert(
+      'profiles',
+      {
+        'user_id': profile.userId,
+        'avatar_path': profile.avatarPath,
+        'date_of_birth': profile.dateOfBirth,
+        'position': profile.position,
+        'place_of_employment': profile.placeOfEmployment,
+        'show_name': profile.showName ? 1 : 0,
+        'show_email': profile.showEmail ? 1 : 0,
+        'show_date_of_birth': profile.showDateOfBirth ? 1 : 0,
+        'show_position': profile.showPosition ? 1 : 0,
+        'show_place_of_employment': profile.showPlaceOfEmployment ? 1 : 0,
+        'created_at': profile.createdAt.millisecondsSinceEpoch,
+        'updated_at': profile.updatedAt.millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Map<String, dynamic>?> getProfileByUserId(int userId) async {
+    final db = await database;
+    final results = await db.query(
+      'profiles',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> updateProfile(Profile profile) async {
+    final db = await database;
+    await db.update(
+      'profiles',
+      {
+        'avatar_path': profile.avatarPath,
+        'date_of_birth': profile.dateOfBirth,
+        'position': profile.position,
+        'place_of_employment': profile.placeOfEmployment,
+        'show_name': profile.showName ? 1 : 0,
+        'show_email': profile.showEmail ? 1 : 0,
+        'show_date_of_birth': profile.showDateOfBirth ? 1 : 0,
+        'show_position': profile.showPosition ? 1 : 0,
+        'show_place_of_employment': profile.showPlaceOfEmployment ? 1 : 0,
+        'updated_at': profile.updatedAt.millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [profile.userId],
+    );
+  }
+
+  Future<void> deleteProfile(int userId) async {
+    final db = await database;
+    await db.delete(
+      'profiles',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+  
   // Utility operations
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete('transactions');
     await db.delete('user_settings');
+    await db.delete('profiles');
     await db.delete('users');
   }
   
@@ -373,6 +503,7 @@ class DatabaseService {
     final db = await database;
     await db.delete('transactions', where: 'user_id = ?', whereArgs: [userId]);
     await db.delete('user_settings', where: 'user_id = ?', whereArgs: [userId]);
+    await db.delete('profiles', where: 'user_id = ?', whereArgs: [userId]);
   }
   
   Future<void> close() async {

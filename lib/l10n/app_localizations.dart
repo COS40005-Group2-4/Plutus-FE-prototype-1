@@ -138,6 +138,7 @@ class AppLocalizations {
       'login_failed': 'Login failed. Please try again.',
       
       // Widget Names (Dashboard Widgets - keep transactions intact)
+      'widget_profile': 'Profile',
       'widget_budget_tracking': 'Budget Tracking',
       'widget_transaction_history': 'Transaction History',
       'widget_import_report': 'Import Report',
@@ -145,6 +146,7 @@ class AppLocalizations {
       'widget_dashboard_widgets': 'Dashboard Widgets',
       'widget_budget_overview': 'Budget Overview',
       'widget_recent_transactions': 'Recent Transactions',
+      'profile': 'Profile',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -272,6 +274,7 @@ class AppLocalizations {
       'login_failed': 'Đăng nhập không thành công. Vui lòng thử lại.',
       
       // Widget Names (Dashboard Widgets - keep transactions intact)
+      'widget_profile': 'Hồ sơ',
       'widget_budget_tracking': 'Theo dõi ngân sách',
       'widget_transaction_history': 'Lịch sử giao dịch',
       'widget_import_report': 'Báo cáo nhập',
@@ -279,6 +282,7 @@ class AppLocalizations {
       'widget_dashboard_widgets': 'Tiện ích bảng điều khiển',
       'widget_budget_overview': 'Tổng quan ngân sách',
       'widget_recent_transactions': 'Giao dịch gần đây',
+      'profile': 'Hồ sơ',
     },
   };
 
@@ -404,6 +408,7 @@ class AppLocalizations {
   String get loginFailed => translate('login_failed');
 
   // Widget Names (Dashboard Widgets - keep transactions intact)
+  String get widgetProfile => translate('widget_profile');
   String get widgetBudgetTracking => translate('widget_budget_tracking');
   String get widgetTransactionHistory => translate('widget_transaction_history');
   String get widgetImportReport => translate('widget_import_report');
@@ -411,6 +416,7 @@ class AppLocalizations {
   String get widgetDashboardWidgets => translate('widget_dashboard_widgets');
   String get widgetBudgetOverview => translate('widget_budget_overview');
   String get widgetRecentTransactions => translate('widget_recent_transactions');
+  String get profile => translate('profile');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

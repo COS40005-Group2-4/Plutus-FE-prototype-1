@@ -20,6 +20,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
     final l10n = AppLocalizations.of(context);
     return [
       MenuItemData(
+        id: 'profile',
+        label: l10n.widgetProfile,
+        icon: Icons.person,
+        color: Colors.purple,
+      ),
+      MenuItemData(
         id: 'budget',
         label: l10n.widgetBudgetTracking,
         icon: Icons.account_balance_wallet,

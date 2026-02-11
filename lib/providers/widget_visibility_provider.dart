@@ -6,6 +6,7 @@ class WidgetVisibilityProvider extends ChangeNotifier {
   bool _isInitialized = false;
   
   final Map<String, bool> _visibleWidgets = {
+    'profile': true,
     'budget': true,
     'history': true,
     'import': true,

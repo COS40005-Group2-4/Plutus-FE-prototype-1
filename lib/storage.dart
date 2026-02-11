@@ -47,7 +47,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
   final List<int> _slotCounts = [3, 4, 6];
   
-  List<String> visibilityFilter = ['budget', 'history', 'import', 'export'];
+  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export'];
 
   void setVisibilityFilter(List<String> visibleWidgets) {
     visibilityFilter = visibleWidgets;
@@ -57,16 +57,25 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
     3: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
-        width: 2,
+        width: 3,
         startX: 0,
         startY: 0,
+        minHeight: 2,
+        identifier: "profile",
+        data: "profile",
+      ),
+      ColoredDashboardItem(
+        height: 2,
+        width: 2,
+        startX: 0,
+        startY: 2,
         minHeight: 2,
         identifier: "budget",
         data: "budget",
       ),
       ColoredDashboardItem(
         startX: 0,
-        startY: 2,
+        startY: 4,
         minHeight: 2,
         height: 2,
         width: 2,
@@ -75,7 +84,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 2,
-        startY: 0,
+        startY: 2,
         width: 1,
         height: 1,
         identifier: "import",
@@ -87,7 +96,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 2,
-        startY: 1,
+        startY: 3,
         minHeight: 1,
         minWidth: 1,
         height: 1,
@@ -101,16 +110,25 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
     4: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
-        width: 2,
+        width: 4,
         startX: 0,
         startY: 0,
+        minHeight: 2,
+        identifier: "profile",
+        data: "profile",
+      ),
+      ColoredDashboardItem(
+        height: 2,
+        width: 2,
+        startX: 0,
+        startY: 2,
         minHeight: 2,
         identifier: "budget",
         data: "budget",
       ),
       ColoredDashboardItem(
         startX: 2,
-        startY: 0,
+        startY: 2,
         minHeight: 2,
         height: 2,
         width: 2,
@@ -119,7 +137,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 0,
-        startY: 2,
+        startY: 4,
         width: 1,
         height: 1,
         identifier: "import",
@@ -131,7 +149,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 2,
-        startY: 2,
+        startY: 4,
         minHeight: 1,
         minWidth: 1,
         height: 1,
@@ -145,9 +163,18 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
     6: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
-        width: 3,
+        width: 6,
         startX: 0,
         startY: 0,
+        minHeight: 2,
+        identifier: "profile",
+        data: "profile",
+      ),
+      ColoredDashboardItem(
+        height: 2,
+        width: 3,
+        startX: 0,
+        startY: 2,
         minHeight: 2,
         minWidth: 2,
         identifier: "budget",
@@ -155,7 +182,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 3,
-        startY: 0,
+        startY: 2,
         minHeight: 2,
         height: 2,
         width: 3,
@@ -164,7 +191,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 0,
-        startY: 2,
+        startY: 4,
         width: 1,
         height: 1,
         identifier: "import",
@@ -176,7 +203,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 3,
-        startY: 2,
+        startY: 4,
         minHeight: 1,
         minWidth: 1,
         height: 1,

@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'storage.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
+import 'models/user_model.dart';
 import 'widgets/glass_container.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/export_preview_dialog.dart';
+import 'widgets/profile_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
@@ -26,6 +28,7 @@ class DataWidget extends StatelessWidget {
   final ColoredDashboardItem item;
 
   final Map<String, Widget Function(ColoredDashboardItem i)> _map = {
+    "profile": (l) => const ProfileDashboardWidget(),
     "budget": (l) => const BudgetTrackingWidget(),
     "history": (l) => const TransactionHistoryWidget(),
     "import": (l) => const ReportImportWidget(),
@@ -833,6 +836,52 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Profile Display Widget for Dashboard
+class ProfileDashboardWidget extends StatefulWidget {
+  const ProfileDashboardWidget({super.key});
+
+  @override
+  State<ProfileDashboardWidget> createState() => _ProfileDashboardWidgetState();
+}
+
+class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final currentUser = authProvider.currentUser;
+
+        if (currentUser == null) {
+          return GlassContainer(
+            color: Colors.purple,
+            opacity: 0.2,
+            borderRadius: 16,
+            padding: const EdgeInsets.all(16),
+            child: const Center(
+              child: Text(
+                'No user logged in',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+          );
+        }
+
+        return GlassContainer(
+          color: Colors.purple,
+          opacity: 0.2,
+          borderRadius: 16,
+          padding: const EdgeInsets.all(16),
+          child: ProfileWidget(
+            user: currentUser,
+            defaultAvatarAsset: 'lib/assets/avatar/default-avatar.jpg',
+            isCompact: true,
+          ),
+        );
+      },
     );
   }
 }

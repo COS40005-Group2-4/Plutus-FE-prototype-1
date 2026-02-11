@@ -3,11 +3,13 @@
 A new Flutter project.
 
 ## Checklist
+###Initiate project
+flutter run --dart-define-from-file=.env
 
 ###Build libc
 go build -o libplutus.dll -buildmode=c-shared ./main.go
 
-###Build APK on emulatỏ
+###Build APK on emulator
 flutter install -d emulator-5554
 
 ## Sample Resoureces
