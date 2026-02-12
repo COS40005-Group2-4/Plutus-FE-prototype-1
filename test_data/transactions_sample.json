@@ -1,0 +1,49 @@
+{
+  "transactions": [
+    {
+      "date": "2024-01-15",
+      "payee": "Coffee Shop",
+      "amount": -50000.0,
+      "currency": "VND",
+      "category": "Food",
+      "description": "Morning coffee",
+      "type": "expense"
+    },
+    {
+      "date": "2024-01-16",
+      "payee": "Supermarket",
+      "amount": -150000.0,
+      "currency": "VND",
+      "category": "Food",
+      "description": "Grocery shopping",
+      "type": "expense"
+    },
+    {
+      "date": "2024-01-17",
+      "payee": "Salary",
+      "amount": 5000000.0,
+      "currency": "VND",
+      "category": "Salary",
+      "description": "Monthly salary",
+      "type": "income"
+    },
+    {
+      "date": "2024-01-18",
+      "payee": "Electric Company",
+      "amount": -250000.0,
+      "currency": "VND",
+      "category": "Utilities",
+      "description": "Electric bill",
+      "type": "expense"
+    },
+    {
+      "date": "2024-01-19",
+      "payee": "Transport",
+      "amount": -75000.0,
+      "currency": "VND",
+      "category": "Transportation",
+      "description": "Bus fare",
+      "type": "expense"
+    }
+  ]
+}

@@ -11,17 +11,17 @@ class GlassBackground extends StatelessWidget {
     
     return Stack(
       children: [
-        // Base gradient
+        // Base gradient - Figma-inspired dark navy/teal
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: isDark 
                   ? [
-                      const Color(0xFF0F2027),
-                      const Color(0xFF203A43),
-                      const Color(0xFF2C5364),
+                      const Color(0xFF0A1828), // Deep navy
+                      const Color(0xFF132D3F), // Dark teal-blue
+                      const Color(0xFF1A3A4A), // Medium teal
                     ]
                   : [
                       const Color(0xFFE0C3FC),
@@ -30,64 +30,82 @@ class GlassBackground extends StatelessWidget {
             ),
           ),
         ),
-        // Decorative orbs
-        Positioned(
-          top: -100,
-          left: -100,
-          child: Container(
-            width: 400,
-            height: 400,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isDark ? Colors.purple : Colors.purpleAccent).withValues(alpha: 0.3),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.purple : Colors.purpleAccent).withValues(alpha: 0.3),
-                  blurRadius: 100,
-                  spreadRadius: 20,
-                )
-              ]
+        // Subtle decorative elements for depth
+        if (isDark) ...[
+          Positioned(
+            top: -150,
+            right: -100,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF2A5470).withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: -50,
-          right: -50,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isDark ? Colors.blue : Colors.lightBlue).withValues(alpha: 0.3),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.blue : Colors.lightBlue).withValues(alpha: 0.3),
-                  blurRadius: 100,
-                  spreadRadius: 20,
-                )
-              ]
+          Positioned(
+            bottom: -100,
+            left: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1E4A5F).withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-         Positioned(
-          top: 200,
-          right: 50,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isDark ? Colors.teal : Colors.tealAccent).withValues(alpha: 0.2),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.teal : Colors.tealAccent).withValues(alpha: 0.2),
-                  blurRadius: 80,
-                  spreadRadius: 10,
-                )
-              ]
+        ] else ...[
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.purpleAccent.withValues(alpha: 0.3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purpleAccent.withValues(alpha: 0.3),
+                    blurRadius: 100,
+                    spreadRadius: 20,
+                  )
+                ]
+              ),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -50,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.lightBlue.withValues(alpha: 0.3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.lightBlue.withValues(alpha: 0.3),
+                    blurRadius: 100,
+                    spreadRadius: 20,
+                  )
+                ]
+              ),
+            ),
+          ),
+        ],
         // Content
         SafeArea(child: child),
       ],

@@ -1,0 +1,11 @@
+Date,Payee,Amount,Currency,Category,Description
+2024-01-15,Coffee Shop,-50000,VND,Food,Morning coffee
+2024-01-16,Supermarket,-150000,VND,Food,Grocery shopping
+2024-01-17,Salary,5000000,VND,Salary,Monthly salary
+2024-01-18,Electric Company,-250000,VND,Utilities,Electric bill
+2024-01-19,Transport,-75000,VND,Transportation,Bus fare
+2024-01-20,Freelance Project,1200000,VND,Freelance,Web development
+2024-01-21,Restaurant,-350000,VND,Food,Dinner with friends
+2024-01-22,Internet,-150000,VND,Utilities,Monthly internet
+2024-01-23,Pharmacy,-85000,VND,Health,Medicine
+2024-01-24,Clothing Store,-450000,VND,Shopping,New shirt

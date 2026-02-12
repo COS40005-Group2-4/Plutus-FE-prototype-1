@@ -1,0 +1,109 @@
+{
+  "transactions": [
+    {
+      "date": "2024-01-15",
+      "payee": "Coffee Shop",
+      "amount": 50000.0,
+      "currency": "VND",
+      "category": "Food",
+      "description": "Morning coffee",
+      "type": "expense",
+      "postings": [
+        {
+          "account": "Assets:Cash",
+          "amount": -50000.0,
+          "commodity": "VND"
+        },
+        {
+          "account": "Expenses:Food",
+          "amount": 50000.0,
+          "commodity": "VND"
+        }
+      ]
+    },
+    {
+      "date": "2024-01-16",
+      "payee": "Online Store",
+      "amount": 150.0,
+      "currency": "USD",
+      "category": "Shopping",
+      "description": "Electronics purchase",
+      "type": "expense",
+      "postings": [
+        {
+          "account": "Assets:Bank",
+          "amount": -150.0,
+          "commodity": "USD"
+        },
+        {
+          "account": "Expenses:Shopping",
+          "amount": 150.0,
+          "commodity": "USD"
+        }
+      ]
+    },
+    {
+      "date": "2024-01-17",
+      "payee": "Salary",
+      "amount": 5000000.0,
+      "currency": "VND",
+      "category": "Income",
+      "description": "Monthly salary",
+      "type": "income",
+      "postings": [
+        {
+          "account": "Income:Salary",
+          "amount": -5000000.0,
+          "commodity": "VND"
+        },
+        {
+          "account": "Assets:Bank",
+          "amount": 5000000.0,
+          "commodity": "VND"
+        }
+      ]
+    },
+    {
+      "date": "2024-01-18",
+      "payee": "Electric Company",
+      "amount": -250000.0,
+      "currency": "VND",
+      "category": "Utilities",
+      "description": "Electric bill",
+      "type": "expense",
+      "postings": [
+        {
+          "account": "Assets:Bank",
+          "amount": -250000.0,
+          "commodity": "VND"
+        },
+        {
+          "account": "Expenses:Utilities",
+          "amount": 250000.0,
+          "commodity": "VND"
+        }
+      ]
+    },
+    {
+      "date": "2024-01-19",
+      "payee": "Restaurant",
+      "amount": 75.0,
+      "currency": "USD",
+      "category": "Food",
+      "description": "Dinner with client",
+      "type": "expense",
+      "postings": [
+        {
+          "account": "Assets:Bank",
+          "amount": -75.0,
+          "commodity": "USD"
+        },
+        {
+          "account": "Expenses:Food",
+          "amount": 75.0,
+          "commodity": "USD"
+        }
+      ]
+    }
+  ]
+}

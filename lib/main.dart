@@ -124,19 +124,29 @@ class _MyAppState extends State<MyApp> {
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
+                foregroundColor: Colors.white,
               ),
               dialogBackgroundColor: Colors.transparent,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF4285F4),
+                brightness: Brightness.light,
+              ),
             ),
             darkTheme: ThemeData.dark().copyWith(
               scaffoldBackgroundColor: Colors.transparent,
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
+                foregroundColor: Colors.white,
               ),
               dialogBackgroundColor: Colors.transparent,
               colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
+                seedColor: const Color(0xFF2A5470),
                 brightness: Brightness.dark,
+                primary: const Color(0xFF4A90E2),
+                secondary: const Color(0xFF5DADE2),
+                surface: const Color(0xFF1A3A4A),
+                background: const Color(0xFF0A1828),
               ),
             ),
             themeMode: settingsProvider.themeMode,
@@ -389,7 +399,9 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         },
       ),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1A3A4A).withValues(alpha: 0.3)
+            : const Color(0xFF4285F4).withValues(alpha: 0.2),
         flexibleSpace: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -397,6 +409,16 @@ class _DashboardWidgetState extends State<DashboardWidget> {
           ),
         ),
         automaticallyImplyLeading: true,
+        title: Text(
+          'PLUTUS',
+          style: TextStyle(
+            fontWeight: FontWeight.w300,
+            letterSpacing: 2.0,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF5DADE2)
+                : Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () async {

@@ -35,6 +35,8 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       width: width,
       height: height,
@@ -43,9 +45,10 @@ class GlassContainer extends StatelessWidget {
         shape: shape,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 16,
-            spreadRadius: 4,
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+            blurRadius: isDark ? 20 : 16,
+            spreadRadius: isDark ? 2 : 4,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -58,17 +61,24 @@ class GlassContainer extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: (color ?? Colors.white).withValues(alpha: opacity),
+              color: isDark 
+                  ? const Color(0xFF1A3A4A).withValues(alpha: opacity + 0.15)
+                  : (color ?? Colors.white).withValues(alpha: opacity),
               shape: shape,
               borderRadius: shape == BoxShape.circle ? null : BorderRadius.circular(borderRadius),
               border: border ?? Border.all(
-                color: Colors.white.withValues(alpha: borderOpacity),
-                width: 1.5,
+                color: isDark 
+                    ? const Color(0xFF2A5470).withValues(alpha: borderOpacity + 0.1)
+                    : Colors.white.withValues(alpha: borderOpacity),
+                width: 1.0,
               ),
               gradient: gradient ?? LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
+                colors: isDark ? [
+                  const Color(0xFF1E4A5F).withValues(alpha: opacity + 0.2),
+                  const Color(0xFF132D3F).withValues(alpha: opacity + 0.15),
+                ] : [
                   (color ?? Colors.white).withValues(alpha: opacity + 0.1),
                   (color ?? Colors.white).withValues(alpha: opacity),
                 ],

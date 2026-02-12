@@ -387,34 +387,135 @@ class TransactionService {
     
     final List<Map<String, dynamic>> transactions = [];
     
-    if (data.containsKey('income') && data['income']['accounts'] != null) {
-      final accounts = data['income']['accounts'] as Map<String, dynamic>;
-      accounts.forEach((account, amounts) {
-        amounts.forEach((currency, amount) {
-          transactions.add({
-            'type': 'income',
-            'account': account,
-            'currency': currency,
-            'amount': amount,
-            'date': DateTime.now().toIso8601String(),
-          });
-        });
-      });
+    // Check if data has a 'transactions' array directly (new format)
+    if (data.containsKey('transactions') && data['transactions'] is List) {
+      final txList = data['transactions'] as List;
+      for (var tx in txList) {
+        if (tx is Map<String, dynamic>) {
+          // Ensure all required fields are present
+          final txMap = Map<String, dynamic>.from(tx);
+          
+          // Determine type if not present
+          if (!txMap.containsKey('type')) {
+            final amount = (txMap['amount'] as num?)?.toDouble() ?? 0.0;
+            txMap['type'] = amount < 0 ? 'expense' : 'income';
+          }
+          
+          // Build account paths if not present
+          if (!txMap.containsKey('account')) {
+            txMap['account'] = 'Assets:Cash';
+          }
+          
+          if (!txMap.containsKey('category')) {
+            final type = txMap['type'] as String;
+            final categoryName = tx['category'] as String? ?? (type == 'expense' ? 'Other' : 'General');
+            txMap['category'] = type == 'expense' 
+                ? 'Expenses:$categoryName'
+                : 'Income:$categoryName';
+          }
+          
+          // Create postings if not present
+          if (!txMap.containsKey('postings') || txMap['postings'] == null) {
+            final amount = (txMap['amount'] as num?)?.toDouble() ?? 0.0;
+            final currency = txMap['currency'] as String? ?? 'VND';
+            final type = txMap['type'] as String;
+            final assetAccount = txMap['account'] as String;
+            final categoryAccount = txMap['category'] as String;
+            
+            List<Map<String, dynamic>> postings = [];
+            if (type == 'expense') {
+              postings.add({
+                'account': assetAccount,
+                'amount': -amount.abs(),
+                'commodity': currency,
+              });
+              postings.add({
+                'account': categoryAccount,
+                'amount': amount.abs(),
+                'commodity': currency,
+              });
+            } else {
+              postings.add({
+                'account': assetAccount,
+                'amount': amount.abs(),
+                'commodity': currency,
+              });
+              postings.add({
+                'account': categoryAccount,
+                'amount': -amount.abs(),
+                'commodity': currency,
+              });
+            }
+            txMap['postings'] = postings;
+          }
+          
+          transactions.add(txMap);
+        }
+      }
     }
-    
-    if (data.containsKey('expense') && data['expense']['accounts'] != null) {
-      final accounts = data['expense']['accounts'] as Map<String, dynamic>;
-      accounts.forEach((account, amounts) {
-        amounts.forEach((currency, amount) {
-          transactions.add({
-            'type': 'expense',
-            'account': account,
-            'currency': currency,
-            'amount': -amount.abs(),
-            'date': DateTime.now().toIso8601String(),
+    // Legacy format with income/expense accounts
+    else {
+      if (data.containsKey('income') && data['income']['accounts'] != null) {
+        final accounts = data['income']['accounts'] as Map<String, dynamic>;
+        accounts.forEach((account, amounts) {
+          amounts.forEach((currency, amount) {
+            final amountValue = (amount as num).toDouble();
+            transactions.add({
+              'type': 'income',
+              'account': 'Assets:Cash',
+              'category': 'Income:$account',
+              'currency': currency,
+              'amount': amountValue,
+              'date': DateTime.now().toIso8601String(),
+              'payee': account,
+              'description': 'Income from $account',
+              'postings': [
+                {
+                  'account': 'Assets:Cash',
+                  'amount': amountValue.abs(),
+                  'commodity': currency,
+                },
+                {
+                  'account': 'Income:$account',
+                  'amount': -amountValue.abs(),
+                  'commodity': currency,
+                },
+              ],
+            });
           });
         });
-      });
+      }
+      
+      if (data.containsKey('expense') && data['expense']['accounts'] != null) {
+        final accounts = data['expense']['accounts'] as Map<String, dynamic>;
+        accounts.forEach((account, amounts) {
+          amounts.forEach((currency, amount) {
+            final amountValue = (amount as num).toDouble();
+            transactions.add({
+              'type': 'expense',
+              'account': 'Assets:Cash',
+              'category': 'Expenses:$account',
+              'currency': currency,
+              'amount': -amountValue.abs(),
+              'date': DateTime.now().toIso8601String(),
+              'payee': account,
+              'description': 'Expense for $account',
+              'postings': [
+                {
+                  'account': 'Assets:Cash',
+                  'amount': -amountValue.abs(),
+                  'commodity': currency,
+                },
+                {
+                  'account': 'Expenses:$account',
+                  'amount': amountValue.abs(),
+                  'commodity': currency,
+                },
+              ],
+            });
+          });
+        });
+      }
     }
     
     return {
@@ -465,15 +566,52 @@ class TransactionService {
       String currency = getValue('currency', 3)?.toString() ?? 'VND';
       String category = getValue('category', 4)?.toString() ?? '';
       String description = getValue('description', 5)?.toString() ?? '';
+      
+      // Determine transaction type based on amount
+      String type = amount < 0 ? 'expense' : 'income';
+      
+      // Build account paths
+      String assetAccount = 'Assets:Cash';
+      String categoryAccount = type == 'expense' 
+          ? 'Expenses:${category.isNotEmpty ? category : 'Other'}'
+          : 'Income:${category.isNotEmpty ? category : 'General'}';
+      
+      // Create postings for double-entry accounting
+      List<Map<String, dynamic>> postings = [];
+      if (type == 'expense') {
+        postings.add({
+          'account': assetAccount,
+          'amount': -amount.abs(),
+          'commodity': currency,
+        });
+        postings.add({
+          'account': categoryAccount,
+          'amount': amount.abs(),
+          'commodity': currency,
+        });
+      } else {
+        postings.add({
+          'account': assetAccount,
+          'amount': amount.abs(),
+          'commodity': currency,
+        });
+        postings.add({
+          'account': categoryAccount,
+          'amount': -amount.abs(),
+          'commodity': currency,
+        });
+      }
 
       transactions.add({
         'date': date,
         'payee': payee,
         'amount': amount,
         'currency': currency,
-        'category': category,
+        'category': categoryAccount,
         'description': description,
-        'type': amount < 0 ? 'expense' : 'income', 
+        'type': type,
+        'account': assetAccount,
+        'postings': postings,
       });
     }
 

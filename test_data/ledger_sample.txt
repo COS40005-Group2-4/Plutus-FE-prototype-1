@@ -1,0 +1,42 @@
+; Sample Ledger File for Plutus
+; Double-entry accounting format
+
+2024-01-15 * "Coffee Shop" "Morning coffee"
+    Assets:Cash                    -50000.00 VND
+    Expenses:Food                   50000.00 VND
+
+2024-01-16 * "Supermarket" "Grocery shopping"
+    Assets:Cash                   -150000.00 VND
+    Expenses:Food                  150000.00 VND
+
+2024-01-17 * "Salary" "Monthly salary"
+    Income:Salary                -5000000.00 VND
+    Assets:Cash                   5000000.00 VND
+
+2024-01-18 * "Electric Company" "Electric bill"
+    Assets:Cash                   -250000.00 VND
+    Expenses:Utilities            250000.00 VND
+
+2024-01-19 * "Transport" "Bus fare"
+    Assets:Cash                    -75000.00 VND
+    Expenses:Transportation        75000.00 VND
+
+2024-01-20 * "Freelance Project" "Web development payment"
+    Income:Freelance             -1200000.00 VND
+    Assets:Cash                   1200000.00 VND
+
+2024-01-21 * "Restaurant" "Dinner with friends"
+    Assets:Cash                   -350000.00 VND
+    Expenses:Food                  350000.00 VND
+
+2024-01-22 * "Internet Provider" "Monthly internet"
+    Assets:Cash                   -150000.00 VND
+    Expenses:Utilities            150000.00 VND
+
+2024-01-23 * "Pharmacy" "Medicine"
+    Assets:Cash                    -85000.00 VND
+    Expenses:Health                 85000.00 VND
+
+2024-01-24 * "Clothing Store" "New shirt"
+    Assets:Cash                   -450000.00 VND
+    Expenses:Shopping              450000.00 VND
