@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'dart:math' as math;
 import 'storage.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
@@ -60,6 +62,13 @@ class BudgetTrackingWidget extends StatefulWidget {
 
 class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
   late TransactionService _transactionService;
+  bool _isYearlyView = false;
+  DateTime _selectedDate = DateTime.now();
+  double _monthlyBudget = 0;
+  double _yearlyBudget = 0;
+  AppCurrency _budgetCurrency = AppCurrency.usd;
+  bool _isEditMode = false;
+  final TextEditingController _budgetController = TextEditingController();
 
   @override
   void initState() {
@@ -69,7 +78,8 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
     if (authProvider.currentUserId != null) {
       _transactionService.setCurrentUser(authProvider.currentUserId!);
     }
-    // Load initial transactions on next frame to ensure stream subscription is ready
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    _budgetCurrency = settings.currency;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
     });
@@ -77,9 +87,11 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
 
   @override
   void dispose() {
-    // Don't dispose - service is a singleton
+    _budgetController.dispose();
     super.dispose();
   }
+
+  double get _currentBudget => _isYearlyView ? _yearlyBudget : _monthlyBudget;
 
   @override
   Widget build(BuildContext context) {
@@ -90,47 +102,300 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
-          child: StreamBuilder<List<Transaction>>(
-            stream: _transactionService.transactionStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              }
+          child: Column(
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 8),
+              Expanded(
+                child: StreamBuilder<List<Transaction>>(
+                  stream: _transactionService.transactionStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    }
 
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Text(
-                    AppLocalizations.of(context).noTransactionsFound,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                );
-              }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          AppLocalizations.of(context).noTransactionsFound,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      );
+                    }
 
-              final transactions = snapshot.data!;
+                    final transactions = _filterTransactions(snapshot.data!);
 
-              return _BudgetContent(
-                key: ValueKey('budget_${settings.currency.code}'),
-                transactions: transactions,
-                settings: settings,
-              );
-            },
+                    return _BudgetContent(
+                      key: ValueKey('budget_${settings.currency.code}_${_selectedDate}_${_isYearlyView}_${_budgetCurrency.code}'),
+                      transactions: transactions,
+                      settings: settings,
+                      targetBudget: _currentBudget,
+                      budgetCurrency: _budgetCurrency,
+                      isYearlyView: _isYearlyView,
+                      selectedDate: _selectedDate,
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AppLocalizations.of(context).widgetBudgetOverview,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => _isYearlyView = false),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: !_isYearlyView ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Month',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: !_isYearlyView ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () => setState(() => _isYearlyView = true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _isYearlyView ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Year',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: _isYearlyView ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (_isEditMode)
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _isEditMode = false;
+                        _budgetController.clear();
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _isEditMode = true;
+                        _budgetController.text = _currentBudget > 0 ? _currentBudget.toString() : '';
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left, color: Colors.white, size: 20),
+              onPressed: () {
+                setState(() {
+                  if (_isYearlyView) {
+                    _selectedDate = DateTime(_selectedDate.year - 1);
+                  } else {
+                    _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1);
+                  }
+                });
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            Text(
+              _isYearlyView
+                  ? '${_selectedDate.year}'
+                  : '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
+              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+              onPressed: () {
+                setState(() {
+                  if (_isYearlyView) {
+                    _selectedDate = DateTime(_selectedDate.year + 1);
+                  } else {
+                    _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1);
+                  }
+                });
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        if (_isEditMode)
+          GlassContainer(
+            padding: const EdgeInsets.all(8),
+            color: Colors.white,
+            opacity: 0.1,
+            borderRadius: 6,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Target Budget (${_isYearlyView ? 'Year' : 'Month'}):',
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: TextField(
+                        controller: _budgetController,
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white30),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          final value = double.tryParse(_budgetController.text) ?? 0;
+                          if (_isYearlyView) {
+                            _yearlyBudget = value;
+                          } else {
+                            _monthlyBudget = value;
+                          }
+                          _isEditMode = false;
+                        });
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Currency:',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white30),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<AppCurrency>(
+                        value: _budgetCurrency,
+                        dropdownColor: Colors.black87,
+                        underline: const SizedBox(),
+                        isDense: true,
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        items: AppCurrency.values.map((currency) {
+                          return DropdownMenuItem(
+                            value: currency,
+                            child: Text('${currency.symbol} ${currency.code}'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _budgetCurrency = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _getMonthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+
+  List<Transaction> _filterTransactions(List<Transaction> transactions) {
+    return transactions.where((tx) {
+      if (_isYearlyView) {
+        return tx.dateTime.year == _selectedDate.year;
+      } else {
+        return tx.dateTime.year == _selectedDate.year && tx.dateTime.month == _selectedDate.month;
+      }
+    }).toList();
   }
 }
 
 class _BudgetContent extends StatefulWidget {
   final List<Transaction> transactions;
   final SettingsProvider settings;
+  final double targetBudget;
+  final AppCurrency budgetCurrency;
+  final bool isYearlyView;
+  final DateTime selectedDate;
 
   const _BudgetContent({
     super.key,
     required this.transactions,
     required this.settings,
+    required this.targetBudget,
+    required this.budgetCurrency,
+    required this.isYearlyView,
+    required this.selectedDate,
   });
 
   @override
@@ -153,6 +418,7 @@ class _BudgetContentState extends State<_BudgetContent> {
   void didUpdateWidget(_BudgetContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.budgetCurrency != widget.budgetCurrency ||
         oldWidget.transactions != widget.transactions) {
       _calculateTotals();
     }
@@ -169,9 +435,8 @@ class _BudgetContentState extends State<_BudgetContent> {
     for (var transaction in widget.transactions) {
       double amount = transaction.totalAmount;
 
-      // Convert if needed
       final sourceCurrency = transaction.currency.toUpperCase();
-      final targetCurrency = widget.settings.currency.code.toUpperCase();
+      final targetCurrency = widget.budgetCurrency.code.toUpperCase();
       
       if (sourceCurrency != targetCurrency) {
         try {
@@ -181,7 +446,6 @@ class _BudgetContentState extends State<_BudgetContent> {
             toCurrency: targetCurrency,
           );
         } catch (e) {
-          // If conversion fails, use original amount
           amount = transaction.totalAmount;
         }
       }
@@ -211,122 +475,208 @@ class _BudgetContentState extends State<_BudgetContent> {
     }
 
     final balance = _totalIncome - _totalExpense;
-    final currencyService = CurrencyService();
+    final budgetUsage = widget.targetBudget > 0 ? (_totalExpense / widget.targetBudget).clamp(0.0, 1.5) : 0.0;
+    
+    // Calculate prediction
+    final now = DateTime.now();
+    final isCurrentPeriod = widget.isYearlyView 
+        ? now.year == widget.selectedDate.year
+        : (now.year == widget.selectedDate.year && now.month == widget.selectedDate.month);
+    
+    double predictedExpense = _totalExpense;
+    if (isCurrentPeriod && _totalExpense > 0) {
+      if (widget.isYearlyView) {
+        final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays + 1;
+        final daysInYear = DateTime(now.year, 12, 31).difference(DateTime(now.year, 1, 1)).inDays + 1;
+        final dailyAverage = _totalExpense / dayOfYear;
+        predictedExpense = dailyAverage * daysInYear;
+      } else {
+        final dayOfMonth = now.day;
+        final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+        final dailyAverage = _totalExpense / dayOfMonth;
+        predictedExpense = dailyAverage * daysInMonth;
+      }
+    }
 
     return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            AppLocalizations.of(context).widgetBudgetOverview,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        GlassContainer(
-          padding: const EdgeInsets.all(12),
-          color: Colors.white,
-          opacity: 0.1,
-          borderRadius: 8,
-          child: Column(
+          if (widget.targetBudget > 0) ...[
+            _buildGaugeChart(budgetUsage, predictedExpense),
+            const SizedBox(height: 16),
+          ],
+          _buildSummary(balance, predictedExpense, isCurrentPeriod),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGaugeChart(double usage, double predictedExpense) {
+    final predictedUsage = widget.targetBudget > 0 
+        ? (predictedExpense / widget.targetBudget).clamp(0.0, 1.5) 
+        : 0.0;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 140,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${AppLocalizations.of(context).income}:',
-                      style: const TextStyle(color: Colors.white70),
-                      overflow: TextOverflow.ellipsis,
+              // Background circle
+              SizedBox(
+                height: 140,
+                width: 140,
+                child: CircularProgressIndicator(
+                  value: 1.0,
+                  strokeWidth: 14,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.1)),
+                ),
+              ),
+              // Predicted usage (lighter color)
+              if (predictedUsage > usage)
+                SizedBox(
+                  height: 140,
+                  width: 140,
+                  child: CircularProgressIndicator(
+                    value: predictedUsage.clamp(0.0, 1.0),
+                    strokeWidth: 14,
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      (predictedUsage < 0.7 ? Colors.green : (predictedUsage < 0.9 ? Colors.orange : Colors.red))
+                          .withOpacity(0.3),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      currencyService.formatCurrency(
-                        amount: _totalIncome,
-                        currencyCode: widget.settings.currency.code,
-                        symbol: widget.settings.currency.symbol,
-                      ),
-                      style: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.end,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${AppLocalizations.of(context).expense}:',
-                      style: const TextStyle(color: Colors.white70),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              // Current usage
+              SizedBox(
+                height: 140,
+                width: 140,
+                child: CircularProgressIndicator(
+                  value: usage.clamp(0.0, 1.0),
+                  strokeWidth: 14,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
                   ),
-                  Expanded(
-                    child: Text(
-                      currencyService.formatCurrency(
-                        amount: _totalExpense,
-                        currencyCode: widget.settings.currency.code,
-                        symbol: widget.settings.currency.symbol,
-                      ),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${(usage * 100).toStringAsFixed(0)}%',
                     style: const TextStyle(
-                      color: Colors.red,
+                      color: Colors.white,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.end,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                ],
-              ),
-              const Divider(color: Colors.white30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Balance:',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      currencyService.formatCurrency(
-                        amount: balance,
-                        currencyCode: widget.settings.currency.code,
-                        symbol: widget.settings.currency.symbol,
-                      ),
+                  Text(
+                    'of budget',
                     style: TextStyle(
-                      color: balance >= 0 ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 10,
                     ),
-                    textAlign: TextAlign.end,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
                 ],
               ),
             ],
           ),
         ),
+        if (predictedUsage > usage) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Predicted: ${(predictedUsage * 100).toStringAsFixed(0)}%',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSummary(double balance, double predictedExpense, bool isCurrentPeriod) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(12),
+      color: Colors.white,
+      opacity: 0.1,
+      borderRadius: 8,
+      child: Column(
+        children: [
+          if (widget.targetBudget > 0)
+            _buildSummaryRow(
+              'Budget',
+              widget.targetBudget,
+              Colors.blue,
+            ),
+          _buildSummaryRow(
+            AppLocalizations.of(context).income,
+            _totalIncome,
+            Colors.green,
+          ),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            AppLocalizations.of(context).expense,
+            _totalExpense,
+            Colors.red,
+          ),
+          if (isCurrentPeriod && predictedExpense > _totalExpense) ...[
+            const SizedBox(height: 8),
+            _buildSummaryRow(
+              'Predicted',
+              predictedExpense,
+              Colors.orange,
+            ),
+          ],
+          const Divider(color: Colors.white30),
+          _buildSummaryRow(
+            'Balance',
+            balance,
+            balance >= 0 ? Colors.green : Colors.red,
+            isBold: true,
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, double amount, Color color, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            '$label:',
+            style: TextStyle(
+              color: isBold ? Colors.white : Colors.white70,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            _currencyService.formatCurrency(
+              amount: amount,
+              currencyCode: widget.budgetCurrency.code,
+              symbol: widget.budgetCurrency.symbol,
+            ),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: isBold ? 14 : 12,
+            ),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -79,6 +79,7 @@ dependencies:
   printing: ^5.13.4
   open_file: ^3.5.10
   google_fonts: ^6.2.1
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:
