@@ -47,7 +47,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
   final List<int> _slotCounts = [3, 4, 6];
   
-  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr'];
+  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr', 'cashflow'];
 
   void setVisibilityFilter(List<String> visibleWidgets) {
     visibilityFilter = visibleWidgets;
@@ -127,6 +127,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         minWidth: 1,
         data: "irr",
       ),
+      ColoredDashboardItem(
+        startX: 0,
+        startY: 6,
+        width: 2,
+        height: 2,
+        identifier: "cashflow",
+        minHeight: 2,
+        minWidth: 2,
+        data: "cashflow",
+      ),
     ],
     4: <ColoredDashboardItem>[
       ColoredDashboardItem(
@@ -200,6 +210,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         minHeight: 1,
         minWidth: 1,
         data: "irr",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 4,
+        width: 2,
+        height: 2,
+        identifier: "cashflow",
+        minHeight: 2,
+        minWidth: 2,
+        data: "cashflow",
       ),
     ],
     6: <ColoredDashboardItem>[
@@ -275,6 +295,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         minHeight: 1,
         minWidth: 1,
         data: "irr",
+      ),
+      ColoredDashboardItem(
+        startX: 4,
+        startY: 2,
+        width: 2,
+        height: 2,
+        identifier: "cashflow",
+        minHeight: 2,
+        minWidth: 2,
+        data: "cashflow",
       ),
     ],
   };

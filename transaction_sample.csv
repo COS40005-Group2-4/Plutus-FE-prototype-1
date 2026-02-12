@@ -1,0 +1,9 @@
+Date,Payee,Amount,Currency,Category,Description
+2024-01-15,Grocery Store,-50000,VND,Food,Weekly groceries
+2024-01-16,Salary,15000000,VND,Salary,Monthly salary
+2024-01-17,Coffee Shop,-35000,VND,Food,Morning coffee
+2024-01-18,Gas Station,-200000,VND,Transportation,Fuel
+2024-01-20,Freelance Work,5000000,VND,Income,Project payment
+2024-01-22,Restaurant,-150000,VND,Food,Dinner with friends
+2024-01-25,Electric Bill,-500000,VND,Utilities,Monthly electricity
+2024-01-28,Bonus,2000000,VND,Income,Performance bonus

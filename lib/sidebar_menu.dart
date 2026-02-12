@@ -61,6 +61,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.show_chart,
         color: const Color(0xFF5DADE2),
       ),
+      MenuItemData(
+        id: 'cashflow',
+        label: 'Cash Flow',
+        icon: Icons.waterfall_chart,
+        color: const Color(0xFF2A5470),
+      ),
     ];
   }
 

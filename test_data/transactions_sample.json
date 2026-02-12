@@ -1,7 +1,7 @@
 {
   "transactions": [
     {
-      "date": "2024-01-15",
+      "date": "2026-01-15",
       "payee": "Coffee Shop",
       "amount": -50000.0,
       "currency": "VND",
@@ -10,7 +10,7 @@
       "type": "expense"
     },
     {
-      "date": "2024-01-16",
+      "date": "2026-02-10",
       "payee": "Supermarket",
       "amount": -150000.0,
       "currency": "VND",
@@ -19,7 +19,7 @@
       "type": "expense"
     },
     {
-      "date": "2024-01-17",
+      "date": "2026-02-28",
       "payee": "Salary",
       "amount": 5000000.0,
       "currency": "VND",
@@ -28,7 +28,7 @@
       "type": "income"
     },
     {
-      "date": "2024-01-18",
+      "date": "2026-03-12",
       "payee": "Electric Company",
       "amount": -250000.0,
       "currency": "VND",
@@ -37,12 +37,102 @@
       "type": "expense"
     },
     {
-      "date": "2024-01-19",
+      "date": "2026-04-05",
       "payee": "Transport",
       "amount": -75000.0,
       "currency": "VND",
       "category": "Transportation",
       "description": "Bus fare",
+      "type": "expense"
+    },
+    {
+      "date": "2026-05-20",
+      "payee": "Freelance Project",
+      "amount": 1200000.0,
+      "currency": "VND",
+      "category": "Freelance",
+      "description": "Web development payment",
+      "type": "income"
+    },
+    {
+      "date": "2026-06-08",
+      "payee": "Restaurant",
+      "amount": -350000.0,
+      "currency": "VND",
+      "category": "Food",
+      "description": "Dinner with friends",
+      "type": "expense"
+    },
+    {
+      "date": "2026-06-25",
+      "payee": "Internet Provider",
+      "amount": -150000.0,
+      "currency": "VND",
+      "category": "Utilities",
+      "description": "Monthly internet",
+      "type": "expense"
+    },
+    {
+      "date": "2026-07-14",
+      "payee": "Pharmacy",
+      "amount": -85000.0,
+      "currency": "VND",
+      "category": "Health",
+      "description": "Medicine",
+      "type": "expense"
+    },
+    {
+      "date": "2026-08-03",
+      "payee": "Clothing Store",
+      "amount": -450000.0,
+      "currency": "VND",
+      "category": "Shopping",
+      "description": "New shirt",
+      "type": "expense"
+    },
+    {
+      "date": "2026-09-18",
+      "payee": "Gym Membership",
+      "amount": -300000.0,
+      "currency": "VND",
+      "category": "Health",
+      "description": "Monthly gym fee",
+      "type": "expense"
+    },
+    {
+      "date": "2026-10-07",
+      "payee": "Consulting Work",
+      "amount": 2500000.0,
+      "currency": "VND",
+      "category": "Freelance",
+      "description": "Business consultation",
+      "type": "income"
+    },
+    {
+      "date": "2026-11-11",
+      "payee": "Electronics Store",
+      "amount": -800000.0,
+      "currency": "VND",
+      "category": "Shopping",
+      "description": "New headphones",
+      "type": "expense"
+    },
+    {
+      "date": "2026-11-30",
+      "payee": "Bonus",
+      "amount": 3000000.0,
+      "currency": "VND",
+      "category": "Bonus",
+      "description": "Year-end bonus",
+      "type": "income"
+    },
+    {
+      "date": "2026-12-22",
+      "payee": "Holiday Dinner",
+      "amount": -650000.0,
+      "currency": "VND",
+      "category": "Food",
+      "description": "Christmas celebration",
       "type": "expense"
     }
   ]

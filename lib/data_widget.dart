@@ -12,6 +12,7 @@ import 'widgets/export_preview_dialog.dart';
 import 'widgets/profile_widget.dart';
 import 'widgets/roi_widget.dart';
 import 'widgets/irr_widget.dart';
+import 'widgets/cashflow_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
@@ -39,6 +40,7 @@ class DataWidget extends StatelessWidget {
     "export": (l) => const ReportExportWidget(),
     "roi": (l) => const RoiWidget(),
     "irr": (l) => const IrrWidget(),
+    "cashflow": (l) => const CashflowWidget(),
   };
 
   @override

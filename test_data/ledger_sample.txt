@@ -1,42 +1,63 @@
 ; Sample Ledger File for Plutus
 ; Double-entry accounting format
+; Year 2026 transactions
 
-2024-01-15 * "Coffee Shop" "Morning coffee"
+2026-01-15 * "Coffee Shop" "Morning coffee"
     Assets:Cash                    -50000.00 VND
     Expenses:Food                   50000.00 VND
 
-2024-01-16 * "Supermarket" "Grocery shopping"
+2026-02-10 * "Supermarket" "Grocery shopping"
     Assets:Cash                   -150000.00 VND
     Expenses:Food                  150000.00 VND
 
-2024-01-17 * "Salary" "Monthly salary"
+2026-02-28 * "Salary" "Monthly salary"
     Income:Salary                -5000000.00 VND
     Assets:Cash                   5000000.00 VND
 
-2024-01-18 * "Electric Company" "Electric bill"
+2026-03-12 * "Electric Company" "Electric bill"
     Assets:Cash                   -250000.00 VND
     Expenses:Utilities            250000.00 VND
 
-2024-01-19 * "Transport" "Bus fare"
+2026-04-05 * "Transport" "Bus fare"
     Assets:Cash                    -75000.00 VND
     Expenses:Transportation        75000.00 VND
 
-2024-01-20 * "Freelance Project" "Web development payment"
+2026-05-20 * "Freelance Project" "Web development payment"
     Income:Freelance             -1200000.00 VND
     Assets:Cash                   1200000.00 VND
 
-2024-01-21 * "Restaurant" "Dinner with friends"
+2026-06-08 * "Restaurant" "Dinner with friends"
     Assets:Cash                   -350000.00 VND
     Expenses:Food                  350000.00 VND
 
-2024-01-22 * "Internet Provider" "Monthly internet"
+2026-06-25 * "Internet Provider" "Monthly internet"
     Assets:Cash                   -150000.00 VND
     Expenses:Utilities            150000.00 VND
 
-2024-01-23 * "Pharmacy" "Medicine"
+2026-07-14 * "Pharmacy" "Medicine"
     Assets:Cash                    -85000.00 VND
     Expenses:Health                 85000.00 VND
 
-2024-01-24 * "Clothing Store" "New shirt"
+2026-08-03 * "Clothing Store" "New shirt"
     Assets:Cash                   -450000.00 VND
     Expenses:Shopping              450000.00 VND
+
+2026-09-18 * "Gym Membership" "Monthly gym fee"
+    Assets:Cash                   -300000.00 VND
+    Expenses:Health                300000.00 VND
+
+2026-10-07 * "Consulting Work" "Business consultation"
+    Income:Freelance             -2500000.00 VND
+    Assets:Cash                   2500000.00 VND
+
+2026-11-11 * "Electronics Store" "New headphones"
+    Assets:Cash                   -800000.00 VND
+    Expenses:Shopping              800000.00 VND
+
+2026-11-30 * "Bonus" "Year-end bonus"
+    Income:Bonus                 -3000000.00 VND
+    Assets:Cash                   3000000.00 VND
+
+2026-12-22 * "Holiday Dinner" "Christmas celebration"
+    Assets:Cash                   -650000.00 VND
+    Expenses:Food                  650000.00 VND

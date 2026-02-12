@@ -13,6 +13,7 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     'export': true,
     'roi': true,
     'irr': true,
+    'cashflow': true,
   };
 
   static const String _storageKey = 'widget_visibility';

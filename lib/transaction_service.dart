@@ -296,25 +296,35 @@ class TransactionService {
   }
 
   Future<void> importTransactionFile(String filePath) async {
-    // Call the FFI Import function to import the transaction file
+    if (_currentUserId == null) {
+      throw Exception('No user logged in');
+    }
+    
+    if (!await FileHandler.exists(filePath)) {
+      throw Exception('File not found: $filePath');
+    }
+    
+    final extension = filePath.split('.').last.toLowerCase();
+    
     if (kDebugMode) {
+      print('Importing file: $filePath (extension: $extension)');
       print('FFI Service Available: ${_ffiService.isAvailable}');
     }
     
-    if (_ffiService.isAvailable) {
+    // Only use FFI for ledger/txt files (journal format)
+    // CSV, JSON, XML should use manual parsing
+    if (_ffiService.isAvailable && (extension == 'ledger' || extension == 'txt')) {
       try {
         if (kDebugMode) {
-          print('Attempting to import file via FFI: $filePath');
+          print('Attempting to import ledger file via FFI: $filePath');
         }
         await _ffiService.importFile(filePath);
         
         // After FFI import, sync the transactions to local database
-        if (_currentUserId != null) {
-          if (kDebugMode) {
-            print('Syncing transactions to local database for user $_currentUserId');
-          }
-          await _syncWithBackend(_currentUserId!);
+        if (kDebugMode) {
+          print('Syncing transactions to local database for user $_currentUserId');
         }
+        await _syncWithBackend(_currentUserId!);
         
         // Notify listeners of transaction update
         notifyTransactionUpdate();
@@ -326,59 +336,54 @@ class TransactionService {
       } catch (e) {
         if (kDebugMode) {
           print('Backend FFI import error: $e');
+          print('Falling back to manual ledger parsing');
         }
-        rethrow;
+        // Fall through to manual parsing
       }
-    } else {
-      // Fallback: Parse the file manually and save to local database
+    }
+    
+    // Manual parsing for CSV, JSON, XML or when FFI is not available
+    if (kDebugMode) {
+      print('Using manual file parsing for $extension file');
+    }
+    
+    try {
+      final content = await FileHandler.readAsString(filePath);
+      
+      List<Map<String, dynamic>> transactions = [];
+      
+      if (extension == 'json') {
+        final parsed = await parseJsonFile(content);
+        transactions = parsed['transactions'] as List<Map<String, dynamic>>? ?? [];
+      } else if (extension == 'csv') {
+        transactions = await parseCsvFile(content);
+      } else if (extension == 'xml') {
+        transactions = await parseXmlFile(content);
+      } else if (extension == 'ledger' || extension == 'txt') {
+        // Try to parse ledger format manually
+        transactions = await parseLedgerFile(content);
+      } else {
+        throw Exception('Unsupported file format: $extension');
+      }
+      
+      // Import each transaction to local database
+      for (final tx in transactions) {
+        await _db.insertTransaction(_currentUserId!, tx);
+      }
+      
+      // Notify listeners of transaction update
+      notifyTransactionUpdate();
+      
       if (kDebugMode) {
-        print('Backend FFI not available, attempting manual file parsing');
+        print('Imported ${transactions.length} transactions from $extension file');
       }
       
-      if (_currentUserId == null) {
-        throw Exception('No user logged in');
+      return;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Manual file import error: $e');
       }
-      
-      try {
-        if (!await FileHandler.exists(filePath)) {
-          throw Exception('File not found: $filePath');
-        }
-        
-        final extension = filePath.split('.').last.toLowerCase();
-        final content = await FileHandler.readAsString(filePath);
-        
-        List<Map<String, dynamic>> transactions = [];
-        
-        if (extension == 'json') {
-          final parsed = await parseJsonFile(content);
-          transactions = parsed['transactions'] as List<Map<String, dynamic>>? ?? [];
-        } else if (extension == 'csv') {
-          transactions = await parseCsvFile(content);
-        } else if (extension == 'xml') {
-          transactions = await parseXmlFile(content);
-        } else {
-          throw Exception('Unsupported file format: $extension');
-        }
-        
-        // Import each transaction to local database
-        for (final tx in transactions) {
-          await _db.insertTransaction(_currentUserId!, tx);
-        }
-        
-        // Notify listeners of transaction update
-        notifyTransactionUpdate();
-        
-        if (kDebugMode) {
-          print('Imported ${transactions.length} transactions from $extension file');
-        }
-        
-        return;
-      } catch (e) {
-        if (kDebugMode) {
-          print('Manual file import error: $e');
-        }
-        rethrow;
-      }
+      rethrow;
     }
   }
 
@@ -525,97 +530,178 @@ class TransactionService {
   }
 
   Future<List<Map<String, dynamic>>> parseCsvFile(String csvContent) async {
-    // Simple CSV parser assuming headers: Date, Payee, Amount, Currency, Category, Description
-    List<List<dynamic>> rows = const CsvToListConverter().convert(csvContent);
-    
-    if (rows.isEmpty) return [];
-
-    // Basic heuristic: check if first row is header
-    List<String> headers = rows[0].map((e) => e.toString().toLowerCase()).toList();
-    bool hasHeader = headers.contains('date') || headers.contains('amount');
-    
-    int startRow = hasHeader ? 1 : 0;
-    List<Map<String, dynamic>> transactions = [];
-    
-    // Map column indices if header exists
-    Map<String, int> colMap = {};
-    if (hasHeader) {
-      for (int i = 0; i < headers.length; i++) {
-        colMap[headers[i]] = i;
-      }
-    }
-
-    for (int i = startRow; i < rows.length; i++) {
-      var row = rows[i];
-      if (row.isEmpty) continue;
+    try {
+      // Simple CSV parser assuming headers: Date, Payee, Amount, Currency, Category, Description
+      List<List<dynamic>> rows = const CsvToListConverter().convert(csvContent);
       
-      // Helper to safely get value by index or column name
-      dynamic getValue(String key, int defaultIndex) {
-        if (hasHeader && colMap.containsKey(key)) {
-          int idx = colMap[key]!;
-          if (idx < row.length) return row[idx];
-        } else if (!hasHeader && defaultIndex < row.length) {
-          return row[defaultIndex];
+      if (rows.isEmpty) return [];
+
+      // Basic heuristic: check if first row is header
+      List<String> headers = rows[0].map((e) => e.toString().toLowerCase().trim()).toList();
+      bool hasHeader = headers.contains('date') || headers.contains('amount');
+      
+      int startRow = hasHeader ? 1 : 0;
+      List<Map<String, dynamic>> transactions = [];
+      
+      // Map column indices if header exists
+      Map<String, int> colMap = {};
+      if (hasHeader) {
+        for (int i = 0; i < headers.length; i++) {
+          colMap[headers[i]] = i;
         }
-        return null;
       }
 
-      String date = getValue('date', 0)?.toString() ?? DateTime.now().toIso8601String();
-      String payee = getValue('payee', 1)?.toString() ?? '';
-      double amount = double.tryParse(getValue('amount', 2)?.toString().replaceAll(',', '') ?? '0') ?? 0.0;
-      String currency = getValue('currency', 3)?.toString() ?? 'VND';
-      String category = getValue('category', 4)?.toString() ?? '';
-      String description = getValue('description', 5)?.toString() ?? '';
-      
-      // Determine transaction type based on amount
-      String type = amount < 0 ? 'expense' : 'income';
-      
-      // Build account paths
-      String assetAccount = 'Assets:Cash';
-      String categoryAccount = type == 'expense' 
-          ? 'Expenses:${category.isNotEmpty ? category : 'Other'}'
-          : 'Income:${category.isNotEmpty ? category : 'General'}';
-      
-      // Create postings for double-entry accounting
-      List<Map<String, dynamic>> postings = [];
-      if (type == 'expense') {
-        postings.add({
-          'account': assetAccount,
-          'amount': -amount.abs(),
-          'commodity': currency,
-        });
-        postings.add({
-          'account': categoryAccount,
-          'amount': amount.abs(),
-          'commodity': currency,
-        });
-      } else {
-        postings.add({
-          'account': assetAccount,
-          'amount': amount.abs(),
-          'commodity': currency,
-        });
-        postings.add({
-          'account': categoryAccount,
-          'amount': -amount.abs(),
-          'commodity': currency,
-        });
+      for (int i = startRow; i < rows.length; i++) {
+        try {
+          var row = rows[i];
+          if (row.isEmpty || row.every((cell) => cell.toString().trim().isEmpty)) continue;
+          
+          // Helper to safely get value by index or column name
+          dynamic getValue(String key, int defaultIndex) {
+            if (hasHeader && colMap.containsKey(key)) {
+              int idx = colMap[key]!;
+              if (idx < row.length) return row[idx];
+            } else if (!hasHeader && defaultIndex < row.length) {
+              return row[defaultIndex];
+            }
+            return null;
+          }
+
+          // Parse date with multiple format support
+          String dateStr = getValue('date', 0)?.toString().trim() ?? '';
+          String date;
+          
+          if (dateStr.isEmpty) {
+            date = DateTime.now().toIso8601String();
+          } else {
+            try {
+              // Try parsing various date formats
+              DateTime parsedDate;
+              
+              // Try ISO format first (yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss)
+              if (dateStr.contains('T') || dateStr.contains('-')) {
+                parsedDate = DateTime.parse(dateStr);
+              }
+              // Try dd/MM/yyyy format
+              else if (dateStr.contains('/')) {
+                final parts = dateStr.split('/');
+                if (parts.length == 3) {
+                  final day = int.parse(parts[0]);
+                  final month = int.parse(parts[1]);
+                  final year = int.parse(parts[2]);
+                  parsedDate = DateTime(year, month, day);
+                } else {
+                  parsedDate = DateTime.now();
+                }
+              }
+              // Try dd-MM-yyyy format
+              else if (dateStr.split('-').length == 3 && !dateStr.contains('T')) {
+                final parts = dateStr.split('-');
+                final day = int.parse(parts[0]);
+                final month = int.parse(parts[1]);
+                final year = int.parse(parts[2]);
+                parsedDate = DateTime(year, month, day);
+              }
+              else {
+                parsedDate = DateTime.now();
+              }
+              
+              date = parsedDate.toIso8601String();
+            } catch (e) {
+              if (kDebugMode) {
+                print('Date parsing error for "$dateStr": $e, using current date');
+              }
+              date = DateTime.now().toIso8601String();
+            }
+          }
+          
+          String payee = getValue('payee', 1)?.toString().trim() ?? '';
+          
+          // Parse amount with better error handling
+          String amountStr = getValue('amount', 2)?.toString().trim() ?? '0';
+          double amount = 0.0;
+          try {
+            // Remove currency symbols and commas
+            amountStr = amountStr.replaceAll(RegExp(r'[^\d.-]'), '');
+            amount = double.parse(amountStr);
+          } catch (e) {
+            if (kDebugMode) {
+              print('Amount parsing error for "$amountStr": $e, using 0.0');
+            }
+            amount = 0.0;
+          }
+          
+          String currency = getValue('currency', 3)?.toString().trim().toUpperCase() ?? 'VND';
+          // Validate currency
+          if (!['VND', 'USD', 'EUR', 'GBP', 'JPY', 'CNY'].contains(currency)) {
+            currency = 'VND';
+          }
+          
+          String category = getValue('category', 4)?.toString().trim() ?? '';
+          String description = getValue('description', 5)?.toString().trim() ?? '';
+          
+          // Determine transaction type based on amount
+          String type = amount < 0 ? 'expense' : 'income';
+          
+          // Build account paths
+          String assetAccount = 'Assets:Cash';
+          String categoryAccount = type == 'expense' 
+              ? 'Expenses:${category.isNotEmpty ? category : 'Other'}'
+              : 'Income:${category.isNotEmpty ? category : 'General'}';
+          
+          // Create postings for double-entry accounting
+          List<Map<String, dynamic>> postings = [];
+          if (type == 'expense') {
+            postings.add({
+              'account': assetAccount,
+              'amount': -amount.abs(),
+              'commodity': currency,
+            });
+            postings.add({
+              'account': categoryAccount,
+              'amount': amount.abs(),
+              'commodity': currency,
+            });
+          } else {
+            postings.add({
+              'account': assetAccount,
+              'amount': amount.abs(),
+              'commodity': currency,
+            });
+            postings.add({
+              'account': categoryAccount,
+              'amount': -amount.abs(),
+              'commodity': currency,
+            });
+          }
+
+          transactions.add({
+            'date': date,
+            'payee': payee,
+            'amount': amount,
+            'currency': currency,
+            'category': categoryAccount,
+            'description': description,
+            'type': type,
+            'account': assetAccount,
+            'postings': postings,
+          });
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error parsing CSV row $i: $e');
+          }
+          // Skip this row and continue with next
+          continue;
+        }
       }
 
-      transactions.add({
-        'date': date,
-        'payee': payee,
-        'amount': amount,
-        'currency': currency,
-        'category': categoryAccount,
-        'description': description,
-        'type': type,
-        'account': assetAccount,
-        'postings': postings,
-      });
+      return transactions;
+    } catch (e) {
+      if (kDebugMode) {
+        print('CSV parsing error: $e');
+      }
+      rethrow;
     }
-
-    return transactions;
   }
 
   Future<List<Map<String, dynamic>>> parseXmlFile(String xmlContent) async {
@@ -656,6 +742,133 @@ class TransactionService {
     }
 
     return transactions;
+  }
+
+  Future<List<Map<String, dynamic>>> parseLedgerFile(String ledgerContent) async {
+    try {
+      final transactions = <Map<String, dynamic>>[];
+      final lines = ledgerContent.split('\n');
+      
+      int i = 0;
+      while (i < lines.length) {
+        final line = lines[i].trim();
+        
+        // Skip empty lines and comments
+        if (line.isEmpty || line.startsWith(';') || line.startsWith('#')) {
+          i++;
+          continue;
+        }
+        
+        // Check if line starts with a date (transaction header)
+        final dateMatch = RegExp(r'^(\d{4}[-/]\d{2}[-/]\d{2})').firstMatch(line);
+        if (dateMatch != null) {
+          try {
+            final dateStr = dateMatch.group(1)!.replaceAll('/', '-');
+            final date = DateTime.parse(dateStr).toIso8601String();
+            
+            // Extract payee and description
+            String payee = '';
+            String description = '';
+            
+            // Format: YYYY-MM-DD * "Payee" "Description"
+            final headerMatch = RegExp(r'\d{4}[-/]\d{2}[-/]\d{2}\s+[*!]\s+"([^"]+)"(?:\s+"([^"]+)")?').firstMatch(line);
+            if (headerMatch != null) {
+              payee = headerMatch.group(1) ?? '';
+              description = headerMatch.group(2) ?? '';
+            }
+            
+            // Parse postings (next lines that start with spaces)
+            final postings = <Map<String, dynamic>>[];
+            i++;
+            
+            while (i < lines.length) {
+              final postingLine = lines[i];
+              
+              // Check if this is a posting line (starts with whitespace)
+              if (postingLine.trim().isEmpty || postingLine.startsWith(';')) {
+                i++;
+                continue;
+              }
+              
+              if (!postingLine.startsWith(' ') && !postingLine.startsWith('\t')) {
+                // Not a posting line, break to process next transaction
+                break;
+              }
+              
+              // Parse posting: "    Account:Name    Amount CURRENCY"
+              final postingMatch = RegExp(r'\s+([A-Za-z:]+)\s+([-]?\d+(?:\.\d+)?)\s+([A-Z]+)').firstMatch(postingLine);
+              if (postingMatch != null) {
+                final account = postingMatch.group(1)!;
+                final amount = double.parse(postingMatch.group(2)!);
+                final currency = postingMatch.group(3)!;
+                
+                postings.add({
+                  'account': account,
+                  'amount': amount,
+                  'commodity': currency,
+                });
+              }
+              
+              i++;
+            }
+            
+            // Determine transaction type and amounts from postings
+            if (postings.length >= 2) {
+              String type = 'expense';
+              double transactionAmount = 0.0;
+              String currency = 'VND';
+              String category = '';
+              String account = 'Assets:Cash';
+              
+              // Find the asset and category accounts
+              for (final posting in postings) {
+                final acc = posting['account'] as String;
+                final amt = posting['amount'] as double;
+                final curr = posting['commodity'] as String;
+                
+                if (acc.startsWith('Assets:')) {
+                  account = acc;
+                  transactionAmount = amt;
+                  currency = curr;
+                } else if (acc.startsWith('Expenses:')) {
+                  category = acc;
+                  type = 'expense';
+                } else if (acc.startsWith('Income:')) {
+                  category = acc;
+                  type = 'income';
+                }
+              }
+              
+              transactions.add({
+                'date': date,
+                'payee': payee,
+                'description': description,
+                'amount': transactionAmount,
+                'currency': currency,
+                'type': type,
+                'account': account,
+                'category': category,
+                'postings': postings,
+              });
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error parsing ledger transaction at line $i: $e');
+            }
+            i++;
+          }
+        } else {
+          i++;
+        }
+      }
+      
+      return transactions;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Ledger parsing error: $e');
+      }
+      rethrow;
+    }
   }
 
   Future<void> importTransaction(Map<String, dynamic> transaction) async {
