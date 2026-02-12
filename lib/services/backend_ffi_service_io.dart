@@ -22,6 +22,9 @@ typedef SaveTransaction = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef FreeStringFunc = Void Function(Pointer<Utf8>);
 typedef FreeString = void Function(Pointer<Utf8>);
 
+typedef GetROIFunc = Pointer<Utf8> Function();
+typedef GetROI = Pointer<Utf8> Function();
+
 class BackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
@@ -36,6 +39,7 @@ class BackendFfiService {
   late TransactionHistory _transactionHistory;
   late SaveTransaction _saveTransaction;
   late FreeString _freeString;
+  late GetROI _getROI;
 
   bool _isInitialized = false;
   bool _hasError = false;
@@ -85,6 +89,7 @@ class BackendFfiService {
       _transactionHistory = _lib.lookupFunction<TransactionHistoryFunc, TransactionHistory>('TransactionHistory');
       _saveTransaction = _lib.lookupFunction<SaveTransactionFunc, SaveTransaction>('SaveTransaction');
       _freeString = _lib.lookupFunction<FreeStringFunc, FreeString>('FreeString');
+      _getROI = _lib.lookupFunction<GetROIFunc, GetROI>('GetROI');
 
       // Bootstrap DB
       final resultPtr = _bootstrap();
@@ -157,6 +162,41 @@ class BackendFfiService {
       _import(filePathPtr);
     } finally {
       malloc.free(filePathPtr);
+    }
+  }
+
+  Future<Map<String, dynamic>> getRoiData() async {
+    if (!isAvailable) {
+      return {
+        'roi': '0.00',
+        'irr': '0.00',
+        'cashflowTotal': '0',
+      };
+    }
+
+    try {
+      final resultPtr = _getROI();
+      final result = resultPtr.toDartString();
+      _freeString(resultPtr);
+
+      if (result.isEmpty || result.startsWith('Error:')) {
+        print('ROI Error: $result');
+        return {
+          'roi': '0.00',
+          'irr': '0.00',
+          'cashflowTotal': '0',
+        };
+      }
+
+      final decoded = json.decode(result);
+      return Map<String, dynamic>.from(decoded);
+    } catch (e) {
+      print('Error getting ROI data: $e');
+      return {
+        'roi': '0.00',
+        'irr': '0.00',
+        'cashflowTotal': '0',
+      };
     }
   }
 }

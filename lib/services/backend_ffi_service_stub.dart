@@ -30,4 +30,13 @@ class BackendFfiService {
     // No-op for web - file import handled differently
     throw UnsupportedError('FFI file import not available on web platform');
   }
+
+  Future<Map<String, dynamic>> getRoiData() async {
+    // Return default values for web
+    return {
+      'roi': '0.00',
+      'irr': '0.00',
+      'cashflowTotal': '0',
+    };
+  }
 }

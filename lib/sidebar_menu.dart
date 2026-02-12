@@ -49,6 +49,18 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.download,
         color: red,
       ),
+      MenuItemData(
+        id: 'roi',
+        label: 'ROI',
+        icon: Icons.trending_up,
+        color: const Color(0xFF4A90E2),
+      ),
+      MenuItemData(
+        id: 'irr',
+        label: 'IRR',
+        icon: Icons.show_chart,
+        color: const Color(0xFF5DADE2),
+      ),
     ];
   }
 

@@ -47,7 +47,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
   final List<int> _slotCounts = [3, 4, 6];
   
-  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export'];
+  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr'];
 
   void setVisibilityFilter(List<String> visibleWidgets) {
     visibilityFilter = visibleWidgets;
@@ -107,6 +107,26 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         identifier: "export",
         data: "export",
       ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 2,
+        width: 1,
+        height: 1,
+        identifier: "roi",
+        minHeight: 1,
+        minWidth: 1,
+        data: "roi",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 3,
+        width: 1,
+        height: 1,
+        identifier: "irr",
+        minHeight: 1,
+        minWidth: 1,
+        data: "irr",
+      ),
     ],
     4: <ColoredDashboardItem>[
       ColoredDashboardItem(
@@ -160,6 +180,26 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         maxWidth: 1,
         identifier: "export",
         data: "export",
+      ),
+      ColoredDashboardItem(
+        startX: 0,
+        startY: 4,
+        width: 1,
+        height: 1,
+        identifier: "roi",
+        minHeight: 1,
+        minWidth: 1,
+        data: "roi",
+      ),
+      ColoredDashboardItem(
+        startX: 1,
+        startY: 4,
+        width: 1,
+        height: 1,
+        identifier: "irr",
+        minHeight: 1,
+        minWidth: 1,
+        data: "irr",
       ),
     ],
     6: <ColoredDashboardItem>[
@@ -216,6 +256,26 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         identifier: "export",
         data: "export",
       ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 2,
+        width: 1,
+        height: 1,
+        identifier: "roi",
+        minHeight: 1,
+        minWidth: 1,
+        data: "roi",
+      ),
+      ColoredDashboardItem(
+        startX: 3,
+        startY: 2,
+        width: 1,
+        height: 1,
+        identifier: "irr",
+        minHeight: 1,
+        minWidth: 1,
+        data: "irr",
+      ),
     ],
   };
 
@@ -264,9 +324,23 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
             var layoutDataStr = _preferences.getString("layout_data_$s");
             if (layoutDataStr != null) {
               var js = json.decode(layoutDataStr) as Map<String, dynamic>;
-              _localItems![s] = js.map<String, ColoredDashboardItem>(
+              var loadedItems = js.map<String, ColoredDashboardItem>(
                 (key, value) => MapEntry(key, ColoredDashboardItem.fromMap(value)),
               );
+              
+              // Merge with defaults to add any new widgets
+              var defaultItems = _default[s]!.asMap().map(
+                (key, value) => MapEntry(value.identifier, value),
+              );
+              
+              // Add any new widgets from defaults that don't exist in loaded items
+              for (var entry in defaultItems.entries) {
+                if (!loadedItems.containsKey(entry.key)) {
+                  loadedItems[entry.key] = entry.value;
+                }
+              }
+              
+              _localItems![s] = loadedItems;
             } else {
               // Use default if data doesn't exist
               _localItems![s] = _default[s]!.asMap().map(
