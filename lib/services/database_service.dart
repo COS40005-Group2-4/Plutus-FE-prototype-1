@@ -36,7 +36,7 @@ class DatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -145,11 +145,24 @@ class DatabaseService {
       )
     ''');
     
+    // Create postings table for double-entry accounting
+    await db.execute('''
+      CREATE TABLE postings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_id INTEGER NOT NULL,
+        account TEXT NOT NULL,
+        amount REAL NOT NULL,
+        commodity TEXT NOT NULL,
+        FOREIGN KEY (transaction_id) REFERENCES transactions (id) ON DELETE CASCADE
+      )
+    ''');
+    
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_user_settings_user_id ON user_settings(user_id)');
     await db.execute('CREATE INDEX idx_profiles_user_id ON profiles(user_id)');
+    await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
     
     if (kDebugMode) {
       print('Database tables created successfully');
@@ -200,6 +213,42 @@ class DatabaseService {
       } catch (e) {
         if (kDebugMode) {
           print('Error creating profiles table during upgrade: $e');
+        }
+        rethrow;
+      }
+    }
+    
+    // Upgrade from version 2 to 3: Add postings table for double-entry accounting
+    if (oldVersion < 3) {
+      try {
+        // Check if postings table exists
+        final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='postings'",
+        );
+        
+        if (tables.isEmpty) {
+          // Create postings table
+          await db.execute('''
+            CREATE TABLE postings (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              transaction_id INTEGER NOT NULL,
+              account TEXT NOT NULL,
+              amount REAL NOT NULL,
+              commodity TEXT NOT NULL,
+              FOREIGN KEY (transaction_id) REFERENCES transactions (id) ON DELETE CASCADE
+            )
+          ''');
+          
+          // Create index
+          await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
+          
+          if (kDebugMode) {
+            print('Postings table created successfully during upgrade');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error creating postings table during upgrade: $e');
         }
         rethrow;
       }
@@ -319,7 +368,7 @@ class DatabaseService {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
     
-    return await db.insert('transactions', {
+    final txId = await db.insert('transactions', {
       'user_id': userId,
       'transaction_id': transaction['transaction_id'] ?? 'tx_${now}_$userId',
       'type': transaction['type'] ?? 'expense',
@@ -334,20 +383,61 @@ class DatabaseService {
       'created_at': now,
       'updated_at': now,
     });
+    
+    // Insert postings if provided
+    if (transaction['postings'] != null && transaction['postings'] is List) {
+      final postings = transaction['postings'] as List;
+      for (final posting in postings) {
+        await db.insert('postings', {
+          'transaction_id': txId,
+          'account': posting['account'],
+          'amount': posting['amount'],
+          'commodity': posting['commodity'],
+        });
+      }
+    }
+    
+    return txId;
+  }
+  
+  Future<List<Map<String, dynamic>>> getPostingsByTransactionId(int transactionId) async {
+    final db = await database;
+    return await db.query(
+      'postings',
+      where: 'transaction_id = ?',
+      whereArgs: [transactionId],
+    );
   }
   
   Future<List<Map<String, dynamic>>> getTransactionsByUserId(int userId) async {
     final db = await database;
-    return await db.query(
+    final transactions = await db.query(
       'transactions',
       where: 'user_id = ?',
       whereArgs: [userId],
       orderBy: 'date DESC',
     );
+    
+    // Attach postings to each transaction
+    final List<Map<String, dynamic>> result = [];
+    for (final tx in transactions) {
+      final txMap = Map<String, dynamic>.from(tx);
+      final postings = await getPostingsByTransactionId(tx['id'] as int);
+      txMap['postings'] = postings;
+      result.add(txMap);
+    }
+    
+    return result;
   }
   
   Future<void> deleteTransaction(int transactionId) async {
     final db = await database;
+    // Delete postings first (will be handled by CASCADE, but being explicit)
+    await db.delete(
+      'postings',
+      where: 'transaction_id = ?',
+      whereArgs: [transactionId],
+    );
     await db.delete(
       'transactions',
       where: 'id = ?',

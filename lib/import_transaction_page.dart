@@ -188,27 +188,90 @@ class _ManualImportTabState extends State<ManualImportTab> {
     
     try {
       double amount = double.tryParse(_amountController.text) ?? 0.0;
+      
+      // Determine account name from category or use default
+      String accountName = 'Cash'; // Default account
+      String categoryPath = _categoryController.text.trim();
+      
+      // If category is empty, use default
+      if (categoryPath.isEmpty) {
+        categoryPath = _type == 'expense' ? 'Other' : 'General';
+      }
+      
+      // Build account paths following P1:P2:P3 format
+      String assetAccount = 'Assets:$accountName';
+      String categoryAccount = _type == 'expense' 
+          ? 'Expenses:$categoryPath' 
+          : 'Income:$categoryPath';
+      
+      // Create postings for double-entry accounting
+      List<Map<String, dynamic>> postings = [];
+      
       if (_type == 'expense') {
-        amount = -amount.abs();
+        // For expense: deduct from asset, add to expense
+        postings.add({
+          'account': assetAccount,
+          'amount': -amount.abs(),
+          'commodity': _currency,
+        });
+        postings.add({
+          'account': categoryAccount,
+          'amount': amount.abs(),
+          'commodity': _currency,
+        });
       } else {
-        amount = amount.abs();
+        // For income: add to asset, deduct from income source
+        postings.add({
+          'account': assetAccount,
+          'amount': amount.abs(),
+          'commodity': _currency,
+        });
+        postings.add({
+          'account': categoryAccount,
+          'amount': -amount.abs(),
+          'commodity': _currency,
+        });
+      }
+      
+      // Add child items as additional postings if present
+      if (_items.isNotEmpty) {
+        double totalItemsAmount = 0.0;
+        for (final item in _items) {
+          final itemAmount = (item['amount'] as num?)?.toDouble() ?? 0.0;
+          if (itemAmount > 0) {
+            final itemDesc = item['description'] as String? ?? 'Item';
+            String itemAccount = _type == 'expense'
+                ? 'Expenses:$categoryPath:$itemDesc'
+                : 'Income:$categoryPath:$itemDesc';
+            
+            // Add child item posting
+            postings.add({
+              'account': itemAccount,
+              'amount': _type == 'expense' ? itemAmount.abs() : -itemAmount.abs(),
+              'commodity': _currency,
+            });
+            totalItemsAmount += itemAmount;
+          }
+        }
+        
+        // Adjust the parent category posting to maintain balance
+        if (totalItemsAmount > 0 && postings.length > 2) {
+          // Remove the original category posting
+          postings.removeAt(1);
+        }
       }
 
       final transaction = {
         'date': _selectedDate.toIso8601String(),
         'payee': _payeeController.text,
         'description': _descController.text,
-        // Using a flatter structure for now, but keeping in mind the backend needs postings
-        // Ideally we would structure this as:
-        // 'postings': [
-        //   {'account': 'assets:general', 'amount': -amount, 'commodity': _currency},
-        //   {'account': _categoryController.text, 'amount': amount, 'commodity': _currency}
-        // ]
-        'amount': amount,
+        'postings': postings,
+        // Keep flat fields for backward compatibility
+        'amount': _type == 'expense' ? -amount.abs() : amount.abs(),
         'currency': _currency,
         'type': _type,
-        'category': _categoryController.text,
-        'items': _items,
+        'category': categoryAccount,
+        'account': assetAccount,
       };
       
       await _service.importTransaction(transaction);

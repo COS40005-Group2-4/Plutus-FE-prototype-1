@@ -1,5 +1,17 @@
-Date,Payee,Amount,Currency,Category,Description
-2023-10-27,VinMart,-150000,VND,Groceries,Mua sắm tuần
-2023-10-28,Highlands Coffee,-45000,VND,Dining,Cà phê sáng
-2023-10-29,Grab,-85000,VND,Transportation,Đi làm
-2023-10-30,Circle K,-20000,VND,Snacks,Nước uống
+Date,Payee,Description,Account,Amount,Commodity
+2024-01-15T10:30:00Z,VinMart,Weekly grocery shopping,Assets:Cash,-150000,VND
+2024-01-15T10:30:00Z,VinMart,Weekly grocery shopping,Expenses:Groceries,150000,VND
+2024-01-16T08:15:00Z,Highlands Coffee,Morning coffee,Assets:Cash,-45000,VND
+2024-01-16T08:15:00Z,Highlands Coffee,Morning coffee,Expenses:Dining:Coffee,45000,VND
+2024-01-17T07:45:00Z,Grab,Ride to work,Assets:Cash,-85000,VND
+2024-01-17T07:45:00Z,Grab,Ride to work,Expenses:Transportation:Taxi,85000,VND
+2024-01-18T12:00:00Z,Circle K,Snacks and drinks,Assets:Cash,-20000,VND
+2024-01-18T12:00:00Z,Circle K,Snacks and drinks,Expenses:Snacks,20000,VND
+2024-01-20T09:00:00Z,Company ABC,Monthly salary January 2024,Assets:Bank:Checking,20000000,VND
+2024-01-20T09:00:00Z,Company ABC,Monthly salary January 2024,Income:Salary,-20000000,VND
+2024-01-25T14:30:00Z,Company ABC,Performance bonus Q4 2023,Assets:Bank:Checking,5000000,VND
+2024-01-25T14:30:00Z,Company ABC,Performance bonus Q4 2023,Income:Bonus,-5000000,VND
+2024-01-18T19:30:00Z,Shopee,Buy clothes,Assets:Cash,-100000,VND
+2024-01-18T19:30:00Z,Shopee,Buy clothes,Assets:Bank:Credit,-150000,VND
+2024-01-18T19:30:00Z,Shopee,Buy clothes,Expenses:Shopping:Clothes:Shirt,150000,VND
+2024-01-18T19:30:00Z,Shopee,Buy clothes,Expenses:Shopping:Clothes:Pants,100000,VND

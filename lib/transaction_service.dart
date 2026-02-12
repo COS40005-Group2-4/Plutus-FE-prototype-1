@@ -150,45 +150,56 @@ class TransactionService {
       }
       
       return txMaps.map((map) {
-        // Convert flat database structure to Transaction model format
+        // Convert database structure to Transaction model format
         final dateStr = map['date'] as String? ?? DateTime.now().toIso8601String();
         final dateTime = DateTime.tryParse(dateStr) ?? DateTime.now();
         final dateUnix = dateTime.millisecondsSinceEpoch ~/ 1000;
         
-        final amount = (map['amount'] as num?)?.toDouble() ?? 0.0;
-        final currency = map['currency'] as String? ?? 'VND';
-        final account = map['account'] as String? ?? 'Assets:Cash';
-        final category = map['category'] as String? ?? 'Expenses:Other';
-        final type = map['type'] as String? ?? 'expense';
         final dbId = map['id'] as int?;
         
-        // Create postings array from flat structure
-        final postings = <Map<String, dynamic>>[];
+        // Get postings if available (from joined data)
+        List<Map<String, dynamic>> postings = [];
         
-        if (type == 'expense') {
-          // Expense: money goes out of account (negative) and into expense category (positive)
-          postings.add({
-            'account': account,
-            'amount': -amount.abs(),
-            'commodity': currency,
-          });
-          postings.add({
-            'account': category,
-            'amount': amount.abs(),
-            'commodity': currency,
-          });
+        if (map['postings'] != null && map['postings'] is List) {
+          // Postings already loaded from database
+          postings = (map['postings'] as List).map((p) => {
+            'account': p['account'] as String,
+            'amount': (p['amount'] as num).toDouble(),
+            'commodity': p['commodity'] as String,
+          }).toList();
         } else {
-          // Income: money goes into account (positive) and from income source (negative)
-          postings.add({
-            'account': account,
-            'amount': amount.abs(),
-            'commodity': currency,
-          });
-          postings.add({
-            'account': category,
-            'amount': -amount.abs(),
-            'commodity': currency,
-          });
+          // Fallback: construct postings from flat structure (backward compatibility)
+          final amount = (map['amount'] as num?)?.toDouble() ?? 0.0;
+          final currency = map['currency'] as String? ?? 'VND';
+          final account = map['account'] as String? ?? 'Assets:Cash';
+          final category = map['category'] as String? ?? 'Expenses:Other';
+          final type = map['type'] as String? ?? 'expense';
+          
+          if (type == 'expense') {
+            // Expense: money goes out of account (negative) and into expense category (positive)
+            postings.add({
+              'account': account,
+              'amount': -amount.abs(),
+              'commodity': currency,
+            });
+            postings.add({
+              'account': category,
+              'amount': amount.abs(),
+              'commodity': currency,
+            });
+          } else {
+            // Income: money goes into account (positive) and from income source (negative)
+            postings.add({
+              'account': account,
+              'amount': amount.abs(),
+              'commodity': currency,
+            });
+            postings.add({
+              'account': category,
+              'amount': -amount.abs(),
+              'commodity': currency,
+            });
+          }
         }
         
         return Transaction.fromJson({
