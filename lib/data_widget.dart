@@ -13,12 +13,14 @@ import 'widgets/profile_widget.dart';
 import 'widgets/roi_widget.dart';
 import 'widgets/irr_widget.dart';
 import 'widgets/cashflow_widget.dart';
+import 'widgets/upcoming_bills_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
 import 'services/database_service.dart';
 import 'services/export_service.dart';
 import 'services/user_service.dart';
+import 'services/budget_service.dart';
 import 'utils/date_time_formatter.dart';
 import 'l10n/app_localizations.dart';
 
@@ -41,6 +43,7 @@ class DataWidget extends StatelessWidget {
     "roi": (l) => const RoiWidget(),
     "irr": (l) => const IrrWidget(),
     "cashflow": (l) => const CashflowWidget(),
+    "bills": (l) => const UpcomingBillsWidget(),
   };
 
   @override
@@ -64,21 +67,25 @@ class BudgetTrackingWidget extends StatefulWidget {
 
 class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
   late TransactionService _transactionService;
+  late BudgetService _budgetService;
   bool _isYearlyView = false;
   DateTime _selectedDate = DateTime.now();
-  double _monthlyBudget = 0;
+  Map<int, double> _monthlyBudgets = {}; // month (1-12) -> budget
   double _yearlyBudget = 0;
   AppCurrency _budgetCurrency = AppCurrency.usd;
   bool _isEditMode = false;
+  bool _showMonthlyBudgetEditor = false;
   final TextEditingController _budgetController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _transactionService = TransactionService();
+    _budgetService = BudgetService();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.currentUserId != null) {
       _transactionService.setCurrentUser(authProvider.currentUserId!);
+      _loadBudgetPreferences(authProvider.currentUserId!);
     }
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     _budgetCurrency = settings.currency;
@@ -87,13 +94,45 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
     });
   }
 
+  Future<void> _loadBudgetPreferences(int userId) async {
+    final prefs = await _budgetService.loadBudgetPreferences(userId);
+    if (prefs != null && mounted) {
+      setState(() {
+        _monthlyBudgets = Map.from(prefs.monthlyBudgets);
+        _yearlyBudget = prefs.yearlyBudget;
+        _budgetCurrency = AppCurrency.fromCode(prefs.currencyCode);
+      });
+    }
+  }
+
+  Future<void> _saveBudgetPreferences() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      final prefs = BudgetPreferences(
+        monthlyBudgets: Map.from(_monthlyBudgets),
+        yearlyBudget: _yearlyBudget,
+        currencyCode: _budgetCurrency.code,
+      );
+      await _budgetService.saveBudgetPreferences(
+        authProvider.currentUserId!,
+        prefs,
+      );
+    }
+  }
+
+  double get _currentBudget {
+    if (_isYearlyView) {
+      return _yearlyBudget;
+    } else {
+      return _monthlyBudgets[_selectedDate.month] ?? 0;
+    }
+  }
+
   @override
   void dispose() {
     _budgetController.dispose();
     super.dispose();
   }
-
-  double get _currentBudget => _isYearlyView ? _yearlyBudget : _monthlyBudget;
 
   @override
   Widget build(BuildContext context) {
@@ -278,49 +317,234 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
             borderRadius: 6,
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Target Budget (${_isYearlyView ? 'Year' : 'Month'}):',
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 100,
-                      child: TextField(
-                        controller: _budgetController,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                          border: OutlineInputBorder(),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white30),
-                          ),
+                if (_isYearlyView) ...[
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Yearly Budget:',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
-                        keyboardType: TextInputType.number,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.green, size: 20),
-                      onPressed: () {
-                        setState(() {
-                          final value = double.tryParse(_budgetController.text) ?? 0;
-                          if (_isYearlyView) {
-                            _yearlyBudget = value;
-                          } else {
-                            _monthlyBudget = value;
-                          }
-                          _isEditMode = false;
-                        });
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      SizedBox(
+                        width: 100,
+                        child: TextField(
+                          controller: _budgetController,
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            border: OutlineInputBorder(),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white30),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _yearlyBudget = double.tryParse(_budgetController.text) ?? 0;
+                            _isEditMode = false;
+                            _saveBudgetPreferences();
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Budget for ${_getMonthName(_selectedDate.month)}:',
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 100,
+                        child: TextField(
+                          controller: _budgetController,
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            border: OutlineInputBorder(),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white30),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            final value = double.tryParse(_budgetController.text) ?? 0;
+                            _monthlyBudgets[_selectedDate.month] = value;
+                            _isEditMode = false;
+                            _showMonthlyBudgetEditor = false;
+                            _saveBudgetPreferences();
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showMonthlyBudgetEditor = !_showMonthlyBudgetEditor;
+                          });
+                        },
+                        icon: Icon(
+                          _showMonthlyBudgetEditor ? Icons.expand_less : Icons.expand_more,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
+                        label: Text(
+                          _showMonthlyBudgetEditor ? 'Hide All Months' : 'Set All Months',
+                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_showMonthlyBudgetEditor) ...[
+                    const SizedBox(height: 8),
+                    GlassContainer(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.white,
+                      opacity: 0.05,
+                      borderRadius: 4,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Apply to all months:',
+                                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 80,
+                                child: TextField(
+                                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                    border: OutlineInputBorder(),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.white30),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onSubmitted: (value) {
+                                    final budget = double.tryParse(value) ?? 0;
+                                    if (budget > 0) {
+                                      setState(() {
+                                        for (int i = 1; i <= 12; i++) {
+                                          _monthlyBudgets[i] = budget;
+                                        }
+                                        _saveBudgetPreferences();
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(Icons.done_all, color: Colors.blue, size: 16),
+                                onPressed: () {
+                                  // Apply current month's budget to all
+                                  final currentBudget = _monthlyBudgets[_selectedDate.month] ?? 0;
+                                  if (currentBudget > 0) {
+                                    setState(() {
+                                      for (int i = 1; i <= 12; i++) {
+                                        _monthlyBudgets[i] = currentBudget;
+                                      }
+                                      _saveBudgetPreferences();
+                                    });
+                                  }
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                tooltip: 'Apply current to all',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Divider(color: Colors.white30, height: 1),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: List.generate(12, (index) {
+                              final month = index + 1;
+                              final budget = _monthlyBudgets[month] ?? 0;
+                              return SizedBox(
+                                width: 70,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      _getMonthName(month),
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    SizedBox(
+                                      height: 28,
+                                      child: TextField(
+                                        controller: TextEditingController(
+                                          text: budget > 0 ? budget.toStringAsFixed(0) : '',
+                                        ),
+                                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                          border: OutlineInputBorder(),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.white30),
+                                          ),
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        onSubmitted: (value) {
+                                          setState(() {
+                                            _monthlyBudgets[month] = double.tryParse(value) ?? 0;
+                                            _saveBudgetPreferences();
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -352,6 +576,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                           if (value != null) {
                             setState(() {
                               _budgetCurrency = value;
+                              _saveBudgetPreferences();
                             });
                           }
                         },
@@ -569,18 +794,38 @@ class _BudgetContentState extends State<_BudgetContent> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${(usage * 100).toStringAsFixed(0)}%',
+                    _currencyService.formatCurrency(
+                      amount: _totalExpense,
+                      currencyCode: widget.budgetCurrency.code,
+                      symbol: widget.budgetCurrency.symbol,
+                    ),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    'of budget',
+                    'of ${_currencyService.formatCurrency(
+                      amount: widget.targetBudget,
+                      currencyCode: widget.budgetCurrency.code,
+                      symbol: widget.budgetCurrency.symbol,
+                    )}',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${(usage * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      color: usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

@@ -1,0 +1,837 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../models/bill_model.dart';
+import '../models/transaction_model.dart' as tx_model;
+import '../models/user_model.dart';
+import '../services/bill_service.dart';
+import '../services/database_service.dart';
+import '../services/currency_service.dart';
+import '../transaction_service.dart';
+import '../providers/auth_provider.dart';
+import '../providers/settings_provider.dart';
+import '../l10n/app_localizations.dart';
+import 'glass_container.dart';
+
+class UpcomingBillsWidget extends StatefulWidget {
+  const UpcomingBillsWidget({super.key});
+
+  @override
+  State<UpcomingBillsWidget> createState() => _UpcomingBillsWidgetState();
+}
+
+class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
+  late BillService _billService;
+  late TransactionService _transactionService;
+  int _daysFilter = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    _billService = BillService();
+    _transactionService = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _billService.setCurrentUser(authProvider.currentUserId!);
+      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _billService.notifyBillUpdate();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        return GlassContainer(
+          color: const Color(0xFFEA4335),
+          opacity: 0.2,
+          borderRadius: 16,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 8),
+              Expanded(
+                child: StreamBuilder<List<Bill>>(
+                  stream: _billService.billStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No upcoming bills',
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      );
+                    }
+
+                    // Filter out paid bills
+                    final bills = _filterBills(snapshot.data!.where((b) => !b.isPaid).toList());
+
+                    return _BillsContent(
+                      bills: bills,
+                      settings: settings,
+                      daysFilter: _daysFilter,
+                      onPayBill: _handlePayBill,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Upcoming Bills',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Row(
+          children: [
+            PopupMenuButton<int>(
+              icon: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+              onSelected: (value) {
+                setState(() => _daysFilter = value);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 7, child: Text('Next 7 days')),
+                PopupMenuItem(value: 30, child: Text('Next 30 days')),
+                PopupMenuItem(value: 90, child: Text('Next 90 days')),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+              onPressed: () => _showBillEditor(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  List<Bill> _filterBills(List<Bill> bills) {
+    final now = DateTime.now();
+    final endDate = now.add(Duration(days: _daysFilter));
+    
+    return bills.where((bill) {
+      return bill.dueDate.isBefore(endDate) || bill.dueDate.isAtSameMomentAs(endDate);
+    }).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  Future<void> _showBillEditor(BuildContext context) async {
+    // Get all bills (including paid ones for editing)
+    final allBills = await _billService.getBills();
+    
+    if (allBills.isEmpty) {
+      // No bills exist, show add dialog
+      await showDialog(
+        context: context,
+        builder: (context) => _BillEditorDialog(
+          billService: _billService,
+        ),
+      );
+    } else {
+      // Show bill selection dialog
+      await showDialog(
+        context: context,
+        builder: (context) => _BillSelectorDialog(
+          bills: allBills,
+          billService: _billService,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handlePayBill(Bill bill) async {
+    if (bill.id == null) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId == null) return;
+
+    // Create transaction in database
+    final now = DateTime.now();
+    final transaction = {
+      'transaction_id': 'bill_${bill.id}_${now.millisecondsSinceEpoch}',
+      'type': 'expense',
+      'amount': bill.amount,
+      'currency': bill.currency,
+      'category': bill.category ?? 'Expenses:Bills',
+      'description': 'Bill payment: ${bill.name}',
+      'payee': bill.name,
+      'date': now.toIso8601String(),
+      'account': 'Assets:Cash',
+      'postings': [
+        {
+          'account': 'Assets:Cash',
+          'amount': -bill.amount,
+          'commodity': bill.currency,
+        },
+        {
+          'account': bill.category ?? 'Expenses:Bills',
+          'amount': bill.amount,
+          'commodity': bill.currency,
+        },
+      ],
+    };
+
+    final db = DatabaseService();
+    await db.insertTransaction(authProvider.currentUserId!, transaction);
+
+    // Mark bill as paid
+    await _billService.markBillAsPaid(bill.id!);
+
+    // Notify transaction service
+    _transactionService.notifyTransactionUpdate();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bill "${bill.name}" marked as paid')),
+      );
+    }
+  }
+}
+
+class _BillsContent extends StatefulWidget {
+  final List<Bill> bills;
+  final SettingsProvider settings;
+  final int daysFilter;
+  final Function(Bill) onPayBill;
+
+  const _BillsContent({
+    required this.bills,
+    required this.settings,
+    required this.daysFilter,
+    required this.onPayBill,
+  });
+
+  @override
+  State<_BillsContent> createState() => _BillsContentState();
+}
+
+class _BillsContentState extends State<_BillsContent> {
+  final CurrencyService _currencyService = CurrencyService();
+  final Map<String, double> _convertedAmounts = {};
+  final Set<int> _animatingBills = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _convertAmounts();
+  }
+
+  @override
+  void didUpdateWidget(_BillsContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.currency != widget.settings.currency ||
+        oldWidget.bills != widget.bills) {
+      _convertAmounts();
+    }
+  }
+
+  Future<void> _convertAmounts() async {
+    setState(() => _isLoading = true);
+    
+    _convertedAmounts.clear();
+    
+    for (var bill in widget.bills) {
+      if (bill.currency == widget.settings.currency.code) {
+        _convertedAmounts[bill.id.toString()] = bill.amount;
+      } else {
+        try {
+          final converted = await _currencyService.convert(
+            amount: bill.amount,
+            fromCurrency: bill.currency,
+            toCurrency: widget.settings.currency.code,
+          );
+          _convertedAmounts[bill.id.toString()] = converted;
+        } catch (e) {
+          _convertedAmounts[bill.id.toString()] = bill.amount;
+        }
+      }
+    }
+    
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    final totalDue = widget.bills
+        .where((b) => !b.isPaid)
+        .fold(0.0, (sum, bill) {
+          final converted = _convertedAmounts[bill.id.toString()] ?? bill.amount;
+          return sum + converted;
+        });
+
+    return Column(
+      children: [
+        _buildSummary(totalDue),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            itemCount: widget.bills.length,
+            itemBuilder: (context, index) {
+              final bill = widget.bills[index];
+              final convertedAmount = _convertedAmounts[bill.id.toString()] ?? bill.amount;
+              final isAnimating = _animatingBills.contains(bill.id);
+              return _buildBillItem(context, bill, convertedAmount, isAnimating);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummary(double totalDue) {
+    final format = widget.settings.currency == AppCurrency.vnd
+        ? NumberFormat("#,##0", "en_US")
+        : NumberFormat("#,##0.00", "en_US");
+    
+    return GlassContainer(
+      padding: const EdgeInsets.all(12),
+      color: Colors.white,
+      opacity: 0.1,
+      borderRadius: 8,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total Due (${widget.daysFilter}d):',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          Text(
+            '${widget.settings.currency.symbol}${format.format(totalDue)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBillItem(BuildContext context, Bill bill, double convertedAmount, bool isAnimating) {
+    final now = DateTime.now();
+    final daysUntilDue = bill.dueDate.difference(now).inDays;
+    
+    Color dateColor;
+    if (bill.isOverdue) {
+      dateColor = Colors.red;
+    } else if (daysUntilDue <= 3) {
+      dateColor = Colors.pink;
+    } else {
+      dateColor = const Color(0xFF6050dc);
+    }
+
+    // Get currency symbol for the bill's original currency
+    final billCurrency = AppCurrency.fromCode(bill.currency);
+
+    return AnimatedOpacity(
+      opacity: isAnimating ? 0.0 : 1.0,
+      duration: const Duration(milliseconds: 300),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: GlassContainer(
+          padding: const EdgeInsets.all(10),
+          color: Colors.white,
+          opacity: 0.05,
+          borderRadius: 8,
+          child: Row(
+            children: [
+              // Date indicator
+              Container(
+                width: 50,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: dateColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: dateColor.withOpacity(0.5)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      DateFormat('MMM').format(bill.dueDate),
+                      style: TextStyle(
+                        color: dateColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('dd').format(bill.dueDate),
+                      style: TextStyle(
+                        color: dateColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Bill details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      bill.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        // Show converted amount with settings currency
+                        Text(
+                          '${widget.settings.currency.symbol}${_formatAmount(convertedAmount, widget.settings.currency)}',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                        // Show original amount if different currency
+                        if (bill.currency != widget.settings.currency.code) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${billCurrency.symbol}${_formatAmount(bill.amount, billCurrency)})',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 8),
+                        if (bill.recurrence != BillRecurrence.oneTime)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _getRecurrenceLabel(bill.recurrence),
+                              style: const TextStyle(
+                                color: Colors.lightBlueAccent,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Pay button with animation
+              if (!bill.isPaid)
+                ElevatedButton(
+                  onPressed: () => _handlePayBill(bill),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.withOpacity(0.8),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Pay', style: TextStyle(fontSize: 11)),
+                )
+              else
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 500),
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green.withOpacity(value),
+                        size: 20,
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handlePayBill(Bill bill) async {
+    if (bill.id == null) return;
+
+    // Start animation
+    setState(() {
+      _animatingBills.add(bill.id!);
+    });
+
+    // Wait for animation to complete
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Call the parent's pay handler
+    await widget.onPayBill(bill);
+
+    // Remove from animating set
+    if (mounted) {
+      setState(() {
+        _animatingBills.remove(bill.id!);
+      });
+    }
+  }
+
+  String _getRecurrenceLabel(BillRecurrence recurrence) {
+    switch (recurrence) {
+      case BillRecurrence.monthly:
+        return 'Monthly';
+      case BillRecurrence.quarterly:
+        return 'Quarterly';
+      case BillRecurrence.yearly:
+        return 'Yearly';
+      default:
+        return '';
+    }
+  }
+
+  String _formatAmount(double amount, AppCurrency currency) {
+    if (currency == AppCurrency.vnd) {
+      return NumberFormat("#,##0", "en_US").format(amount);
+    } else {
+      return NumberFormat("#,##0.00", "en_US").format(amount);
+    }
+  }
+}
+
+class _BillEditorDialog extends StatefulWidget {
+  final BillService billService;
+  final Bill? bill;
+
+  const _BillEditorDialog({
+    required this.billService,
+    this.bill,
+  });
+
+  @override
+  State<_BillEditorDialog> createState() => _BillEditorDialogState();
+}
+
+class _BillEditorDialogState extends State<_BillEditorDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _amountController;
+  late TextEditingController _categoryController;
+  late TextEditingController _notesController;
+  late DateTime _dueDate;
+  late BillRecurrence _recurrence;
+  String _currency = 'VND';
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.bill?.name ?? '');
+    _amountController = TextEditingController(
+      text: widget.bill?.amount.toString() ?? '',
+    );
+    _categoryController = TextEditingController(text: widget.bill?.category ?? '');
+    _notesController = TextEditingController(text: widget.bill?.notes ?? '');
+    _dueDate = widget.bill?.dueDate ?? DateTime.now().add(const Duration(days: 7));
+    _recurrence = widget.bill?.recurrence ?? BillRecurrence.oneTime;
+    _currency = widget.bill?.currency ?? 'VND';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _amountController.dispose();
+    _categoryController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.bill == null ? 'Add Bill' : 'Edit Bill'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Bill Name'),
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _amountController,
+                decoration: const InputDecoration(labelText: 'Amount'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) return 'Required';
+                  if (double.tryParse(value!) == null) return 'Invalid number';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _currency,
+                decoration: const InputDecoration(labelText: 'Currency'),
+                items: ['VND', 'USD', 'EUR']
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (value) => setState(() => _currency = value!),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                title: const Text('Due Date'),
+                subtitle: Text(DateFormat('dd/MM/yyyy').format(_dueDate)),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _dueDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                  );
+                  if (picked != null) {
+                    setState(() => _dueDate = picked);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<BillRecurrence>(
+                value: _recurrence,
+                decoration: const InputDecoration(labelText: 'Recurrence'),
+                items: BillRecurrence.values
+                    .map((r) => DropdownMenuItem(
+                          value: r,
+                          child: Text(_getRecurrenceLabel(r)),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _recurrence = value!),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _categoryController,
+                decoration: const InputDecoration(labelText: 'Category (optional)'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notesController,
+                decoration: const InputDecoration(labelText: 'Notes (optional)'),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _saveBill,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
+  String _getRecurrenceLabel(BillRecurrence recurrence) {
+    switch (recurrence) {
+      case BillRecurrence.oneTime:
+        return 'One-time';
+      case BillRecurrence.monthly:
+        return 'Monthly';
+      case BillRecurrence.quarterly:
+        return 'Quarterly';
+      case BillRecurrence.yearly:
+        return 'Yearly';
+    }
+  }
+
+  Future<void> _saveBill() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      final bill = Bill(
+        id: widget.bill?.id,
+        name: _nameController.text,
+        amount: double.parse(_amountController.text),
+        currency: _currency,
+        dueDate: _dueDate,
+        recurrence: _recurrence,
+        category: _categoryController.text.isEmpty ? null : _categoryController.text,
+        notes: _notesController.text.isEmpty ? null : _notesController.text,
+      );
+
+      if (widget.bill == null) {
+        await widget.billService.addBill(bill);
+      } else {
+        await widget.billService.updateBill(bill);
+      }
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Bill saved successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving bill: $e')),
+        );
+      }
+    }
+  }
+}
+
+
+class _BillSelectorDialog extends StatelessWidget {
+  final List<Bill> bills;
+  final BillService billService;
+
+  const _BillSelectorDialog({
+    required this.bills,
+    required this.billService,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Manage Bills'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: bills.length,
+                itemBuilder: (context, index) {
+                  final bill = bills[index];
+                  final billCurrency = AppCurrency.fromCode(bill.currency);
+                  final format = billCurrency == AppCurrency.vnd
+                      ? NumberFormat("#,##0", "en_US")
+                      : NumberFormat("#,##0.00", "en_US");
+                  
+                  return ListTile(
+                    leading: Icon(
+                      bill.isPaid ? Icons.check_circle : Icons.receipt_long,
+                      color: bill.isPaid ? Colors.green : Colors.orange,
+                    ),
+                    title: Text(bill.name),
+                    subtitle: Text(
+                      '${billCurrency.symbol}${format.format(bill.amount)} - ${DateFormat('dd/MM/yyyy').format(bill.dueDate)}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            await showDialog(
+                              context: context,
+                              builder: (context) => _BillEditorDialog(
+                                billService: billService,
+                                bill: bill,
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Bill'),
+                                content: Text('Are you sure you want to delete "${bill.name}"?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && bill.id != null) {
+                              await billService.deleteBill(bill.id!);
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () async {
+            Navigator.of(context).pop();
+            await showDialog(
+              context: context,
+              builder: (context) => _BillEditorDialog(
+                billService: billService,
+              ),
+            );
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Add New'),
+        ),
+      ],
+    );
+  }
+}

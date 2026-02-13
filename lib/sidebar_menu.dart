@@ -67,6 +67,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.waterfall_chart,
         color: const Color(0xFF2A5470),
       ),
+      MenuItemData(
+        id: 'bills',
+        label: 'Upcoming Bills',
+        icon: Icons.receipt_long,
+        color: red,
+      ),
     ];
   }
 

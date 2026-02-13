@@ -36,7 +36,7 @@ class DatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -157,12 +157,33 @@ class DatabaseService {
       )
     ''');
     
+    // Create bills table
+    await db.execute('''
+      CREATE TABLE bills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL,
+        due_date TEXT NOT NULL,
+        recurrence TEXT NOT NULL,
+        is_paid INTEGER DEFAULT 0,
+        category TEXT,
+        notes TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+    
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_user_settings_user_id ON user_settings(user_id)');
     await db.execute('CREATE INDEX idx_profiles_user_id ON profiles(user_id)');
     await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
+    await db.execute('CREATE INDEX idx_bills_user_id ON bills(user_id)');
+    await db.execute('CREATE INDEX idx_bills_due_date ON bills(due_date)');
     
     if (kDebugMode) {
       print('Database tables created successfully');
@@ -249,6 +270,50 @@ class DatabaseService {
       } catch (e) {
         if (kDebugMode) {
           print('Error creating postings table during upgrade: $e');
+        }
+        rethrow;
+      }
+    }
+    
+    // Upgrade from version 3 to 4: Add bills table
+    if (oldVersion < 4) {
+      try {
+        // Check if bills table exists
+        final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='bills'",
+        );
+        
+        if (tables.isEmpty) {
+          // Create bills table
+          await db.execute('''
+            CREATE TABLE bills (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER NOT NULL,
+              name TEXT NOT NULL,
+              amount REAL NOT NULL,
+              currency TEXT NOT NULL,
+              due_date TEXT NOT NULL,
+              recurrence TEXT NOT NULL,
+              is_paid INTEGER DEFAULT 0,
+              category TEXT,
+              notes TEXT,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+          ''');
+          
+          // Create indexes
+          await db.execute('CREATE INDEX idx_bills_user_id ON bills(user_id)');
+          await db.execute('CREATE INDEX idx_bills_due_date ON bills(due_date)');
+          
+          if (kDebugMode) {
+            print('Bills table created successfully during upgrade');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error creating bills table during upgrade: $e');
         }
         rethrow;
       }
@@ -586,6 +651,7 @@ class DatabaseService {
     await db.delete('transactions');
     await db.delete('user_settings');
     await db.delete('profiles');
+    await db.delete('bills');
     await db.delete('users');
   }
   
@@ -594,6 +660,66 @@ class DatabaseService {
     await db.delete('transactions', where: 'user_id = ?', whereArgs: [userId]);
     await db.delete('user_settings', where: 'user_id = ?', whereArgs: [userId]);
     await db.delete('profiles', where: 'user_id = ?', whereArgs: [userId]);
+    await db.delete('bills', where: 'user_id = ?', whereArgs: [userId]);
+  }
+  
+  // Bill operations
+  Future<int> insertBill(int userId, Map<String, dynamic> bill) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    
+    return await db.insert('bills', {
+      'user_id': userId,
+      'name': bill['name'],
+      'amount': bill['amount'],
+      'currency': bill['currency'],
+      'due_date': bill['due_date'],
+      'recurrence': bill['recurrence'],
+      'is_paid': bill['is_paid'] == true ? 1 : 0,
+      'category': bill['category'],
+      'notes': bill['notes'],
+      'created_at': now,
+      'updated_at': now,
+    });
+  }
+  
+  Future<List<Map<String, dynamic>>> getBillsByUserId(int userId) async {
+    final db = await database;
+    return await db.query(
+      'bills',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'due_date ASC',
+    );
+  }
+  
+  Future<void> updateBill(int billId, Map<String, dynamic> bill) async {
+    final db = await database;
+    await db.update(
+      'bills',
+      {
+        'name': bill['name'],
+        'amount': bill['amount'],
+        'currency': bill['currency'],
+        'due_date': bill['due_date'],
+        'recurrence': bill['recurrence'],
+        'is_paid': bill['is_paid'] == true ? 1 : 0,
+        'category': bill['category'],
+        'notes': bill['notes'],
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [billId],
+    );
+  }
+  
+  Future<void> deleteBill(int billId) async {
+    final db = await database;
+    await db.delete(
+      'bills',
+      where: 'id = ?',
+      whereArgs: [billId],
+    );
   }
   
   Future<void> close() async {
