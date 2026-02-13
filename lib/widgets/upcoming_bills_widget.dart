@@ -66,7 +66,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return Center(
                         child: Text(
-                          'No upcoming bills',
+                          AppLocalizations.of(context).noBillsUpcoming,
                           style: const TextStyle(color: Colors.white, fontSize: 14),
                         ),
                       );
@@ -95,9 +95,9 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Upcoming Bills',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).upcomingBills,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -322,7 +322,7 @@ class _BillsContentState extends State<_BillsContent> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Total Due (${widget.daysFilter}d):',
+            '${AppLocalizations.of(context).totalDue} (${widget.daysFilter}d):',
             style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
           Text(

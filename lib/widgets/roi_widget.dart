@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../services/backend_ffi_service.dart';
+import '../l10n/app_localizations.dart';
 
 class RoiWidget extends StatefulWidget {
   const RoiWidget({super.key});
@@ -55,18 +56,18 @@ class _RoiWidgetState extends State<RoiWidget> {
           children: [
             const Icon(Icons.trending_up, size: 40, color: Colors.white),
             const SizedBox(height: 12),
-            const Text(
-              'ROI',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context).roi,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Return on Investment',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+            Text(
+              AppLocalizations.of(context).returnOnInvestment,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -95,9 +96,9 @@ class _RoiWidgetState extends State<RoiWidget> {
                           ),
                         ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Current ROI',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context).currentRoi,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
                     ),

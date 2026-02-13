@@ -147,6 +147,57 @@ class AppLocalizations {
       'widget_budget_overview': 'Budget Overview',
       'widget_recent_transactions': 'Recent Transactions',
       'profile': 'Profile',
+      
+      // Additional Widgets
+      'cashflow': 'Cashflow',
+      'roi': 'ROI',
+      'irr': 'IRR',
+      'tax_estimation': 'Tax Estimation',
+      'upcoming_bills': 'Upcoming Bills',
+      'my_profile': 'My Profile',
+      'net_cashflow': 'Net Cashflow',
+      'total_income': 'Total Income',
+      'total_expenses': 'Total Expenses',
+      'return_on_investment': 'Return on Investment',
+      'internal_rate_of_return': 'Internal Rate of Return',
+      'estimated_tax': 'Estimated Tax',
+      'no_bills_upcoming': 'No bills upcoming',
+      'due_date': 'Due Date',
+      'amount': 'Amount',
+      'paid': 'Paid',
+      'unpaid': 'Unpaid',
+      'total_due': 'Total Due',
+      'month': 'Month',
+      'year': 'Year',
+      'vietnamese_personal_income_tax': 'Vietnamese Personal Income Tax',
+      'tax_breakdown': 'Tax Breakdown',
+      'financial_year': 'Financial Year',
+      'vietnamese_tax_brackets': 'Vietnamese Tax Brackets',
+      'monthly_income_range': 'Monthly Income',
+      'rate': 'Rate',
+      'deduction': 'Deduction',
+      'income_section': 'Income',
+      'annual_income': 'Annual Income',
+      'monthly_income': 'Monthly Income',
+      'deductions_section': 'Deductions',
+      'personal_deduction': 'Personal Deduction',
+      'total_deductions': 'Total Deductions',
+      'taxable_income_section': 'Taxable Income',
+      'annual_taxable': 'Annual Taxable',
+      'monthly_taxable': 'Monthly Taxable',
+      'tax_bracket': 'Tax Bracket',
+      'range': 'Range',
+      'tax_calculation': 'Tax Calculation',
+      'monthly_tax': 'Monthly Tax',
+      'annual_tax': 'Annual Tax',
+      'effective_rate': 'Effective Rate',
+      'net_income_section': 'Net Income',
+      'after_tax': 'After Tax',
+      'based_on_vietnamese_tax_law': 'Based on Vietnamese progressive tax law (Circular 111/2013/TT-BTC)',
+      'estimated_tax_label': 'Estimated Tax',
+      'current_roi': 'Current ROI',
+      'current_irr': 'Current IRR',
+      'click_for_details': 'Click for Details & Tax Table',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -283,6 +334,57 @@ class AppLocalizations {
       'widget_budget_overview': 'Tổng quan ngân sách',
       'widget_recent_transactions': 'Giao dịch gần đây',
       'profile': 'Hồ sơ',
+      
+      // Additional Widgets
+      'cashflow': 'Dòng tiền',
+      'roi': 'ROI',
+      'irr': 'IRR',
+      'tax_estimation': 'Ước tính thuế',
+      'upcoming_bills': 'Hóa đơn sắp tới',
+      'my_profile': 'Hồ sơ của tôi',
+      'net_cashflow': 'Dòng tiền ròng',
+      'total_income': 'Tổng thu nhập',
+      'total_expenses': 'Tổng chi tiêu',
+      'return_on_investment': 'Lợi nhuận đầu tư',
+      'internal_rate_of_return': 'Tỷ suất hoàn vốn nội bộ',
+      'estimated_tax': 'Thuế ước tính',
+      'no_bills_upcoming': 'Không có hóa đơn sắp tới',
+      'due_date': 'Ngày đến hạn',
+      'amount': 'Số tiền',
+      'paid': 'Đã thanh toán',
+      'unpaid': 'Chưa thanh toán',
+      'total_due': 'Tổng phải trả',
+      'month': 'Tháng',
+      'year': 'Năm',
+      'vietnamese_personal_income_tax': 'Thuế thu nhập cá nhân Việt Nam',
+      'tax_breakdown': 'Chi tiết thuế',
+      'financial_year': 'Năm tài chính',
+      'vietnamese_tax_brackets': 'Bậc thuế Việt Nam',
+      'monthly_income_range': 'Thu nhập tháng',
+      'rate': 'Thuế suất',
+      'deduction': 'Khấu trừ',
+      'income_section': 'Thu nhập',
+      'annual_income': 'Thu nhập năm',
+      'monthly_income': 'Thu nhập tháng',
+      'deductions_section': 'Các khoản giảm trừ',
+      'personal_deduction': 'Giảm trừ bản thân',
+      'total_deductions': 'Tổng giảm trừ',
+      'taxable_income_section': 'Thu nhập tính thuế',
+      'annual_taxable': 'Thu nhập tính thuế năm',
+      'monthly_taxable': 'Thu nhập tính thuế tháng',
+      'tax_bracket': 'Bậc thuế',
+      'range': 'Khoảng',
+      'tax_calculation': 'Tính thuế',
+      'monthly_tax': 'Thuế tháng',
+      'annual_tax': 'Thuế năm',
+      'effective_rate': 'Thuế suất thực tế',
+      'net_income_section': 'Thu nhập ròng',
+      'after_tax': 'Sau thuế',
+      'based_on_vietnamese_tax_law': 'Dựa trên luật thuế lũy tiến Việt Nam (Thông tư 111/2013/TT-BTC)',
+      'estimated_tax_label': 'Thuế ước tính',
+      'current_roi': 'ROI hiện tại',
+      'current_irr': 'IRR hiện tại',
+      'click_for_details': 'Bấm để xem chi tiết & bảng thuế',
     },
   };
 
@@ -417,6 +519,57 @@ class AppLocalizations {
   String get widgetBudgetOverview => translate('widget_budget_overview');
   String get widgetRecentTransactions => translate('widget_recent_transactions');
   String get profile => translate('profile');
+  
+  // Additional Widgets
+  String get cashflow => translate('cashflow');
+  String get roi => translate('roi');
+  String get irr => translate('irr');
+  String get taxEstimation => translate('tax_estimation');
+  String get upcomingBills => translate('upcoming_bills');
+  String get myProfile => translate('my_profile');
+  String get netCashflow => translate('net_cashflow');
+  String get totalIncome => translate('total_income');
+  String get totalExpenses => translate('total_expenses');
+  String get returnOnInvestment => translate('return_on_investment');
+  String get internalRateOfReturn => translate('internal_rate_of_return');
+  String get estimatedTax => translate('estimated_tax');
+  String get noBillsUpcoming => translate('no_bills_upcoming');
+  String get dueDate => translate('due_date');
+  String get amount => translate('amount');
+  String get paid => translate('paid');
+  String get unpaid => translate('unpaid');
+  String get totalDue => translate('total_due');
+  String get month => translate('month');
+  String get year => translate('year');
+  String get vietnamesePersonalIncomeTax => translate('vietnamese_personal_income_tax');
+  String get taxBreakdown => translate('tax_breakdown');
+  String get financialYear => translate('financial_year');
+  String get vietnameseTaxBrackets => translate('vietnamese_tax_brackets');
+  String get monthlyIncomeRange => translate('monthly_income_range');
+  String get rate => translate('rate');
+  String get deduction => translate('deduction');
+  String get incomeSection => translate('income_section');
+  String get annualIncome => translate('annual_income');
+  String get monthlyIncome => translate('monthly_income');
+  String get deductionsSection => translate('deductions_section');
+  String get personalDeduction => translate('personal_deduction');
+  String get totalDeductions => translate('total_deductions');
+  String get taxableIncomeSection => translate('taxable_income_section');
+  String get annualTaxable => translate('annual_taxable');
+  String get monthlyTaxable => translate('monthly_taxable');
+  String get taxBracket => translate('tax_bracket');
+  String get range => translate('range');
+  String get taxCalculation => translate('tax_calculation');
+  String get monthlyTax => translate('monthly_tax');
+  String get annualTax => translate('annual_tax');
+  String get effectiveRate => translate('effective_rate');
+  String get netIncomeSection => translate('net_income_section');
+  String get afterTax => translate('after_tax');
+  String get basedOnVietnameseTaxLaw => translate('based_on_vietnamese_tax_law');
+  String get estimatedTaxLabel => translate('estimated_tax_label');
+  String get currentRoi => translate('current_roi');
+  String get currentIrr => translate('current_irr');
+  String get clickForDetails => translate('click_for_details');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

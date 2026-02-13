@@ -94,9 +94,9 @@ class _CashflowWidgetState extends State<CashflowWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Cash Flow',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context).cashflow,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -498,7 +498,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           ),
           const Divider(color: Colors.white30),
           _buildSummaryRow(
-            'Net Cash Flow',
+            AppLocalizations.of(context).netCashflow,
             netCashflow,
             netCashflow >= 0 ? Colors.green : Colors.red,
             isBold: true,

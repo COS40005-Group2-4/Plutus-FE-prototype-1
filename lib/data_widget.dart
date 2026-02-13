@@ -215,7 +215,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'Month',
+                      AppLocalizations.of(context).month,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -234,7 +234,7 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'Year',
+                      AppLocalizations.of(context).year,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,

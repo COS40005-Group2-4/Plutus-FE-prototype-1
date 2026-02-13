@@ -550,7 +550,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   children: [
                     Expanded(
                       child: Text(
-                        'My Profile',
+                        AppLocalizations.of(context).myProfile,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: titleSize,

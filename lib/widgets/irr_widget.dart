@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../services/backend_ffi_service.dart';
+import '../l10n/app_localizations.dart';
 
 class IrrWidget extends StatefulWidget {
   const IrrWidget({super.key});
@@ -55,18 +56,18 @@ class _IrrWidgetState extends State<IrrWidget> {
           children: [
             const Icon(Icons.show_chart, size: 40, color: Colors.white),
             const SizedBox(height: 12),
-            const Text(
-              'IRR',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context).irr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Internal Rate of Return',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+            Text(
+              AppLocalizations.of(context).internalRateOfReturn,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -95,9 +96,9 @@ class _IrrWidgetState extends State<IrrWidget> {
                           ),
                         ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Current IRR',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context).currentIrr,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
                     ),
