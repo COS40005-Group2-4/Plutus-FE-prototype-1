@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
@@ -942,6 +943,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
   late DatabaseService _databaseService;
   bool _isEditMode = false;
   final Set<dynamic> _selectedTransactionIds = {};
+  DateTime? _startDate;
+  DateTime? _endDate;
+  String _dateFilter = 'all'; // 'all', 'today', 'week', 'month', 'custom'
 
   @override
   void initState() {
@@ -955,6 +959,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
     });
+    
+    if (kDebugMode) {
+      print('TransactionHistoryWidget: Initialized and listening to stream');
+    }
   }
 
   @override
@@ -996,6 +1004,76 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     if (mounted) setState(() {});
   }
 
+  List<Transaction> _filterTransactionsByDate(List<Transaction> transactions) {
+    if (_dateFilter == 'all') {
+      return transactions;
+    }
+
+    final now = DateTime.now();
+    DateTime? filterStart;
+    DateTime? filterEnd;
+
+    switch (_dateFilter) {
+      case 'today':
+        filterStart = DateTime(now.year, now.month, now.day);
+        filterEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
+      case 'week':
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        filterStart = DateTime(weekStart.year, weekStart.month, weekStart.day);
+        filterEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
+      case 'month':
+        filterStart = DateTime(now.year, now.month, 1);
+        filterEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
+      case 'custom':
+        filterStart = _startDate;
+        filterEnd = _endDate;
+        break;
+    }
+
+    if (filterStart == null && filterEnd == null) {
+      return transactions;
+    }
+
+    return transactions.where((tx) {
+      if (filterStart != null && tx.dateTime.isBefore(filterStart)) {
+        return false;
+      }
+      if (filterEnd != null && tx.dateTime.isAfter(filterEnd)) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  Future<void> _showDateRangePicker() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: now,
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    } else {
+      // User cancelled, revert to 'all'
+      setState(() {
+        _dateFilter = 'all';
+        _startDate = null;
+        _endDate = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
@@ -1025,7 +1103,10 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
               final allTransactions = List<Transaction>.from(snapshot.data!);
               allTransactions.sort((a, b) => b.dateTime.compareTo(a.dateTime));
-              final transactions = allTransactions.take(10).toList();
+              
+              // Apply date filter
+              final filteredTransactions = _filterTransactionsByDate(allTransactions);
+              final transactions = filteredTransactions.take(10).toList();
 
               return SingleChildScrollView(
                 child: Column(
@@ -1070,16 +1151,41 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                           ],
                         )
                       else
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                          onPressed: () {
-                            setState(() {
-                              _isEditMode = true;
-                              _selectedTransactionIds.clear();
-                            });
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        Row(
+                          children: [
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+                              onSelected: (value) {
+                                setState(() {
+                                  _dateFilter = value;
+                                  if (value == 'custom') {
+                                    _showDateRangePicker();
+                                  } else {
+                                    _startDate = null;
+                                    _endDate = null;
+                                  }
+                                });
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(value: 'all', child: Text('All Time')),
+                                PopupMenuItem(value: 'today', child: Text('Today')),
+                                PopupMenuItem(value: 'week', child: Text('This Week')),
+                                PopupMenuItem(value: 'month', child: Text('This Month')),
+                                PopupMenuItem(value: 'custom', child: Text('Custom Range')),
+                              ],
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  _isEditMode = true;
+                                  _selectedTransactionIds.clear();
+                                });
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
                         ),
                     ],
                     ),

@@ -55,10 +55,23 @@ class TransactionService {
   
   void notifyTransactionUpdate() async {
     if (_currentUserId != null) {
+      if (kDebugMode) {
+        print('TransactionService: Notifying transaction update for user $_currentUserId');
+      }
       final transactions = await getTransactions();
       _lastTransactions = transactions;
+      if (kDebugMode) {
+        print('TransactionService: Loaded ${transactions.length} transactions');
+      }
       if (!_transactionStreamController.isClosed) {
         _transactionStreamController.add(transactions);
+        if (kDebugMode) {
+          print('TransactionService: Sent ${transactions.length} transactions to stream');
+        }
+      }
+    } else {
+      if (kDebugMode) {
+        print('TransactionService: Cannot notify - no current user set');
       }
     }
   }
