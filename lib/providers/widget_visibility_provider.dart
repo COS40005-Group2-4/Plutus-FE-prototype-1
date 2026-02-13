@@ -13,6 +13,7 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     'export': true,
     'roi': true,
     'irr': true,
+    'tax': true,
     'cashflow': true,
     'bills': true,
   };

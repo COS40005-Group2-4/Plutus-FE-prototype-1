@@ -152,13 +152,16 @@ class _SidebarMenuState extends State<SidebarMenu> {
                       const SizedBox(height: 12),
                       ...menuItems.map((item) {
                         final isVisible = visibilityProvider.isWidgetVisible(item.id);
-                        return GlassContainer(
+                        return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          borderRadius: 8,
-                          color: isVisible ? item.color : Colors.transparent,
-                          opacity: isVisible ? 0.2 : 0,
-                          blur: isVisible ? 5 : 0,
-                          borderOpacity: isVisible ? 0.2 : 0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: isVisible ? item.color.withValues(alpha: 0.2) : Colors.transparent,
+                            border: Border.all(
+                              color: isVisible ? item.color.withValues(alpha: 0.3) : Colors.transparent,
+                              width: 1,
+                            ),
+                          ),
                           child: CheckboxListTile(
                             value: isVisible,
                             onChanged: (value) {

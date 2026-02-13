@@ -84,7 +84,11 @@ class GlassContainer extends StatelessWidget {
                 ],
               ),
             ),
-            child: child,
+            child: child == null ? null : Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) {},
+              child: child,
+            ),
           ),
         ),
       ),
