@@ -1,5 +1,6 @@
 # Flutter/Dart/Pub related
 /Plutus-backend-prototype-2/
+plutus.db*
 .kiro/
 .cursor/
 .dart_tool/

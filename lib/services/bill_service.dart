@@ -101,8 +101,57 @@ class BillService {
 
     final bills = await getBills();
     final bill = bills.firstWhere((b) => b.id == billId);
+    
+    // Mark current bill as paid
     final updatedBill = bill.copyWith(isPaid: true);
     await updateBill(updatedBill);
+
+    // If recurring, create next occurrence
+    if (bill.recurrence != BillRecurrence.oneTime) {
+      final nextDueDate = _calculateNextDueDate(bill.dueDate, bill.recurrence);
+      
+      final nextBill = Bill(
+        name: bill.name,
+        amount: bill.amount,
+        currency: bill.currency,
+        dueDate: nextDueDate,
+        recurrence: bill.recurrence,
+        isPaid: false,
+        category: bill.category,
+        notes: bill.notes,
+      );
+      
+      await addBill(nextBill);
+      
+      if (kDebugMode) {
+        print('Created next occurrence of recurring bill: ${bill.name} for ${nextDueDate}');
+      }
+    }
+  }
+
+  DateTime _calculateNextDueDate(DateTime currentDueDate, BillRecurrence recurrence) {
+    switch (recurrence) {
+      case BillRecurrence.monthly:
+        return DateTime(
+          currentDueDate.year,
+          currentDueDate.month + 1,
+          currentDueDate.day,
+        );
+      case BillRecurrence.quarterly:
+        return DateTime(
+          currentDueDate.year,
+          currentDueDate.month + 3,
+          currentDueDate.day,
+        );
+      case BillRecurrence.yearly:
+        return DateTime(
+          currentDueDate.year + 1,
+          currentDueDate.month,
+          currentDueDate.day,
+        );
+      case BillRecurrence.oneTime:
+        return currentDueDate;
+    }
   }
 
   Future<double> getTotalDueAmount({

@@ -1,224 +1,117 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/intl.dart';
 
 class CurrencyService {
-  static const String _cacheKey = 'exchange_rates';
-  static const String _cacheTimestampKey = 'exchange_rates_timestamp';
-  static const Duration _cacheValidDuration = Duration(hours: 12);
+  // Exchange rates relative to VND (Vietnamese Dong)
+  // These are approximate rates - in production, you'd fetch from an API
+  static const Map<String, double> _exchangeRates = {
+    'VND': 1.0,
+    'USD': 25000.0,  // 1 USD ≈ 25,000 VND
+    'EUR': 27000.0,  // 1 EUR ≈ 27,000 VND
+    'GBP': 31000.0,  // 1 GBP ≈ 31,000 VND
+    'JPY': 170.0,    // 1 JPY ≈ 170 VND
+    'CNY': 3500.0,   // 1 CNY ≈ 3,500 VND
+  };
 
-  Map<String, double>? _cachedRates;
-  DateTime? _cacheTimestamp;
-
-  // Get API key from environment
-  String? get _apiKey => dotenv.env['EXCHANGE_RATE_API_KEY'];
-
-  Future<Map<String, double>> getExchangeRates({bool forceRefresh = false}) async {
-    // Check if cached rates are still valid
-    if (!forceRefresh && _cachedRates != null && _cacheTimestamp != null) {
-      if (DateTime.now().difference(_cacheTimestamp!) < _cacheValidDuration) {
-        return _cachedRates!;
-      }
-    }
-
-    // Try to load from SharedPreferences first
-    if (!forceRefresh) {
-      final cachedData = await _loadFromCache();
-      if (cachedData != null) {
-        _cachedRates = cachedData;
-        return cachedData;
-      }
-    }
-
-    // Fetch from API
-    try {
-      final rates = await _fetchFromApi();
-      await _saveToCache(rates);
-      _cachedRates = rates;
-      _cacheTimestamp = DateTime.now();
-      return rates;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching exchange rates: $e');
-      }
-      // Return cached data if available, even if expired
-      if (_cachedRates != null) {
-        return _cachedRates!;
-      }
-      // Return default rates as fallback
-      return _getDefaultRates();
-    }
+  /// Convert amount from source currency to VND
+  static double toVND(double amount, String fromCurrency) {
+    final rate = _exchangeRates[fromCurrency.toUpperCase()] ?? 1.0;
+    return amount * rate;
   }
 
-  Future<Map<String, double>> _fetchFromApi() async {
-    if (_apiKey == null || _apiKey!.isEmpty) {
-      if (kDebugMode) {
-        print('Warning: EXCHANGE_RATE_API_KEY not found in .env file. Using default rates.');
-      }
-      return _getDefaultRates();
-    }
-
-    final url = 'https://v6.exchangerate-api.com/v6/$_apiKey/latest/VND';
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['result'] == 'success') {
-        final conversionRates = data['conversion_rates'] as Map<String, dynamic>;
-        final rates = <String, double>{};
-        conversionRates.forEach((key, value) {
-          rates[key] = (value is int) ? value.toDouble() : (value as num).toDouble();
-        });
-        return rates;
-      } else {
-        throw Exception('API returned error: ${data['error-type']}');
-      }
-    } else {
-      throw Exception('Failed to fetch exchange rates: ${response.statusCode}');
-    }
+  /// Convert amount from VND to target currency
+  static double fromVND(double amountInVND, String toCurrency) {
+    final rate = _exchangeRates[toCurrency.toUpperCase()] ?? 1.0;
+    return amountInVND / rate;
   }
 
-  Future<Map<String, double>?> _loadFromCache() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedJson = prefs.getString(_cacheKey);
-      final timestampStr = prefs.getString(_cacheTimestampKey);
-
-      if (cachedJson != null && timestampStr != null) {
-        final timestamp = DateTime.parse(timestampStr);
-        if (DateTime.now().difference(timestamp) < _cacheValidDuration) {
-          _cacheTimestamp = timestamp;
-          final cachedData = json.decode(cachedJson) as Map<String, dynamic>;
-          final rates = <String, double>{};
-          cachedData.forEach((key, value) {
-            rates[key] = (value is int) ? value.toDouble() : (value as num).toDouble();
-          });
-          return rates;
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading cached rates: $e');
-      }
-    }
-    return null;
-  }
-
-  Future<void> _saveToCache(Map<String, double> rates) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKey, json.encode(rates));
-      await prefs.setString(_cacheTimestampKey, DateTime.now().toIso8601String());
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error saving rates to cache: $e');
-      }
-    }
-  }
-
-  Map<String, double> _getDefaultRates() {
-    // Fallback rates (approximate as of 2024)
-    // 1 VND = X of other currency
-    return {
-      'VND': 1.0,
-      'USD': 0.000041, // ~1 USD = 24,000 VND
-      'EUR': 0.000037, // ~1 EUR = 27,000 VND
-      'JPY': 0.0056,
-      'GBP': 0.000032,
-    };
-  }
-
+  /// Convert amount from one currency to another (async for compatibility)
   Future<double> convert({
     required double amount,
     required String fromCurrency,
     required String toCurrency,
   }) async {
-    // Normalize currency codes
-    final from = fromCurrency.trim().toUpperCase();
-    final to = toCurrency.trim().toUpperCase();
-    
-    // Handle empty or invalid inputs
-    if (from.isEmpty || to.isEmpty) {
-      if (kDebugMode) {
-        print('Warning: Empty currency code in conversion');
-      }
+    if (fromCurrency.toUpperCase() == toCurrency.toUpperCase()) {
       return amount;
     }
     
-    // No conversion needed if same currency
-    if (from == to) {
-      return amount;
-    }
-
-    try {
-      final rates = await getExchangeRates();
-
-      // All rates are based on VND, so we need to convert accordingly
-      // If from VND to other currency
-      if (from == 'VND') {
-        final rate = rates[to];
-        if (rate != null && rate > 0) {
-          return amount * rate;
-        }
-      }
-      // If from other currency to VND
-      else if (to == 'VND') {
-        final rate = rates[from];
-        if (rate != null && rate > 0) {
-          return amount / rate;
-        }
-      }
-      // If between two non-VND currencies
-      else {
-        final fromRate = rates[from];
-        final toRate = rates[to];
-        if (fromRate != null && toRate != null && fromRate > 0 && toRate > 0) {
-          // Convert to VND first, then to target currency
-          final inVnd = amount / fromRate;
-          return inVnd * toRate;
-        }
-      }
-      
-      if (kDebugMode) {
-        print('Warning: Could not find exchange rate for $from to $to');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error converting currency: $e');
-      }
-    }
-
-    return amount; // Return original amount if conversion fails
+    // Convert to VND first, then to target currency
+    final amountInVND = toVND(amount, fromCurrency);
+    return fromVND(amountInVND, toCurrency);
   }
 
+  /// Get exchange rate between two currencies
+  static double getExchangeRate(String fromCurrency, String toCurrency) {
+    if (fromCurrency.toUpperCase() == toCurrency.toUpperCase()) {
+      return 1.0;
+    }
+    
+    final fromRate = _exchangeRates[fromCurrency.toUpperCase()] ?? 1.0;
+    final toRate = _exchangeRates[toCurrency.toUpperCase()] ?? 1.0;
+    
+    return fromRate / toRate;
+  }
+
+  /// Check if currency is supported
+  static bool isSupported(String currency) {
+    return _exchangeRates.containsKey(currency.toUpperCase());
+  }
+
+  /// Get currency symbol
+  static String getCurrencySymbol(String currency) {
+    switch (currency.toUpperCase()) {
+      case 'VND':
+        return '₫';
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      case 'JPY':
+        return '¥';
+      case 'CNY':
+        return '¥';
+      default:
+        return currency;
+    }
+  }
+
+  /// Format amount with currency (named parameters for compatibility)
   String formatCurrency({
     required double amount,
     required String currencyCode,
-    String? symbol,
-    int decimalPlaces = 2,
+    bool showSymbol = true,
   }) {
-    final code = currencyCode.trim().toUpperCase();
+    final symbol = getCurrencySymbol(currencyCode);
     
-    if (code == 'VND') {
-      // VND doesn't use decimal places - show full number
-      final roundedAmount = amount.round();
-      final formattedNumber = roundedAmount.abs().toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]},',
-      );
-      return '${symbol ?? '₫'}$formattedNumber';
+    if (currencyCode.toUpperCase() == 'VND') {
+      // VND doesn't use decimals
+      final formatter = NumberFormat('#,##0', 'vi_VN');
+      return showSymbol ? '${formatter.format(amount)} $symbol' : formatter.format(amount);
     } else {
       // Other currencies use 2 decimal places
-      final absAmount = amount.abs();
-      final formattedAmount = absAmount.toStringAsFixed(decimalPlaces);
-      final parts = formattedAmount.split('.');
-      final integerPart = parts[0].replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]},',
-      );
-      return '${symbol ?? code}$integerPart.${parts[1]}';
+      final formatter = NumberFormat('#,##0.00', 'en_US');
+      if (showSymbol) {
+        return '$symbol${formatter.format(amount)}';
+      } else {
+        return formatter.format(amount);
+      }
+    }
+  }
+
+  /// Format amount with currency (positional parameters - legacy support)
+  static String formatAmount(double amount, String currency) {
+    final symbol = getCurrencySymbol(currency);
+    
+    if (currency.toUpperCase() == 'VND') {
+      // VND doesn't use decimals
+      final formatter = NumberFormat('#,##0', 'vi_VN');
+      return '${formatter.format(amount)} $symbol';
+    } else {
+      // Other currencies use 2 decimal places
+      final formatter = NumberFormat('#,##0.00', 'en_US');
+      return '$symbol${formatter.format(amount)}';
     }
   }
 }

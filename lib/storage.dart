@@ -47,7 +47,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
   final List<int> _slotCounts = [3, 4, 6];
   
-  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr', 'cashflow', 'bills'];
+  List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr', 'cashflow', 'bills', 'tax'];
 
   void setVisibilityFilter(List<String> visibleWidgets) {
     visibilityFilter = visibleWidgets;
@@ -128,16 +128,6 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "irr",
       ),
       ColoredDashboardItem(
-        startX: 0,
-        startY: 6,
-        width: 2,
-        height: 2,
-        identifier: "cashflow",
-        minHeight: 2,
-        minWidth: 2,
-        data: "cashflow",
-      ),
-      ColoredDashboardItem(
         startX: 2,
         startY: 4,
         width: 1,
@@ -146,6 +136,26 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         minHeight: 2,
         minWidth: 1,
         data: "bills",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 6,
+        width: 2,
+        height: 2,
+        identifier: "tax",
+        minHeight: 2,
+        minWidth: 2,
+        data: "tax",
+      ),
+      ColoredDashboardItem(
+        startX: 0,
+        startY: 6,
+        width: 2,
+        height: 2,
+        identifier: "cashflow",
+        minHeight: 2,
+        minWidth: 2,
+        data: "cashflow",
       ),
     ],
     4: <ColoredDashboardItem>[
@@ -222,6 +232,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "irr",
       ),
       ColoredDashboardItem(
+        startX: 0,
+        startY: 5,
+        width: 2,
+        height: 2,
+        identifier: "tax",
+        minHeight: 2,
+        minWidth: 2,
+        data: "tax",
+      ),
+      ColoredDashboardItem(
         startX: 2,
         startY: 4,
         width: 2,
@@ -232,9 +252,9 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "cashflow",
       ),
       ColoredDashboardItem(
-        startX: 0,
+        startX: 1,
         startY: 5,
-        width: 2,
+        width: 1,
         height: 2,
         identifier: "bills",
         minHeight: 2,
@@ -315,6 +335,16 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         minHeight: 1,
         minWidth: 1,
         data: "irr",
+      ),
+      ColoredDashboardItem(
+        startX: 2,
+        startY: 3,
+        width: 2,
+        height: 2,
+        identifier: "tax",
+        minHeight: 2,
+        minWidth: 2,
+        data: "tax",
       ),
       ColoredDashboardItem(
         startX: 4,

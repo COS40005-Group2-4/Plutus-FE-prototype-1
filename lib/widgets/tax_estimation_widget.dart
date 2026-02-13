@@ -1,0 +1,774 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'glass_container.dart';
+import '../services/tax_calculation_service.dart';
+import '../services/currency_service.dart';
+import '../transaction_service.dart';
+import '../providers/auth_provider.dart';
+import '../providers/settings_provider.dart';
+
+class TaxEstimationWidget extends StatefulWidget {
+  const TaxEstimationWidget({super.key});
+
+  @override
+  State<TaxEstimationWidget> createState() => _TaxEstimationWidgetState();
+}
+
+class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
+  late TransactionService _transactionService;
+  final NumberFormat _currencyFormat = NumberFormat('#,##0', 'vi_VN');
+  
+  double _annualIncome = 0;
+  double _estimatedTax = 0;
+  double _effectiveRate = 0;
+  bool _isLoading = true;
+  int _selectedYear = DateTime.now().year;
+  StreamSubscription? _transactionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _transactionService = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    }
+    
+    // Listen to transaction updates
+    _transactionSubscription = _transactionService.transactionStream.listen((_) {
+      if (mounted) {
+        _calculateTax();
+      }
+    });
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _transactionService.notifyTransactionUpdate();
+      _calculateTax();
+    });
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recalculate when currency settings change
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    if (settingsProvider.isInitialized) {
+      _calculateTax();
+    }
+  }
+  
+  @override
+  void dispose() {
+    _transactionSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _calculateTax() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final transactions = await _transactionService.getTransactions();
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final userCurrency = settingsProvider.currency.code;
+      
+      final startOfYear = DateTime(_selectedYear, 1, 1);
+      final endOfYear = DateTime(_selectedYear, 12, 31, 23, 59, 59);
+
+      double totalIncomeInVND = 0;
+      
+      for (final transaction in transactions) {
+        final txDate = transaction.dateTime;
+        
+        if (txDate.isAfter(startOfYear.subtract(const Duration(days: 1))) && 
+            txDate.isBefore(endOfYear.add(const Duration(days: 1)))) {
+          
+          bool isIncome = false;
+          double incomeAmount = 0;
+          String transactionCurrency = 'VND';
+          
+          if (transaction.postings.isNotEmpty) {
+            for (final posting in transaction.postings) {
+              final account = posting.account.toLowerCase();
+              
+              if (account.startsWith('income:')) {
+                if (posting.amount < 0) {
+                  isIncome = true;
+                  incomeAmount = posting.amount.abs();
+                  transactionCurrency = posting.commodity;
+                  break;
+                }
+              }
+              else if ((account.startsWith('assets:') || account.startsWith('asset:')) && posting.amount > 0) {
+                final hasIncomePosting = transaction.postings.any((p) => 
+                  p.account.toLowerCase().startsWith('income:') && p.amount < 0
+                );
+                if (hasIncomePosting) {
+                  isIncome = true;
+                  incomeAmount = posting.amount;
+                  transactionCurrency = posting.commodity;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (isIncome && incomeAmount > 0) {
+            final incomeInVND = CurrencyService.toVND(incomeAmount, transactionCurrency);
+            totalIncomeInVND += incomeInVND;
+          }
+        }
+      }
+      
+      final taxResult = TaxCalculationService.calculateAnnualTax(
+        annualIncome: totalIncomeInVND,
+        numberOfDependents: 0,
+      );
+      
+      final annualIncomeInUserCurrency = CurrencyService.fromVND(totalIncomeInVND, userCurrency);
+      final taxInUserCurrency = CurrencyService.fromVND(taxResult['annualTax'] ?? 0, userCurrency);
+      
+      if (mounted) {
+        setState(() {
+          _annualIncome = annualIncomeInUserCurrency;
+          _estimatedTax = taxInUserCurrency;
+          _effectiveRate = taxResult['effectiveRate'] ?? 0;
+          _isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('Error calculating tax: $e');
+        print('Stack trace: $stackTrace');
+      }
+      if (mounted) {
+        setState(() {
+          _annualIncome = 0;
+          _estimatedTax = 0;
+          _effectiveRate = 0;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showYearPicker() async {
+    final currentYear = DateTime.now().year;
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GlassContainer(
+          padding: const EdgeInsets.all(24),
+          borderRadius: 16,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Select Year',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 300,
+                width: 200,
+                child: ListView.builder(
+                  itemCount: 10,
+                  itemBuilder: (context, index) {
+                    final year = currentYear - index;
+                    final isSelected = year == _selectedYear;
+                    return GlassContainer(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: isSelected ? const Color(0xFF2A5470) : Colors.transparent,
+                      opacity: isSelected ? 0.3 : 0,
+                      borderRadius: 8,
+                      child: ListTile(
+                        title: Text(
+                          year.toString(),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        onTap: () => Navigator.pop(context, year),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    
+    if (result != null && result != _selectedYear) {
+      setState(() {
+        _selectedYear = result;
+      });
+      _calculateTax();
+    }
+  }
+
+  void _showTaxDetails() {
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final userCurrency = settingsProvider.currency.code;
+    final currencySymbol = settingsProvider.currency.symbol;
+    
+    final taxResult = TaxCalculationService.calculateAnnualTax(
+      annualIncome: CurrencyService.toVND(_annualIncome, userCurrency),
+      numberOfDependents: 0,
+    );
+    
+    final monthlyTaxableIncome = taxResult['monthlyTaxableIncome']!;
+    final bracket = TaxCalculationService.getTaxBracket(monthlyTaxableIncome);
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GlassContainer(
+          padding: const EdgeInsets.all(24),
+          borderRadius: 16,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tax Breakdown',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Financial Year $_selectedYear',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Tax Bracket Table
+                _buildSectionTitle('Vietnamese Tax Brackets'),
+                GlassContainer(
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.white,
+                  opacity: 0.05,
+                  borderRadius: 8,
+                  child: Column(
+                    children: [
+                      _buildTableHeader(),
+                      const Divider(color: Colors.white30, height: 8),
+                      _buildTableRow('0 - 5M', '5%', '0'),
+                      _buildTableRow('5M - 10M', '10%', '250K'),
+                      _buildTableRow('10M - 18M', '15%', '750K'),
+                      _buildTableRow('18M - 32M', '20%', '1.65M'),
+                      _buildTableRow('32M - 52M', '25%', '3.25M'),
+                      _buildTableRow('52M - 80M', '30%', '5.85M'),
+                      _buildTableRow('> 80M', '35%', '9.85M'),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                
+                // Income Section
+                _buildSectionTitle('Income'),
+                _buildDetailRow('Annual Income', taxResult['annualIncome']!),
+                _buildDetailRow('Monthly Income', taxResult['monthlyIncome']!),
+                
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                
+                // Deductions Section
+                _buildSectionTitle('Deductions'),
+                _buildDetailRow('Personal Deduction', 11000000 * 12),
+                _buildDetailRow('Total Deductions', taxResult['annualDeductions']!),
+                
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                
+                // Taxable Income Section
+                _buildSectionTitle('Taxable Income'),
+                _buildDetailRow('Annual Taxable', taxResult['annualTaxableIncome']!),
+                _buildDetailRow('Monthly Taxable', taxResult['monthlyTaxableIncome']!),
+                
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                
+                // Tax Bracket
+                if (bracket != null) ...[
+                  _buildSectionTitle('Tax Bracket'),
+                  GlassContainer(
+                    padding: const EdgeInsets.all(12),
+                    color: Colors.white,
+                    opacity: 0.1,
+                    borderRadius: 8,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rate: ${((bracket['rate'] as double) * 100).toStringAsFixed(0)}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Range: ${_currencyFormat.format(bracket['min'])} - ${bracket['max'] == double.infinity ? '∞' : _currencyFormat.format(bracket['max'])} ₫/month',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(color: Colors.white30),
+                  const SizedBox(height: 16),
+                ],
+                
+                // Tax Calculation
+                _buildSectionTitle('Tax Calculation'),
+                _buildDetailRow('Monthly Tax', taxResult['monthlyTax']!, highlight: true),
+                _buildDetailRow('Annual Tax', taxResult['annualTax']!, highlight: true),
+                _buildDetailRow('Effective Rate', _effectiveRate, isPercentage: true),
+                
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white30),
+                const SizedBox(height: 16),
+                
+                // Net Income
+                _buildSectionTitle('Net Income'),
+                _buildDetailRow('After Tax', taxResult['netIncome']!, highlight: true),
+                
+                const SizedBox(height: 16),
+                
+                // Note
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Based on Vietnamese progressive tax law (Circular 111/2013/TT-BTC)',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableHeader() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: Text(
+            'Monthly Income',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            'Rate',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            'Deduction',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableRow(String range, String rate, String deduction) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              range,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              rate,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              deduction,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, double value, {bool highlight = false, bool isPercentage = false}) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final currencySymbol = settingsProvider.currency.symbol;
+    final userCurrency = settingsProvider.currency.code;
+    
+    // Convert VND values to user currency for display
+    final displayValue = isPercentage ? value : CurrencyService.fromVND(value, userCurrency);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: highlight ? Colors.white : Colors.white70,
+              fontSize: highlight ? 14 : 13,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            isPercentage 
+                ? '${displayValue.toStringAsFixed(2)}%'
+                : '${_currencyFormat.format(displayValue)} $currencySymbol',
+            style: TextStyle(
+              color: highlight ? Colors.white : Colors.white70,
+              fontSize: highlight ? 14 : 13,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final currencySymbol = settingsProvider.currency.symbol;
+    
+    return GlassContainer(
+      color: const Color(0xFF2A5470),
+      opacity: 0.2,
+      borderRadius: 16,
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(Icons.account_balance, size: 32, color: Colors.white),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
+                  onPressed: _calculateTax,
+                  tooltip: 'Refresh',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tax Estimation',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Vietnamese Personal Income Tax',
+              style: TextStyle(color: Colors.white70, fontSize: 11),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Year Selector
+            GestureDetector(
+              onTap: _showYearPicker,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white30),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.white70, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      'FY $_selectedYear',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 18),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            else ...[
+              // Tax Amount Display
+              GlassContainer(
+                padding: const EdgeInsets.all(12),
+                color: Colors.white,
+                opacity: 0.1,
+                borderRadius: 8,
+                child: Column(
+                  children: [
+                    const Text(
+                      'Estimated Tax',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_currencyFormat.format(_estimatedTax)} $currencySymbol',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rate: ${_effectiveRate.toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Income Summary
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white24, width: 1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow('Annual Income', _annualIncome),
+                    const SizedBox(height: 4),
+                    _buildInfoRow('Net Income', _annualIncome - _estimatedTax),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Calculation Summary
+              GlassContainer(
+                padding: const EdgeInsets.all(8),
+                color: Colors.white,
+                opacity: 0.05,
+                borderRadius: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Calculation:',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Monthly Taxable = (${_currencyFormat.format(_annualIncome / 12)} - 11M) ₫',
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 9,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tax = Taxable × Rate - Deduction',
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Details Button
+              TextButton.icon(
+                onPressed: _showTaxDetails,
+                icon: const Icon(Icons.info_outline, color: Colors.white70, size: 16),
+                label: const Text(
+                  'Click for Details & Tax Table',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, double value) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final currencySymbol = settingsProvider.currency.symbol;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+          ),
+        ),
+        Text(
+          '${_currencyFormat.format(value)} $currencySymbol',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}

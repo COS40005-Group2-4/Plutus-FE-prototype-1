@@ -622,7 +622,6 @@ class _CashflowContentState extends State<_CashflowContent> {
             _currencyService.formatCurrency(
               amount: amount,
               currencyCode: widget.settings.currency.code,
-              symbol: widget.settings.currency.symbol,
             ),
             style: TextStyle(
               color: color,
@@ -667,7 +666,6 @@ class _CashflowContentState extends State<_CashflowContent> {
                 '$label\n$periodLabel\n${_currencyService.formatCurrency(
                   amount: value,
                   currencyCode: widget.settings.currency.code,
-                  symbol: widget.settings.currency.symbol,
                 )}',
                 const TextStyle(color: Colors.white, fontSize: 10),
               );
@@ -720,8 +718,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   _currencyService.formatCurrency(
                     amount: value,
                     currencyCode: widget.settings.currency.code,
-                    symbol: widget.settings.currency.symbol,
-                  ),
+                    ),
                   style: const TextStyle(color: Colors.white70, fontSize: 8),
                 );
               },
@@ -817,8 +814,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   '$label\n$periodLabel\n${_currencyService.formatCurrency(
                     amount: spot.y,
                     currencyCode: widget.settings.currency.code,
-                    symbol: widget.settings.currency.symbol,
-                  )}',
+                    )}',
                   TextStyle(
                     color: spot.barIndex == 0 ? Colors.green : Colors.red,
                     fontSize: 10,
@@ -875,8 +871,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   _currencyService.formatCurrency(
                     amount: value,
                     currencyCode: widget.settings.currency.code,
-                    symbol: widget.settings.currency.symbol,
-                  ),
+                    ),
                   style: const TextStyle(color: Colors.white70, fontSize: 8),
                 );
               },
@@ -1002,3 +997,4 @@ class _YearPickerDialog extends StatelessWidget {
     );
   }
 }
+

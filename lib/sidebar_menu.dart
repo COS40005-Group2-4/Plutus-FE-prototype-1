@@ -62,6 +62,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
         color: const Color(0xFF5DADE2),
       ),
       MenuItemData(
+        id: 'tax',
+        label: 'Tax Estimation',
+        icon: Icons.account_balance,
+        color: const Color(0xFF2A5470),
+      ),
+      MenuItemData(
         id: 'cashflow',
         label: 'Cash Flow',
         icon: Icons.waterfall_chart,

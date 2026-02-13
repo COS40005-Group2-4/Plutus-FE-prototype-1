@@ -15,6 +15,7 @@ import 'widgets/roi_widget.dart';
 import 'widgets/irr_widget.dart';
 import 'widgets/cashflow_widget.dart';
 import 'widgets/upcoming_bills_widget.dart';
+import 'widgets/tax_estimation_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
@@ -45,6 +46,7 @@ class DataWidget extends StatelessWidget {
     "irr": (l) => const IrrWidget(),
     "cashflow": (l) => const CashflowWidget(),
     "bills": (l) => const UpcomingBillsWidget(),
+    "tax": (l) => const TaxEstimationWidget(),
   };
 
   @override
@@ -798,8 +800,7 @@ class _BudgetContentState extends State<_BudgetContent> {
                     _currencyService.formatCurrency(
                       amount: _totalExpense,
                       currencyCode: widget.budgetCurrency.code,
-                      symbol: widget.budgetCurrency.symbol,
-                    ),
+                      ),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -812,8 +813,7 @@ class _BudgetContentState extends State<_BudgetContent> {
                     'of ${_currencyService.formatCurrency(
                       amount: widget.targetBudget,
                       currencyCode: widget.budgetCurrency.code,
-                      symbol: widget.budgetCurrency.symbol,
-                    )}',
+                      )}',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 10,
@@ -913,8 +913,7 @@ class _BudgetContentState extends State<_BudgetContent> {
             _currencyService.formatCurrency(
               amount: amount,
               currencyCode: widget.budgetCurrency.code,
-              symbol: widget.budgetCurrency.symbol,
-            ),
+              ),
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
@@ -1375,8 +1374,7 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
     final formatted = _currencyService.formatCurrency(
       amount: displayAmount,
       currencyCode: widget.settings.currency.code,
-      symbol: widget.settings.currency.symbol,
-    );
+      );
 
     return Text(
       '${widget.transaction.isExpense ? '-' : '+'}$formatted',
@@ -1632,3 +1630,5 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
     );
   }
 }
+
+

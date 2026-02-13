@@ -314,8 +314,7 @@ class _TransactionAmountState extends State<_TransactionAmount> {
     final formatted = _currencyService.formatCurrency(
       amount: displayAmount,
       currencyCode: widget.settings.currency.code,
-      symbol: widget.settings.currency.symbol,
-    );
+      );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -426,8 +425,7 @@ class _PostingRowState extends State<_PostingRow> {
     final formatted = _currencyService.formatCurrency(
       amount: displayAmount.abs(),
       currencyCode: widget.settings.currency.code,
-      symbol: widget.settings.currency.symbol,
-    );
+      );
 
     return Padding(
       padding: const EdgeInsets.only(left: 8, top: 4),
@@ -461,4 +459,5 @@ class _PostingRowState extends State<_PostingRow> {
     );
   }
 }
+
 
