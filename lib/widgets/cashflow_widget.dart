@@ -21,8 +21,6 @@ class _CashflowWidgetState extends State<CashflowWidget> {
   int _viewMode = 0; // 0 = Monthly, 1 = Yearly, 2 = All Years
   DateTime _selectedDate = DateTime.now();
   bool _showBarChart = true;
-  bool _showComparison = false;
-  DateTime? _comparisonDate;
 
   @override
   void initState() {
@@ -70,19 +68,14 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                     }
 
                     final transactions = _filterTransactions(snapshot.data!);
-                    final comparisonTransactions = _showComparison && _comparisonDate != null
-                        ? _filterComparisonTransactions(snapshot.data!)
-                        : null;
 
                     return _CashflowContent(
-                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_viewMode}_${_showBarChart}_${_showComparison}_${_comparisonDate}'),
+                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_viewMode}_${_showBarChart}'),
                       transactions: transactions,
                       allTransactions: snapshot.data!,
-                      comparisonTransactions: comparisonTransactions,
                       settings: settings,
                       viewMode: _viewMode,
                       selectedDate: _selectedDate,
-                      comparisonDate: _comparisonDate,
                       showBarChart: _showBarChart,
                     );
                   },
@@ -179,26 +172,6 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   constraints: const BoxConstraints(),
                   tooltip: _showBarChart ? 'Switch to Line Chart' : 'Switch to Bar Chart',
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(
-                    _showComparison ? Icons.compare_arrows : Icons.compare,
-                    color: _showComparison ? Colors.greenAccent : Colors.white,
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _showComparison = !_showComparison;
-                      if (_showComparison && _comparisonDate == null) {
-                        // Default to previous year
-                        _comparisonDate = DateTime(_selectedDate.year - 1, _selectedDate.month);
-                      }
-                    });
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  tooltip: 'Compare Years',
-                ),
               ],
             ),
           ],
@@ -249,56 +222,6 @@ class _CashflowWidgetState extends State<CashflowWidget> {
             'All Years',
             style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
           ),
-        if (_showComparison && _comparisonDate != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'vs ',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              GestureDetector(
-                onTap: () async {
-                  final picked = await showDialog<int>(
-                    context: context,
-                    builder: (context) => _YearPickerDialog(
-                      initialYear: _comparisonDate!.year,
-                      minYear: 2000,
-                      maxYear: 2100,
-                    ),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _comparisonDate = DateTime(picked, _selectedDate.month);
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.greenAccent.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
-                  ),
-                  child: Text(
-                    _viewMode == 0
-                        ? '${_getMonthName(_comparisonDate!.month)} ${_comparisonDate!.year}'
-                        : '${_comparisonDate!.year}',
-                    style: const TextStyle(color: Colors.greenAccent, fontSize: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white70, size: 16),
-                onPressed: () => setState(() => _showComparison = false),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
@@ -322,39 +245,24 @@ class _CashflowWidgetState extends State<CashflowWidget> {
       }
     }).toList();
   }
-
-  List<Transaction> _filterComparisonTransactions(List<Transaction> transactions) {
-    if (_comparisonDate == null || _viewMode == 2) return [];
-    return transactions.where((tx) {
-      if (_viewMode == 0) {
-        return tx.dateTime.year == _comparisonDate!.year && tx.dateTime.month == _comparisonDate!.month;
-      } else {
-        return tx.dateTime.year == _comparisonDate!.year;
-      }
-    }).toList();
-  }
 }
 
 
 class _CashflowContent extends StatefulWidget {
   final List<Transaction> transactions;
   final List<Transaction> allTransactions;
-  final List<Transaction>? comparisonTransactions;
   final SettingsProvider settings;
   final int viewMode;
   final DateTime selectedDate;
-  final DateTime? comparisonDate;
   final bool showBarChart;
 
   const _CashflowContent({
     super.key,
     required this.transactions,
     required this.allTransactions,
-    this.comparisonTransactions,
     required this.settings,
     required this.viewMode,
     required this.selectedDate,
-    this.comparisonDate,
     required this.showBarChart,
   });
 
@@ -366,8 +274,6 @@ class _CashflowContentState extends State<_CashflowContent> {
   final CurrencyService _currencyService = CurrencyService();
   Map<int, double> _incomeData = {};
   Map<int, double> _expenseData = {};
-  Map<int, double> _comparisonIncomeData = {};
-  Map<int, double> _comparisonExpenseData = {};
   bool _isLoading = true;
 
   @override
@@ -956,45 +862,6 @@ class _CashflowContentState extends State<_CashflowContent> {
     }
 
     return spots;
-  }
-}
-
-
-// Year Picker Dialog
-class _YearPickerDialog extends StatelessWidget {
-  final int initialYear;
-  final int minYear;
-  final int maxYear;
-
-  const _YearPickerDialog({
-    required this.initialYear,
-    required this.minYear,
-    required this.maxYear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Select Year'),
-      content: SizedBox(
-        width: 300,
-        height: 300,
-        child: YearPicker(
-          firstDate: DateTime(minYear),
-          lastDate: DateTime(maxYear),
-          selectedDate: DateTime(initialYear),
-          onChanged: (DateTime dateTime) {
-            Navigator.pop(context, dateTime.year);
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-      ],
-    );
   }
 }
 

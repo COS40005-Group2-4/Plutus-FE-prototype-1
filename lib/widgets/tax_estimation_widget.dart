@@ -688,43 +688,6 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 ),
               ),
               const SizedBox(height: 8),
-              // Calculation Summary
-              GlassContainer(
-                padding: const EdgeInsets.all(8),
-                color: Colors.white,
-                opacity: 0.05,
-                borderRadius: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Calculation:',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Monthly Taxable = (${_currencyFormat.format(_annualIncome / 12)} - 11M) ₫',
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 9,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tax = Taxable × Rate - Deduction',
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
               // Details Button
               TextButton.icon(
                 onPressed: _showTaxDetails,
