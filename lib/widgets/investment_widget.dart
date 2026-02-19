@@ -35,13 +35,13 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
     });
 
     try {
-      print('Loading investment data...');
+      print('InvestmentWidget: Loading investment data (forceRefresh: $forceRefresh)...');
       final investments = await _service.getInvestmentList(forceRefresh: forceRefresh);
-      print('Loaded ${investments.length} investments');
+      print('InvestmentWidget: Loaded ${investments.length} investments');
       
       // Refresh price data for crypto/stock investments if forcing refresh
       if (forceRefresh && investments.isNotEmpty) {
-        print('Refreshing price data for investments...');
+        print('InvestmentWidget: Refreshing price data for investments...');
         final updatedInvestments = <InvestmentModel>[];
         
         for (final investment in investments) {
@@ -59,6 +59,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
             _investments = updatedInvestments;
             _isLoading = false;
           });
+          print('InvestmentWidget: State updated with ${updatedInvestments.length} investments');
         }
       } else {
         if (mounted) {
@@ -66,10 +67,11 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
             _investments = investments;
             _isLoading = false;
           });
+          print('InvestmentWidget: State updated with ${investments.length} investments');
         }
       }
     } catch (e) {
-      print('Error loading investments: $e');
+      print('InvestmentWidget: Error loading investments: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -95,7 +97,9 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
         color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _buildContent(localizations, isDark),
+          child: SingleChildScrollView(
+            child: _buildContent(localizations, isDark),
+          ),
         ),
       ),
     );
@@ -113,44 +117,174 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
   }
 
   Widget _buildContent(AppLocalizations localizations, bool isDark) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    if (_error != null) {
-      return _buildError(localizations);
-    }
-
-    if (_investments == null || _investments!.isEmpty) {
-      return _buildEmptyState(localizations, isDark);
-    }
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildHeader(localizations, isDark),
+        // Header - Always visible
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Icon(Icons.account_balance_wallet, size: 32, color: Colors.white),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.add, size: 20),
+                  onPressed: () => _showAddDialog(),
+                  color: Colors.white70,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Add Investment',
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 20),
+                  onPressed: () => _loadData(forceRefresh: true),
+                  color: Colors.white70,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Refresh',
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          localizations.investments,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Portfolio Overview',
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 12),
         
-        // Show first investment details directly
+        // Content - Changes based on state
+        if (_isLoading)
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
+          )
+        else if (_error != null)
+          _buildErrorContent(localizations)
+        else if (_investments == null || _investments!.isEmpty)
+          _buildEmptyContent(localizations, isDark)
+        else
+          _buildInvestmentContent(isDark),
+      ],
+    );
+  }
+
+  Widget _buildInvestmentContent(bool isDark) {
+    return Column(
+      children: [
+        // Show first investment details
         if (_investments!.isNotEmpty)
           _buildCompactInvestmentCard(_investments!.first, isDark),
         
         // Show count if there are more investments
         if (_investments!.length > 1) ...[
           const SizedBox(height: 8),
-          Center(
-            child: Text(
-              '+${_investments!.length - 1} more investment${_investments!.length - 1 > 1 ? 's' : ''}',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white60 : Colors.black54,
-              ),
+          Text(
+            '+${_investments!.length - 1} more investment${_investments!.length - 1 > 1 ? 's' : ''}',
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.white60,
             ),
           ),
         ],
+        
+        const SizedBox(height: 8),
+        // View All Button
+        TextButton.icon(
+          onPressed: _showInvestmentListDialog,
+          icon: const Icon(Icons.list, color: Colors.white70, size: 16),
+          label: const Text(
+            'View All',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyContent(AppLocalizations localizations, bool isDark) {
+    return Column(
+      children: [
+        Icon(
+          Icons.account_balance_wallet_outlined,
+          size: 40,
+          color: isDark ? Colors.white54 : Colors.white38,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          localizations.noInvestmentsYet,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white70,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () => _showAddDialog(),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Add Investment'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4A90E2),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorContent(AppLocalizations localizations) {
+    return Column(
+      children: [
+        const Icon(
+          Icons.error_outline,
+          size: 32,
+          color: Colors.redAccent,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          localizations.errorLoadingData,
+          style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        ElevatedButton(
+          onPressed: () => _loadData(forceRefresh: true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minimumSize: Size.zero,
+          ),
+          child: Text(localizations.retry, style: const TextStyle(fontSize: 11)),
+        ),
       ],
     );
   }
@@ -306,42 +440,6 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
     );
   }
 
-  Widget _buildHeader(AppLocalizations localizations, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          localizations.investments,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.add, size: 20),
-              onPressed: () => _showAddDialog(),
-              color: isDark ? Colors.white70 : Colors.black54,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              tooltip: 'Add Investment',
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.refresh, size: 20),
-              onPressed: _loadData,
-              color: isDark ? Colors.white70 : Colors.black54,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   void _showAddDialog() {
     showDialog(
       context: context,
@@ -349,6 +447,13 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
         onSave: (assetType, assetName, quantity, purchaseValue, currency, purchaseDate) async {
           try {
             print('Widget: Saving new investment $assetName');
+            
+            // Show loading indicator
+            if (mounted) {
+              setState(() {
+                _isLoading = true;
+              });
+            }
             
             // Create investment model
             final investment = InvestmentModel(
@@ -361,41 +466,31 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
               purchaseDate: purchaseDate,
             );
             
-            // Save to backend
-            final service = InvestmentService();
-            final newId = await service.saveInvestment(investment);
+            // Save to backend (this already fetches price data)
+            final newId = await _service.saveInvestment(investment);
             
             print('Widget: Investment saved with ID: $newId');
             
             if (mounted) {
-              // Immediately add to local list for instant feedback
-              final newInvestment = InvestmentModel(
-                id: newId,
-                assetType: assetType,
-                assetName: assetName,
-                quantity: quantity,
-                purchaseValue: purchaseValue,
-                currency: currency,
-                purchaseDate: purchaseDate,
-              );
-              
-              setState(() {
-                _investments = [...(_investments ?? []), newInvestment];
-              });
-              
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Added $assetName'),
                   backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 2),
                 ),
               );
               
-              // Refresh in background to get price data
-              _loadData(forceRefresh: true);
+              // Force refresh to get the investment with price data from database
+              print('Widget: Force refreshing investment list');
+              await _loadData(forceRefresh: true);
+              print('Widget: Refresh complete, investments count: ${_investments?.length}');
             }
           } catch (e) {
             print('Widget: Save failed - $e');
             if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Failed to add investment: $e'),
@@ -523,74 +618,6 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
           lineTouchData: LineTouchData(enabled: false),
         ),
       ),
-    );
-  }
-
-  Widget _buildEmptyState(AppLocalizations localizations, bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.account_balance_wallet_outlined,
-            size: 40,
-            color: isDark ? Colors.white54 : Colors.black38,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            localizations.noInvestmentsYet,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => _showAddDialog(),
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add Investment'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? const Color(0xFF4A90E2) : const Color(0xFF5DADE2),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildError(AppLocalizations localizations) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.error_outline,
-          size: 32,
-          color: Colors.redAccent,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          localizations.errorLoadingData,
-          style: const TextStyle(color: Colors.redAccent, fontSize: 11),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: _loadData,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            minimumSize: Size.zero,
-          ),
-          child: Text(localizations.retry, style: TextStyle(fontSize: 11)),
-        ),
-      ],
     );
   }
 }
