@@ -27,12 +27,21 @@ class _RoiWidgetState extends State<RoiWidget> {
     try {
       final data = await _ffiService.getRoiData();
       if (mounted) {
+        String roiStr = data['roi'] ?? '0.00';
+        
+        // Remove any existing % signs
+        roiStr = roiStr.replaceAll('%', '');
+        
+        // Parse as double and format
+        double roi = double.tryParse(roiStr) ?? 0.0;
+        
         setState(() {
-          _roiValue = data['roi'] ?? '0.00';
+          _roiValue = roi.toStringAsFixed(2);
           _isLoading = false;
         });
       }
     } catch (e) {
+      print('Error loading ROI: $e');
       if (mounted) {
         setState(() {
           _roiValue = '0.00';

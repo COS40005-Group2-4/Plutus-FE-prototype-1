@@ -21,26 +21,11 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
   List<InvestmentModel>? _investments;
   bool _isLoading = false;
   String? _error;
-  Map<String, String>? _roiIrrData;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    _loadRoiIrr();
-  }
-
-  Future<void> _loadRoiIrr() async {
-    try {
-      final data = await _service.getRoiIrrData();
-      if (mounted) {
-        setState(() {
-          _roiIrrData = data;
-        });
-      }
-    } catch (e) {
-      print('Failed to load ROI/IRR: $e');
-    }
   }
 
   Future<void> _loadData({bool forceRefresh = false}) async {
@@ -75,9 +60,6 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
             _isLoading = false;
           });
         }
-        
-        // Also refresh ROI/IRR
-        _loadRoiIrr();
       } else {
         if (mounted) {
           setState(() {
@@ -294,32 +276,6 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
               ),
             ],
           ),
-          
-          // ROI/IRR if available
-          if (_roiIrrData != null) ...[
-            const SizedBox(height: 10),
-            Divider(height: 1, color: isDark ? Colors.white24 : Colors.black12),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildCompactDetail(
-                    'ROI',
-                    _roiIrrData!['roi'] ?? '0%',
-                    isDark,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildCompactDetail(
-                    'IRR',
-                    _roiIrrData!['irr'] ?? '0%',
-                    isDark,
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );

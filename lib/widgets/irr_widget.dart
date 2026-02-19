@@ -27,12 +27,21 @@ class _IrrWidgetState extends State<IrrWidget> {
     try {
       final data = await _ffiService.getRoiData();
       if (mounted) {
+        String irrStr = data['irr'] ?? '0.00';
+        
+        // Remove any existing % signs
+        irrStr = irrStr.replaceAll('%', '');
+        
+        // Parse as double and format
+        double irr = double.tryParse(irrStr) ?? 0.0;
+        
         setState(() {
-          _irrValue = data['irr'] ?? '0.00';
+          _irrValue = irr.toStringAsFixed(2);
           _isLoading = false;
         });
       }
     } catch (e) {
+      print('Error loading IRR: $e');
       if (mounted) {
         setState(() {
           _irrValue = '0.00';
