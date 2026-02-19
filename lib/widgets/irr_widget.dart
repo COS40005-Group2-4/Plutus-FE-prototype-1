@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../services/backend_ffi_service.dart';
+import '../services/settings_service.dart';
 import '../l10n/app_localizations.dart';
 
 class IrrWidget extends StatefulWidget {
@@ -10,10 +11,13 @@ class IrrWidget extends StatefulWidget {
   State<IrrWidget> createState() => _IrrWidgetState();
 }
 
-class _IrrWidgetState extends State<IrrWidget> {
+class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixin {
   final BackendFfiService _ffiService = BackendFfiService();
   String _irrValue = '0.00';
   bool _isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -21,18 +25,30 @@ class _IrrWidgetState extends State<IrrWidget> {
     _loadIrrData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadIrrData();
+  }
+
   Future<void> _loadIrrData() async {
     setState(() => _isLoading = true);
     
     try {
-      final data = await _ffiService.getRoiData();
+      String currency = 'VND'; // Default
+      
+      try {
+        final settingsService = SettingsService();
+        currency = await settingsService.getDefaultCurrency(1);
+      } catch (e) {
+        print('Could not load currency from settings, using default: $e');
+      }
+      
+      final data = await _ffiService.getRoiData(currency: currency);
       if (mounted) {
         String irrStr = data['irr'] ?? '0.00';
         
-        // Remove any existing % signs
         irrStr = irrStr.replaceAll('%', '');
-        
-        // Parse as double and format
         double irr = double.tryParse(irrStr) ?? 0.0;
         
         setState(() {
@@ -53,6 +69,7 @@ class _IrrWidgetState extends State<IrrWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return GlassContainer(
       color: const Color(0xFF5DADE2),
       opacity: 0.2,

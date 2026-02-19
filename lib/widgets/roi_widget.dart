@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../services/backend_ffi_service.dart';
+import '../services/settings_service.dart';
 import '../l10n/app_localizations.dart';
 
 class RoiWidget extends StatefulWidget {
@@ -10,10 +11,13 @@ class RoiWidget extends StatefulWidget {
   State<RoiWidget> createState() => _RoiWidgetState();
 }
 
-class _RoiWidgetState extends State<RoiWidget> {
+class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixin {
   final BackendFfiService _ffiService = BackendFfiService();
   String _roiValue = '0.00';
   bool _isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -21,18 +25,30 @@ class _RoiWidgetState extends State<RoiWidget> {
     _loadRoiData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadRoiData();
+  }
+
   Future<void> _loadRoiData() async {
     setState(() => _isLoading = true);
     
     try {
-      final data = await _ffiService.getRoiData();
+      String currency = 'VND'; // Default
+      
+      try {
+        final settingsService = SettingsService();
+        currency = await settingsService.getDefaultCurrency(1);
+      } catch (e) {
+        print('Could not load currency from settings, using default: $e');
+      }
+      
+      final data = await _ffiService.getRoiData(currency: currency);
       if (mounted) {
         String roiStr = data['roi'] ?? '0.00';
         
-        // Remove any existing % signs
         roiStr = roiStr.replaceAll('%', '');
-        
-        // Parse as double and format
         double roi = double.tryParse(roiStr) ?? 0.0;
         
         setState(() {
@@ -53,6 +69,7 @@ class _RoiWidgetState extends State<RoiWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return GlassContainer(
       color: const Color(0xFF4A90E2),
       opacity: 0.2,

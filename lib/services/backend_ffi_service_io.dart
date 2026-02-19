@@ -25,6 +25,9 @@ typedef FreeString = void Function(Pointer<Utf8>);
 typedef GetROIFunc = Pointer<Utf8> Function();
 typedef GetROI = Pointer<Utf8> Function();
 
+typedef GetROIWithCurrencyFunc = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef GetROIWithCurrency = Pointer<Utf8> Function(Pointer<Utf8>);
+
 typedef GetInvestmentListFunc = Pointer<Utf8> Function();
 typedef GetInvestmentList = Pointer<Utf8> Function();
 
@@ -52,6 +55,7 @@ class BackendFfiService {
   late SaveTransaction _saveTransaction;
   late FreeString _freeString;
   late GetROI _getROI;
+  GetROIWithCurrency? _getROIWithCurrency;
   late GetInvestmentList _getInvestmentList;
   late GetInvestmentDetail _getInvestmentDetail;
   late DeleteInvestment _deleteInvestment;
@@ -106,6 +110,14 @@ class BackendFfiService {
       _saveTransaction = _lib.lookupFunction<SaveTransactionFunc, SaveTransaction>('SaveTransaction');
       _freeString = _lib.lookupFunction<FreeStringFunc, FreeString>('FreeString');
       _getROI = _lib.lookupFunction<GetROIFunc, GetROI>('GetROI');
+      
+      // Try to load the new function, but don't fail if it doesn't exist
+      try {
+        _getROIWithCurrency = _lib.lookupFunction<GetROIWithCurrencyFunc, GetROIWithCurrency>('GetROIWithCurrency');
+      } catch (e) {
+        print('GetROIWithCurrency not available in DLL, will use GetROI instead');
+      }
+      
       _getInvestmentList = _lib.lookupFunction<GetInvestmentListFunc, GetInvestmentList>('GetInvestmentList');
       _getInvestmentDetail = _lib.lookupFunction<GetInvestmentDetailFunc, GetInvestmentDetail>('GetInvestmentDetail');
       _deleteInvestment = _lib.lookupFunction<DeleteInvestmentFunc, DeleteInvestment>('DeleteInvestment');
@@ -185,17 +197,33 @@ class BackendFfiService {
     }
   }
 
-  Future<Map<String, dynamic>> getRoiData() async {
+  Future<Map<String, dynamic>> getRoiData({String? currency}) async {
     if (!isAvailable) {
       return {
         'roi': '0.00',
         'irr': '0.00',
         'cashflowTotal': '0',
+        'currency': currency ?? 'VND',
       };
     }
 
     try {
-      final resultPtr = _getROI();
+      Pointer<Utf8> resultPtr;
+      
+      // Try to use the new function with currency if available
+      if (currency != null && currency.isNotEmpty && _getROIWithCurrency != null) {
+        try {
+          final currencyPtr = currency.toNativeUtf8();
+          resultPtr = _getROIWithCurrency!(currencyPtr);
+          malloc.free(currencyPtr);
+        } catch (e) {
+          print('GetROIWithCurrency failed, using GetROI: $e');
+          resultPtr = _getROI();
+        }
+      } else {
+        resultPtr = _getROI();
+      }
+      
       final result = resultPtr.toDartString();
       _freeString(resultPtr);
 
@@ -205,6 +233,7 @@ class BackendFfiService {
           'roi': '0.00',
           'irr': '0.00',
           'cashflowTotal': '0',
+          'currency': currency ?? 'VND',
         };
       }
 
@@ -216,6 +245,7 @@ class BackendFfiService {
         'roi': '0.00',
         'irr': '0.00',
         'cashflowTotal': '0',
+        'currency': currency ?? 'VND',
       };
     }
   }
