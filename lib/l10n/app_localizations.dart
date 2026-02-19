@@ -198,6 +198,62 @@ class AppLocalizations {
       'current_roi': 'Current ROI',
       'current_irr': 'Current IRR',
       'click_for_details': 'Click for Details & Tax Table',
+      
+      // Investment Tracking Widget
+      'investments': 'Investments',
+      'portfolio': 'Portfolio',
+      'add_investment': 'Add Investment',
+      'edit_investment': 'Edit Investment',
+      'delete_investment': 'Delete Investment',
+      'value_history': 'Value History',
+      'api_tracked': 'API Tracked',
+      'current_value': 'Current Value',
+      'cost_basis': 'Cost Basis',
+      'gain_loss': 'Gain/Loss',
+      'quantity': 'Quantity',
+      'performance_chart': 'Performance Chart',
+      'total_portfolio_value': 'Total Portfolio Value',
+      'no_investments_yet': 'No investments yet. Add your first investment to get started.',
+      'error_loading_data': 'Error loading investment data',
+      'retry': 'Retry',
+      'investment_name': 'Investment Name',
+      'commodity_symbol': 'Commodity Symbol',
+      'tracking_type': 'Tracking Type',
+      'initial_value': 'Initial Value',
+      'add_value_entry': 'Add Value Entry',
+      'date': 'Date',
+      'from_currency': 'From Currency',
+      'to_currency': 'To Currency',
+      'exchange_rate': 'Exchange Rate',
+      'transactions': 'Transactions',
+      'transaction_type': 'Transaction Type',
+      'buy': 'Buy',
+      'sell': 'Sell',
+      'dividend': 'Dividend',
+      'total_inflow': 'Total Inflow',
+      'total_outflow': 'Total Outflow',
+      'net_cashflow_investment': 'Net Cashflow',
+      'unrealized_gain_loss': 'Unrealized Gain/Loss',
+      'percentage_return': 'Percentage Return',
+      'last_updated': 'Last Updated',
+      'refresh_prices': 'Refresh Prices',
+      'delete_confirmation': 'Are you sure you want to delete this investment?',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      'investment_details': 'Investment Details',
+      'no_transaction_history_investment': 'No transaction history',
+      'no_value_history': 'No value history',
+      'add_first_value': 'Add your first value entry',
+      'invalid_commodity_symbol': 'Commodity symbol must contain only alphanumeric characters and underscores',
+      'invalid_exchange_rate': 'Exchange rate must be a positive number',
+      'invalid_date': 'Date cannot be in the future',
+      'required_field': 'This field is required',
+      'investment_added': 'Investment added successfully',
+      'investment_updated': 'Investment updated successfully',
+      'investment_deleted': 'Investment deleted successfully',
+      'error_adding_investment': 'Error adding investment',
+      'error_updating_investment': 'Error updating investment',
+      'error_deleting_investment': 'Error deleting investment',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -385,6 +441,62 @@ class AppLocalizations {
       'current_roi': 'ROI hiện tại',
       'current_irr': 'IRR hiện tại',
       'click_for_details': 'Bấm để xem chi tiết & bảng thuế',
+      
+      // Investment Tracking Widget
+      'investments': 'Đầu tư',
+      'portfolio': 'Danh mục đầu tư',
+      'add_investment': 'Thêm đầu tư',
+      'edit_investment': 'Chỉnh sửa đầu tư',
+      'delete_investment': 'Xóa đầu tư',
+      'value_history': 'Lịch sử giá trị',
+      'api_tracked': 'Theo dõi API',
+      'current_value': 'Giá trị hiện tại',
+      'cost_basis': 'Giá vốn',
+      'gain_loss': 'Lãi/Lỗ',
+      'quantity': 'Số lượng',
+      'performance_chart': 'Biểu đồ hiệu suất',
+      'total_portfolio_value': 'Tổng giá trị danh mục',
+      'no_investments_yet': 'Chưa có đầu tư. Thêm đầu tư đầu tiên để bắt đầu.',
+      'error_loading_data': 'Lỗi tải dữ liệu đầu tư',
+      'retry': 'Thử lại',
+      'investment_name': 'Tên đầu tư',
+      'commodity_symbol': 'Ký hiệu hàng hóa',
+      'tracking_type': 'Loại theo dõi',
+      'initial_value': 'Giá trị ban đầu',
+      'add_value_entry': 'Thêm mục giá trị',
+      'date': 'Ngày',
+      'from_currency': 'Từ tiền tệ',
+      'to_currency': 'Sang tiền tệ',
+      'exchange_rate': 'Tỷ giá',
+      'transactions': 'Giao dịch',
+      'transaction_type': 'Loại giao dịch',
+      'buy': 'Mua',
+      'sell': 'Bán',
+      'dividend': 'Cổ tức',
+      'total_inflow': 'Tổng tiền vào',
+      'total_outflow': 'Tổng tiền ra',
+      'net_cashflow_investment': 'Dòng tiền ròng',
+      'unrealized_gain_loss': 'Lãi/Lỗ chưa thực hiện',
+      'percentage_return': 'Tỷ lệ lợi nhuận',
+      'last_updated': 'Cập nhật lần cuối',
+      'refresh_prices': 'Làm mới giá',
+      'delete_confirmation': 'Bạn có chắc chắn muốn xóa đầu tư này?',
+      'delete': 'Xóa',
+      'edit': 'Chỉnh sửa',
+      'investment_details': 'Chi tiết đầu tư',
+      'no_transaction_history_investment': 'Không có lịch sử giao dịch',
+      'no_value_history': 'Không có lịch sử giá trị',
+      'add_first_value': 'Thêm mục giá trị đầu tiên',
+      'invalid_commodity_symbol': 'Ký hiệu hàng hóa chỉ được chứa ký tự chữ và số và dấu gạch dưới',
+      'invalid_exchange_rate': 'Tỷ giá phải là số dương',
+      'invalid_date': 'Ngày không thể ở tương lai',
+      'required_field': 'Trường này là bắt buộc',
+      'investment_added': 'Đã thêm đầu tư thành công',
+      'investment_updated': 'Đã cập nhật đầu tư thành công',
+      'investment_deleted': 'Đã xóa đầu tư thành công',
+      'error_adding_investment': 'Lỗi thêm đầu tư',
+      'error_updating_investment': 'Lỗi cập nhật đầu tư',
+      'error_deleting_investment': 'Lỗi xóa đầu tư',
     },
   };
 
@@ -570,6 +682,62 @@ class AppLocalizations {
   String get currentRoi => translate('current_roi');
   String get currentIrr => translate('current_irr');
   String get clickForDetails => translate('click_for_details');
+  
+  // Investment Tracking Widget
+  String get investments => translate('investments');
+  String get portfolio => translate('portfolio');
+  String get addInvestment => translate('add_investment');
+  String get editInvestment => translate('edit_investment');
+  String get deleteInvestment => translate('delete_investment');
+  String get valueHistory => translate('value_history');
+  String get apiTracked => translate('api_tracked');
+  String get currentValue => translate('current_value');
+  String get costBasis => translate('cost_basis');
+  String get gainLoss => translate('gain_loss');
+  String get quantity => translate('quantity');
+  String get performanceChart => translate('performance_chart');
+  String get totalPortfolioValue => translate('total_portfolio_value');
+  String get noInvestmentsYet => translate('no_investments_yet');
+  String get errorLoadingData => translate('error_loading_data');
+  String get retry => translate('retry');
+  String get investmentName => translate('investment_name');
+  String get commoditySymbol => translate('commodity_symbol');
+  String get trackingType => translate('tracking_type');
+  String get initialValue => translate('initial_value');
+  String get addValueEntry => translate('add_value_entry');
+  String get date => translate('date');
+  String get fromCurrency => translate('from_currency');
+  String get toCurrency => translate('to_currency');
+  String get exchangeRate => translate('exchange_rate');
+  String get transactions => translate('transactions');
+  String get transactionType => translate('transaction_type');
+  String get buy => translate('buy');
+  String get sell => translate('sell');
+  String get dividend => translate('dividend');
+  String get totalInflow => translate('total_inflow');
+  String get totalOutflow => translate('total_outflow');
+  String get netCashflowInvestment => translate('net_cashflow_investment');
+  String get unrealizedGainLoss => translate('unrealized_gain_loss');
+  String get percentageReturn => translate('percentage_return');
+  String get lastUpdated => translate('last_updated');
+  String get refreshPrices => translate('refresh_prices');
+  String get deleteConfirmation => translate('delete_confirmation');
+  String get delete => translate('delete');
+  String get edit => translate('edit');
+  String get investmentDetails => translate('investment_details');
+  String get noTransactionHistoryInvestment => translate('no_transaction_history_investment');
+  String get noValueHistory => translate('no_value_history');
+  String get addFirstValue => translate('add_first_value');
+  String get invalidCommoditySymbol => translate('invalid_commodity_symbol');
+  String get invalidExchangeRate => translate('invalid_exchange_rate');
+  String get invalidDate => translate('invalid_date');
+  String get requiredField => translate('required_field');
+  String get investmentAdded => translate('investment_added');
+  String get investmentUpdated => translate('investment_updated');
+  String get investmentDeleted => translate('investment_deleted');
+  String get errorAddingInvestment => translate('error_adding_investment');
+  String get errorUpdatingInvestment => translate('error_updating_investment');
+  String get errorDeletingInvestment => translate('error_deleting_investment');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

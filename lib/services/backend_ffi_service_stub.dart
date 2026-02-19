@@ -39,4 +39,12 @@ class BackendFfiService {
       'cashflowTotal': '0',
     };
   }
+
+  Future<Map<String, dynamic>> getInvestmentList() async {
+    throw UnimplementedError('Investment list not available on web platform');
+  }
+
+  Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
+    throw UnimplementedError('Investment detail not available on web platform');
+  }
 }

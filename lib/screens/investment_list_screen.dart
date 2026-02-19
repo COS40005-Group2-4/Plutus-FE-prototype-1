@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import '../models/investment_model.dart';
+import '../services/investment_service.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/glass_background.dart';
+import '../widgets/add_investment_dialog.dart';
+import '../l10n/app_localizations.dart';
+
+/// Full screen view of all investments
+class InvestmentListScreen extends StatefulWidget {
+  const InvestmentListScreen({super.key});
+
+  @override
+  State<InvestmentListScreen> createState() => _InvestmentListScreenState();
+}
+
+class _InvestmentListScreenState extends State<InvestmentListScreen> {
+  final InvestmentService _service = InvestmentService();
+  List<InvestmentModel>? _investments;
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final investments = await _service.getInvestmentList(forceRefresh: true);
+      if (mounted) {
+        setState(() {
+          _investments = investments;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showAddDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddInvestmentDialog(
+        onSave: (assetType, assetName, quantity, purchaseValue, currency, purchaseDate) {
+          // TODO: Call backend to save investment
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Added $assetName - ${assetType.name} (${quantity} units)'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadData();
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: GlassBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // App bar
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      localizations.investments,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Expanded(
+                child: _buildContent(localizations, isDark),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddDialog,
+        backgroundColor: const Color(0xFF4A90E2),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildContent(AppLocalizations localizations, bool isDark) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            Text(
+              localizations.errorLoadingData,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: TextStyle(color: Colors.redAccent.withOpacity(0.7)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: Text(localizations.retry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_investments == null || _investments!.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 64,
+              color: isDark ? Colors.white54 : Colors.black38,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              localizations.noInvestmentsYet,
+              style: TextStyle(
+                fontSize: 18,
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap + to add your first investment',
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.black45,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _investments!.length,
+        itemBuilder: (context, index) {
+          final investment = _investments![index];
+          return _buildInvestmentCard(investment, isDark);
+        },
+      ),
+    );
+  }
+
+  Widget _buildInvestmentCard(InvestmentModel investment, bool isDark) {
+    final color = investment.isPositiveReturn()
+        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        : (isDark ? Colors.redAccent : Colors.red);
+
+    return GlassContainer(
+      borderRadius: 12,
+      opacity: isDark ? 0.3 : 0.1,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(
+          investment.assetName,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              '${investment.assetType.name.toUpperCase()} • ${investment.quantity} units',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  '${investment.getCurrencySymbol()}${investment.getCurrentValue().toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  investment.isPositiveReturn()
+                      ? Icons.trending_up
+                      : Icons.trending_down,
+                  size: 16,
+                  color: color,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  investment.getFormattedGainLoss(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: isDark ? Colors.white54 : Colors.black45,
+        ),
+        onTap: () {
+          // TODO: Navigate to detail screen
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('View ${investment.assetName} details')),
+          );
+        },
+      ),
+    );
+  }
+}

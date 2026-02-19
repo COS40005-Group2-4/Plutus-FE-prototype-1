@@ -16,6 +16,7 @@ import 'widgets/irr_widget.dart';
 import 'widgets/cashflow_widget.dart';
 import 'widgets/upcoming_bills_widget.dart';
 import 'widgets/tax_estimation_widget.dart';
+import 'widgets/investment_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/currency_service.dart';
@@ -47,6 +48,7 @@ class DataWidget extends StatelessWidget {
     "cashflow": (l) => const CashflowWidget(),
     "bills": (l) => const UpcomingBillsWidget(),
     "tax": (l) => const TaxEstimationWidget(),
+    "investment": (l) => const InvestmentWidget(),
   };
 
   @override

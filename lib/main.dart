@@ -19,6 +19,7 @@ import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
+import 'screens/investment_list_screen.dart';
 import 'transaction_service.dart';
 import 'l10n/app_localizations.dart';
 
@@ -105,6 +106,7 @@ class _MyAppState extends State<MyApp> {
               "/history": (c) => const TransactionHistoryPage(),
               "/import": (c) => const ImportTransactionPage(),
               "/settings": (c) => const SettingsScreen(),
+              "/investments": (c) => const InvestmentListScreen(),
             },
             locale: settingsProvider.locale,
             localizationsDelegates: const [

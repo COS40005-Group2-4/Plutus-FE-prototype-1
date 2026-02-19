@@ -79,6 +79,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.receipt_long,
         color: red,
       ),
+      MenuItemData(
+        id: 'investment',
+        label: l10n.investments,
+        icon: Icons.account_balance_wallet,
+        color: const Color(0xFF4A90E2),
+      ),
     ];
   }
 

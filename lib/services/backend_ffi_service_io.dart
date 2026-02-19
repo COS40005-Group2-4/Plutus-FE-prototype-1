@@ -25,6 +25,18 @@ typedef FreeString = void Function(Pointer<Utf8>);
 typedef GetROIFunc = Pointer<Utf8> Function();
 typedef GetROI = Pointer<Utf8> Function();
 
+typedef GetInvestmentListFunc = Pointer<Utf8> Function();
+typedef GetInvestmentList = Pointer<Utf8> Function();
+
+typedef GetInvestmentDetailFunc = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef GetInvestmentDetail = Pointer<Utf8> Function(Pointer<Utf8>);
+
+typedef DeleteInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef DeleteInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
+
+typedef SaveInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef SaveInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
+
 class BackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
@@ -40,6 +52,10 @@ class BackendFfiService {
   late SaveTransaction _saveTransaction;
   late FreeString _freeString;
   late GetROI _getROI;
+  late GetInvestmentList _getInvestmentList;
+  late GetInvestmentDetail _getInvestmentDetail;
+  late DeleteInvestment _deleteInvestment;
+  late SaveInvestment _saveInvestment;
 
   bool _isInitialized = false;
   bool _hasError = false;
@@ -90,6 +106,10 @@ class BackendFfiService {
       _saveTransaction = _lib.lookupFunction<SaveTransactionFunc, SaveTransaction>('SaveTransaction');
       _freeString = _lib.lookupFunction<FreeStringFunc, FreeString>('FreeString');
       _getROI = _lib.lookupFunction<GetROIFunc, GetROI>('GetROI');
+      _getInvestmentList = _lib.lookupFunction<GetInvestmentListFunc, GetInvestmentList>('GetInvestmentList');
+      _getInvestmentDetail = _lib.lookupFunction<GetInvestmentDetailFunc, GetInvestmentDetail>('GetInvestmentDetail');
+      _deleteInvestment = _lib.lookupFunction<DeleteInvestmentFunc, DeleteInvestment>('DeleteInvestment');
+      _saveInvestment = _lib.lookupFunction<SaveInvestmentFunc, SaveInvestment>('SaveInvestment');
 
       // Bootstrap DB
       final resultPtr = _bootstrap();
@@ -197,6 +217,134 @@ class BackendFfiService {
         'irr': '0.00',
         'cashflowTotal': '0',
       };
+    }
+  }
+
+  Future<Map<String, dynamic>> getInvestmentList() async {
+    if (!isAvailable) throw Exception("Backend FFI not available");
+
+    final resultPtr = _getInvestmentList();
+    final result = resultPtr.toDartString();
+    _freeString(resultPtr);
+
+    if (result.isEmpty) {
+      throw Exception("Empty response from backend");
+    }
+
+    try {
+      final decoded = json.decode(result);
+      if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('error')) {
+          throw Exception(decoded['error']);
+        }
+        return decoded;
+      }
+      throw Exception("Invalid response format");
+    } catch (e) {
+      throw Exception('Error decoding investment list: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
+    if (!isAvailable) throw Exception("Backend FFI not available");
+
+    final commodityPtr = commodity.toNativeUtf8();
+    final resultPtr = _getInvestmentDetail(commodityPtr);
+    final result = resultPtr.toDartString();
+    
+    malloc.free(commodityPtr);
+    _freeString(resultPtr);
+
+    if (result.isEmpty) {
+      throw Exception("Empty response from backend");
+    }
+
+    try {
+      final decoded = json.decode(result);
+      if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('error')) {
+          throw Exception(decoded['error']);
+        }
+        return decoded;
+      }
+      throw Exception("Invalid response format");
+    } catch (e) {
+      throw Exception('Error decoding investment detail: $e');
+    }
+  }
+
+  Future<void> deleteInvestment(String investmentId) async {
+    if (!isAvailable) throw Exception("Backend FFI not available");
+
+    print('FFI: Deleting investment with ID: $investmentId');
+    
+    final idPtr = investmentId.toNativeUtf8();
+    final resultPtr = _deleteInvestment(idPtr);
+    final result = resultPtr.toDartString();
+    
+    malloc.free(idPtr);
+    _freeString(resultPtr);
+
+    print('FFI: Delete response: $result');
+
+    if (result.isEmpty) {
+      throw Exception("Empty response from backend");
+    }
+
+    try {
+      final decoded = json.decode(result);
+      if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('error')) {
+          throw Exception(decoded['error']);
+        }
+        if (decoded['success'] != true) {
+          throw Exception(decoded['message'] ?? 'Delete failed');
+        }
+        print('FFI: Investment deleted successfully');
+      } else {
+        throw Exception("Invalid response format");
+      }
+    } catch (e) {
+      throw Exception('Error deleting investment: $e');
+    }
+  }
+
+  Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
+    if (!isAvailable) throw Exception("Backend FFI not available");
+
+    print('FFI: Saving investment: $investmentData');
+
+    final jsonStr = json.encode(investmentData);
+    final jsonPtr = jsonStr.toNativeUtf8();
+    
+    final resultPtr = _saveInvestment(jsonPtr);
+    final result = resultPtr.toDartString();
+    
+    malloc.free(jsonPtr);
+    _freeString(resultPtr);
+
+    print('FFI: Save response: $result');
+
+    if (result.isEmpty) {
+      throw Exception("Empty response from backend");
+    }
+
+    try {
+      final decoded = json.decode(result);
+      if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('error')) {
+          throw Exception(decoded['error']);
+        }
+        if (decoded['success'] != true) {
+          throw Exception(decoded['message'] ?? 'Save failed');
+        }
+        print('FFI: Investment saved successfully with ID: ${decoded['id']}');
+        return decoded['id'] as String;
+      } else {
+        throw Exception("Invalid response format");
+      }
+    } catch (e) {
+      throw Exception('Error saving investment: $e');
     }
   }
 }

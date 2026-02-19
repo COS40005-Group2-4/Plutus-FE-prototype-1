@@ -16,6 +16,7 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     'tax': true,
     'cashflow': true,
     'bills': true,
+    'investment': true,
   };
 
   static const String _storageKey = 'widget_visibility';
