@@ -647,62 +647,59 @@ class _InvestmentListDialog extends StatelessWidget {
         blur: 15.0,
         opacity: isDark ? 0.35 : 0.1,
         color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        localizations.investments,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                      ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      localizations.investments,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onAdd();
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      onAdd();
+                    },
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            
+            // Investment List
+            Expanded(
+              child: investments.isEmpty
+                  ? _buildEmptyState(localizations, isDark)
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: investments.length,
+                      itemBuilder: (context, index) {
+                        return _buildInvestmentCard(
+                          context,
+                          investments[index],
+                          isDark,
+                          onRefresh,
+                        );
                       },
-                      color: isDark ? Colors.white70 : Colors.black54,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              
-              // Investment List
-              Expanded(
-                child: investments.isEmpty
-                    ? _buildEmptyState(localizations, isDark)
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: investments.length,
-                        itemBuilder: (context, index) {
-                          return _buildInvestmentCard(
-                            context,
-                            investments[index],
-                            isDark,
-                            onRefresh,
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

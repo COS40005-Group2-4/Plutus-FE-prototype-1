@@ -26,16 +26,11 @@ class _ExportDialogState extends State<ExportDialog> {
         borderRadius: 16,
         opacity: 0.15,
         padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 500,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Row(
                 children: [
                   const Icon(Icons.download, size: 28),
@@ -104,7 +99,6 @@ class _ExportDialogState extends State<ExportDialog> {
                 ],
               ),
             ],
-            ),
           ),
         ),
       ),

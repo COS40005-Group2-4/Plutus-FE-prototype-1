@@ -563,7 +563,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                                         width: double.infinity,
                                         height: double.infinity,
                                         child: Text(
-                                          "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}", if (layout.minWidth != 1) "minW: ${layout.minWidth}", if (layout.minHeight != 1) "minH: ${layout.minHeight}", if (layout.maxWidth != null) "maxW: ${layout.maxWidth}", if (layout.maxHeight != null) "maxH : ${layout.maxHeight}"].join("\n")}",
+                                          "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
                                           style: const TextStyle(
                                             color: Colors.white,
                                           ),
@@ -607,8 +607,6 @@ class _DashboardWidgetState extends State<DashboardWidget> {
       startX: 0,
       startY: 0,
       identifier: 'preview',
-      minWidth: 1,
-      minHeight: 1,
       data: widgetId,
     );
 

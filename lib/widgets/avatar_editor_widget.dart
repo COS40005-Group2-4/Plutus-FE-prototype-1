@@ -63,9 +63,6 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
         ),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -266,9 +263,6 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

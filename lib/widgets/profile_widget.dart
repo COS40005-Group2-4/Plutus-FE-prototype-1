@@ -108,10 +108,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       ),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
         decoration: BoxDecoration(
           color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
@@ -600,35 +596,32 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: double.infinity),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontSize: labelSize,
-                color: Colors.white.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.8,
-              ),
-              textAlign: TextAlign.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: labelSize,
+              color: Colors.white.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.8,
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: valueSize,
-                color: Colors.white,
-                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: valueSize,
+              color: Colors.white,
+              fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

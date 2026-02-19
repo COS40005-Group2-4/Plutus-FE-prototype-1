@@ -37,25 +37,19 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
         borderRadius: 16,
         opacity: 0.15,
         padding: const EdgeInsets.all(0),
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: 900,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(),
-              const Divider(height: 1),
-              Expanded(
-                child: widget.format == ExportFormat.pdf
-                    ? _buildPdfPreview()
-                    : _buildTxtPreview(),
-              ),
-              const Divider(height: 1),
-              _buildFooter(),
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
+            const Divider(height: 1),
+            Expanded(
+              child: widget.format == ExportFormat.pdf
+                  ? _buildPdfPreview()
+                  : _buildTxtPreview(),
+            ),
+            const Divider(height: 1),
+            _buildFooter(),
+          ],
         ),
       ),
     );
