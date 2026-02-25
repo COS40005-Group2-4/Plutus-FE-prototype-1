@@ -35,6 +35,7 @@ class AppLocalizations {
       'currency_vnd': 'Vietnamese Dong (₫)',
       'currency_usd': 'US Dollar (\$)',
       'currency_eur': 'Euro (€)',
+      'currency_original': 'Original (No Conversion)',
       
       // Date & Time
       'date_format': 'Date Format',
@@ -254,6 +255,15 @@ class AppLocalizations {
       'error_adding_investment': 'Error adding investment',
       'error_updating_investment': 'Error updating investment',
       'error_deleting_investment': 'Error deleting investment',
+      
+      // Transaction Detail Dialog
+      'transaction_details': 'Transaction Details',
+      'payee': 'Payee',
+      'description': 'Description',
+      'type': 'Type',
+      'postings': 'Postings',
+      'account': 'Account',
+      'close': 'Close',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -278,6 +288,7 @@ class AppLocalizations {
       'currency_vnd': 'Đồng Việt Nam (₫)',
       'currency_usd': 'Đô la Mỹ (\$)',
       'currency_eur': 'Euro (€)',
+      'currency_original': 'Gốc (Không chuyển đổi)',
       
       // Date & Time
       'date_format': 'Định dạng ngày',
@@ -497,6 +508,15 @@ class AppLocalizations {
       'error_adding_investment': 'Lỗi thêm đầu tư',
       'error_updating_investment': 'Lỗi cập nhật đầu tư',
       'error_deleting_investment': 'Lỗi xóa đầu tư',
+      
+      // Transaction Detail Dialog
+      'transaction_details': 'Chi tiết giao dịch',
+      'payee': 'Người nhận',
+      'description': 'Mô tả',
+      'type': 'Loại',
+      'postings': 'Bút toán',
+      'account': 'Tài khoản',
+      'close': 'Đóng',
     },
   };
 
@@ -523,6 +543,7 @@ class AppLocalizations {
   String get currencyVnd => translate('currency_vnd');
   String get currencyUsd => translate('currency_usd');
   String get currencyEur => translate('currency_eur');
+  String get currencyOriginal => translate('currency_original');
   
   String get dateFormat => translate('date_format');
   String get timeFormat => translate('time_format');
@@ -738,6 +759,15 @@ class AppLocalizations {
   String get errorAddingInvestment => translate('error_adding_investment');
   String get errorUpdatingInvestment => translate('error_updating_investment');
   String get errorDeletingInvestment => translate('error_deleting_investment');
+  
+  // Transaction Detail Dialog
+  String get transactionDetails => translate('transaction_details');
+  String get payee => translate('payee');
+  String get description => translate('description');
+  String get type => translate('type');
+  String get postings => translate('postings');
+  String get account => translate('account');
+  String get close => translate('close');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

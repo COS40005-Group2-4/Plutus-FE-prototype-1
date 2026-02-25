@@ -574,7 +574,9 @@ class _BudgetTrackingWidgetState extends State<BudgetTrackingWidget> {
                         items: AppCurrency.values.map((currency) {
                           return DropdownMenuItem(
                             value: currency,
-                            child: Text('${currency.symbol} ${currency.code}'),
+                            child: Text(currency.isOriginal
+                                ? currency.displayName
+                                : '${currency.symbol} ${currency.code}'),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -1321,6 +1323,17 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
   }
 
   Future<void> _convertAmount() async {
+    // Original mode: no conversion
+    if (widget.settings.currency.isOriginal) {
+      if (mounted) {
+        setState(() {
+          _convertedAmount = widget.transaction.totalAmount;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     final sourceCurrency = widget.transaction.currency.toUpperCase();
     final targetCurrency = widget.settings.currency.code.toUpperCase();
 
@@ -1372,10 +1385,14 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
       );
     }
 
+    final isOriginal = widget.settings.currency.isOriginal;
+    final displayCurrency = isOriginal
+        ? widget.transaction.currency
+        : widget.settings.currency.code;
     final displayAmount = _convertedAmount ?? widget.transaction.totalAmount;
     final formatted = _currencyService.formatCurrency(
       amount: displayAmount,
-      currencyCode: widget.settings.currency.code,
+      currencyCode: displayCurrency,
       );
 
     return Text(

@@ -18,6 +18,7 @@ enum AppLanguage {
 }
 
 enum AppCurrency {
+  original('ORIGINAL', '', 'Original Currency'),
   vnd('VND', '₫', 'Vietnamese Dong'),
   usd('USD', '\$', 'US Dollar'),
   eur('EUR', '€', 'Euro');
@@ -26,6 +27,8 @@ enum AppCurrency {
   final String symbol;
   final String displayName;
   const AppCurrency(this.code, this.symbol, this.displayName);
+
+  bool get isOriginal => this == AppCurrency.original;
 
   static AppCurrency fromCode(String code) {
     return AppCurrency.values.firstWhere(

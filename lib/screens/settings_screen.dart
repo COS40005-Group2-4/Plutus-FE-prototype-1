@@ -496,7 +496,9 @@ class SettingsScreen extends StatelessWidget {
         items: AppCurrency.values.map((currency) {
           return DropdownMenuItem(
             value: currency,
-            child: Text('${currency.symbol} ${currency.code}'),
+            child: Text(currency.isOriginal
+                ? currency.displayName
+                : '${currency.symbol} ${currency.code}'),
           );
         }).toList(),
         onChanged: (AppCurrency? newCurrency) {

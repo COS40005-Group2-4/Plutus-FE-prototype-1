@@ -50,6 +50,15 @@ extension SettingsContext on BuildContext {
   }
   
   Future<String> formatCurrency(double amount, {String? currencyCode}) async {
+    // Original mode: use the provided currency code as-is, no conversion
+    if (settings.currency.isOriginal) {
+      final code = currencyCode ?? 'VND';
+      return currencyService.formatCurrency(
+        amount: amount,
+        currencyCode: code,
+      );
+    }
+
     final code = currencyCode ?? settings.currency.code;
     final currency = AppCurrency.fromCode(code);
     
@@ -63,25 +72,30 @@ extension SettingsContext on BuildContext {
       return currencyService.formatCurrency(
         amount: converted,
         currencyCode: settings.currency.code,
-        symbol: settings.currency.symbol,
       );
     }
     
     return currencyService.formatCurrency(
       amount: amount,
       currencyCode: code,
-      symbol: currency.symbol,
     );
   }
   
   String formatCurrencySync(double amount, {String? currencyCode}) {
+    // Original mode: use the provided currency code as-is
+    if (settings.currency.isOriginal) {
+      final code = currencyCode ?? 'VND';
+      return currencyService.formatCurrency(
+        amount: amount,
+        currencyCode: code,
+      );
+    }
+
     final code = currencyCode ?? settings.currency.code;
-    final currency = AppCurrency.fromCode(code);
     
     return currencyService.formatCurrency(
       amount: amount,
       currencyCode: code,
-      symbol: currency.symbol,
     );
   }
 }
