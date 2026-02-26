@@ -74,72 +74,83 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
       color: const Color(0xFF4A90E2),
       opacity: 0.2,
       borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.trending_up, size: 40, color: Colors.white),
-            const SizedBox(height: 12),
-            Text(
-              AppLocalizations.of(context).roi,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppLocalizations.of(context).returnOnInvestment,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            GlassContainer(
-              padding: const EdgeInsets.all(12),
-              color: Colors.white,
-              opacity: 0.1,
-              borderRadius: 8,
-              child: Column(
-                children: [
-                  _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          '$_roiValue%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                  const SizedBox(height: 4),
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxHeight < 180;
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.trending_up, size: isCompact ? 28 : 40, color: Colors.white),
+                SizedBox(height: isCompact ? 6 : 12),
+                Text(
+                  AppLocalizations.of(context).roi,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isCompact ? 14 : 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (!isCompact) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context).currentRoi,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    AppLocalizations.of(context).returnOnInvestment,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    textAlign: TextAlign.center,
                   ),
                 ],
-              ),
+                SizedBox(height: isCompact ? 8 : 16),
+                GlassContainer(
+                  padding: EdgeInsets.all(isCompact ? 8 : 12),
+                  color: Colors.white,
+                  opacity: 0.1,
+                  borderRadius: 8,
+                  child: Column(
+                    children: [
+                      _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              '$_roiValue%',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isCompact ? 18 : 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                      if (!isCompact) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          AppLocalizations.of(context).currentRoi,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
+                  onPressed: _loadRoiData,
+                  tooltip: 'Refresh',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white70),
-              onPressed: _loadRoiData,
-              tooltip: 'Refresh',
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

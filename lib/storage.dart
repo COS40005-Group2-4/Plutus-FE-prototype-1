@@ -41,7 +41,7 @@ class ColoredDashboardItem extends DashboardItem {
 class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   late SharedPreferences _preferences;
 
-  final List<int> _slotCounts = [3, 4, 6];
+  final List<int> _slotCounts = [2, 4, 6];
   
   List<String> visibilityFilter = ['profile', 'budget', 'history', 'import', 'export', 'roi', 'irr', 'investment', 'cashflow', 'bills', 'tax'];
 
@@ -50,7 +50,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   }
 
   final Map<int, List<ColoredDashboardItem>> _default = {
-    3: <ColoredDashboardItem>[
+    2: <ColoredDashboardItem>[
       ColoredDashboardItem(
         height: 2,
         width: 2,
@@ -60,7 +60,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         data: "profile",
       ),
       ColoredDashboardItem(
-        height: 2,
+        height: 3,
         width: 2,
         startX: 0,
         startY: 2,
@@ -69,63 +69,63 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 0,
-        startY: 4,
-        height: 2,
+        startY: 5,
+        height: 3,
         width: 2,
         identifier: "history",
         data: "history",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 0,
+        startX: 0,
+        startY: 8,
         width: 1,
         height: 1,
         identifier: "import",
         data: "import",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 1,
+        startX: 1,
+        startY: 8,
         height: 1,
         width: 1,
         identifier: "export",
         data: "export",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 2,
+        startX: 0,
+        startY: 9,
         width: 1,
         height: 1,
         identifier: "roi",
         data: "roi",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 3,
+        startX: 1,
+        startY: 9,
         width: 1,
         height: 1,
         identifier: "irr",
         data: "irr",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 4,
+        startX: 0,
+        startY: 10,
         width: 2,
         height: 2,
         identifier: "investment",
         data: "investment",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 6,
-        width: 1,
+        startX: 0,
+        startY: 12,
+        width: 2,
         height: 2,
         identifier: "bills",
         data: "bills",
       ),
       ColoredDashboardItem(
-        startX: 2,
-        startY: 8,
+        startX: 0,
+        startY: 14,
         width: 2,
         height: 2,
         identifier: "tax",
@@ -133,9 +133,9 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       ),
       ColoredDashboardItem(
         startX: 0,
-        startY: 6,
+        startY: 16,
         width: 2,
-        height: 2,
+        height: 3,
         identifier: "cashflow",
         data: "cashflow",
       ),

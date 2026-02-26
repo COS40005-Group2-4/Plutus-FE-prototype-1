@@ -425,20 +425,25 @@ class _CashflowContentState extends State<_CashflowContent> {
     final totalExpense = _expenseData.values.fold(0.0, (sum, val) => sum + val);
     final netCashflow = totalIncome - totalExpense;
 
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSummary(totalIncome, totalExpense, netCashflow),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: widget.showBarChart ? _buildBarChart() : _buildLineChart(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartHeight = (constraints.maxHeight * 0.4).clamp(120.0, 200.0);
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSummary(totalIncome, totalExpense, netCashflow),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: chartHeight,
+                child: widget.showBarChart ? _buildBarChart() : _buildLineChart(),
+              ),
+              const SizedBox(height: 8),
+              _buildLegend(),
+            ],
           ),
-          const SizedBox(height: 8),
-          _buildLegend(),
-        ],
-      ),
+        );
+      },
     );
   }
 

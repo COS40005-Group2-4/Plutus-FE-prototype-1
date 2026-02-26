@@ -439,31 +439,46 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildThemeModeSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
-    return ListTile(
-      leading: const Icon(Icons.brightness_6),
-      title: Text(l10n.themeMode),
-      trailing: SegmentedButton<ThemeMode>(
-        segments: [
-          ButtonSegment(
-            value: ThemeMode.light,
-            icon: const Icon(Icons.light_mode, size: 16),
-            label: Text(l10n.themeLight),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.brightness_6),
+              const SizedBox(width: 16),
+              Text(l10n.themeMode),
+            ],
           ),
-          ButtonSegment(
-            value: ThemeMode.dark,
-            icon: const Icon(Icons.dark_mode, size: 16),
-            label: Text(l10n.themeDark),
-          ),
-          ButtonSegment(
-            value: ThemeMode.system,
-            icon: const Icon(Icons.brightness_auto, size: 16),
-            label: Text(l10n.themeSystem),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              segments: [
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  icon: const Icon(Icons.light_mode, size: 16),
+                  label: Text(l10n.themeLight, style: const TextStyle(fontSize: 12)),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  icon: const Icon(Icons.dark_mode, size: 16),
+                  label: Text(l10n.themeDark, style: const TextStyle(fontSize: 12)),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  icon: const Icon(Icons.brightness_auto, size: 16),
+                  label: Text(l10n.themeSystem, style: const TextStyle(fontSize: 12)),
+                ),
+              ],
+              selected: {settingsProvider.themeMode},
+              onSelectionChanged: (Set<ThemeMode> newSelection) {
+                settingsProvider.setThemeMode(newSelection.first);
+              },
+            ),
           ),
         ],
-        selected: {settingsProvider.themeMode},
-        onSelectionChanged: (Set<ThemeMode> newSelection) {
-          settingsProvider.setThemeMode(newSelection.first);
-        },
       ),
     );
   }

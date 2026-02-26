@@ -751,104 +751,111 @@ class _BudgetContentState extends State<_BudgetContent> {
         ? (predictedExpense / widget.targetBudget).clamp(0.0, 1.5) 
         : 0.0;
 
-    return Column(
-      children: [
-        SizedBox(
-          height: 140,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Background circle
-              SizedBox(
-                height: 140,
-                width: 140,
-                child: CircularProgressIndicator(
-                  value: 1.0,
-                  strokeWidth: 14,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.1)),
-                ),
-              ),
-              // Predicted usage (lighter color)
-              if (predictedUsage > usage)
-                SizedBox(
-                  height: 140,
-                  width: 140,
-                  child: CircularProgressIndicator(
-                    value: predictedUsage.clamp(0.0, 1.0),
-                    strokeWidth: 14,
-                    backgroundColor: Colors.transparent,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      (predictedUsage < 0.7 ? Colors.green : (predictedUsage < 0.9 ? Colors.orange : Colors.red))
-                          .withOpacity(0.3),
-                    ),
-                  ),
-                ),
-              // Current usage
-              SizedBox(
-                height: 140,
-                width: 140,
-                child: CircularProgressIndicator(
-                  value: usage.clamp(0.0, 1.0),
-                  strokeWidth: 14,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
-                  ),
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gaugeSize = (constraints.maxWidth * 0.6).clamp(80.0, 140.0);
+        final strokeWidth = (gaugeSize * 0.1).clamp(8.0, 14.0);
+        final amountFontSize = (gaugeSize * 0.12).clamp(12.0, 18.0);
+        final subFontSize = (gaugeSize * 0.07).clamp(8.0, 10.0);
+        final percentFontSize = (gaugeSize * 0.11).clamp(11.0, 16.0);
+
+        return Column(
+          children: [
+            SizedBox(
+              height: gaugeSize,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Text(
-                    _currencyService.formatCurrency(
-                      amount: _totalExpense,
-                      currencyCode: widget.budgetCurrency.code,
+                  SizedBox(
+                    height: gaugeSize,
+                    width: gaugeSize,
+                    child: CircularProgressIndicator(
+                      value: 1.0,
+                      strokeWidth: strokeWidth,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.1)),
+                    ),
+                  ),
+                  if (predictedUsage > usage)
+                    SizedBox(
+                      height: gaugeSize,
+                      width: gaugeSize,
+                      child: CircularProgressIndicator(
+                        value: predictedUsage.clamp(0.0, 1.0),
+                        strokeWidth: strokeWidth,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          (predictedUsage < 0.7 ? Colors.green : (predictedUsage < 0.9 ? Colors.orange : Colors.red))
+                              .withOpacity(0.3),
+                        ),
                       ),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
                     ),
-                    textAlign: TextAlign.center,
+                  SizedBox(
+                    height: gaugeSize,
+                    width: gaugeSize,
+                    child: CircularProgressIndicator(
+                      value: usage.clamp(0.0, 1.0),
+                      strokeWidth: strokeWidth,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'of ${_currencyService.formatCurrency(
-                      amount: widget.targetBudget,
-                      currencyCode: widget.budgetCurrency.code,
-                      )}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${(usage * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      color: usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _currencyService.formatCurrency(
+                          amount: _totalExpense,
+                          currencyCode: widget.budgetCurrency.code,
+                          ),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: amountFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'of ${_currencyService.formatCurrency(
+                          amount: widget.targetBudget,
+                          currencyCode: widget.budgetCurrency.code,
+                          )}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: subFontSize,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${(usage * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
+                          fontSize: percentFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        if (predictedUsage > usage) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Predicted: ${(predictedUsage * 100).toStringAsFixed(0)}%',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 11,
             ),
-          ),
-        ],
-      ],
+            if (predictedUsage > usage) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Predicted: ${(predictedUsage * 100).toStringAsFixed(0)}%',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 
@@ -1417,42 +1424,52 @@ class ReportImportWidget extends StatelessWidget {
       color: yellow,
       opacity: 0.2,
       borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-          const Icon(Icons.upload_file, size: 40, color: Colors.white),
-          const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context).widgetImportReport,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxHeight < 160;
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.upload_file, size: isCompact ? 28 : 40, color: Colors.white),
+                SizedBox(height: isCompact ? 6 : 12),
+                Text(
+                  AppLocalizations.of(context).widgetImportReport,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isCompact ? 13 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!isCompact) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context).clickImportTransactions,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                SizedBox(height: isCompact ? 8 : 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, "/import");
+                  },
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(AppLocalizations.of(context).import),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: yellow,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppLocalizations.of(context).clickImportTransactions,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, "/import");
-            },
-            icon: const Icon(Icons.add),
-            label: Text(AppLocalizations.of(context).import),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: yellow,
-            ),
-          ),
-        ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1554,49 +1571,59 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
       color: red,
       opacity: 0.2,
       borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-          const Icon(Icons.download, size: 40, color: Colors.white),
-          const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context).widgetExportReport,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxHeight < 160;
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.download, size: isCompact ? 28 : 40, color: Colors.white),
+                SizedBox(height: isCompact ? 6 : 12),
+                Text(
+                  AppLocalizations.of(context).widgetExportReport,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isCompact ? 13 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!isCompact) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context).clickExportTransactions,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                SizedBox(height: isCompact ? 8 : 16),
+                ElevatedButton.icon(
+                  onPressed: _isExporting ? null : _showExportDialog,
+                  icon: _isExporting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(red),
+                          ),
+                        )
+                      : const Icon(Icons.save_alt, size: 18),
+                  label: Text(_isExporting ? AppLocalizations.of(context).exporting : AppLocalizations.of(context).export),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: red,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppLocalizations.of(context).clickExportTransactions,
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _isExporting ? null : _showExportDialog,
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(red),
-                    ),
-                  )
-                : const Icon(Icons.save_alt),
-            label: Text(_isExporting ? AppLocalizations.of(context).exporting : AppLocalizations.of(context).export),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: red,
-            ),
-          ),
-        ],
-        ),
+          );
+        },
       ),
     );
   }

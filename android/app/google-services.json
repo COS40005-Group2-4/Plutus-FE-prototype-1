@@ -12,7 +12,20 @@
           "package_name": "com.example.plutus_fe_prototype"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "611876522758-748qpdg7a3aups646nkb0u0n2s15kftl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.plutus_fe_prototype",
+            "certificate_hash": "280e9ce1b4acdb02501f70d0cdb5d153d5c04a19"
+          }
+        },
+        {
+          "client_id": "611876522758-30av79i8clflnriv7ee5dp68qft0ja28.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBquzRyuqw9c_w2el0LE4IHNqqVBvqWgl4"

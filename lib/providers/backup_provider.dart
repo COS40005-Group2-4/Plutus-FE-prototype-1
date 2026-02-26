@@ -15,6 +15,7 @@ class BackupProvider extends ChangeNotifier {
   String? _errorMessage;
   List<VersionEntry> _versions = [];
   bool _hasConflict = false;
+  bool _hasRemoteBackup = false;
   int? _userId;
 
   bool get isBackupEnabled => _isBackupEnabled;
@@ -22,6 +23,7 @@ class BackupProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<VersionEntry> get versions => List.unmodifiable(_versions);
   bool get hasConflict => _hasConflict;
+  bool get hasRemoteBackup => _hasRemoteBackup;
 
   BackupProvider({
     BackupService? backupService,
@@ -36,12 +38,21 @@ class BackupProvider extends ChangeNotifier {
     _userId = userId;
     _isLoading = true;
     _errorMessage = null;
+    _hasRemoteBackup = false;
     notifyListeners();
 
     try {
       // Read backup setting from SettingsService
       _isBackupEnabled =
           await _settingsService.getAutoBackupEnabled(userId);
+
+      // Always check if remote backups exist (for new device sync)
+      try {
+        final backups = await _backupService.listBackups(userId);
+        _hasRemoteBackup = backups.isNotEmpty;
+      } catch (_) {
+        _hasRemoteBackup = false;
+      }
 
       if (_isBackupEnabled) {
         // Run conflict check via SyncManager
@@ -51,6 +62,9 @@ class BackupProvider extends ChangeNotifier {
 
         // Start auto-sync if enabled
         _syncManager.startAutoSync(userId);
+      } else if (_hasRemoteBackup) {
+        // Backup not enabled but remote data exists — flag for new device prompt
+        _hasConflict = true;
       }
     } on BackupException catch (e) {
       _errorMessage = _mapErrorCode(e.code);

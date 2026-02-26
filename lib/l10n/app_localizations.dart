@@ -289,6 +289,10 @@ class AppLocalizations {
       'backup_error_s3': 'S3 storage error. Please try again later.',
       'backup_manual_backup': 'Manual Backup',
       'backup_last_sync': 'Last Sync',
+      'backup_found_title': 'Cloud Backup Found',
+      'backup_found_message': 'A cloud backup was found for your account. Would you like to restore it to this device?',
+      'backup_found_restore': 'Restore from cloud',
+      'backup_found_skip': 'Start fresh',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -567,6 +571,10 @@ class AppLocalizations {
       'backup_error_s3': 'Lỗi lưu trữ S3. Vui lòng thử lại sau.',
       'backup_manual_backup': 'Sao lưu thủ công',
       'backup_last_sync': 'Đồng bộ lần cuối',
+      'backup_found_title': 'Tìm thấy bản sao lưu đám mây',
+      'backup_found_message': 'Đã tìm thấy bản sao lưu đám mây cho tài khoản của bạn. Bạn có muốn khôi phục về thiết bị này không?',
+      'backup_found_restore': 'Khôi phục từ đám mây',
+      'backup_found_skip': 'Bắt đầu mới',
     },
   };
 
@@ -843,6 +851,10 @@ class AppLocalizations {
   String get backupErrorS3 => translate('backup_error_s3');
   String get backupManualBackup => translate('backup_manual_backup');
   String get backupLastSync => translate('backup_last_sync');
+  String get backupFoundTitle => translate('backup_found_title');
+  String get backupFoundMessage => translate('backup_found_message');
+  String get backupFoundRestore => translate('backup_found_restore');
+  String get backupFoundSkip => translate('backup_found_skip');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

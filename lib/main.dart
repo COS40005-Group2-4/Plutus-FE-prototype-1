@@ -29,6 +29,8 @@ import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'widgets/conflict_dialog.dart';
+import 'widgets/backup_found_dialog.dart';
+import 'models/backup_models.dart';
 import 'widgets/glass_background.dart';
 import 'widgets/glass_container.dart';
 
@@ -210,11 +212,20 @@ class _MainPageState extends State<MainPage> {
 
     if (!mounted) return;
 
-    // Show conflict dialog if needed
     if (backupProvider.hasConflict) {
-      final choice = await showConflictDialog(context);
-      if (choice != null) {
-        await backupProvider.resolveConflict(choice);
+      if (!backupProvider.isBackupEnabled && backupProvider.hasRemoteBackup) {
+        // New device: backup not enabled but remote data exists
+        final restore = await showBackupFoundDialog(context);
+        if (restore == true) {
+          await backupProvider.resolveConflict(ConflictChoice.overrideLocal);
+          await backupProvider.setBackupEnabled(true);
+        }
+      } else {
+        // Existing device: backup enabled, data differs
+        final choice = await showConflictDialog(context);
+        if (choice != null) {
+          await backupProvider.resolveConflict(choice);
+        }
       }
     }
 
@@ -286,77 +297,130 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: IndexedStack(
-          index: _currentIndex,
-          children: [
-            const DashboardWidget(),
-            TransactionHistoryPage(key: _historyKey),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
+      body: IndexedStack(
+        index: _currentIndex,
         children: [
-          BottomNavigationBar(
-            currentIndex: _currentIndex == 2 ? 0 : _currentIndex,
-            onTap: (index) {
-              if (index == 1) {
-                setState(() => _currentIndex = 1);
-              } else {
-                setState(() => _currentIndex = 0);
-              }
-            },
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.dashboard),
-                label: AppLocalizations.of(context).dashboard,
+          const DashboardWidget(),
+          TransactionHistoryPage(key: _historyKey),
+        ],
+      ),
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1A3A4A).withValues(alpha: 0.4)
+                  : Colors.white.withValues(alpha: 0.15),
+              border: Border(
+                top: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF2A5470).withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.2),
+                ),
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.history),
-                label: AppLocalizations.of(context).history,
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 20,
-            child: Material(
-              elevation: 8,
-              shape: const CircleBorder(),
-              child: GestureDetector(
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ImportTransactionPage(),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(
+                      icon: Icons.dashboard,
+                      label: AppLocalizations.of(context).dashboard,
+                      isSelected: _currentIndex == 0,
+                      onTap: () => setState(() => _currentIndex = 0),
                     ),
-                  );
-                  if (result == true) {
-                    _historyKey.currentState?.refresh();
-                    // Notify transaction service to emit update to all listeners
-                    TransactionService().notifyTransactionUpdate();
-                  }
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue,
-                  ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                    _buildFab(),
+                    _buildNavItem(
+                      icon: Icons.history,
+                      label: AppLocalizations.of(context).history,
+                      isSelected: _currentIndex == 1,
+                      onTap: () => setState(() => _currentIndex = 1),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? const Color(0xFF4A90E2) : Colors.white54,
+                size: 24,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? const Color(0xFF4A90E2) : Colors.white54,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFab() {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ImportTransactionPage(),
+          ),
+        );
+        if (result == true) {
+          _historyKey.currentState?.refresh();
+          TransactionService().notifyTransactionUpdate();
+        }
+      },
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4A90E2), Color(0xFF5DADE2)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4A90E2).withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }
@@ -406,7 +470,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
           ? w > 900
                 ? 6
                 : 4
-          : 3;
+          : 2;
     });
   }
 
@@ -435,6 +499,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     }
   }
 
+  double _getAspectRatio(double width) {
+    if (width < 600) return 0.85; // mobile: taller slots
+    if (width < 900) return 0.95;
+    return 1.0;
+  }
+
   ///
   @override
   Widget build(BuildContext context) {
@@ -443,7 +513,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ? w > 900
               ? 6
               : 4
-        : 3;
+        : 2;
+    final aspectRatio = _getAspectRatio(w);
     return Scaffold(
       drawer: SidebarMenu(
         onMenuItemSelected: (widgetId) {
@@ -541,10 +612,10 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           padding: const EdgeInsets.all(8),
                           horizontalSpace: 8,
                           verticalSpace: 8,
-                          slotAspectRatio: 1,
+                          slotAspectRatio: aspectRatio,
                           animateEverytime: true,
                           dashboardItemController: itemController,
-                          slotCount: slot ?? 3,
+                          slotCount: slot ?? 2,
                           errorPlaceholder: (e, s) {
                             return Text("$e , $s");
                           },

@@ -54,11 +54,11 @@ class GoogleAuthService {
         print('🖥️  Desktop Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
       }
     } else {
-      // Android/iOS
-      clientId = GoogleOAuthConfig.androidClientId;
+      // Android/iOS - google_sign_in v7 needs the Web Client ID as serverClientId
+      clientId = GoogleOAuthConfig.webClientId;
       clientSecret = GoogleOAuthConfig.clientSecret;
       if (kDebugMode) {
-        print('📱 Mobile Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+        print('📱 Mobile Platform - Server Client ID (Web): ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
       }
     }
 

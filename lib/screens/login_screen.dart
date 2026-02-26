@@ -62,100 +62,107 @@ class _LoginScreenState extends State<LoginScreen> {
   }
   
   Widget _buildLoginUI(BuildContext context, AuthProvider authProvider) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 400;
+
     return SingleChildScrollView(
       child: Center(
-        child: GlassContainer(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(30),
-          borderRadius: 20,
-          opacity: 0.1,
-          blur: 15,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-          const Icon(
-            Icons.account_balance_wallet,
-            size: 100,
-            color: Colors.blue,
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Welcome to Plutus',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: GlassContainer(
+            margin: EdgeInsets.all(isSmall ? 16 : 20),
+            padding: EdgeInsets.all(isSmall ? 20 : 30),
+            borderRadius: 20,
+            opacity: 0.1,
+            blur: 15,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+            Icon(
+              Icons.account_balance_wallet,
+              size: isSmall ? 72 : 100,
+              color: Colors.blue,
             ),
-          ),
-          const SizedBox(height: 40),
-          // Show error message if present
-          if (_errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[100],
-                  border: Border.all(color: Colors.red),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _errorMessage!,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 5,
-                  style: TextStyle(
-                    color: Colors.red[900],
-                    fontSize: 14,
+            const SizedBox(height: 20),
+            Text(
+              'Welcome to Plutus',
+              style: TextStyle(
+                fontSize: isSmall ? 24 : 32,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            // Show error message if present
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 5,
+                    style: TextStyle(
+                      color: Colors.red[900],
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
-            ),
-          // Use sign-in button widget on web, regular button on other platforms
-          if (kIsWeb)
-            authProvider.getSignInButton() ?? const SizedBox.shrink()
-          else
-            ElevatedButton.icon(
+            // Use sign-in button widget on web, regular button on other platforms
+            if (kIsWeb)
+              authProvider.getSignInButton() ?? const SizedBox.shrink()
+            else
+              ElevatedButton.icon(
+                onPressed: () async {
+                  setState(() => _errorMessage = null);
+                  final success = await authProvider.signIn();
+                  if (success && context.mounted) {
+                    Navigator.pushReplacementNamed(context, '/dashboard');
+                  } else if (context.mounted) {
+                    setState(() => _errorMessage = 'Login failed. Please check your Google credentials and try again.');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Login failed. Please try again.'),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.login),
+                label: const Text('Sign in with Google'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 15,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
+            TextButton(
               onPressed: () async {
-                setState(() => _errorMessage = null);
-                final success = await authProvider.signIn();
-                if (success && context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                } else if (context.mounted) {
-                  setState(() => _errorMessage = 'Login failed. Please check your Google credentials and try again.');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Login failed. Please try again.'),
-                    ),
-                  );
+                // Navigate to user selection where they can create guest account
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/user_selection');
                 }
               },
-              icon: const Icon(Icons.login),
-              label: const Text('Sign in with Google'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 15,
+              child: const Text(
+                'Continue as Guest',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed: () async {
-              // Navigate to user selection where they can create guest account
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/user_selection');
-              }
-            },
-            child: const Text(
-              'Continue as Guest',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                decoration: TextDecoration.underline,
-              ),
+              ],
             ),
-          ),
-            ],
           ),
         ),
       ),
