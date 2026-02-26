@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../widgets/glass_container.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/backup_provider.dart';
 import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -239,6 +240,7 @@ class SettingsScreen extends StatelessWidget {
         _buildCurrencySelector(context, settingsProvider, l10n),
         _buildDateFormatSelector(context, settingsProvider, l10n),
         _buildTimeFormatSelector(context, settingsProvider, l10n),
+        _buildBackupCard(context, l10n),
         const Divider(),
         
         // Account Settings Section
@@ -548,6 +550,89 @@ class SettingsScreen extends StatelessWidget {
             settingsProvider.setTimeFormat(newFormat);
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildBackupCard(BuildContext context, AppLocalizations l10n) {
+    final backupProvider = context.watch<BackupProvider>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GlassContainer(
+        borderRadius: 12,
+        opacity: 0.1,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud_upload, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.backupSettings,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  backupProvider.isBackupEnabled
+                      ? l10n.backupEnabled
+                      : l10n.backupDisabled,
+                ),
+                Switch(
+                  value: backupProvider.isBackupEnabled,
+                  onChanged: backupProvider.isLoading
+                      ? null
+                      : (value) => backupProvider.setBackupEnabled(value),
+                ),
+              ],
+            ),
+            Text(
+              '${l10n.backupLastSync}: --',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: backupProvider.isBackupEnabled && !backupProvider.isLoading
+                    ? () => backupProvider.triggerManualBackup()
+                    : null,
+                icon: backupProvider.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.backup),
+                label: Text(l10n.backupManualBackup),
+              ),
+            ),
+            if (backupProvider.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.translate(backupProvider.errorMessage!),
+                style: const TextStyle(fontSize: 12, color: Colors.red),
+              ),
+            ],
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.history, color: Colors.blue),
+              title: Text(l10n.backupHistory),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => Navigator.pushNamed(context, '/backup-history'),
+            ),
+          ],
+        ),
       ),
     );
   }

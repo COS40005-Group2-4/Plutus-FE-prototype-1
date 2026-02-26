@@ -264,6 +264,31 @@ class AppLocalizations {
       'postings': 'Postings',
       'account': 'Account',
       'close': 'Close',
+      
+      // Backup
+      'backup_settings': 'Backup Settings',
+      'backup_enabled': 'Backup Enabled',
+      'backup_disabled': 'Backup Disabled',
+      'backup_history': 'Backup History',
+      'backup_restore': 'Restore Backup',
+      'backup_restore_confirm': 'Are you sure you want to restore this backup? Your current data will be replaced.',
+      'backup_uploading': 'Uploading backup...',
+      'backup_downloading': 'Downloading backup...',
+      'backup_success': 'Backup completed successfully',
+      'backup_failed': 'Backup failed',
+      'backup_conflict_title': 'Backup Conflict Detected',
+      'backup_conflict_message': 'Your local data differs from the latest cloud backup. What would you like to do?',
+      'backup_conflict_override': 'Override local with cloud version',
+      'backup_conflict_keep_local': 'Keep local and upload',
+      'backup_conflict_cancel': 'Cancel',
+      'backup_no_versions': 'No backup versions available',
+      'backup_version_timestamp': 'Backup Time',
+      'backup_version_size': 'Size',
+      'backup_error_network': 'Network error. Please check your connection and try again.',
+      'backup_error_credentials': 'Invalid AWS credentials. Please check your configuration.',
+      'backup_error_s3': 'S3 storage error. Please try again later.',
+      'backup_manual_backup': 'Manual Backup',
+      'backup_last_sync': 'Last Sync',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -517,6 +542,31 @@ class AppLocalizations {
       'postings': 'Bút toán',
       'account': 'Tài khoản',
       'close': 'Đóng',
+      
+      // Backup
+      'backup_settings': 'Cài đặt sao lưu',
+      'backup_enabled': 'Sao lưu đã bật',
+      'backup_disabled': 'Sao lưu đã tắt',
+      'backup_history': 'Lịch sử sao lưu',
+      'backup_restore': 'Khôi phục sao lưu',
+      'backup_restore_confirm': 'Bạn có chắc chắn muốn khôi phục bản sao lưu này? Dữ liệu hiện tại sẽ bị thay thế.',
+      'backup_uploading': 'Đang tải lên bản sao lưu...',
+      'backup_downloading': 'Đang tải xuống bản sao lưu...',
+      'backup_success': 'Sao lưu hoàn tất thành công',
+      'backup_failed': 'Sao lưu thất bại',
+      'backup_conflict_title': 'Phát hiện xung đột sao lưu',
+      'backup_conflict_message': 'Dữ liệu cục bộ khác với bản sao lưu đám mây mới nhất. Bạn muốn làm gì?',
+      'backup_conflict_override': 'Ghi đè cục bộ bằng phiên bản đám mây',
+      'backup_conflict_keep_local': 'Giữ cục bộ và tải lên',
+      'backup_conflict_cancel': 'Hủy',
+      'backup_no_versions': 'Không có phiên bản sao lưu nào',
+      'backup_version_timestamp': 'Thời gian sao lưu',
+      'backup_version_size': 'Kích thước',
+      'backup_error_network': 'Lỗi mạng. Vui lòng kiểm tra kết nối và thử lại.',
+      'backup_error_credentials': 'Thông tin xác thực AWS không hợp lệ. Vui lòng kiểm tra cấu hình.',
+      'backup_error_s3': 'Lỗi lưu trữ S3. Vui lòng thử lại sau.',
+      'backup_manual_backup': 'Sao lưu thủ công',
+      'backup_last_sync': 'Đồng bộ lần cuối',
     },
   };
 
@@ -768,6 +818,31 @@ class AppLocalizations {
   String get postings => translate('postings');
   String get account => translate('account');
   String get close => translate('close');
+
+  // Backup
+  String get backupSettings => translate('backup_settings');
+  String get backupEnabled => translate('backup_enabled');
+  String get backupDisabled => translate('backup_disabled');
+  String get backupHistory => translate('backup_history');
+  String get backupRestore => translate('backup_restore');
+  String get backupRestoreConfirm => translate('backup_restore_confirm');
+  String get backupUploading => translate('backup_uploading');
+  String get backupDownloading => translate('backup_downloading');
+  String get backupSuccess => translate('backup_success');
+  String get backupFailed => translate('backup_failed');
+  String get backupConflictTitle => translate('backup_conflict_title');
+  String get backupConflictMessage => translate('backup_conflict_message');
+  String get backupConflictOverride => translate('backup_conflict_override');
+  String get backupConflictKeepLocal => translate('backup_conflict_keep_local');
+  String get backupConflictCancel => translate('backup_conflict_cancel');
+  String get backupNoVersions => translate('backup_no_versions');
+  String get backupVersionTimestamp => translate('backup_version_timestamp');
+  String get backupVersionSize => translate('backup_version_size');
+  String get backupErrorNetwork => translate('backup_error_network');
+  String get backupErrorCredentials => translate('backup_error_credentials');
+  String get backupErrorS3 => translate('backup_error_s3');
+  String get backupManualBackup => translate('backup_manual_backup');
+  String get backupLastSync => translate('backup_last_sync');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

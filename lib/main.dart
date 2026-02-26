@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dashboard/dashboard.dart';
 import 'storage.dart';
 import 'package:provider/provider.dart';
@@ -14,16 +15,20 @@ import 'sidebar_menu.dart';
 import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
+import 'providers/backup_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/widget_visibility_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
 import 'screens/investment_list_screen.dart';
+import 'screens/backup_history_screen.dart';
+import 'services/sync_manager.dart';
 import 'transaction_service.dart';
 import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'widgets/conflict_dialog.dart';
 import 'widgets/glass_background.dart';
 import 'widgets/glass_container.dart';
 
@@ -48,17 +53,38 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late AuthProvider _authProvider;
+  late BackupProvider _backupProvider;
+  late SyncManager _syncManager;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    _syncManager = SyncManager();
+    _backupProvider = BackupProvider(syncManager: _syncManager);
     _authProvider = AuthProvider();
     _initializeAuth();
+    _setupConnectivity();
   }
 
   Future<void> _initializeAuth() async {
     await _authProvider.initialize();
     setState(() {});
+  }
+
+  void _setupConnectivity() {
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((results) {
+      final isConnected =
+          results.isNotEmpty && !results.contains(ConnectivityResult.none);
+      _syncManager.onConnectivityChanged(isConnected);
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 
   ///
@@ -72,6 +98,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
+        ChangeNotifierProvider.value(value: _backupProvider),
         ChangeNotifierProvider(create: (_) => WidgetVisibilityProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
@@ -107,6 +134,7 @@ class _MyAppState extends State<MyApp> {
               "/import": (c) => const ImportTransactionPage(),
               "/settings": (c) => const SettingsScreen(),
               "/investments": (c) => const InvestmentListScreen(),
+              "/backup-history": (c) => const BackupHistoryScreen(),
             },
             locale: settingsProvider.locale,
             localizationsDelegates: const [
@@ -170,6 +198,30 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  bool _backupInitialized = false;
+
+  Future<void> _initBackupAndNavigate(BuildContext context, int userId) async {
+    if (_backupInitialized) return;
+    _backupInitialized = true;
+
+    final backupProvider =
+        Provider.of<BackupProvider>(context, listen: false);
+    await backupProvider.initialize(userId);
+
+    if (!mounted) return;
+
+    // Show conflict dialog if needed
+    if (backupProvider.hasConflict) {
+      final choice = await showConflictDialog(context);
+      if (choice != null) {
+        await backupProvider.resolveConflict(choice);
+      }
+    }
+
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, "/dashboard");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
@@ -181,7 +233,7 @@ class _MainPageState extends State<MainPage> {
                 // User is logged in, set up transaction service and go to dashboard
                 final transactionService = TransactionService();
                 transactionService.setCurrentUser(authProvider.currentUserId!);
-                Navigator.pushReplacementNamed(context, "/dashboard");
+                _initBackupAndNavigate(context, authProvider.currentUserId!);
               } else {
                 // No user logged in, show user selection screen
                 Navigator.pushReplacementNamed(context, "/user_selection");
