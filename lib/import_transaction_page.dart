@@ -76,19 +76,49 @@ class ManualImportTab extends StatefulWidget {
 class _ManualImportTabState extends State<ManualImportTab> {
   final _formKey = GlobalKey<FormState>();
   late TransactionService _service;
-  
+
   late TextEditingController _payeeController;
   late TextEditingController _amountController;
   late TextEditingController _categoryController;
   late TextEditingController _descController;
-  
+
   String _type = 'expense';
   String _currency = 'VND';
   DateTime _selectedDate = DateTime.now();
   bool _loading = false;
-  
+
   // Child items (splits)
   List<Map<String, dynamic>> _items = [];
+
+  // Category dropdown
+  String? _selectedCategory;
+  bool _isCustomCategory = false;
+  final TextEditingController _customCategoryController = TextEditingController();
+
+  // Common expense categories (aligned with Category Budget widget)
+  static const List<String> _commonExpenseCategories = [
+    'Food',
+    'Transportation',
+    'Entertainment',
+    'Shopping',
+    'Bills',
+    'Healthcare',
+    'Education',
+    'Other',
+  ];
+
+  // Common income categories
+  static const List<String> _commonIncomeCategories = [
+    'Salary',
+    'Freelance',
+    'Investment',
+    'Gift',
+    'Other',
+  ];
+
+  List<String> get _currentCategories {
+    return _type == 'expense' ? _commonExpenseCategories : _commonIncomeCategories;
+  }
 
   @override
   void initState() {
@@ -107,7 +137,21 @@ class _ManualImportTabState extends State<ManualImportTab> {
     _amountController = TextEditingController(text: data['amount']?.toString() ?? '');
     _categoryController = TextEditingController(text: data['category']?.toString() ?? '');
     _descController = TextEditingController(text: data['description']?.toString() ?? '');
-    
+
+    // Set selected category from data
+    final categoryFromData = data['category']?.toString() ?? '';
+    if (_currentCategories.contains(categoryFromData)) {
+      _selectedCategory = categoryFromData;
+      _isCustomCategory = false;
+    } else if (categoryFromData.isNotEmpty) {
+      _selectedCategory = 'Other';
+      _isCustomCategory = true;
+      _customCategoryController.text = categoryFromData;
+    } else {
+      _selectedCategory = null;
+      _isCustomCategory = false;
+    }
+
     if (data['type'] != null) {
       _type = data['type'].toString().toLowerCase();
     }
@@ -149,6 +193,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
     _amountController.dispose();
     _categoryController.dispose();
     _descController.dispose();
+    _customCategoryController.dispose();
     super.dispose();
   }
 
@@ -398,13 +443,51 @@ class _ManualImportTabState extends State<ManualImportTab> {
             const SizedBox(height: 16),
             
             // Category
-            TextFormField(
-              controller: _categoryController,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-                helperText: 'e.g., Food, Transportation, Salary, etc.',
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: _isCustomCategory ? 'Other' : _selectedCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    ..._currentCategories.map((category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    )),
+                  ],
+                  onChanged: (val) {
+                    if (val == 'Other') {
+                      setState(() {
+                        _isCustomCategory = true;
+                        _selectedCategory = null;
+                      });
+                    } else {
+                      setState(() {
+                        _selectedCategory = val;
+                        _isCustomCategory = false;
+                        _categoryController.text = val ?? '';
+                      });
+                    }
+                  },
+                ),
+                if (_isCustomCategory) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _customCategoryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom Category',
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter new category name',
+                    ),
+                    onChanged: (val) {
+                      _categoryController.text = val;
+                    },
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 16),
             
@@ -721,11 +804,19 @@ class _ScanImportTabState extends State<ScanImportTab> {
     
     try {
       final details = await _ocrService.processInvoice(_imageFile!.path, mode: _ocrMode);
-      
+
       if (details != null && !details.containsKey('error')) {
-        setState(() {
-          _scannedData = details;
-        });
+        // For online OCR (AWS Textract), add context-aware category suggestion
+        if (_ocrMode == OCRMode.online || _ocrMode == OCRMode.auto) {
+          final detailsWithCategory = _ocrService.processWithCategorySuggestion(details);
+          setState(() {
+            _scannedData = detailsWithCategory;
+          });
+        } else {
+          setState(() {
+            _scannedData = details;
+          });
+        }
       } else {
         if (mounted) {
           final error = details?['error'] ?? 'Could not read text from image';

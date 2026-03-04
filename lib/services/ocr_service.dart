@@ -331,7 +331,7 @@ class OCRService {
     for (var field in summaryFields) {
       final type = field['Type']['Text'];
       final value = field['ValueDetection']['Text'];
-      
+
       if (type == 'VENDOR_NAME') {
         result['payee'] = value;
       } else if (type == 'TOTAL') {
@@ -342,9 +342,9 @@ class OCRService {
         // Textract usually returns standardized dates, but we might need parsing.
         // For now, pass as string, the UI tries to parse it.
         result['date'] = value;
-      } else if (type == 'CURRENCY') { 
+      } else if (type == 'CURRENCY') {
          // Textract usually provides currency code
-         result['currency'] = value; 
+         result['currency'] = value;
       }
     }
 
@@ -377,6 +377,109 @@ class OCRService {
       }
     }
 
+    return result;
+  }
+
+  /// Suggests a category based on the invoice content (vendor name and items)
+  /// Uses keyword matching to determine the most appropriate category
+  String suggestCategory(Map<String, dynamic> data) {
+    final payee = (data['payee'] ?? '').toString().toLowerCase();
+    final items = data['items'] as List? ?? [];
+    final fullText = StringBuffer(payee);
+
+    // Collect all item descriptions
+    for (var item in items) {
+      fullText.write(' ');
+      fullText.write((item['description'] ?? '').toString().toLowerCase());
+    }
+
+    final text = fullText.toString();
+
+    // Category keyword mappings - aligned with Category Budget widget
+    final categoryKeywords = {
+      'Food': [
+        'restaurant', 'cafe', 'coffee', 'food', 'pizza', 'burger', 'sushi',
+        'grocery', 'supermarket', 'convenience', 'bakery', 'doordash',
+        'grabfood', 'baemin', 'shopeefood', 'thue', 'ăn', 'nhà hàng',
+        'starbucks', 'mcdonald', 'kfc', 'lotteria', 'bếp', 'cơm',
+      ],
+      'Transportation': [
+        'uber', 'lyft', 'grab', 'gojek', 'taxi', 'gas', 'petrol',
+        'fuel', 'shell', 'caltex', 'petronas', ' petrolimex', 'pvoil',
+        'parking', 'toll', 'xe', 'ô tô', 'xăng', 'dầu', 'đổ xăng',
+        'vietnam airlines', 'vietjet', 'jetstar', 'bus', 'metro',
+      ],
+      'Entertainment': [
+        'cinema', 'movie', 'netflix', 'spotify', 'youtube', 'premium',
+        'game', 'steam', 'playstation', 'xbox', 'nintendo', 'karaoke',
+        'bar', 'pub', 'club', 'bowling', 'gym', 'fitness', 'massage',
+        'spa', 'giải trí', 'rạp chiếu', 'thể thao', 'sport',
+      ],
+      'Shopping': [
+        'shopee', 'lazada', 'tiki', 'amazon', 'ebay', 'walmart',
+        'target', 'costco', 'mall', 'department store', 'clothing',
+        'fashion', 'electronics', 'phone', 'laptop', ' accessory',
+        'siêu thị', 'mua sắm', 'điện thoại', 'quần áo',
+      ],
+      'Bills': [
+        'electricity', 'electric', 'water', 'internet', 'phone bill',
+        'utility', 'power', 'evn', 'viettel', 'vnpt', 'fpt',
+        'điện', 'nước', 'internet', 'tiện ích', 'hóa đơn',
+        'vnpt', 'mobifone', 'vinaphone', 'wifi',
+      ],
+      'Healthcare': [
+        'pharmacy', 'hospital', 'clinic', 'doctor', 'medical',
+        'health', 'dental', 'vision', 'medicine', 'drugstore',
+        'bệnh viện', 'phòng khám', 'y tế', 'thuốc', 'dược',
+        'nhà thuốc', 'khám bệnh',
+      ],
+      'Education': [
+        'school', 'university', 'college', 'course', 'book',
+        'tutorial', 'training', 'certificate', 'education', 'learning',
+        'trường', 'học', 'đại học', 'sách', 'khóa học', 'udemy',
+        'coursera', 'skillshare', 'du học',
+      ],
+      'Salary': [
+        'salary', 'payroll', 'wage', 'bonus', 'lương', 'thưởng',
+        'monthly salary', 'lương tháng',
+      ],
+      'Freelance': [
+        'freelance', 'contract', 'project fee', 'consulting',
+        'dịch vụ', 'phí dịch vụ', 'hợp đồng',
+      ],
+      'Investment': [
+        'dividend', 'interest', 'stock', 'bond', 'fund', 'investment',
+        'cổ tức', 'lãi', 'đầu tư', 'chứng khoán',
+      ],
+      'Gift': [
+        'gift', 'present', 'donation', 'quà tặng', 'từ thiện',
+      ],
+    };
+
+    // Find the best matching category
+    int bestScore = 0;
+    String bestCategory = 'Other';
+
+    for (var entry in categoryKeywords.entries) {
+      int score = 0;
+      for (var keyword in entry.value) {
+        if (text.contains(keyword)) {
+          score++;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestCategory = entry.key;
+      }
+    }
+
+    return bestCategory;
+  }
+
+  /// Process OCR result and add category suggestion
+  Map<String, dynamic> processWithCategorySuggestion(Map<String, dynamic> data) {
+    final result = Map<String, dynamic>.from(data);
+    result['category'] = suggestCategory(data);
     return result;
   }
 

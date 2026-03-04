@@ -32,6 +32,12 @@ class _SidebarMenuState extends State<SidebarMenu> {
         color: blue,
       ),
       MenuItemData(
+        id: 'categoryBudget',
+        label: 'Category Budget',
+        icon: Icons.category,
+        color: Colors.teal,
+      ),
+      MenuItemData(
         id: 'history',
         label: l10n.widgetTransactionHistory,
         icon: Icons.history,
