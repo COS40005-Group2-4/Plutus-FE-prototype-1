@@ -36,7 +36,7 @@ class DatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -84,6 +84,7 @@ class DatabaseService {
         oauth_provider TEXT,
         oauth_id TEXT,
         is_guest INTEGER DEFAULT 0,
+        data_consent INTEGER DEFAULT 0,
         created_at INTEGER NOT NULL,
         last_login INTEGER NOT NULL,
         is_active INTEGER DEFAULT 1
@@ -318,6 +319,29 @@ class DatabaseService {
         rethrow;
       }
     }
+
+    // Upgrade from version 4 to 5: Add data_consent column
+    if (oldVersion < 5) {
+      try {
+        // Check if data_consent column exists
+        final columns = await db.rawQuery(
+          "PRAGMA table_info(users)",
+        );
+        final hasDataConsent = columns.any((col) => col['name'] == 'data_consent');
+
+        if (!hasDataConsent) {
+          await db.execute('ALTER TABLE users ADD COLUMN data_consent INTEGER DEFAULT 0');
+          if (kDebugMode) {
+            print('data_consent column added successfully during upgrade');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error adding data_consent column during upgrade: $e');
+        }
+        rethrow;
+      }
+    }
   }
   
   // User operations
@@ -423,6 +447,16 @@ class DatabaseService {
         'oauth_id': null,
         'email': null,
       },
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  Future<void> setUserDataConsent(int userId, bool consent) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'data_consent': consent ? 1 : 0},
       where: 'id = ?',
       whereArgs: [userId],
     );

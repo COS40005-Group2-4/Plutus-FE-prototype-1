@@ -169,4 +169,15 @@ class UserService {
       rethrow;
     }
   }
+
+  Future<void> setDataConsent(int userId, bool consent) async {
+    try {
+      await _db.setUserDataConsent(userId, consent);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error setting data consent: $e');
+      }
+      rethrow;
+    }
+  }
 }

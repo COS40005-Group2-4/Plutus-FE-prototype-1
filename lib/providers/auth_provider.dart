@@ -6,6 +6,7 @@ import '../services/google_auth_service.dart';
 import '../services/user_service.dart';
 import '../services/settings_service.dart';
 import '../models/user_model.dart';
+import '../widgets/consent_dialog.dart';
 
 class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _authService = GoogleAuthService();
@@ -319,6 +320,47 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
+      return false;
+    }
+  }
+
+  /// Check if user has given consent for data collection.
+  /// Returns true if user has OAuth and has consented, or if user doesn't have OAuth.
+  bool get hasDataConsent {
+    if (_currentUser == null) return true;
+    // If user doesn't have OAuth, they are in offline/guest mode - no consent needed
+    if (!_currentUser!.hasOAuth) return true;
+    // If user has OAuth, check if they have consented
+    return _currentUser!.dataConsent;
+  }
+
+  /// Check and prompt for data consent if user has OAuth but hasn't consented yet.
+  /// Returns true if consent is granted, false if declined.
+  /// This should be called from a BuildContext (e.g., in main.dart after auth initialization).
+  Future<bool> checkDataConsent(BuildContext context) async {
+    // No user logged in - no consent needed
+    if (_currentUser == null) return true;
+
+    // User doesn't have OAuth (offline/guest mode) - no consent needed
+    if (!_currentUser!.hasOAuth) return true;
+
+    // User has already consented - proceed
+    if (_currentUser!.dataConsent) return true;
+
+    // Show consent dialog
+    final agreed = await showDataConsentDialog(context);
+
+    if (agreed) {
+      // User agreed - save consent
+      await _userService.setDataConsent(_currentUser!.id, true);
+      // Reload user to get updated data
+      _currentUser = await _userService.getUserById(_currentUser!.id);
+      notifyListeners();
+      return true;
+    } else {
+      // User declined - convert to guest/offline mode
+      await _userService.setDataConsent(_currentUser!.id, false);
+      await unlinkOAuthAccount();
       return false;
     }
   }

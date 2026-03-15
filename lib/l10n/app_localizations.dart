@@ -59,6 +59,17 @@ class AppLocalizations {
       'guest_mode': 'Guest Mode',
       'local_account': 'Local Account',
       'google_linked': 'Google Linked',
+
+      // Data Consent
+      'data_consent_title': 'Data Collection Consent',
+      'data_consent_message': 'To provide you with online backup and sync features, we need your permission to collect and store your financial data securely.',
+      'data_consent_backup': 'Cloud Backup',
+      'data_consent_backup_desc': 'Securely store your data in the cloud',
+      'data_consent_sync': 'Multi-Device Sync',
+      'data_consent_sync_desc': 'Access your data across multiple devices',
+      'data_consent_decline': 'If you decline, you will continue to use the app in offline (guest) mode.',
+      'data_consent_agree_btn': 'Agree',
+      'data_consent_decline_btn': 'Decline',
       
       // Navigation
       'dashboard': 'Dashboard',
@@ -341,6 +352,17 @@ class AppLocalizations {
       'guest_mode': 'Chế độ khách',
       'local_account': 'Tài khoản cục bộ',
       'google_linked': 'Đã liên kết Google',
+
+      // Data Consent
+      'data_consent_title': 'Đồng ý thu thập dữ liệu',
+      'data_consent_message': 'Để cung cấp cho bạn các tính năng sao lưu và đồng bộ đám mây, chúng tôi cần sự cho phép của bạn để thu thập và lưu trữ an toàn dữ liệu tài chính của bạn.',
+      'data_consent_backup': 'Sao lưu đám mây',
+      'data_consent_backup_desc': 'Lưu trữ an toàn dữ liệu của bạn trên đám mây',
+      'data_consent_sync': 'Đồng bộ đa thiết bị',
+      'data_consent_sync_desc': 'Truy cập dữ liệu của bạn trên nhiều thiết bị',
+      'data_consent_decline': 'Nếu bạn từ chối, bạn sẽ tiếp tục sử dụng ứng dụng ở chế độ ngoại tuyến (khách).',
+      'data_consent_agree_btn': 'Đồng ý',
+      'data_consent_decline_btn': 'Từ chối',
       
       // Navigation
       'dashboard': 'Bảng điều khiển',
@@ -621,6 +643,17 @@ class AppLocalizations {
   String get guestMode => translate('guest_mode');
   String get localAccount => translate('local_account');
   String get googleLinked => translate('google_linked');
+
+  // Data Consent
+  String get dataConsentTitle => translate('data_consent_title');
+  String get dataConsentMessage => translate('data_consent_message');
+  String get dataConsentBackup => translate('data_consent_backup');
+  String get dataConsentBackupDesc => translate('data_consent_backup_desc');
+  String get dataConsentSync => translate('data_consent_sync');
+  String get dataConsentSyncDesc => translate('data_consent_sync_desc');
+  String get dataConsentDecline => translate('data_consent_decline');
+  String get dataConsentAgreeBtn => translate('data_consent_agree_btn');
+  String get dataConsentDeclineBtn => translate('data_consent_decline_btn');
 
   // Navigation
   String get dashboard => translate('dashboard');

@@ -201,9 +201,29 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   bool _backupInitialized = false;
+  bool _consentChecked = false;
 
   Future<void> _initBackupAndNavigate(BuildContext context, int userId) async {
     if (_backupInitialized) return;
+
+    // Check data consent for OAuth users
+    if (!_consentChecked) {
+      _consentChecked = true;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // If user has OAuth but hasn't consented, show consent dialog
+      if (authProvider.currentUser?.hasOAuth == true &&
+          authProvider.currentUser?.dataConsent != true) {
+        // Store context before async call
+        final scaffoldContext = context;
+        final consented = await authProvider.checkDataConsent(scaffoldContext);
+        if (!consented) {
+          // User declined - they are now in guest mode, continue to dashboard
+          if (!mounted) return;
+        }
+      }
+    }
+
     _backupInitialized = true;
 
     final backupProvider =

@@ -6,10 +6,11 @@ class User {
   final String? oauthProvider;
   final String? oauthId;
   final bool isGuest;
+  final bool dataConsent;
   final DateTime createdAt;
   final DateTime lastLogin;
   final bool isActive;
-  
+
   User({
     required this.id,
     required this.username,
@@ -18,11 +19,12 @@ class User {
     this.oauthProvider,
     this.oauthId,
     this.isGuest = false,
+    this.dataConsent = false,
     required this.createdAt,
     required this.lastLogin,
     this.isActive = true,
   });
-  
+
   bool get hasOAuth => oauthProvider != null && oauthId != null;
   
   factory User.fromMap(Map<String, dynamic> map) {
@@ -34,12 +36,13 @@ class User {
       oauthProvider: map['oauth_provider'] as String?,
       oauthId: map['oauth_id'] as String?,
       isGuest: (map['is_guest'] as int) == 1,
+      dataConsent: (map['data_consent'] as int?) == 1,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       lastLogin: DateTime.fromMillisecondsSinceEpoch(map['last_login'] as int),
       isActive: (map['is_active'] as int) == 1,
     );
   }
-  
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -49,6 +52,7 @@ class User {
       'oauth_provider': oauthProvider,
       'oauth_id': oauthId,
       'is_guest': isGuest ? 1 : 0,
+      'data_consent': dataConsent ? 1 : 0,
       'created_at': createdAt.millisecondsSinceEpoch,
       'last_login': lastLogin.millisecondsSinceEpoch,
       'is_active': isActive ? 1 : 0,
@@ -63,6 +67,7 @@ class User {
     String? oauthProvider,
     String? oauthId,
     bool? isGuest,
+    bool? dataConsent,
     DateTime? createdAt,
     DateTime? lastLogin,
     bool? isActive,
@@ -75,6 +80,7 @@ class User {
       oauthProvider: oauthProvider ?? this.oauthProvider,
       oauthId: oauthId ?? this.oauthId,
       isGuest: isGuest ?? this.isGuest,
+      dataConsent: dataConsent ?? this.dataConsent,
       createdAt: createdAt ?? this.createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
       isActive: isActive ?? this.isActive,
