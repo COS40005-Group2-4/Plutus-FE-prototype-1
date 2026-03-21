@@ -18,6 +18,13 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     'cashflow': true,
     'bills': true,
     'investment': true,
+    'expenseBreakdown': true,
+    'portfolioAllocation': true,
+    'netWorthTrend': true,
+    'spendingHeatmap': true,
+    'incomeTrend': true,
+    'savingsRate': true,
+    'marketTrending': true,
   };
 
   static const String _storageKey = 'widget_visibility';

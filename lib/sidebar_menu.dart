@@ -91,6 +91,42 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.account_balance_wallet,
         color: const Color(0xFF4A90E2),
       ),
+      MenuItemData(
+        id: 'expenseBreakdown',
+        label: l10n.expenseBreakdown,
+        icon: Icons.pie_chart,
+        color: const Color(0xFFAF7AC5),
+      ),
+      MenuItemData(
+        id: 'portfolioAllocation',
+        label: l10n.portfolioAllocation,
+        icon: Icons.donut_large,
+        color: const Color(0xFF4285F4),
+      ),
+      MenuItemData(
+        id: 'netWorthTrend',
+        label: l10n.netWorthTrend,
+        icon: Icons.timeline,
+        color: const Color(0xFF1ABC9C),
+      ),
+      MenuItemData(
+        id: 'spendingHeatmap',
+        label: l10n.spendingByDay,
+        icon: Icons.calendar_view_week,
+        color: const Color(0xFF48C9B0),
+      ),
+      MenuItemData(
+        id: 'incomeTrend',
+        label: l10n.incomeTrend,
+        icon: Icons.trending_up,
+        color: const Color(0xFF34A853),
+      ),
+      MenuItemData(
+        id: 'savingsRate',
+        label: l10n.savingsRate,
+        icon: Icons.savings,
+        color: const Color(0xFFF39C12),
+      ),
     ];
   }
 

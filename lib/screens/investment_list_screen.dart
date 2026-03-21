@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/investment_model.dart';
-import '../services/investment_service.dart';
+import '../services/interfaces/i_investment_service.dart';
+import '../di/service_locator.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/glass_background.dart';
@@ -17,7 +18,7 @@ class InvestmentListScreen extends StatefulWidget {
 }
 
 class _InvestmentListScreenState extends State<InvestmentListScreen> {
-  final InvestmentService _service = InvestmentService();
+  final IInvestmentService _service = sl<IInvestmentService>();
   List<InvestmentModel>? _investments;
   bool _isLoading = false;
   String? _error;
@@ -81,7 +82,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             );
             
             // Save to backend (this fetches price data)
-            final service = InvestmentService();
+            final service = sl<IInvestmentService>();
             final authProvider = context.read<AuthProvider>();
             if (authProvider.currentUserId != null) {
               service.setUserId(authProvider.currentUserId!);

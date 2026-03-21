@@ -37,7 +37,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -171,6 +171,7 @@ class DatabaseService implements IDatabaseService {
         is_paid INTEGER DEFAULT 0,
         category TEXT,
         notes TEXT,
+        anchor_day INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -382,6 +383,25 @@ class DatabaseService implements IDatabaseService {
       } catch (e) {
         if (kDebugMode) {
           print('Error creating investments table during upgrade: $e');
+        }
+        rethrow;
+      }
+    }
+
+    // Upgrade from version 5 to 6: Add anchor_day to bills for correct monthly recurrence
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE bills ADD COLUMN anchor_day INTEGER');
+        // Back-fill existing rows: derive anchor from the stored due_date day
+        await db.execute(
+          "UPDATE bills SET anchor_day = CAST(strftime('%d', due_date) AS INTEGER) WHERE anchor_day IS NULL",
+        );
+        if (kDebugMode) {
+          print('anchor_day column added to bills');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error adding anchor_day to bills: $e');
         }
         rethrow;
       }
@@ -746,6 +766,7 @@ class DatabaseService implements IDatabaseService {
       'is_paid': bill['is_paid'] == true ? 1 : 0,
       'category': bill['category'],
       'notes': bill['notes'],
+      'anchor_day': bill['anchor_day'],
       'created_at': now,
       'updated_at': now,
     });
@@ -774,6 +795,7 @@ class DatabaseService implements IDatabaseService {
         'is_paid': bill['is_paid'] == true ? 1 : 0,
         'category': bill['category'],
         'notes': bill['notes'],
+        'anchor_day': bill['anchor_day'],
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',

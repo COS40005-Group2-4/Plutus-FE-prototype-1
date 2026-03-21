@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../models/bill_model.dart';
 import '../models/transaction_model.dart' as tx_model;
 import '../models/user_model.dart';
@@ -12,6 +13,7 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'glass_container.dart';
+import 'chart_theme.dart';
 
 class UpcomingBillsWidget extends StatefulWidget {
   const UpcomingBillsWidget({super.key});
@@ -129,11 +131,11 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   }
 
   List<Bill> _filterBills(List<Bill> bills) {
-    final now = DateTime.now();
-    final endDate = now.add(Duration(days: _daysFilter));
-    
+    final endDate = DateTime.now().add(Duration(days: _daysFilter));
+
     return bills.where((bill) {
-      return bill.dueDate.isBefore(endDate) || bill.dueDate.isAtSameMomentAs(endDate);
+      // Overdue bills are always shown regardless of the filter window
+      return bill.isOverdue || !bill.dueDate.isAfter(endDate);
     }).toList()
       ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
   }
@@ -292,7 +294,8 @@ class _BillsContentState extends State<_BillsContent> {
     return Column(
       children: [
         _buildSummary(totalDue),
-        const SizedBox(height: 12),
+        if (widget.bills.length > 1) _buildBillsBarChart(),
+        const SizedBox(height: 8),
         Expanded(
           child: ListView.builder(
             itemCount: widget.bills.length,
@@ -305,6 +308,88 @@ class _BillsContentState extends State<_BillsContent> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBillsBarChart() {
+    final now = DateTime.now();
+    // Group bills by week number within the filter window
+    final Map<int, double> weeklyTotals = {};
+    for (var bill in widget.bills) {
+      final daysFromNow = bill.dueDate.difference(now).inDays;
+      final weekNum = bill.isOverdue ? 0 : (daysFromNow ~/ 7) + 1;
+      final clamped = weekNum.clamp(0, 4);
+      final amount = _convertedAmounts[bill.id.toString()] ?? bill.amount;
+      weeklyTotals[clamped] = (weeklyTotals[clamped] ?? 0) + amount;
+    }
+
+    if (weeklyTotals.isEmpty) return const SizedBox.shrink();
+
+    final maxVal = weeklyTotals.values.fold(0.0, (a, b) => a > b ? a : b);
+    final labels = ['Overdue', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'];
+    final colors = [Colors.red, Colors.orange, Colors.blue, Colors.blue, Colors.blue];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SizedBox(
+        height: 80,
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceAround,
+            maxY: maxVal * 1.3,
+            minY: 0,
+            barTouchData: BarTouchData(
+              enabled: true,
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  return BarTooltipItem(
+                    '${labels[group.x]}\n${PlutusChartStyle.formatCompactCurrency(rod.toY)}',
+                    const TextStyle(color: Colors.white, fontSize: 10),
+                  );
+                },
+              ),
+            ),
+            titlesData: FlTitlesData(
+              show: true,
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  getTitlesWidget: (value, meta) {
+                    final idx = value.toInt();
+                    if (idx < 0 || idx >= labels.length) return const SizedBox.shrink();
+                    if (!weeklyTotals.containsKey(idx)) return const SizedBox.shrink();
+                    return Text(
+                      labels[idx],
+                      style: const TextStyle(color: Colors.white54, fontSize: 9),
+                    );
+                  },
+                ),
+              ),
+              leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            gridData: const FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            barGroups: weeklyTotals.entries.map((entry) {
+              return BarChartGroupData(
+                x: entry.key,
+                barRods: [
+                  BarChartRodData(
+                    toY: entry.value,
+                    color: colors[entry.key.clamp(0, 4)].withOpacity(0.7),
+                    width: 20,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -433,7 +518,24 @@ class _BillsContentState extends State<_BillsContent> {
                           ),
                         ],
                         const SizedBox(width: 8),
-                        if (bill.recurrence != BillRecurrence.oneTime)
+                        if (bill.isOverdue)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.red.withOpacity(0.6)),
+                            ),
+                            child: const Text(
+                              'OVERDUE',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        else if (bill.recurrence != BillRecurrence.oneTime)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -623,7 +725,7 @@ class _BillEditorDialogState extends State<_BillEditorDialog> {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: _dueDate,
-                    firstDate: DateTime.now(),
+                    firstDate: DateTime(2000),
                     lastDate: DateTime.now().add(const Duration(days: 3650)),
                   );
                   if (picked != null) {
@@ -754,7 +856,11 @@ class _BillSelectorDialog extends StatelessWidget {
                   return ListTile(
                     leading: Icon(
                       bill.isPaid ? Icons.check_circle : Icons.receipt_long,
-                      color: bill.isPaid ? Colors.green : Colors.orange,
+                      color: bill.isPaid
+                          ? Colors.green
+                          : bill.isOverdue
+                              ? Colors.red
+                              : Colors.orange,
                     ),
                     title: Text(bill.name),
                     subtitle: Text(

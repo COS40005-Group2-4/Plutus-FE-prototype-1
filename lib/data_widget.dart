@@ -13,6 +13,13 @@ import 'widgets/transaction_history_widget.dart';
 import 'widgets/report_import_widget.dart';
 import 'widgets/report_export_widget.dart';
 import 'widgets/profile_dashboard_widget.dart';
+import 'widgets/expense_breakdown_chart_widget.dart';
+import 'widgets/portfolio_allocation_widget.dart';
+import 'widgets/net_worth_trend_widget.dart';
+import 'widgets/spending_heatmap_widget.dart';
+import 'widgets/income_trend_widget.dart';
+import 'widgets/savings_rate_widget.dart';
+import 'widgets/market_trending_widget.dart';
 
 const Color blue = Color(0xFF4285F4);
 const Color red = Color(0xFFEA4335);
@@ -37,6 +44,13 @@ class DataWidget extends StatelessWidget {
     "bills": (l) => const UpcomingBillsWidget(),
     "tax": (l) => const TaxEstimationWidget(),
     "investment": (l) => const InvestmentWidget(),
+    "expenseBreakdown": (l) => const ExpenseBreakdownChartWidget(),
+    "portfolioAllocation": (l) => const PortfolioAllocationWidget(),
+    "netWorthTrend": (l) => const NetWorthTrendWidget(),
+    "spendingHeatmap": (l) => const SpendingHeatmapWidget(),
+    "incomeTrend": (l) => const IncomeTrendWidget(),
+    "savingsRate": (l) => const SavingsRateWidget(),
+    "marketTrending": (l) => const MarketTrendingWidget(),
   };
 
   @override

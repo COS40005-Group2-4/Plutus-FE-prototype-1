@@ -3,11 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Service for fetching real-time cryptocurrency and stock prices
-/// 
+///
 /// Uses:
 /// - CoinGecko API for cryptocurrency prices (with API key)
 /// - Alpha Vantage API for stock prices (with API key)
 import 'interfaces/i_price_api_service.dart';
+import '../models/market_data_model.dart';
 
 class PriceApiService implements IPriceApiService {
   static const Duration _timeout = Duration(seconds: 5);
@@ -209,6 +210,107 @@ class PriceApiService implements IPriceApiService {
       return null;
     } catch (e) {
       print('CoinGecko historical API error: $e');
+      return null;
+    }
+  }
+
+  /// Fetches market data (price, 24h change, high/low, volume, market cap)
+  Future<MarketData?> getMarketData(String symbol) async {
+    try {
+      if (_isCryptoSymbol(symbol)) {
+        final data = await _getCryptoMarketData(symbol);
+        if (data != null) return data;
+      }
+      return await _getStockMarketData(symbol);
+    } catch (e) {
+      print('Error fetching market data for $symbol: $e');
+      return null;
+    }
+  }
+
+  Future<MarketData?> _getCryptoMarketData(String symbol) async {
+    try {
+      final coinId = _getCoinGeckoId(symbol);
+      if (coinId == null) return null;
+
+      final headers = _coinGeckoApiKey != null
+          ? {'x-cg-demo-api-key': _coinGeckoApiKey!}
+          : <String, String>{};
+
+      final url = Uri.parse(
+        '$_coinGeckoBase/coins/$coinId?localization=false&tickers=false&community_data=false&developer_data=false',
+      );
+
+      final response = await http.get(url, headers: headers).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final marketData = data['market_data'] as Map<String, dynamic>?;
+        if (marketData == null) return null;
+
+        final currentPrice = (marketData['current_price'] as Map<String, dynamic>?)?['usd'];
+        final changePercent = marketData['price_change_percentage_24h'];
+        final high = (marketData['high_24h'] as Map<String, dynamic>?)?['usd'];
+        final low = (marketData['low_24h'] as Map<String, dynamic>?)?['usd'];
+        final marketCap = (marketData['market_cap'] as Map<String, dynamic>?)?['usd'];
+        final volume = (marketData['total_volume'] as Map<String, dynamic>?)?['usd'];
+
+        if (currentPrice == null) return null;
+
+        return MarketData(
+          currentPrice: (currentPrice as num).toDouble(),
+          priceChangePercent24h: changePercent != null ? (changePercent as num).toDouble() : 0.0,
+          high24h: high != null ? (high as num).toDouble() : (currentPrice as num).toDouble(),
+          low24h: low != null ? (low as num).toDouble() : (currentPrice as num).toDouble(),
+          marketCap: marketCap != null ? (marketCap as num).toDouble() : null,
+          volume: volume != null ? (volume as num).toDouble() : null,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('CoinGecko market data API error: $e');
+      return null;
+    }
+  }
+
+  Future<MarketData?> _getStockMarketData(String symbol) async {
+    try {
+      if (_alphaVantageApiKey == null) return null;
+
+      final url = Uri.parse(
+        '$_alphaVantageBase?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$_alphaVantageApiKey',
+      );
+
+      final response = await http.get(url).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final quote = data['Global Quote'] as Map<String, dynamic>?;
+        if (quote == null || quote.isEmpty) return null;
+
+        final priceStr = quote['05. price'] as String?;
+        if (priceStr == null) return null;
+
+        final price = double.tryParse(priceStr);
+        if (price == null) return null;
+
+        final changePercentStr = (quote['10. change percent'] as String?)?.replaceAll('%', '');
+        final high = double.tryParse(quote['03. high'] as String? ?? '');
+        final low = double.tryParse(quote['04. low'] as String? ?? '');
+        final volume = double.tryParse(quote['06. volume'] as String? ?? '');
+
+        return MarketData(
+          currentPrice: price,
+          priceChangePercent24h: changePercentStr != null ? (double.tryParse(changePercentStr) ?? 0.0) : 0.0,
+          high24h: high ?? price,
+          low24h: low ?? price,
+          marketCap: null,
+          volume: volume,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Alpha Vantage market data API error: $e');
       return null;
     }
   }

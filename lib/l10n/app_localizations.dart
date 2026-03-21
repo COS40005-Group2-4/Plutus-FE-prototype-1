@@ -155,6 +155,12 @@ class AppLocalizations {
       'irr': 'IRR',
       'tax_estimation': 'Tax Estimation',
       'upcoming_bills': 'Upcoming Bills',
+      'expense_breakdown': 'Expense Breakdown',
+      'portfolio_allocation': 'Portfolio Allocation',
+      'net_worth_trend': 'Net Worth Trend',
+      'spending_by_day': 'Spending by Day',
+      'income_trend': 'Income Trend',
+      'savings_rate': 'Savings Rate',
       'my_profile': 'My Profile',
       'net_cashflow': 'Net Cashflow',
       'total_income': 'Total Income',
@@ -437,6 +443,12 @@ class AppLocalizations {
       'irr': 'IRR',
       'tax_estimation': 'Ước tính thuế',
       'upcoming_bills': 'Hóa đơn sắp tới',
+      'expense_breakdown': 'Phân tích chi tiêu',
+      'portfolio_allocation': 'Phân bổ danh mục',
+      'net_worth_trend': 'Xu hướng tài sản ròng',
+      'spending_by_day': 'Chi tiêu theo ngày',
+      'income_trend': 'Xu hướng thu nhập',
+      'savings_rate': 'Tỷ lệ tiết kiệm',
       'my_profile': 'Hồ sơ của tôi',
       'net_cashflow': 'Dòng tiền ròng',
       'total_income': 'Tổng thu nhập',
@@ -717,6 +729,12 @@ class AppLocalizations {
   String get irr => translate('irr');
   String get taxEstimation => translate('tax_estimation');
   String get upcomingBills => translate('upcoming_bills');
+  String get expenseBreakdown => translate('expense_breakdown');
+  String get portfolioAllocation => translate('portfolio_allocation');
+  String get netWorthTrend => translate('net_worth_trend');
+  String get spendingByDay => translate('spending_by_day');
+  String get incomeTrend => translate('income_trend');
+  String get savingsRate => translate('savings_rate');
   String get myProfile => translate('my_profile');
   String get netCashflow => translate('net_cashflow');
   String get totalIncome => translate('total_income');

@@ -144,6 +144,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         actions: [
           IconButton(
             onPressed: () async {
+              // Reset visibility checkboxes to all-visible
+              final visibilityProvider = Provider.of<WidgetVisibilityProvider>(
+                context, listen: false,
+              );
+              visibilityProvider.reset();
+
               await storage.clear();
               setState(() {
                 refreshing = true;

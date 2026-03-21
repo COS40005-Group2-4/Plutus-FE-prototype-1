@@ -18,8 +18,11 @@ class Bill extends Equatable {
   final bool isPaid;
   final String? category;
   final String? notes;
+  // The user's intended day-of-month (1–31). Preserved across recurrences so
+  // a bill set on the 31st doesn't drift to the 28th after hitting February.
+  final int anchorDay;
 
-  const Bill({
+  Bill({
     this.id,
     required this.name,
     required this.amount,
@@ -29,26 +32,28 @@ class Bill extends Equatable {
     this.isPaid = false,
     this.category,
     this.notes,
-  });
+    int? anchorDay,
+  }) : anchorDay = anchorDay ?? dueDate.day;
 
   @override
-  List<Object?> get props => [id, name, amount, currency, dueDate, recurrence, isPaid, category, notes];
+  List<Object?> get props => [id, name, amount, currency, dueDate, recurrence, isPaid, category, notes, anchorDay];
 
   factory Bill.fromJson(Map<String, dynamic> json) {
-    // Handle is_paid as either int or bool from database
     bool isPaidValue = false;
     if (json['is_paid'] is int) {
       isPaidValue = json['is_paid'] == 1;
     } else if (json['is_paid'] is bool) {
       isPaidValue = json['is_paid'] as bool;
     }
-    
+
+    final dueDate = DateTime.parse(json['due_date'] as String);
+
     return Bill(
       id: json['id'] as int?,
       name: json['name'] as String,
       amount: (json['amount'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'VND',
-      dueDate: DateTime.parse(json['due_date'] as String),
+      dueDate: dueDate,
       recurrence: BillRecurrence.values.firstWhere(
         (e) => e.name == json['recurrence'],
         orElse: () => BillRecurrence.oneTime,
@@ -56,6 +61,8 @@ class Bill extends Equatable {
       isPaid: isPaidValue,
       category: json['category'] as String?,
       notes: json['notes'] as String?,
+      // Falls back to dueDate.day for existing rows that predate this column
+      anchorDay: json['anchor_day'] as int? ?? dueDate.day,
     );
   }
 
@@ -70,6 +77,7 @@ class Bill extends Equatable {
       'is_paid': isPaid,
       'category': category,
       'notes': notes,
+      'anchor_day': anchorDay,
     };
   }
 
@@ -98,6 +106,7 @@ class Bill extends Equatable {
     bool? isPaid,
     String? category,
     String? notes,
+    int? anchorDay,
   }) {
     return Bill(
       id: id ?? this.id,
@@ -109,6 +118,7 @@ class Bill extends Equatable {
       isPaid: isPaid ?? this.isPaid,
       category: category ?? this.category,
       notes: notes ?? this.notes,
+      anchorDay: anchorDay ?? this.anchorDay,
     );
   }
 }

@@ -108,8 +108,8 @@ class BillService implements IBillService {
 
     // If recurring, create next occurrence
     if (bill.recurrence != BillRecurrence.oneTime) {
-      final nextDueDate = _calculateNextDueDate(bill.dueDate, bill.recurrence);
-      
+      final nextDueDate = _calculateNextDueDate(bill.dueDate, bill.recurrence, bill.anchorDay);
+
       final nextBill = Bill(
         name: bill.name,
         amount: bill.amount,
@@ -119,6 +119,7 @@ class BillService implements IBillService {
         isPaid: false,
         category: bill.category,
         notes: bill.notes,
+        anchorDay: bill.anchorDay,
       );
       
       await addBill(nextBill);
@@ -129,29 +130,34 @@ class BillService implements IBillService {
     }
   }
 
-  DateTime _calculateNextDueDate(DateTime currentDueDate, BillRecurrence recurrence) {
+  // Returns the last calendar day of [month] in [year].
+  int _lastDayOfMonth(int year, int month) => DateTime(year, month + 1, 0).day;
+
+  DateTime _calculateNextDueDate(DateTime currentDueDate, BillRecurrence recurrence, int anchorDay) {
+    int year = currentDueDate.year;
+    int month = currentDueDate.month;
+
     switch (recurrence) {
       case BillRecurrence.monthly:
-        return DateTime(
-          currentDueDate.year,
-          currentDueDate.month + 1,
-          currentDueDate.day,
-        );
+        month += 1;
       case BillRecurrence.quarterly:
-        return DateTime(
-          currentDueDate.year,
-          currentDueDate.month + 3,
-          currentDueDate.day,
-        );
+        month += 3;
       case BillRecurrence.yearly:
-        return DateTime(
-          currentDueDate.year + 1,
-          currentDueDate.month,
-          currentDueDate.day,
-        );
+        year += 1;
       case BillRecurrence.oneTime:
         return currentDueDate;
     }
+
+    // Normalise month overflow (e.g. month 13 → Jan of next year)
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+
+    // Use anchorDay but clamp to the actual last day of the target month so we
+    // never overflow into the following month (e.g. anchor=31 in Feb → Feb 28/29).
+    final day = anchorDay.clamp(1, _lastDayOfMonth(year, month));
+    return DateTime(year, month, day);
   }
 
   Future<double> getTotalDueAmount({

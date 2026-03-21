@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../services/tax_calculation_service.dart';
 import '../services/currency_service.dart';
@@ -10,7 +11,6 @@ import '../transaction_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../l10n/app_localizations.dart';
-import '../providers/settings_provider.dart';
 
 class TaxEstimationWidget extends StatefulWidget {
   const TaxEstimationWidget({super.key});
@@ -637,6 +637,56 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 ),
               )
             else ...[
+              // Income vs Tax Bar
+              if (_annualIncome > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 24,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: ((_annualIncome - _estimatedTax) * 100 / _annualIncome).round().clamp(1, 99),
+                                child: Container(color: Colors.green.withOpacity(0.7)),
+                              ),
+                              if (_estimatedTax > 0)
+                                Expanded(
+                                  flex: (_estimatedTax * 100 / _annualIncome).round().clamp(1, 99),
+                                  child: Container(color: Colors.red.withOpacity(0.7)),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.green.withOpacity(0.7), borderRadius: BorderRadius.circular(2))),
+                              const SizedBox(width: 4),
+                              const Text('Net', style: TextStyle(color: Colors.white54, fontSize: 9)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.red.withOpacity(0.7), borderRadius: BorderRadius.circular(2))),
+                              const SizedBox(width: 4),
+                              const Text('Tax', style: TextStyle(color: Colors.white54, fontSize: 9)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               // Tax Amount Display
               GlassContainer(
                 padding: const EdgeInsets.all(12),
