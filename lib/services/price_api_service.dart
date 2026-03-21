@@ -7,7 +7,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Uses:
 /// - CoinGecko API for cryptocurrency prices (with API key)
 /// - Alpha Vantage API for stock prices (with API key)
-class PriceApiService {
+import 'interfaces/i_price_api_service.dart';
+
+class PriceApiService implements IPriceApiService {
   static const Duration _timeout = Duration(seconds: 5);
   
   // CoinGecko API endpoints

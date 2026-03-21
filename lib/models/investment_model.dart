@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 enum AssetType {
   stock,
   bond,
@@ -11,7 +13,7 @@ enum Currency {
   eur,
 }
 
-class InvestmentModel {
+class InvestmentModel extends Equatable {
   final String id;
   final AssetType assetType;
   final String assetName; // Symbol for stock/crypto, or custom name for "other"
@@ -22,7 +24,7 @@ class InvestmentModel {
   final double? currentPrice; // Current price per unit in original currency
   final List<PriceHistoryPoint>? priceHistory;
 
-  InvestmentModel({
+  const InvestmentModel({
     required this.id,
     required this.assetType,
     required this.assetName,
@@ -33,6 +35,9 @@ class InvestmentModel {
     this.currentPrice,
     this.priceHistory,
   });
+
+  @override
+  List<Object?> get props => [id, assetType, assetName, quantity, purchaseValue, currency, purchaseDate, currentPrice, priceHistory];
 
   factory InvestmentModel.fromJson(Map<String, dynamic> json) {
     if (!json.containsKey('id') ||
@@ -150,14 +155,17 @@ class InvestmentModel {
   }
 }
 
-class PriceHistoryPoint {
+class PriceHistoryPoint extends Equatable {
   final DateTime date;
   final double price;
 
-  PriceHistoryPoint({
+  const PriceHistoryPoint({
     required this.date,
     required this.price,
   });
+
+  @override
+  List<Object?> get props => [date, price];
 
   factory PriceHistoryPoint.fromJson(Map<String, dynamic> json) {
     return PriceHistoryPoint(

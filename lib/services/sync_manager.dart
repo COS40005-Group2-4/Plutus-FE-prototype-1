@@ -5,10 +5,12 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/backup_models.dart';
-import 'backup_service.dart';
+import 'interfaces/i_backup_service.dart';
+import 'interfaces/i_sync_manager.dart';
+import '../di/service_locator.dart';
 
-class SyncManager {
-  final BackupService _backupService;
+class SyncManager implements ISyncManager {
+  final IBackupService _backupService;
 
   /// Polling timer: checks DB file modification time every 30 seconds.
   Timer? _pollingTimer;
@@ -31,8 +33,8 @@ class SyncManager {
   static const Duration _pollInterval = Duration(seconds: 30);
   static const Duration _debounceDelay = Duration(minutes: 2);
 
-  SyncManager({BackupService? backupService})
-      : _backupService = backupService ?? BackupService();
+  SyncManager({IBackupService? backupService})
+      : _backupService = backupService ?? sl<IBackupService>();
 
   /// Check for conflict between local DB and latest S3 backup.
   /// Returns ConflictResult indicating match, mismatch, no-remote, or offline.

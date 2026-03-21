@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'dart:convert';
+import 'interfaces/i_backend_ffi_service.dart';
 
 typedef BootstrapFunc = Pointer<Utf8> Function();
 typedef Bootstrap = Pointer<Utf8> Function();
@@ -40,7 +41,7 @@ typedef DeleteInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef SaveInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef SaveInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
 
-class BackendFfiService {
+class BackendFfiService implements IBackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
   factory BackendFfiService() {

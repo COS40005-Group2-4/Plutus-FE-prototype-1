@@ -5,13 +5,14 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/profile_model.dart';
+import 'interfaces/i_database_service.dart';
 
-class DatabaseService {
+class DatabaseService implements IDatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
-  
+
   static Database? _database;
-  
+
   DatabaseService._internal();
   
   Future<Database> get database async {
@@ -36,7 +37,7 @@ class DatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -175,7 +176,27 @@ class DatabaseService {
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
-    
+
+    // Create investments table
+    await db.execute('''
+      CREATE TABLE investments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        investment_id TEXT UNIQUE NOT NULL,
+        asset_type TEXT NOT NULL,
+        asset_name TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        purchase_value REAL NOT NULL,
+        currency TEXT NOT NULL,
+        purchase_date INTEGER NOT NULL,
+        current_price REAL,
+        is_synced INTEGER DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
@@ -184,6 +205,8 @@ class DatabaseService {
     await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
     await db.execute('CREATE INDEX idx_bills_user_id ON bills(user_id)');
     await db.execute('CREATE INDEX idx_bills_due_date ON bills(due_date)');
+    await db.execute('CREATE INDEX idx_investments_user_id ON investments(user_id)');
+    await db.execute('CREATE INDEX idx_investments_id ON investments(investment_id)');
     
     if (kDebugMode) {
       print('Database tables created successfully');
@@ -318,8 +341,53 @@ class DatabaseService {
         rethrow;
       }
     }
+
+    // Upgrade from version 4 to 5: Add investments table
+    if (oldVersion < 5) {
+      try {
+        // Check if investments table exists
+        final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='investments'",
+        );
+
+        if (tables.isEmpty) {
+          // Create investments table
+          await db.execute('''
+            CREATE TABLE investments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER NOT NULL,
+              investment_id TEXT UNIQUE NOT NULL,
+              asset_type TEXT NOT NULL,
+              asset_name TEXT NOT NULL,
+              quantity REAL NOT NULL,
+              purchase_value REAL NOT NULL,
+              currency TEXT NOT NULL,
+              purchase_date INTEGER NOT NULL,
+              current_price REAL,
+              is_synced INTEGER DEFAULT 0,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+          ''');
+
+          // Create indexes
+          await db.execute('CREATE INDEX idx_investments_user_id ON investments(user_id)');
+          await db.execute('CREATE INDEX idx_investments_id ON investments(investment_id)');
+
+          if (kDebugMode) {
+            print('Investments table created successfully during upgrade');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error creating investments table during upgrade: $e');
+        }
+        rethrow;
+      }
+    }
   }
-  
+
   // User operations
   Future<int> createUser({
     required String username,
@@ -721,7 +789,97 @@ class DatabaseService {
       whereArgs: [billId],
     );
   }
-  
+
+  // Investment operations
+  Future<int> insertInvestment(int userId, Map<String, dynamic> investment) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    return await db.insert('investments', {
+      'user_id': userId,
+      'investment_id': investment['id'] ?? 'inv_${now}_$userId',
+      'asset_type': investment['asset_type'],
+      'asset_name': investment['asset_name'],
+      'quantity': investment['quantity'],
+      'purchase_value': investment['purchase_value'],
+      'currency': investment['currency'],
+      'purchase_date': investment['purchase_date'] ?? now,
+      'current_price': investment['current_price'],
+      'is_synced': 0,
+      'created_at': now,
+      'updated_at': now,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getInvestmentsByUserId(int userId) async {
+    final db = await database;
+    return await db.query(
+      'investments',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'purchase_date DESC',
+    );
+  }
+
+  Future<Map<String, dynamic>?> getInvestmentById(String investmentId) async {
+    final db = await database;
+    final results = await db.query(
+      'investments',
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+      limit: 1,
+    );
+
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> updateInvestment(String investmentId, Map<String, dynamic> investment) async {
+    final db = await database;
+    await db.update(
+      'investments',
+      {
+        'asset_type': investment['asset_type'],
+        'asset_name': investment['asset_name'],
+        'quantity': investment['quantity'],
+        'purchase_value': investment['purchase_value'],
+        'currency': investment['currency'],
+        'purchase_date': investment['purchase_date'],
+        'current_price': investment['current_price'],
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<void> deleteInvestment(String investmentId) async {
+    final db = await database;
+    await db.delete(
+      'investments',
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<void> markInvestmentAsSynced(String investmentId) async {
+    final db = await database;
+    await db.update(
+      'investments',
+      {'is_synced': 1, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId) async {
+    final db = await database;
+    return await db.query(
+      'investments',
+      where: 'user_id = ? AND is_synced = 0',
+      whereArgs: [userId],
+    );
+  }
+
   Future<void> close() async {
     final db = await database;
     await db.close();

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/investment_model.dart';
 import '../services/investment_service.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/glass_background.dart';
 import '../widgets/add_investment_dialog.dart';
@@ -23,6 +25,11 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
   @override
   void initState() {
     super.initState();
+    // Set user ID in the investment service for database operations
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUserId != null) {
+      _service.setUserId(authProvider.currentUserId!);
+    }
     _loadData();
   }
 
@@ -75,6 +82,10 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             
             // Save to backend (this fetches price data)
             final service = InvestmentService();
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.currentUserId != null) {
+              service.setUserId(authProvider.currentUserId!);
+            }
             await service.saveInvestment(investment);
             
             if (mounted) {

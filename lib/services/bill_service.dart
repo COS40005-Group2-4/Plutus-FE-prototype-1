@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/bill_model.dart';
-import 'database_service.dart';
+import 'interfaces/i_database_service.dart';
+import 'interfaces/i_bill_service.dart';
+import '../di/service_locator.dart';
 
-class BillService {
-  static final BillService _instance = BillService._internal();
-  factory BillService() => _instance;
-  BillService._internal();
+class BillService implements IBillService {
+  final IDatabaseService _db;
 
-  final DatabaseService _db = DatabaseService();
+  BillService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
   int? _currentUserId;
 
   final StreamController<List<Bill>> _billStreamController =

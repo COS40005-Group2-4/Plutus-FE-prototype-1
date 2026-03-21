@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../models/investment_model.dart';
 import '../services/investment_service.dart';
+import '../providers/auth_provider.dart';
 import 'glass_container.dart';
 import 'add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
@@ -25,6 +27,11 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
   @override
   void initState() {
     super.initState();
+    // Set user ID in the investment service for database operations
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUserId != null) {
+      _service.setUserId(authProvider.currentUserId!);
+    }
     _loadData();
   }
 

@@ -2,10 +2,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/profile_model.dart';
-import 'database_service.dart';
+import 'interfaces/i_database_service.dart';
+import 'interfaces/i_profile_service.dart';
+import '../di/service_locator.dart';
 
-class ProfileService {
-  final DatabaseService _db = DatabaseService();
+class ProfileService implements IProfileService {
+  final IDatabaseService _db;
+
+  ProfileService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
 
   Future<Profile> createProfile({
     required int userId,

@@ -6,42 +6,41 @@ import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
 import 'services/backend_ffi_service.dart';
-import 'services/database_service.dart';
+import 'services/interfaces/i_backend_ffi_service.dart';
+import 'services/interfaces/i_database_service.dart';
+import 'services/interfaces/i_transaction_service.dart';
 import 'services/file_handler.dart';
 import 'models/transaction_model.dart';
+import 'di/service_locator.dart';
 
-class TransactionService {
+class TransactionService implements ITransactionService {
   static const String _transactionsKey = 'transactions';
   static const String _baseUrl = String.fromEnvironment(
     'BACKEND_URL',
     defaultValue: 'http://localhost:8080',
   );
-  
+
   // Short timeout for offline-first behavior
   static const Duration _apiTimeout = Duration(seconds: 3);
-  
-  // Singleton instance
-  static final TransactionService _instance = TransactionService._internal();
-  
-  final BackendFfiService _ffiService = BackendFfiService();
-  final DatabaseService _db = DatabaseService();
-  
+
+  final IBackendFfiService _ffiService;
+  final IDatabaseService _db;
+
   int? _currentUserId;
-  
+
   // Stream controller for transaction updates
   late StreamController<List<Transaction>> _transactionStreamController;
   List<Transaction> _lastTransactions = [];
-  
+
+  @override
   Stream<List<Transaction>> get transactionStream => _transactionStreamController.stream;
 
-  // Private constructor
-  TransactionService._internal() {
+  TransactionService({
+    IBackendFfiService? ffiService,
+    IDatabaseService? db,
+  })  : _ffiService = ffiService ?? sl<IBackendFfiService>(),
+        _db = db ?? sl<IDatabaseService>() {
     _transactionStreamController = StreamController<List<Transaction>>.broadcast();
-  }
-  
-  // Factory constructor that returns singleton instance
-  factory TransactionService() {
-    return _instance;
   }
   
   void setCurrentUser(int userId) {

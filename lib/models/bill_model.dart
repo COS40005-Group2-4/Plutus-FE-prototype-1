@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
 enum BillRecurrence {
@@ -7,7 +8,7 @@ enum BillRecurrence {
   yearly,
 }
 
-class Bill {
+class Bill extends Equatable {
   final int? id;
   final String name;
   final double amount;
@@ -18,7 +19,7 @@ class Bill {
   final String? category;
   final String? notes;
 
-  Bill({
+  const Bill({
     this.id,
     required this.name,
     required this.amount,
@@ -29,6 +30,9 @@ class Bill {
     this.category,
     this.notes,
   });
+
+  @override
+  List<Object?> get props => [id, name, amount, currency, dueDate, recurrence, isPaid, category, notes];
 
   factory Bill.fromJson(Map<String, dynamic> json) {
     // Handle is_paid as either int or bool from database

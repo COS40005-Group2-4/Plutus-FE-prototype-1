@@ -1,15 +1,20 @@
-class VersionEntry {
+import 'package:equatable/equatable.dart';
+
+class VersionEntry extends Equatable {
   final String s3ObjectKey; // e.g. "backups/1/1719849600000.db"
   final DateTime timestamp;
   final int fileSizeBytes;
   final String checksum; // MD5 / ETag
 
-  VersionEntry({
+  const VersionEntry({
     required this.s3ObjectKey,
     required this.timestamp,
     required this.fileSizeBytes,
     required this.checksum,
   });
+
+  @override
+  List<Object?> get props => [s3ObjectKey, timestamp, fileSizeBytes, checksum];
 }
 
 enum ConflictResult {

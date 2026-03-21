@@ -33,11 +33,13 @@ import 'widgets/backup_found_dialog.dart';
 import 'models/backup_models.dart';
 import 'widgets/glass_background.dart';
 import 'widgets/glass_container.dart';
+import 'di/service_locator.dart';
 
 ///
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await setupServiceLocator();
 
   ///
   runApp(const MyApp());

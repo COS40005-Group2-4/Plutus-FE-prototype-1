@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/backup_models.dart';
-import '../services/backup_service.dart';
-import '../services/settings_service.dart';
-import '../services/sync_manager.dart';
+import '../services/interfaces/i_backup_service.dart';
+import '../services/interfaces/i_settings_service.dart';
+import '../services/interfaces/i_sync_manager.dart';
+import '../di/service_locator.dart';
 
 class BackupProvider extends ChangeNotifier {
-  final BackupService _backupService;
-  final SyncManager _syncManager;
-  final SettingsService _settingsService;
+  final IBackupService _backupService;
+  final ISyncManager _syncManager;
+  final ISettingsService _settingsService;
 
   bool _isBackupEnabled = false;
   bool _isLoading = false;
@@ -26,12 +27,12 @@ class BackupProvider extends ChangeNotifier {
   bool get hasRemoteBackup => _hasRemoteBackup;
 
   BackupProvider({
-    BackupService? backupService,
-    SyncManager? syncManager,
-    SettingsService? settingsService,
-  })  : _backupService = backupService ?? BackupService(),
-        _syncManager = syncManager ?? SyncManager(),
-        _settingsService = settingsService ?? SettingsService();
+    IBackupService? backupService,
+    ISyncManager? syncManager,
+    ISettingsService? settingsService,
+  })  : _backupService = backupService ?? sl<IBackupService>(),
+        _syncManager = syncManager ?? sl<ISyncManager>(),
+        _settingsService = settingsService ?? sl<ISettingsService>();
 
   /// Initialize the provider for a given user.
   Future<void> initialize(int userId) async {

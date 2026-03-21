@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, authProvider, child) {
             // Listen to authentication state changes on web
             if (kIsWeb) {
-              return StreamBuilder<gsi.GoogleSignInCredentials?>(
+              return StreamBuilder<dynamic>(
                 stream: authProvider.authenticationState,
                 builder: (context, snapshot) {
                   // If authenticated, navigate to dashboard

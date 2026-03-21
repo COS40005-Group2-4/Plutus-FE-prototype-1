@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
-import 'database_service.dart';
+import 'interfaces/i_database_service.dart';
+import 'interfaces/i_user_service.dart';
+import '../di/service_locator.dart';
 
-class UserService {
-  final DatabaseService _db = DatabaseService();
+class UserService implements IUserService {
+  final IDatabaseService _db;
+
+  UserService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
   
   Future<User> createLocalUser({
     required String username,

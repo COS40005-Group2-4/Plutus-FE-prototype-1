@@ -2,14 +2,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
-import '../services/profile_service.dart';
+import '../services/interfaces/i_profile_service.dart';
+import '../di/service_locator.dart';
 
 /// Profile state enum
 enum ProfileState { initial, loading, loaded, error, editing }
 
 /// Profile Provider for managing profile state
 class ProfileProvider extends ChangeNotifier {
-  final ProfileService _profileService = ProfileService();
+  final IProfileService _profileService;
+
+  ProfileProvider({IProfileService? profileService})
+      : _profileService = profileService ?? sl<IProfileService>();
 
   Profile? _profile;
   ProfileState _state = ProfileState.initial;

@@ -2,15 +2,24 @@ import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/google_auth_service.dart';
-import '../services/user_service.dart';
-import '../services/settings_service.dart';
+import '../services/interfaces/i_google_auth_service.dart';
+import '../services/interfaces/i_user_service.dart';
+import '../services/interfaces/i_settings_service.dart';
 import '../models/user_model.dart';
+import '../di/service_locator.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final GoogleAuthService _authService = GoogleAuthService();
-  final UserService _userService = UserService();
-  final SettingsService _settingsService = SettingsService();
+  final IGoogleAuthService _authService;
+  final IUserService _userService;
+  final ISettingsService _settingsService;
+
+  AuthProvider({
+    IGoogleAuthService? authService,
+    IUserService? userService,
+    ISettingsService? settingsService,
+  })  : _authService = authService ?? sl<IGoogleAuthService>(),
+        _userService = userService ?? sl<IUserService>(),
+        _settingsService = settingsService ?? sl<ISettingsService>();
   
   bool _isAuthenticated = false;
   bool _isGuest = false;
@@ -28,13 +37,13 @@ class AuthProvider extends ChangeNotifier {
   int? get currentUserId => _currentUser?.id;
   
   // Get authentication service for direct access to session info
-  GoogleAuthService get authService => _authService;
+  IGoogleAuthService get authService => _authService;
   
   /// Get the sign-in button widget (for web platform)
   Widget? getSignInButton() => _authService.getSignInButton();
   
   /// Get the authentication state stream (for web platform)
-  Stream<gsi.GoogleSignInCredentials?> get authenticationState => 
+  Stream<dynamic> get authenticationState =>
       _authService.authenticationState;
   
   // Initialize - check if already logged in
