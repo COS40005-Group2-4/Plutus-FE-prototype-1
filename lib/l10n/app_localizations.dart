@@ -299,6 +299,25 @@ class AppLocalizations {
       'backup_found_message': 'A cloud backup was found for your account. Would you like to restore it to this device?',
       'backup_found_restore': 'Restore from cloud',
       'backup_found_skip': 'Start fresh',
+
+      // Multi-Dashboard
+      'new_dashboard': '+ New Dashboard',
+      'create_dashboard': 'Create Dashboard',
+      'dashboard_name': 'Dashboard Name',
+      'dashboard_name_required': 'Name is required',
+      'dashboard_name_exists': 'A dashboard with this name already exists',
+      'start_with_defaults': 'Start with all widgets (default layout)',
+      'start_empty': 'Start empty',
+      'save_layout': 'Save Layout',
+      'layout_saved': 'Layout saved',
+      'reset_dashboard': 'Reset to Saved',
+      'hard_reset_dashboard': 'Hard Reset',
+      'hard_reset_warning': 'This will reset the dashboard to the default layout with all widgets visible. This cannot be undone.',
+      'rename_dashboard': 'Rename Dashboard',
+      'delete_dashboard': 'Delete Dashboard',
+      'delete_warning': 'Are you sure you want to delete this dashboard? This cannot be undone.',
+      'max_dashboards_reached': 'Maximum dashboards reached (5)',
+      'cannot_delete_last': 'Cannot delete the last dashboard',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -587,6 +606,25 @@ class AppLocalizations {
       'backup_found_message': 'Đã tìm thấy bản sao lưu đám mây cho tài khoản của bạn. Bạn có muốn khôi phục về thiết bị này không?',
       'backup_found_restore': 'Khôi phục từ đám mây',
       'backup_found_skip': 'Bắt đầu mới',
+
+      // Multi-Dashboard
+      'new_dashboard': '+ Bảng điều khiển mới',
+      'create_dashboard': 'Tạo bảng điều khiển',
+      'dashboard_name': 'Tên bảng điều khiển',
+      'dashboard_name_required': 'Tên là bắt buộc',
+      'dashboard_name_exists': 'Đã có bảng điều khiển với tên này',
+      'start_with_defaults': 'Bắt đầu với tất cả tiện ích (bố cục mặc định)',
+      'start_empty': 'Bắt đầu trống',
+      'save_layout': 'Lưu bố cục',
+      'layout_saved': 'Đã lưu bố cục',
+      'reset_dashboard': 'Đặt lại về đã lưu',
+      'hard_reset_dashboard': 'Đặt lại hoàn toàn',
+      'hard_reset_warning': 'Thao tác này sẽ đặt lại bảng điều khiển về bố cục mặc định với tất cả tiện ích hiển thị. Không thể hoàn tác.',
+      'rename_dashboard': 'Đổi tên bảng điều khiển',
+      'delete_dashboard': 'Xóa bảng điều khiển',
+      'delete_warning': 'Bạn có chắc chắn muốn xóa bảng điều khiển này? Không thể hoàn tác.',
+      'max_dashboards_reached': 'Đã đạt tối đa số bảng điều khiển (5)',
+      'cannot_delete_last': 'Không thể xóa bảng điều khiển cuối cùng',
     },
   };
 
@@ -873,6 +911,25 @@ class AppLocalizations {
   String get backupFoundMessage => translate('backup_found_message');
   String get backupFoundRestore => translate('backup_found_restore');
   String get backupFoundSkip => translate('backup_found_skip');
+
+  // Multi-Dashboard
+  String get newDashboard => translate('new_dashboard');
+  String get createDashboard => translate('create_dashboard');
+  String get dashboardName => translate('dashboard_name');
+  String get dashboardNameRequired => translate('dashboard_name_required');
+  String get dashboardNameExists => translate('dashboard_name_exists');
+  String get startWithDefaults => translate('start_with_defaults');
+  String get startEmpty => translate('start_empty');
+  String get saveLayout => translate('save_layout');
+  String get layoutSaved => translate('layout_saved');
+  String get resetDashboard => translate('reset_dashboard');
+  String get hardResetDashboard => translate('hard_reset_dashboard');
+  String get hardResetWarning => translate('hard_reset_warning');
+  String get renameDashboard => translate('rename_dashboard');
+  String get deleteDashboard => translate('delete_dashboard');
+  String get deleteWarning => translate('delete_warning');
+  String get maxDashboardsReached => translate('max_dashboards_reached');
+  String get cannotDeleteLast => translate('cannot_delete_last');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -3,8 +3,33 @@ import 'package:provider/provider.dart';
 import 'widgets/glass_container.dart';
 import 'data_widget.dart';
 import 'providers/auth_provider.dart';
-import 'providers/widget_visibility_provider.dart';
+import 'providers/dashboard_provider.dart';
 import 'l10n/app_localizations.dart';
+
+/// Central registry: widget ID → display metadata.
+/// Adding a new widget to this map is the only change needed for it to appear
+/// in the sidebar automatically.
+const Map<String, _WidgetMeta> _widgetRegistry = {
+  'profile':            _WidgetMeta('Profile',               Icons.person,                  Color(0xFFAB47BC)),
+  'budget':             _WidgetMeta('Budget Tracking',       Icons.account_balance_wallet,  Color(0xFF4285F4)),
+  'categoryBudget':     _WidgetMeta('Category Budget',       Icons.category,                Color(0xFF00897B)),
+  'history':            _WidgetMeta('Transaction History',   Icons.history,                 Color(0xFF34A853)),
+  'cashflow':           _WidgetMeta('Cash Flow',             Icons.waterfall_chart,         Color(0xFF1E88E5)),
+  'expenseBreakdown':   _WidgetMeta('Expense Breakdown',     Icons.pie_chart,               Color(0xFFAF7AC5)),
+  'incomeTrend':        _WidgetMeta('Income Trend',          Icons.trending_up,             Color(0xFF43A047)),
+  'savingsRate':        _WidgetMeta('Savings Rate',          Icons.savings,                 Color(0xFFF39C12)),
+  'netWorthTrend':      _WidgetMeta('Net Worth Trend',       Icons.timeline,                Color(0xFF1ABC9C)),
+  'spendingHeatmap':    _WidgetMeta('Spending Heatmap',      Icons.calendar_view_week,      Color(0xFF48C9B0)),
+  'portfolioAllocation':_WidgetMeta('Portfolio Allocation',  Icons.donut_large,             Color(0xFF4285F4)),
+  'investment':         _WidgetMeta('Investments',           Icons.show_chart,              Color(0xFF4A90E2)),
+  'roi':                _WidgetMeta('ROI',                   Icons.trending_up,             Color(0xFF5DADE2)),
+  'irr':                _WidgetMeta('IRR',                   Icons.analytics,               Color(0xFF5DADE2)),
+  'marketTrending':     _WidgetMeta('Market Trending',       Icons.candlestick_chart,       Color(0xFF26A69A)),
+  'bills':              _WidgetMeta('Upcoming Bills',        Icons.receipt_long,            Color(0xFFEA4335)),
+  'tax':                _WidgetMeta('Tax Estimation',        Icons.account_balance,         Color(0xFF2A5470)),
+  'import':             _WidgetMeta('Import Report',         Icons.upload_file,             Color(0xFFFBBC05)),
+  'export':             _WidgetMeta('Export Report',         Icons.download,                Color(0xFFEA4335)),
+};
 
 class SidebarMenu extends StatefulWidget {
   final Function(String)? onMenuItemSelected;
@@ -16,126 +41,12 @@ class SidebarMenu extends StatefulWidget {
 }
 
 class _SidebarMenuState extends State<SidebarMenu> {
-  List<MenuItemData> _getMenuItems(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return [
-      MenuItemData(
-        id: 'profile',
-        label: l10n.widgetProfile,
-        icon: Icons.person,
-        color: Colors.purple,
-      ),
-      MenuItemData(
-        id: 'budget',
-        label: l10n.widgetBudgetTracking,
-        icon: Icons.account_balance_wallet,
-        color: blue,
-      ),
-      MenuItemData(
-        id: 'categoryBudget',
-        label: 'Category Budget',
-        icon: Icons.category,
-        color: Colors.teal,
-      ),
-      MenuItemData(
-        id: 'history',
-        label: l10n.widgetTransactionHistory,
-        icon: Icons.history,
-        color: green,
-      ),
-      MenuItemData(
-        id: 'import',
-        label: l10n.widgetImportReport,
-        icon: Icons.upload_file,
-        color: yellow,
-      ),
-      MenuItemData(
-        id: 'export',
-        label: l10n.widgetExportReport,
-        icon: Icons.download,
-        color: red,
-      ),
-      MenuItemData(
-        id: 'roi',
-        label: 'ROI',
-        icon: Icons.trending_up,
-        color: const Color(0xFF4A90E2),
-      ),
-      MenuItemData(
-        id: 'irr',
-        label: 'IRR',
-        icon: Icons.show_chart,
-        color: const Color(0xFF5DADE2),
-      ),
-      MenuItemData(
-        id: 'tax',
-        label: 'Tax Estimation',
-        icon: Icons.account_balance,
-        color: const Color(0xFF2A5470),
-      ),
-      MenuItemData(
-        id: 'cashflow',
-        label: 'Cash Flow',
-        icon: Icons.waterfall_chart,
-        color: const Color(0xFF2A5470),
-      ),
-      MenuItemData(
-        id: 'bills',
-        label: 'Upcoming Bills',
-        icon: Icons.receipt_long,
-        color: red,
-      ),
-      MenuItemData(
-        id: 'investment',
-        label: l10n.investments,
-        icon: Icons.account_balance_wallet,
-        color: const Color(0xFF4A90E2),
-      ),
-      MenuItemData(
-        id: 'expenseBreakdown',
-        label: l10n.expenseBreakdown,
-        icon: Icons.pie_chart,
-        color: const Color(0xFFAF7AC5),
-      ),
-      MenuItemData(
-        id: 'portfolioAllocation',
-        label: l10n.portfolioAllocation,
-        icon: Icons.donut_large,
-        color: const Color(0xFF4285F4),
-      ),
-      MenuItemData(
-        id: 'netWorthTrend',
-        label: l10n.netWorthTrend,
-        icon: Icons.timeline,
-        color: const Color(0xFF1ABC9C),
-      ),
-      MenuItemData(
-        id: 'spendingHeatmap',
-        label: l10n.spendingByDay,
-        icon: Icons.calendar_view_week,
-        color: const Color(0xFF48C9B0),
-      ),
-      MenuItemData(
-        id: 'incomeTrend',
-        label: l10n.incomeTrend,
-        icon: Icons.trending_up,
-        color: const Color(0xFF34A853),
-      ),
-      MenuItemData(
-        id: 'savingsRate',
-        label: l10n.savingsRate,
-        icon: Icons.savings,
-        color: const Color(0xFFF39C12),
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final menuItems = _getMenuItems(context);
-    return Consumer<WidgetVisibilityProvider>(
-      builder: (context, visibilityProvider, _) {
+    return Consumer<DashboardProvider>(
+      builder: (context, dashProvider, _) {
+        final allIds = dashProvider.allWidgetIds;
         return Drawer(
           backgroundColor: Colors.transparent,
           child: GlassContainer(
@@ -146,9 +57,10 @@ class _SidebarMenuState extends State<SidebarMenu> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // User Info or Guest status
                 DrawerHeader(
-                  decoration: BoxDecoration(color: const Color(0xFF4285F4).withValues(alpha: 0.3)),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4285F4).withValues(alpha: 0.3),
+                  ),
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       return Row(
@@ -170,7 +82,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  auth.isAuthenticated 
+                                  auth.isAuthenticated
                                       ? 'Welcome, ${auth.userName}'
                                       : 'Toggle Dashboard Widgets',
                                   style: const TextStyle(color: Colors.white70, fontSize: 12),
@@ -190,23 +102,30 @@ class _SidebarMenuState extends State<SidebarMenu> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.widgetDashboardWidgets,
+                        '${l10n.widgetDashboardWidgets} — ${dashProvider.activeDashboard.name}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 12),
-                      ...menuItems.map((item) {
-                        final isVisible = visibilityProvider.isWidgetVisible(item.id);
+                      ...allIds.map((id) {
+                        final meta = _widgetRegistry[id];
+                        if (meta == null) return const SizedBox.shrink();
+                        final isVisible = dashProvider.isWidgetVisible(id);
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            color: isVisible ? item.color.withValues(alpha: 0.2) : Colors.transparent,
+                            color: isVisible
+                                ? meta.color.withValues(alpha: 0.2)
+                                : Colors.transparent,
                             border: Border.all(
-                              color: isVisible ? item.color.withValues(alpha: 0.3) : Colors.transparent,
+                              color: isVisible
+                                  ? meta.color.withValues(alpha: 0.3)
+                                  : Colors.transparent,
                               width: 1,
                             ),
                           ),
@@ -214,26 +133,24 @@ class _SidebarMenuState extends State<SidebarMenu> {
                             value: isVisible,
                             onChanged: (value) {
                               if (value == true) {
-                                visibilityProvider.showWidget(item.id);
+                                dashProvider.showWidget(id);
                               } else {
-                                visibilityProvider.hideWidget(item.id);
+                                dashProvider.hideWidget(id);
                               }
                             },
                             title: Text(
-                              item.label,
+                              meta.label,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: isVisible ? item.color : Colors.white,
-                                fontWeight: isVisible
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                                color: isVisible ? meta.color : Colors.white,
+                                fontWeight: isVisible ? FontWeight.w600 : FontWeight.normal,
                               ),
                             ),
                             secondary: Icon(
-                              item.icon,
-                              color: isVisible ? item.color : Colors.white54,
+                              meta.icon,
+                              color: isVisible ? meta.color : Colors.white54,
                             ),
-                            activeColor: item.color,
+                            activeColor: meta.color,
                             checkColor: Colors.white,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                             controlAffinity: ListTileControlAffinity.leading,
@@ -245,15 +162,14 @@ class _SidebarMenuState extends State<SidebarMenu> {
                 ),
                 const Divider(color: Colors.white24),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
-                    'Visible: ${visibilityProvider.visibleWidgetsCount}/${menuItems.length}',
+                    'Visible: ${dashProvider.visibleWidgetsCount} / ${dashProvider.totalWidgetsCount}',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Divider(color: Colors.white24),
-                // Settings
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
@@ -271,7 +187,6 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   ),
                 ),
                 const Divider(color: Colors.white24),
-                // Sign Out / Sign In
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Consumer<AuthProvider>(
@@ -296,7 +211,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                             Navigator.pushNamed(context, '/login');
                           }
                         },
-                        hoverColor: auth.isAuthenticated 
+                        hoverColor: auth.isAuthenticated
                             ? Colors.red.withValues(alpha: 0.1)
                             : Colors.green.withValues(alpha: 0.1),
                       );
@@ -325,12 +240,10 @@ class _SidebarMenuState extends State<SidebarMenu> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final authProvider =
-                  Provider.of<AuthProvider>(context, listen: false);
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
               await authProvider.signOut();
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                    context, '/login', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               }
             },
             child: Text(l10n.signOut),
@@ -341,6 +254,15 @@ class _SidebarMenuState extends State<SidebarMenu> {
   }
 }
 
+class _WidgetMeta {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _WidgetMeta(this.label, this.icon, this.color);
+}
+
+// Keep MenuItemData for any external usage
 class MenuItemData {
   final String id;
   final String label;

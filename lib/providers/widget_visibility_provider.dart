@@ -86,6 +86,8 @@ class WidgetVisibilityProvider extends ChangeNotifier {
         .toList();
   }
 
+  List<String> get allWidgetIds => _visibleWidgets.keys.toList();
+
   List<String> get hiddenWidgetIds {
     return _visibleWidgets.entries
         .where((e) => !e.value)
@@ -96,6 +98,8 @@ class WidgetVisibilityProvider extends ChangeNotifier {
   int get visibleWidgetsCount {
     return _visibleWidgets.values.where((v) => v).length;
   }
+
+  int get totalWidgetsCount => _visibleWidgets.length;
 
   Future<void> showWidget(String widgetId) async {
     if (_visibleWidgets.containsKey(widgetId)) {

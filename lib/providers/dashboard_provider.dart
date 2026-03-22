@@ -1,0 +1,311 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/dashboard_config.dart';
+
+class DashboardProvider extends ChangeNotifier {
+  static const String _dashboardsListKey = 'dashboards_list';
+  static const String _activeDashboardKey = 'active_dashboard_id';
+  static const int maxDashboards = 5;
+  static const List<int> _slotCounts = [2, 4, 6];
+
+  SharedPreferences? _preferences;
+  bool _isInitialized = false;
+
+  List<DashboardConfig> _dashboards = [];
+  String _activeDashboardId = 'default';
+
+  DashboardProvider() {
+    _initialize();
+  }
+
+  bool get isInitialized => _isInitialized;
+  List<DashboardConfig> get dashboards => List.unmodifiable(_dashboards);
+  String get activeDashboardId => _activeDashboardId;
+  bool get canCreateDashboard => _dashboards.length < maxDashboards;
+
+  DashboardConfig get activeDashboard =>
+      _dashboards.firstWhere(
+        (d) => d.id == _activeDashboardId,
+        orElse: () => _dashboards.first,
+      );
+
+  // ── Visibility delegates ──────────────────────────────────────────────
+
+  bool isWidgetVisible(String widgetId) =>
+      activeDashboard.widgetVisibility[widgetId] ?? true;
+
+  List<String> getVisibleWidgets() => activeDashboard.widgetVisibility.entries
+      .where((e) => e.value)
+      .map((e) => e.key)
+      .toList();
+
+  List<String> get allWidgetIds =>
+      activeDashboard.widgetVisibility.keys.toList();
+
+  List<String> get hiddenWidgetIds => activeDashboard.widgetVisibility.entries
+      .where((e) => !e.value)
+      .map((e) => e.key)
+      .toList();
+
+  int get visibleWidgetsCount =>
+      activeDashboard.widgetVisibility.values.where((v) => v).length;
+
+  int get totalWidgetsCount => activeDashboard.widgetVisibility.length;
+
+  Future<void> showWidget(String widgetId) async {
+    if (activeDashboard.widgetVisibility.containsKey(widgetId)) {
+      activeDashboard.widgetVisibility[widgetId] = true;
+      await _saveDashboards();
+      notifyListeners();
+    }
+  }
+
+  Future<void> hideWidget(String widgetId) async {
+    if (activeDashboard.widgetVisibility.containsKey(widgetId)) {
+      activeDashboard.widgetVisibility[widgetId] = false;
+      await _saveDashboards();
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleWidget(String widgetId) async {
+    if (activeDashboard.widgetVisibility.containsKey(widgetId)) {
+      activeDashboard.widgetVisibility[widgetId] =
+          !(activeDashboard.widgetVisibility[widgetId] ?? true);
+      await _saveDashboards();
+      notifyListeners();
+    }
+  }
+
+  // ── Dashboard CRUD ────────────────────────────────────────────────────
+
+  Future<void> createDashboard({
+    required String name,
+    bool useDefaults = true,
+  }) async {
+    if (!canCreateDashboard) return;
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final config = useDefaults
+        ? DashboardConfig.withDefaults(id, name)
+        : DashboardConfig.empty(id, name);
+    _dashboards.add(config);
+
+    // Write initial saved snapshot so Reset has something to revert to
+    if (useDefaults) {
+      await _copyLiveToSaved(id);
+    } else {
+      // For empty dashboards, save an empty snapshot
+      await _saveVisibilitySnapshot(id);
+    }
+
+    _activeDashboardId = id;
+    await _saveDashboards();
+    await _preferences?.setString(_activeDashboardKey, id);
+    notifyListeners();
+  }
+
+  Future<void> renameDashboard(String id, String newName) async {
+    final idx = _dashboards.indexWhere((d) => d.id == id);
+    if (idx == -1) return;
+    _dashboards[idx].name = newName;
+    await _saveDashboards();
+    notifyListeners();
+  }
+
+  Future<void> deleteDashboard(String id) async {
+    if (_dashboards.length <= 1) return;
+    _dashboards.removeWhere((d) => d.id == id);
+
+    // Clean up SharedPreferences keys for this dashboard
+    await _cleanupDashboardKeys(id);
+
+    if (_activeDashboardId == id) {
+      _activeDashboardId = _dashboards.first.id;
+      await _preferences?.setString(_activeDashboardKey, _activeDashboardId);
+    }
+    await _saveDashboards();
+    notifyListeners();
+  }
+
+  Future<void> setActiveDashboard(String id) async {
+    if (_activeDashboardId == id) return;
+    if (!_dashboards.any((d) => d.id == id)) return;
+    _activeDashboardId = id;
+    await _preferences?.setString(_activeDashboardKey, id);
+    notifyListeners();
+  }
+
+  // ── Save / Reset ─────────────────────────────────────────────────────
+
+  Future<void> saveLayout() async {
+    await _copyLiveToSaved(_activeDashboardId);
+    await _saveVisibilitySnapshot(_activeDashboardId);
+  }
+
+  Future<void> resetToSaved() async {
+    await _copySavedToLive(_activeDashboardId);
+    await _restoreVisibilitySnapshot(_activeDashboardId);
+    await _saveDashboards();
+    notifyListeners();
+  }
+
+  Future<void> hardReset() async {
+    // Set all widgets visible
+    activeDashboard.widgetVisibility.updateAll((key, value) => true);
+
+    // Clear live layout keys so storage re-initializes from defaults
+    for (var s in _slotCounts) {
+      await _preferences?.remove('layout_data_${_activeDashboardId}_$s');
+    }
+    await _preferences?.setBool('init_$_activeDashboardId', false);
+
+    await _saveDashboards();
+    notifyListeners();
+  }
+
+  // ── Initialization & Migration ────────────────────────────────────────
+
+  Future<void> _initialize() async {
+    try {
+      _preferences = await SharedPreferences.getInstance();
+      await _loadOrMigrate();
+      _isInitialized = true;
+    } catch (e) {
+      // Fallback: create a default dashboard
+      _dashboards = [DashboardConfig.withDefaults('default', 'Main')];
+      _activeDashboardId = 'default';
+      _isInitialized = true;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _loadOrMigrate() async {
+    final listJson = _preferences?.getString(_dashboardsListKey);
+    if (listJson != null) {
+      // Existing multi-dashboard user: load
+      final list = json.decode(listJson) as List<dynamic>;
+      _dashboards = list
+          .map((e) => DashboardConfig.fromJson(e as Map<String, dynamic>))
+          .toList();
+      _activeDashboardId =
+          _preferences?.getString(_activeDashboardKey) ?? _dashboards.first.id;
+      // Ensure active ID is valid
+      if (!_dashboards.any((d) => d.id == _activeDashboardId)) {
+        _activeDashboardId = _dashboards.first.id;
+      }
+    } else {
+      // Migration from old single-dashboard layout
+      await _migrateFromLegacy();
+    }
+  }
+
+  Future<void> _migrateFromLegacy() async {
+    final config = DashboardConfig.withDefaults('default', 'Main');
+
+    // Migrate old widget_visibility
+    final oldVis = _preferences?.getString('widget_visibility');
+    if (oldVis != null) {
+      try {
+        final parts = oldVis.split(',');
+        for (var part in parts) {
+          final pair = part.trim().split(':');
+          if (pair.length == 2) {
+            config.widgetVisibility[pair[0]] = pair[1] == 'true';
+          }
+        }
+      } catch (_) {}
+      await _preferences?.remove('widget_visibility');
+    }
+
+    _dashboards = [config];
+    _activeDashboardId = 'default';
+
+    // Rename old layout keys: layout_data_N → layout_data_default_N
+    for (var s in _slotCounts) {
+      final oldKey = 'layout_data_$s';
+      final newKey = 'layout_data_default_$s';
+      final data = _preferences?.getString(oldKey);
+      if (data != null) {
+        await _preferences?.setString(newKey, data);
+        // Also create initial saved snapshot
+        await _preferences?.setString('layout_saved_default_$s', data);
+        await _preferences?.remove(oldKey);
+      }
+    }
+
+    // Migrate init flag
+    final oldInit = _preferences?.getBool('init');
+    if (oldInit != null) {
+      await _preferences?.setBool('init_default', oldInit);
+      await _preferences?.remove('init');
+    }
+
+    // Save visibility snapshot
+    await _saveVisibilitySnapshot('default');
+
+    await _saveDashboards();
+    await _preferences?.setString(_activeDashboardKey, 'default');
+  }
+
+  // ── Persistence helpers ───────────────────────────────────────────────
+
+  Future<void> _saveDashboards() async {
+    final list = _dashboards.map((d) => d.toJson()).toList();
+    await _preferences?.setString(_dashboardsListKey, json.encode(list));
+  }
+
+  Future<void> _copyLiveToSaved(String dashId) async {
+    for (var s in _slotCounts) {
+      final liveKey = 'layout_data_${dashId}_$s';
+      final savedKey = 'layout_saved_${dashId}_$s';
+      final data = _preferences?.getString(liveKey);
+      if (data != null) {
+        await _preferences?.setString(savedKey, data);
+      }
+    }
+  }
+
+  Future<void> _copySavedToLive(String dashId) async {
+    for (var s in _slotCounts) {
+      final savedKey = 'layout_saved_${dashId}_$s';
+      final liveKey = 'layout_data_${dashId}_$s';
+      final data = _preferences?.getString(savedKey);
+      if (data != null) {
+        await _preferences?.setString(liveKey, data);
+      }
+    }
+  }
+
+  Future<void> _saveVisibilitySnapshot(String dashId) async {
+    final vis = _dashboards
+        .firstWhere((d) => d.id == dashId, orElse: () => activeDashboard)
+        .widgetVisibility;
+    final encoded = vis.entries.map((e) => '${e.key}:${e.value}').join(',');
+    await _preferences?.setString('visibility_saved_$dashId', encoded);
+  }
+
+  Future<void> _restoreVisibilitySnapshot(String dashId) async {
+    final stored = _preferences?.getString('visibility_saved_$dashId');
+    if (stored == null) return;
+    final dash = _dashboards.firstWhere((d) => d.id == dashId);
+    final parts = stored.split(',');
+    for (var part in parts) {
+      final pair = part.trim().split(':');
+      if (pair.length == 2) {
+        dash.widgetVisibility[pair[0]] = pair[1] == 'true';
+      }
+    }
+  }
+
+  Future<void> _cleanupDashboardKeys(String dashId) async {
+    for (var s in _slotCounts) {
+      await _preferences?.remove('layout_data_${dashId}_$s');
+      await _preferences?.remove('layout_saved_${dashId}_$s');
+    }
+    await _preferences?.remove('init_$dashId');
+    await _preferences?.remove('visibility_saved_$dashId');
+  }
+}

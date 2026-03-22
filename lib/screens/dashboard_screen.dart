@@ -7,8 +7,9 @@ import 'package:provider/provider.dart';
 import '../data_widget.dart';
 import '../sidebar_menu.dart';
 import '../storage.dart';
-import '../providers/widget_visibility_provider.dart';
+import '../providers/dashboard_provider.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
 
 class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
@@ -55,11 +56,14 @@ class _DashboardWidgetState extends State<DashboardWidget> {
   String? _selectedWidget;
 
   List<String> _lastVisibilityKey = [];
+  String? _lastDashboardId;
 
   @override
   void initState() {
     super.initState();
-    storage = MyItemStorage();
+    final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
+    _lastDashboardId = dashProvider.activeDashboardId;
+    storage = MyItemStorage(dashboardId: dashProvider.activeDashboardId);
     _itemController = DashboardItemController<ColoredDashboardItem>.withDelegate(
       itemStorageDelegate: storage,
     );
@@ -76,12 +80,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     });
   }
 
-  void _updateHiddenItems(List<String> visibleWidgets) async {
+  void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) async {
     setState(() {
       refreshing = true;
     });
 
-    storage = MyItemStorage();
+    storage = MyItemStorage(dashboardId: dashboardId);
     storage.setVisibilityFilter(visibleWidgets);
 
     _itemController = DashboardItemController.withDelegate(
@@ -95,6 +99,11 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         refreshing = false;
       });
     }
+  }
+
+  void _updateHiddenItems(List<String> visibleWidgets) {
+    final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
+    _recreateStorageAndController(dashProvider.activeDashboardId, visibleWidgets);
   }
 
   double _getAspectRatio(double width) {
@@ -112,6 +121,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
               : 4
         : 2;
     final aspectRatio = _getAspectRatio(w);
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       drawer: SidebarMenu(
         onMenuItemSelected: (widgetId) {
@@ -131,40 +142,122 @@ class _DashboardWidgetState extends State<DashboardWidget> {
           ),
         ),
         automaticallyImplyLeading: true,
-        title: Text(
-          'PLUTUS',
-          style: TextStyle(
-            fontWeight: FontWeight.w300,
-            letterSpacing: 2.0,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF5DADE2)
-                : Colors.white,
-          ),
+        title: Consumer<DashboardProvider>(
+          builder: (context, dashProvider, _) {
+            return PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == '__new__') {
+                  await _showCreateDashboardDialog(dashProvider);
+                } else {
+                  dashProvider.setActiveDashboard(value);
+                }
+              },
+              offset: const Offset(0, 40),
+              color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      dashProvider.activeDashboard.name.toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 2.0,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF5DADE2)
+                            : Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF5DADE2)
+                        : Colors.white,
+                  ),
+                ],
+              ),
+              itemBuilder: (context) {
+                final items = <PopupMenuEntry<String>>[];
+                for (final dash in dashProvider.dashboards) {
+                  items.add(PopupMenuItem<String>(
+                    value: dash.id,
+                    child: Row(
+                      children: [
+                        if (dash.id == dashProvider.activeDashboardId)
+                          const Icon(Icons.check, color: Color(0xFF4285F4), size: 18)
+                        else
+                          const SizedBox(width: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            dash.name,
+                            style: const TextStyle(color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ));
+                }
+                if (dashProvider.canCreateDashboard) {
+                  items.add(const PopupMenuDivider());
+                  items.add(PopupMenuItem<String>(
+                    value: '__new__',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.add, color: Color(0xFF4285F4), size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.newDashboard,
+                          style: const TextStyle(color: Color(0xFF4285F4)),
+                        ),
+                      ],
+                    ),
+                  ));
+                }
+                return items;
+              },
+            );
+          },
         ),
         actions: [
-          IconButton(
-            onPressed: () async {
-              // Reset visibility checkboxes to all-visible
-              final visibilityProvider = Provider.of<WidgetVisibilityProvider>(
-                context, listen: false,
+          Consumer<DashboardProvider>(
+            builder: (context, dashProvider, _) {
+              return PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
+                onSelected: (value) => _handleMenuAction(value, dashProvider),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'save',
+                    child: _menuItem(Icons.save, l10n.saveLayout),
+                  ),
+                  PopupMenuItem(
+                    value: 'reset',
+                    child: _menuItem(Icons.restore, l10n.resetDashboard),
+                  ),
+                  PopupMenuItem(
+                    value: 'hardReset',
+                    child: _menuItem(Icons.restart_alt, l10n.hardResetDashboard),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: _menuItem(Icons.edit, l10n.renameDashboard),
+                  ),
+                  PopupMenuItem(
+                    enabled: dashProvider.dashboards.length > 1,
+                    value: 'delete',
+                    child: _menuItem(Icons.delete_outline, l10n.deleteDashboard,
+                        color: dashProvider.dashboards.length > 1
+                            ? Colors.redAccent
+                            : Colors.grey),
+                  ),
+                ],
               );
-              visibilityProvider.reset();
-
-              await storage.clear();
-              setState(() {
-                refreshing = true;
-              });
-              storage = MyItemStorage();
-              _itemController = DashboardItemController.withDelegate(
-                itemStorageDelegate: storage,
-              );
-              Future.delayed(const Duration(milliseconds: 150)).then((value) {
-                setState(() {
-                  refreshing = false;
-                });
-              });
             },
-            icon: const Icon(Icons.refresh),
           ),
           IconButton(
             onPressed: () {
@@ -176,9 +269,21 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ],
       ),
       body: SafeArea(
-        child: Consumer<WidgetVisibilityProvider>(
-          builder: (context, visibilityProvider, _) {
-            final visibleWidgets = visibilityProvider.getVisibleWidgets();
+        child: Consumer<DashboardProvider>(
+          builder: (context, dashProvider, _) {
+            // Detect dashboard switch
+            if (_lastDashboardId != dashProvider.activeDashboardId) {
+              _lastDashboardId = dashProvider.activeDashboardId;
+              _lastVisibilityKey = [];
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _recreateStorageAndController(
+                  dashProvider.activeDashboardId,
+                  dashProvider.getVisibleWidgets(),
+                );
+              });
+            }
+
+            final visibleWidgets = dashProvider.getVisibleWidgets();
             final visibilityKey = visibleWidgets.join(',');
 
             final oldKey = _lastVisibilityKey.isNotEmpty ? _lastVisibilityKey.first : '';
@@ -197,7 +302,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                 : (refreshing
                       ? const Center(child: CircularProgressIndicator())
                       : Dashboard<ColoredDashboardItem>(
-                          key: ValueKey(visibleWidgets.join(',')),
+                          key: ValueKey('${dashProvider.activeDashboardId}_${visibleWidgets.join(',')}'),
                           shrinkToPlace: true,
                           slideToTop: true,
                           absorbPointer: false,
@@ -320,6 +425,161 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ),
       ),
     );
+  }
+
+  Widget _menuItem(IconData icon, String label, {Color color = Colors.white}) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 12),
+        Text(label, style: TextStyle(color: color)),
+      ],
+    );
+  }
+
+  Future<void> _handleMenuAction(String action, DashboardProvider dashProvider) async {
+    final l10n = AppLocalizations.of(context);
+    switch (action) {
+      case 'save':
+        await dashProvider.saveLayout();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.layoutSaved)),
+          );
+        }
+        break;
+      case 'reset':
+        await dashProvider.resetToSaved();
+        if (mounted) {
+          _recreateStorageAndController(
+            dashProvider.activeDashboardId,
+            dashProvider.getVisibleWidgets(),
+          );
+        }
+        break;
+      case 'hardReset':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.hardResetDashboard),
+            content: Text(l10n.hardResetWarning),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.confirm, style: const TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true) {
+          await dashProvider.hardReset();
+          if (mounted) {
+            _recreateStorageAndController(
+              dashProvider.activeDashboardId,
+              dashProvider.getVisibleWidgets(),
+            );
+          }
+        }
+        break;
+      case 'rename':
+        await _showRenameDashboardDialog(dashProvider);
+        break;
+      case 'delete':
+        if (dashProvider.dashboards.length <= 1) return;
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.deleteDashboard),
+            content: Text(l10n.deleteWarning),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true) {
+          final oldId = dashProvider.activeDashboardId;
+          await dashProvider.deleteDashboard(oldId);
+          if (mounted) {
+            _recreateStorageAndController(
+              dashProvider.activeDashboardId,
+              dashProvider.getVisibleWidgets(),
+            );
+          }
+        }
+        break;
+    }
+  }
+
+  Future<void> _showCreateDashboardDialog(DashboardProvider dashProvider) async {
+    final result = await showDialog<CreateDashboardResult>(
+      context: context,
+      builder: (ctx) => CreateDashboardDialog(
+        existingNames: dashProvider.dashboards.map((d) => d.name).toList(),
+      ),
+    );
+    if (result != null) {
+      await dashProvider.createDashboard(
+        name: result.name,
+        useDefaults: result.useDefaults,
+      );
+      if (mounted) {
+        _recreateStorageAndController(
+          dashProvider.activeDashboardId,
+          dashProvider.getVisibleWidgets(),
+        );
+      }
+    }
+  }
+
+  Future<void> _showRenameDashboardDialog(DashboardProvider dashProvider) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController(
+      text: dashProvider.activeDashboard.name,
+    );
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.renameDashboard),
+        content: TextField(
+          controller: controller,
+          maxLength: 20,
+          decoration: InputDecoration(labelText: l10n.dashboardName),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.pop(ctx, name);
+              }
+            },
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newName != null && newName.isNotEmpty) {
+      await dashProvider.renameDashboard(
+        dashProvider.activeDashboardId,
+        newName,
+      );
+    }
   }
 
   Widget _buildWidgetPreview(String widgetId) {

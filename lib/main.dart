@@ -11,7 +11,7 @@ import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/settings_provider.dart';
-import 'providers/widget_visibility_provider.dart';
+import 'providers/dashboard_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _backupProvider),
-        ChangeNotifierProvider(create: (_) => WidgetVisibilityProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: Consumer<SettingsProvider>(
