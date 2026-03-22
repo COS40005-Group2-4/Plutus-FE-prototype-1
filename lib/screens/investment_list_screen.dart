@@ -92,7 +92,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Added $assetName'),
+                  content: Text('$assetName added to your portfolio'),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -107,7 +107,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Failed to add investment: $e'),
+                  content: const Text("Couldn't add investment. Please try again."),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -221,7 +221,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap + to add your first investment',
+              'Tap + to start tracking your investments',
               style: TextStyle(
                 color: isDark ? Colors.white54 : Colors.black45,
               ),
@@ -313,7 +313,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
         onTap: () {
           // TODO: Navigate to detail screen
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('View ${investment.assetName} details')),
+            SnackBar(content: Text('Opening ${investment.assetName}')),
           );
         },
       ),

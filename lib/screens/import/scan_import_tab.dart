@@ -142,7 +142,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
         children: [
           // OCR Mode Selector
           const Text(
-            'OCR Mode',
+            'Scanning Mode',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -175,10 +175,10 @@ class _ScanImportTabState extends State<ScanImportTab> {
           const SizedBox(height: 8),
           Text(
             _ocrMode == OCRMode.offline
-                ? 'Uses TesseractOCR (Vietnamese support)'
+                ? 'Works offline, supports Vietnamese'
                 : _ocrMode == OCRMode.online
-                    ? 'Uses AWS Textract (requires internet & AWS config)'
-                    : 'Automatically chooses best option',
+                    ? 'Cloud-powered, requires internet'
+                    : 'Picks the best option automatically',
             style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
             textAlign: TextAlign.center,
           ),
@@ -201,7 +201,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                              'Windows Offline Mode',
+                              'Offline Scanning on Windows',
                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -210,8 +210,8 @@ class _ScanImportTabState extends State<ScanImportTab> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Requires Tesseract OCR installed and added to PATH.\n'
-                      'Vietnamese language data (vie.traineddata) must be in tessdata folder.',
+                      'Requires Tesseract OCR to be installed and added to your system PATH. '
+                      'Vietnamese support requires the vie.traineddata language file.',
                       style: TextStyle(fontSize: 11, color: Colors.blue),
                     ),
                   ],
@@ -261,7 +261,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                'Review & Edit Scanned Data',
+                'Review Scanned Details',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),

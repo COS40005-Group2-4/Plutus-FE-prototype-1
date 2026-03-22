@@ -127,10 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (success && context.mounted) {
                     Navigator.pushReplacementNamed(context, '/dashboard');
                   } else if (context.mounted) {
-                    setState(() => _errorMessage = 'Login failed. Please check your Google credentials and try again.');
+                    setState(() => _errorMessage = 'Sign-in failed. Please check your Google account and try again.');
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Login failed. Please try again.'),
+                        content: Text('Sign-in failed. Please try again.'),
                       ),
                     );
                   }

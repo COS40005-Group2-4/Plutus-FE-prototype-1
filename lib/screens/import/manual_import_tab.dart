@@ -325,7 +325,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
             TextFormField(
               controller: _payeeController,
               decoration: const InputDecoration(
-                labelText: 'Payee',
+                labelText: 'Paid To',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -421,9 +421,9 @@ class _ManualImportTabState extends State<ManualImportTab> {
                   TextFormField(
                     controller: _customCategoryController,
                     decoration: const InputDecoration(
-                      labelText: 'Custom Category',
+                      labelText: 'New Category',
                       border: OutlineInputBorder(),
-                      hintText: 'Enter new category name',
+                      hintText: 'Category name',
                     ),
                     onChanged: (val) {
                       _categoryController.text = val;
@@ -438,7 +438,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
             TextFormField(
               controller: _descController,
               decoration: const InputDecoration(
-                labelText: 'Description / Note',
+                labelText: 'Note',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -480,7 +480,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
                           child: TextFormField(
                             initialValue: item['description'],
                             decoration: const InputDecoration(
-                              labelText: 'Item Name',
+                              labelText: 'Item',
                               isDense: true,
                               border: OutlineInputBorder(),
                             ),

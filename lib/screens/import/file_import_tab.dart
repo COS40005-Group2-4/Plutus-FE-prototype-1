@@ -107,13 +107,13 @@ class _FileImportTabState extends State<FileImportTab> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Import Transaction File',
+            'Import from File',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           const Text(
-            'Select a transaction file to import into the database. The backend will process and store the transactions.',
+            'Choose a file to import your transactions. Supported formats will be loaded automatically.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -135,7 +135,7 @@ class _FileImportTabState extends State<FileImportTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Selected File:',
+                    'File selected:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
