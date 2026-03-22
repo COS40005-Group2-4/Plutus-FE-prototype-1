@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'database_service.dart';
+import 'interfaces/i_database_service.dart';
+import 'interfaces/i_settings_service.dart';
+import '../di/service_locator.dart';
 
-class SettingsService {
-  final DatabaseService _db = DatabaseService();
+class SettingsService implements ISettingsService {
+  final IDatabaseService _db;
+
+  SettingsService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
   
   // Common setting keys
   static const String keyThemeMode = 'theme_mode';

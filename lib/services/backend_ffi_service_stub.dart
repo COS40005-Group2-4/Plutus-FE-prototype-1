@@ -1,7 +1,7 @@
 // Stub implementation for web platform where dart:ffi is not available
-import 'dart:convert';
+import 'interfaces/i_backend_ffi_service.dart';
 
-class BackendFfiService {
+class BackendFfiService implements IBackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
   factory BackendFfiService() {
@@ -13,38 +13,51 @@ class BackendFfiService {
     print('Backend FFI Service (Web Stub) - FFI not available on web platform');
   }
 
-  // Always false for web
+  @override
   bool get isAvailable => false;
 
+  @override
   Future<List<Map<String, dynamic>>> getTransactions() async {
-    // Return empty list - web will rely on HTTP backend or local database
     return [];
   }
 
+  @override
   Future<void> saveTransaction(Map<String, dynamic> transaction) async {
-    // No-op for web - transactions are saved via local database
     throw UnsupportedError('FFI backend not available on web platform');
   }
 
+  @override
   Future<void> importFile(String filePath) async {
-    // No-op for web - file import handled differently
     throw UnsupportedError('FFI file import not available on web platform');
   }
 
-  Future<Map<String, dynamic>> getRoiData() async {
-    // Return default values for web
+  @override
+  Future<Map<String, dynamic>> getRoiData({String? currency}) async {
     return {
       'roi': '0.00',
       'irr': '0.00',
       'cashflowTotal': '0',
+      'currency': currency ?? 'VND',
     };
   }
 
+  @override
   Future<Map<String, dynamic>> getInvestmentList() async {
     throw UnimplementedError('Investment list not available on web platform');
   }
 
+  @override
   Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
     throw UnimplementedError('Investment detail not available on web platform');
+  }
+
+  @override
+  Future<void> deleteInvestment(String investmentId) async {
+    throw UnimplementedError('Investment delete not available on web platform');
+  }
+
+  @override
+  Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
+    throw UnimplementedError('Investment save not available on web platform');
   }
 }

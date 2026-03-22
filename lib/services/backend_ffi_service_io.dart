@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'dart:convert';
+import 'interfaces/i_backend_ffi_service.dart';
 
 typedef BootstrapFunc = Pointer<Utf8> Function();
 typedef Bootstrap = Pointer<Utf8> Function();
@@ -40,7 +41,7 @@ typedef DeleteInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef SaveInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef SaveInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
 
-class BackendFfiService {
+class BackendFfiService implements IBackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
   factory BackendFfiService() {
@@ -63,6 +64,7 @@ class BackendFfiService {
 
   bool _isInitialized = false;
   bool _hasError = false;
+  String _initError = '';
 
   BackendFfiService._internal() {
     _init();
@@ -98,7 +100,42 @@ class BackendFfiService {
         
         _lib = DynamicLibrary.open(libPath);
       } else if (Platform.isMacOS) {
-        _lib = DynamicLibrary.open('libplutus.dylib');
+        // On macOS, the working directory during flutter run is unpredictable.
+        // Resolve from the executable path or use known absolute locations.
+        final exePath = Platform.resolvedExecutable;
+        // exePath is like: .../build/macos/Build/Products/Debug/plutus_fe_prototype.app/Contents/MacOS/plutus_fe_prototype
+        // Walk up to find the project root (contains pubspec.yaml)
+        var dir = File(exePath).parent;
+        String? projectRoot;
+        for (var i = 0; i < 10; i++) {
+          if (File('${dir.path}/pubspec.yaml').existsSync()) {
+            projectRoot = dir.path;
+            break;
+          }
+          dir = dir.parent;
+        }
+
+        final macPaths = [
+          if (projectRoot != null) '$projectRoot/libplutus.dylib',
+          if (projectRoot != null) '$projectRoot/Plutus-backend-prototype-2/libplutus.dylib',
+          'libplutus.dylib',
+          '${Directory.current.path}/libplutus.dylib',
+        ];
+
+        String macLibPath = 'libplutus.dylib';
+        for (final path in macPaths) {
+          try {
+            if (File(path).existsSync()) {
+              macLibPath = path;
+              print('Found dylib at: $macLibPath');
+              break;
+            }
+          } catch (e) {
+            // Continue to next path
+          }
+        }
+
+        _lib = DynamicLibrary.open(macLibPath);
       } else {
         _lib = DynamicLibrary.open('libplutus.so');
       }
@@ -131,6 +168,7 @@ class BackendFfiService {
       if (result.isNotEmpty) {
         print('Backend Bootstrap Error: $result');
         _hasError = true;
+        _initError = result;
       } else {
         _isInitialized = true;
         print('Backend FFI Initialized');
@@ -138,6 +176,7 @@ class BackendFfiService {
     } catch (e) {
       print('Failed to load backend library: $e');
       _hasError = true;
+      _initError = e.toString();
     }
   }
 
@@ -169,7 +208,7 @@ class BackendFfiService {
   }
 
   Future<void> saveTransaction(Map<String, dynamic> transaction) async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     final jsonStr = json.encode(transaction);
     final jsonPtr = jsonStr.toNativeUtf8();
@@ -186,7 +225,7 @@ class BackendFfiService {
   }
 
   Future<void> importFile(String filePath) async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     final filePathPtr = filePath.toNativeUtf8();
     
@@ -251,7 +290,7 @@ class BackendFfiService {
   }
 
   Future<Map<String, dynamic>> getInvestmentList() async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     final resultPtr = _getInvestmentList();
     final result = resultPtr.toDartString();
@@ -276,7 +315,7 @@ class BackendFfiService {
   }
 
   Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     final commodityPtr = commodity.toNativeUtf8();
     final resultPtr = _getInvestmentDetail(commodityPtr);
@@ -304,7 +343,7 @@ class BackendFfiService {
   }
 
   Future<void> deleteInvestment(String investmentId) async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     print('FFI: Deleting investment with ID: $investmentId');
     
@@ -340,7 +379,7 @@ class BackendFfiService {
   }
 
   Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
-    if (!isAvailable) throw Exception("Backend FFI not available");
+    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
     print('FFI: Saving investment: $investmentData');
 

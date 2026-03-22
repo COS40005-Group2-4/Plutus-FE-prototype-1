@@ -6,13 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import '../config/google_oauth_config.dart';
+import 'interfaces/i_google_auth_service.dart';
 
 // Conditional import for web/non-web helper
 import 'web_helper_stub.dart'
     if (dart.library.js_util) 'web_helper_web.dart'
     if (dart.library.html) 'web_helper_web.dart';
 
-class GoogleAuthService {
+class GoogleAuthService implements IGoogleAuthService {
   late final gsi.GoogleSignIn _googleSignIn;
   static const String _userInfoKey = 'google_user_info';
   static const String _accessTokenKey = 'google_access_token';

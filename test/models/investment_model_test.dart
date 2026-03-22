@@ -1,520 +1,456 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plutus_fe_prototype/models/investment_model.dart';
+import '../helpers/test_fixtures.dart';
 
 void main() {
-  group('ValueHistoryModel', () {
-    test('fromJson creates valid model with all fields', () {
-      final json = {
-        'date': 1704067200, // Unix timestamp
-        'from_currency': 'NVDA',
-        'to_currency': 'USD',
-        'rate': 420.50,
-      };
+  group('PriceHistoryPoint', () {
+    group('fromJson', () {
+      test('parses date and price from JSON', () {
+        final json = {'date': 1704067200, 'price': 150.0};
+        final point = PriceHistoryPoint.fromJson(json);
 
-      final model = ValueHistoryModel.fromJson(json);
+        expect(point.date, DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000));
+        expect(point.price, 150.0);
+      });
 
-      expect(model.fromCurrency, 'NVDA');
-      expect(model.toCurrency, 'USD');
-      expect(model.rate, 420.50);
-      expect(model.date.year, 2024);
+      test('parses string price', () {
+        final json = {'date': 1704067200, 'price': '99.50'};
+        final point = PriceHistoryPoint.fromJson(json);
+
+        expect(point.price, 99.50);
+      });
     });
 
-    test('fromJson throws on missing required fields', () {
-      final json = {
-        'date': 1704067200,
-        'from_currency': 'NVDA',
-        // Missing to_currency and rate
-      };
+    group('toJson', () {
+      test('serializes to unix seconds', () {
+        final point = PriceHistoryPoint(
+          date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000),
+          price: 150.0,
+        );
+        final json = point.toJson();
 
-      expect(
-        () => ValueHistoryModel.fromJson(json),
-        throwsA(isA<ArgumentError>()),
-      );
+        expect(json['date'], 1704067200);
+        expect(json['price'], 150.0);
+      });
     });
 
-    test('fromJson throws on future date', () {
-      final futureDate =
-          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch ~/
-              1000;
-      final json = {
-        'date': futureDate,
-        'from_currency': 'NVDA',
-        'to_currency': 'USD',
-        'rate': 420.50,
-      };
+    group('Equatable', () {
+      test('identical points are equal', () {
+        final p1 = PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 100.0);
+        final p2 = PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 100.0);
 
-      expect(
-        () => ValueHistoryModel.fromJson(json),
-        throwsA(predicate((e) =>
-            e is ArgumentError &&
-            e.message.toString().contains('Date cannot be in the future'))),
-      );
-    });
+        expect(p1, p2);
+      });
 
-    test('fromJson throws on zero exchange rate', () {
-      final json = {
-        'date': 1704067200,
-        'from_currency': 'NVDA',
-        'to_currency': 'USD',
-        'rate': 0,
-      };
+      test('different points are not equal', () {
+        final p1 = PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 100.0);
+        final p2 = PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 200.0);
 
-      expect(
-        () => ValueHistoryModel.fromJson(json),
-        throwsA(predicate((e) =>
-            e is ArgumentError &&
-            e.message.toString().contains('Exchange rate must be a positive'))),
-      );
-    });
-
-    test('fromJson throws on negative exchange rate', () {
-      final json = {
-        'date': 1704067200,
-        'from_currency': 'NVDA',
-        'to_currency': 'USD',
-        'rate': -100.0,
-      };
-
-      expect(
-        () => ValueHistoryModel.fromJson(json),
-        throwsA(predicate((e) =>
-            e is ArgumentError &&
-            e.message.toString().contains('Exchange rate must be a positive'))),
-      );
-    });
-
-    test('toJson serializes correctly', () {
-      final model = ValueHistoryModel(
-        date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000),
-        fromCurrency: 'NVDA',
-        toCurrency: 'USD',
-        rate: 420.50,
-      );
-
-      final json = model.toJson();
-
-      expect(json['date'], 1704067200);
-      expect(json['from_currency'], 'NVDA');
-      expect(json['to_currency'], 'USD');
-      expect(json['rate'], 420.50);
-    });
-  });
-
-  group('InvestmentTransactionModel', () {
-    test('fromJson creates valid model', () {
-      final json = {
-        'date': 1704067200,
-        'amount': -2100.00,
-        'type': 'buy',
-        'quantity': 5.0,
-      };
-
-      final model = InvestmentTransactionModel.fromJson(json);
-
-      expect(model.amount, -2100.00);
-      expect(model.type, 'buy');
-      expect(model.quantity, 5.0);
-    });
-
-    test('fromJson throws on missing required fields', () {
-      final json = {
-        'date': 1704067200,
-        'amount': -2100.00,
-        // Missing type and quantity
-      };
-
-      expect(
-        () => InvestmentTransactionModel.fromJson(json),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
-
-    test('toJson serializes correctly', () {
-      final model = InvestmentTransactionModel(
-        date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000),
-        amount: -2100.00,
-        type: 'buy',
-        quantity: 5.0,
-      );
-
-      final json = model.toJson();
-
-      expect(json['date'], 1704067200);
-      expect(json['amount'], -2100.00);
-      expect(json['type'], 'buy');
-      expect(json['quantity'], 5.0);
+        expect(p1, isNot(p2));
+      });
     });
   });
 
   group('InvestmentModel', () {
-    test('fromJson creates valid model with all required fields', () {
-      final json = {
-        'commodity': 'NVDA',
-        'name': 'NVIDIA Corporation',
-        'quantity': 10.5,
-        'current_value': 5250.00,
-        'cost_basis': 4200.00,
-        'gain_loss_percent': 25.0,
-        'tracking_type': 'api',
-      };
+    group('fromJson', () {
+      test('parses all required fields', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'stock',
+          'asset_name': 'AAPL',
+          'quantity': 10,
+          'purchase_value': 1500.0,
+          'currency': 'usd',
+          'purchase_date': 1704067200,
+        };
 
-      final model = InvestmentModel.fromJson(json);
+        final inv = InvestmentModel.fromJson(json);
 
-      expect(model.commodity, 'NVDA');
-      expect(model.name, 'NVIDIA Corporation');
-      expect(model.quantity, 10.5);
-      expect(model.currentValue, 5250.00);
-      expect(model.costBasis, 4200.00);
-      expect(model.gainLossPercent, 25.0);
-      expect(model.trackingType, TrackingType.api);
+        expect(inv.id, 'inv_001');
+        expect(inv.assetType, AssetType.stock);
+        expect(inv.assetName, 'AAPL');
+        expect(inv.quantity, 10.0);
+        expect(inv.purchaseValue, 1500.0);
+        expect(inv.currency, Currency.usd);
+        expect(inv.purchaseDate, DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000));
+        expect(inv.currentPrice, isNull);
+        expect(inv.priceHistory, isNull);
+      });
+
+      test('parses optional currentPrice', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'stock',
+          'asset_name': 'AAPL',
+          'quantity': 10,
+          'purchase_value': 1500.0,
+          'currency': 'usd',
+          'purchase_date': 1704067200,
+          'current_price': 175.0,
+        };
+
+        final inv = InvestmentModel.fromJson(json);
+        expect(inv.currentPrice, 175.0);
+      });
+
+      test('parses optional priceHistory', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'crypto',
+          'asset_name': 'BTC',
+          'quantity': 0.5,
+          'purchase_value': 20000.0,
+          'currency': 'usd',
+          'purchase_date': 1704067200,
+          'price_history': [
+            {'date': 1704067200, 'price': 40000.0},
+            {'date': 1704153600, 'price': 41000.0},
+          ],
+        };
+
+        final inv = InvestmentModel.fromJson(json);
+
+        expect(inv.priceHistory, isNotNull);
+        expect(inv.priceHistory!.length, 2);
+        expect(inv.priceHistory!.first.price, 40000.0);
+      });
+
+      test('throws ArgumentError when required fields are missing', () {
+        final json = {'id': 'inv_001', 'asset_type': 'stock'};
+
+        expect(() => InvestmentModel.fromJson(json), throwsA(isA<ArgumentError>()));
+      });
+
+      test('parses all asset types', () {
+        for (final type in AssetType.values) {
+          final json = {
+            'id': 'inv_001',
+            'asset_type': type.name,
+            'asset_name': 'Test',
+            'quantity': 1,
+            'purchase_value': 100,
+            'currency': 'usd',
+            'purchase_date': 1704067200,
+          };
+
+          final inv = InvestmentModel.fromJson(json);
+          expect(inv.assetType, type);
+        }
+      });
+
+      test('parses all currency types', () {
+        for (final curr in Currency.values) {
+          final json = {
+            'id': 'inv_001',
+            'asset_type': 'stock',
+            'asset_name': 'Test',
+            'quantity': 1,
+            'purchase_value': 100,
+            'currency': curr.name,
+            'purchase_date': 1704067200,
+          };
+
+          final inv = InvestmentModel.fromJson(json);
+          expect(inv.currency, curr);
+        }
+      });
+
+      test('throws for invalid asset type', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'invalid',
+          'asset_name': 'Test',
+          'quantity': 1,
+          'purchase_value': 100,
+          'currency': 'usd',
+          'purchase_date': 1704067200,
+        };
+
+        expect(() => InvestmentModel.fromJson(json), throwsA(isA<ArgumentError>()));
+      });
+
+      test('throws for invalid currency', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'stock',
+          'asset_name': 'Test',
+          'quantity': 1,
+          'purchase_value': 100,
+          'currency': 'gbp',
+          'purchase_date': 1704067200,
+        };
+
+        expect(() => InvestmentModel.fromJson(json), throwsA(isA<ArgumentError>()));
+      });
+
+      test('parses quantity and purchaseValue from string', () {
+        final json = {
+          'id': 'inv_001',
+          'asset_type': 'stock',
+          'asset_name': 'AAPL',
+          'quantity': '10.5',
+          'purchase_value': '1575.00',
+          'currency': 'usd',
+          'purchase_date': 1704067200,
+        };
+
+        final inv = InvestmentModel.fromJson(json);
+        expect(inv.quantity, 10.5);
+        expect(inv.purchaseValue, 1575.0);
+      });
     });
 
-    test('fromJson creates model with manual tracking type', () {
-      final json = {
-        'commodity': 'Property_A',
-        'name': 'Real Estate Property',
-        'quantity': 1.0,
-        'current_value': 500000.00,
-        'cost_basis': 450000.00,
-        'gain_loss_percent': 11.11,
-        'tracking_type': 'manual',
-      };
+    group('toJson', () {
+      test('serializes all fields', () {
+        final inv = createTestInvestment();
+        final json = inv.toJson();
 
-      final model = InvestmentModel.fromJson(json);
+        expect(json['id'], 'inv_001');
+        expect(json['asset_type'], 'stock');
+        expect(json['asset_name'], 'AAPL');
+        expect(json['quantity'], 10.0);
+        expect(json['purchase_value'], 1500.0);
+        expect(json['currency'], 'usd');
+        expect(json['purchase_date'], isA<int>());
+        expect(json['current_price'], 175.0);
+      });
 
-      expect(model.trackingType, TrackingType.manual);
+      test('omits currentPrice when null', () {
+        final inv = createTestInvestment(currentPrice: null);
+        final json = inv.toJson();
+
+        expect(json.containsKey('current_price'), false);
+      });
+
+      test('omits priceHistory when null', () {
+        final inv = createTestInvestment(priceHistory: null);
+        final json = inv.toJson();
+
+        expect(json.containsKey('price_history'), false);
+      });
+
+      test('includes priceHistory when present', () {
+        final inv = createTestInvestment(
+          priceHistory: [
+            PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 150.0),
+          ],
+        );
+        final json = inv.toJson();
+
+        expect(json.containsKey('price_history'), true);
+        expect((json['price_history'] as List).length, 1);
+      });
     });
 
-    test('fromJson throws on missing required fields', () {
-      final json = {
-        'commodity': 'NVDA',
-        'name': 'NVIDIA Corporation',
-        // Missing other required fields
-      };
+    group('toJson/fromJson round-trip', () {
+      test('preserves all data through serialization cycle', () {
+        final original = createTestInvestment();
+        final restored = InvestmentModel.fromJson(original.toJson());
 
-      expect(
-        () => InvestmentModel.fromJson(json),
-        throwsA(isA<ArgumentError>()),
-      );
+        expect(restored, original);
+      });
+
+      test('preserves investment with null optional fields', () {
+        final original = createTestInvestment(currentPrice: null, priceHistory: null);
+        final restored = InvestmentModel.fromJson(original.toJson());
+
+        expect(restored, original);
+      });
+
+      test('preserves investment with price history', () {
+        final original = createTestInvestment(
+          priceHistory: [
+            PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704067200 * 1000), price: 150.0),
+            PriceHistoryPoint(date: DateTime.fromMillisecondsSinceEpoch(1704153600 * 1000), price: 155.0),
+          ],
+        );
+        final restored = InvestmentModel.fromJson(original.toJson());
+
+        expect(restored, original);
+      });
     });
 
-    test('fromJson throws on invalid commodity symbol with special characters',
-        () {
-      final json = {
-        'commodity': 'NV@DA!',
-        'name': 'NVIDIA Corporation',
-        'quantity': 10.5,
-        'current_value': 5250.00,
-        'cost_basis': 4200.00,
-        'gain_loss_percent': 25.0,
-        'tracking_type': 'api',
-      };
+    group('getCurrentValue', () {
+      test('returns quantity * currentPrice when currentPrice is set', () {
+        final inv = createTestInvestment(quantity: 10.0, currentPrice: 175.0);
 
-      expect(
-        () => InvestmentModel.fromJson(json),
-        throwsA(predicate((e) =>
-            e is ArgumentError &&
-            e.message
-                .toString()
-                .contains('Commodity symbol can only contain'))),
-      );
+        expect(inv.getCurrentValue(), 1750.0);
+      });
+
+      test('returns purchaseValue when currentPrice is null', () {
+        final inv = createTestInvestment(purchaseValue: 1500.0, currentPrice: null);
+
+        expect(inv.getCurrentValue(), 1500.0);
+      });
     });
 
-    test('fromJson throws on invalid commodity symbol with spaces', () {
-      final json = {
-        'commodity': 'NV DA',
-        'name': 'NVIDIA Corporation',
-        'quantity': 10.5,
-        'current_value': 5250.00,
-        'cost_basis': 4200.00,
-        'gain_loss_percent': 25.0,
-        'tracking_type': 'api',
-      };
+    group('getGainLoss', () {
+      test('returns positive gain', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1500.0,
+          currentPrice: 175.0,
+        );
 
-      expect(
-        () => InvestmentModel.fromJson(json),
-        throwsA(isA<ArgumentError>()),
-      );
+        expect(inv.getGainLoss(), 250.0);
+      });
+
+      test('returns negative loss', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1500.0,
+          currentPrice: 100.0,
+        );
+
+        expect(inv.getGainLoss(), -500.0);
+      });
+
+      test('returns zero when no change', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1500.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.getGainLoss(), 0.0);
+      });
     });
 
-    test('fromJson accepts valid commodity symbol with underscores', () {
-      final json = {
-        'commodity': 'Property_A_123',
-        'name': 'Real Estate',
-        'quantity': 1.0,
-        'current_value': 500000.00,
-        'cost_basis': 450000.00,
-        'gain_loss_percent': 11.11,
-        'tracking_type': 'manual',
-      };
+    group('getGainLossPercent', () {
+      test('calculates positive percentage', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1000.0,
+          currentPrice: 150.0,
+        );
 
-      final model = InvestmentModel.fromJson(json);
+        expect(inv.getGainLossPercent(), 50.0);
+      });
 
-      expect(model.commodity, 'Property_A_123');
+      test('calculates negative percentage', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 2000.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.getGainLossPercent(), -25.0);
+      });
+
+      test('returns 0 when purchaseValue is 0', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 0.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.getGainLossPercent(), 0.0);
+      });
     });
 
-    test('fromJson parses transactions when present', () {
-      final json = {
-        'commodity': 'NVDA',
-        'name': 'NVIDIA Corporation',
-        'quantity': 10.5,
-        'current_value': 5250.00,
-        'cost_basis': 4200.00,
-        'gain_loss_percent': 25.0,
-        'tracking_type': 'api',
-        'transactions': [
-          {
-            'date': 1704067200,
-            'amount': -2100.00,
-            'type': 'buy',
-            'quantity': 5.0,
-          }
-        ],
-      };
+    group('isPositiveReturn', () {
+      test('returns true for positive gain', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1000.0,
+          currentPrice: 150.0,
+        );
 
-      final model = InvestmentModel.fromJson(json);
+        expect(inv.isPositiveReturn(), true);
+      });
 
-      expect(model.transactions, isNotNull);
-      expect(model.transactions!.length, 1);
-      expect(model.transactions![0].amount, -2100.00);
+      test('returns true for zero gain', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1500.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.isPositiveReturn(), true);
+      });
+
+      test('returns false for negative gain', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 2000.0,
+          currentPrice: 100.0,
+        );
+
+        expect(inv.isPositiveReturn(), false);
+      });
     });
 
-    test('fromJson parses value history when present', () {
-      final json = {
-        'commodity': 'NVDA',
-        'name': 'NVIDIA Corporation',
-        'quantity': 10.5,
-        'current_value': 5250.00,
-        'cost_basis': 4200.00,
-        'gain_loss_percent': 25.0,
-        'tracking_type': 'api',
-        'value_history': [
-          {
-            'date': 1704067200,
-            'from_currency': 'NVDA',
-            'to_currency': 'USD',
-            'rate': 420.00,
-          }
-        ],
-      };
+    group('getFormattedGainLoss', () {
+      test('formats positive gain with + sign', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1000.0,
+          currentPrice: 150.0,
+        );
 
-      final model = InvestmentModel.fromJson(json);
+        expect(inv.getFormattedGainLoss(), '+50.00%');
+      });
 
-      expect(model.valueHistory, isNotNull);
-      expect(model.valueHistory!.length, 1);
-      expect(model.valueHistory![0].rate, 420.00);
+      test('formats negative loss with - sign', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 2000.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.getFormattedGainLoss(), '-25.00%');
+      });
+
+      test('formats zero gain with + sign', () {
+        final inv = createTestInvestment(
+          quantity: 10.0,
+          purchaseValue: 1500.0,
+          currentPrice: 150.0,
+        );
+
+        expect(inv.getFormattedGainLoss(), '+0.00%');
+      });
     });
 
-    test('getTotalValue returns current value', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
+    group('getCurrencySymbol', () {
+      test('returns dong symbol for VND', () {
+        final inv = createTestInvestment(currency: Currency.vnd);
+        expect(inv.getCurrencySymbol(), '\u20ab');
+      });
 
-      expect(model.getTotalValue(), 5250.00);
+      test('returns dollar sign for USD', () {
+        final inv = createTestInvestment(currency: Currency.usd);
+        expect(inv.getCurrencySymbol(), '\$');
+      });
+
+      test('returns euro sign for EUR', () {
+        final inv = createTestInvestment(currency: Currency.eur);
+        expect(inv.getCurrencySymbol(), '\u20ac');
+      });
     });
 
-    test('getUnrealizedGainLoss calculates correctly for positive gain', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
+    group('Equatable', () {
+      test('identical investments are equal', () {
+        final inv1 = createTestInvestment();
+        final inv2 = createTestInvestment();
 
-      expect(model.getUnrealizedGainLoss(), 1050.00);
-    });
+        expect(inv1, inv2);
+        expect(inv1.hashCode, inv2.hashCode);
+      });
 
-    test('getUnrealizedGainLoss calculates correctly for negative loss', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 3500.00,
-        costBasis: 4200.00,
-        gainLossPercent: -16.67,
-        trackingType: TrackingType.api,
-      );
+      test('investments with different ids are not equal', () {
+        final inv1 = createTestInvestment(id: 'inv_001');
+        final inv2 = createTestInvestment(id: 'inv_002');
 
-      expect(model.getUnrealizedGainLoss(), -700.00);
-    });
+        expect(inv1, isNot(inv2));
+      });
 
-    test('isPositiveReturn returns true for positive gain', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
+      test('investments with different quantities are not equal', () {
+        final inv1 = createTestInvestment(quantity: 10.0);
+        final inv2 = createTestInvestment(quantity: 20.0);
 
-      expect(model.isPositiveReturn(), true);
-    });
-
-    test('isPositiveReturn returns false for negative loss', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 3500.00,
-        costBasis: 4200.00,
-        gainLossPercent: -16.67,
-        trackingType: TrackingType.api,
-      );
-
-      expect(model.isPositiveReturn(), false);
-    });
-
-    test('isPositiveReturn returns false for zero gain', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 4200.00,
-        costBasis: 4200.00,
-        gainLossPercent: 0.0,
-        trackingType: TrackingType.api,
-      );
-
-      expect(model.isPositiveReturn(), false);
-    });
-
-    test('getFormattedGainLoss formats positive percentage with + sign', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
-
-      expect(model.getFormattedGainLoss(), '+25.00%');
-    });
-
-    test('getFormattedGainLoss formats negative percentage with - sign', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 3500.00,
-        costBasis: 4200.00,
-        gainLossPercent: -16.67,
-        trackingType: TrackingType.api,
-      );
-
-      expect(model.getFormattedGainLoss(), '-16.67%');
-    });
-
-    test('getFormattedGainLoss formats zero with + sign', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 4200.00,
-        costBasis: 4200.00,
-        gainLossPercent: 0.0,
-        trackingType: TrackingType.api,
-      );
-
-      expect(model.getFormattedGainLoss(), '+0.00%');
-    });
-
-    test('isValidCommoditySymbol validates alphanumeric symbols', () {
-      expect(InvestmentModel.isValidCommoditySymbol('NVDA'), true);
-      expect(InvestmentModel.isValidCommoditySymbol('TSLA'), true);
-      expect(InvestmentModel.isValidCommoditySymbol('Property_A'), true);
-      expect(InvestmentModel.isValidCommoditySymbol('Asset_123'), true);
-    });
-
-    test('isValidCommoditySymbol rejects invalid symbols', () {
-      expect(InvestmentModel.isValidCommoditySymbol('NV@DA'), false);
-      expect(InvestmentModel.isValidCommoditySymbol('NV DA'), false);
-      expect(InvestmentModel.isValidCommoditySymbol('NV-DA'), false);
-      expect(InvestmentModel.isValidCommoditySymbol('NV.DA'), false);
-      expect(InvestmentModel.isValidCommoditySymbol(''), false);
-    });
-
-    test('isValidExchangeRate validates positive rates', () {
-      expect(InvestmentModel.isValidExchangeRate(420.50), true);
-      expect(InvestmentModel.isValidExchangeRate(0.01), true);
-      expect(InvestmentModel.isValidExchangeRate(1000000.0), true);
-    });
-
-    test('isValidExchangeRate rejects zero and negative rates', () {
-      expect(InvestmentModel.isValidExchangeRate(0), false);
-      expect(InvestmentModel.isValidExchangeRate(-100.0), false);
-      expect(InvestmentModel.isValidExchangeRate(-0.01), false);
-    });
-
-    test('isValidDate validates past and present dates', () {
-      final pastDate = DateTime.now().subtract(const Duration(days: 1));
-      final presentDate = DateTime.now();
-
-      expect(InvestmentModel.isValidDate(pastDate), true);
-      expect(InvestmentModel.isValidDate(presentDate), true);
-    });
-
-    test('isValidDate rejects future dates', () {
-      final futureDate = DateTime.now().add(const Duration(days: 1));
-
-      expect(InvestmentModel.isValidDate(futureDate), false);
-    });
-
-    test('toJson serializes complete model correctly', () {
-      final model = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
-
-      final json = model.toJson();
-
-      expect(json['commodity'], 'NVDA');
-      expect(json['name'], 'NVIDIA Corporation');
-      expect(json['quantity'], 10.5);
-      expect(json['current_value'], 5250.00);
-      expect(json['cost_basis'], 4200.00);
-      expect(json['gain_loss_percent'], 25.0);
-      expect(json['tracking_type'], 'api');
-    });
-
-    test('JSON round-trip preserves all data', () {
-      final original = InvestmentModel(
-        commodity: 'NVDA',
-        name: 'NVIDIA Corporation',
-        quantity: 10.5,
-        currentValue: 5250.00,
-        costBasis: 4200.00,
-        gainLossPercent: 25.0,
-        trackingType: TrackingType.api,
-      );
-
-      final json = original.toJson();
-      final restored = InvestmentModel.fromJson(json);
-
-      expect(restored.commodity, original.commodity);
-      expect(restored.name, original.name);
-      expect(restored.quantity, original.quantity);
-      expect(restored.currentValue, original.currentValue);
-      expect(restored.costBasis, original.costBasis);
-      expect(restored.gainLossPercent, original.gainLossPercent);
-      expect(restored.trackingType, original.trackingType);
+        expect(inv1, isNot(inv2));
+      });
     });
   });
 }

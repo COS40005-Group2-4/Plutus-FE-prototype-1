@@ -181,7 +181,7 @@ class SettingsScreen extends StatelessWidget {
                             const Icon(Icons.offline_bolt, color: Colors.blue),
                             const SizedBox(width: 8),
                             const Text(
-                              'Offline Session',
+                              'Offline Access',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -192,12 +192,12 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         if (daysUntilExpiry != null)
                           Text(
-                            'Your session remains valid for $daysUntilExpiry more days while offline',
+                            'You can use Plutus offline for $daysUntilExpiry more days',
                             style: const TextStyle(fontSize: 14, color: Colors.black87),
                           ),
                         const SizedBox(height: 8),
                         const Text(
-                          'You can use the app offline. Your session will be verified when you\'re back online.',
+                          "You're using Plutus offline. We'll verify your account when you reconnect.",
                           style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
@@ -258,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.link, color: Colors.blue),
             title: Text(l10n.linkGoogle),
-            subtitle: const Text('Enable cloud backup and sync'),
+            subtitle: const Text('Back up your data and sync across devices'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
@@ -266,7 +266,7 @@ class SettingsScreen extends StatelessWidget {
                 builder: (context) => AlertDialog(
                   title: Text(l10n.linkGoogle),
                   content: const Text(
-                    'Link your Google account to enable cloud sync and backup across devices.',
+                    'Connect your Google account to back up your data and access it on any device.',
                   ),
                   actions: [
                     TextButton(
@@ -287,9 +287,9 @@ class SettingsScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        success 
-                            ? 'Google account linked successfully!' 
-                            : 'Failed to link account',
+                        success
+                            ? 'Google account connected!'
+                            : "Couldn't connect your Google account",
                       ),
                     ),
                   );
@@ -301,7 +301,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.link_off, color: Colors.orange),
             title: Text(l10n.unlinkGoogle),
-            subtitle: const Text('Switch to local-only mode'),
+            subtitle: const Text('Store data on this device only'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
@@ -309,7 +309,7 @@ class SettingsScreen extends StatelessWidget {
                 builder: (context) => AlertDialog(
                   title: Text(l10n.unlinkGoogle),
                   content: const Text(
-                    'Are you sure you want to unlink your Google account? You can still use the app with local data only.',
+                    'This will disconnect your Google account. Your data will remain on this device.',
                   ),
                   actions: [
                     TextButton(
@@ -330,7 +330,7 @@ class SettingsScreen extends StatelessWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Google account unlinked successfully'),
+                      content: Text('Google account disconnected'),
                     ),
                   );
                 }
@@ -410,7 +410,7 @@ class SettingsScreen extends StatelessWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            'Sign in to sync your data across devices and enable online backups.',
+            'Sign in to back up your data and access it from any device.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,

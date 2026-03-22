@@ -47,7 +47,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).dialogBackgroundColor,
-        title: const Text('Create New User'),
+        title: const Text('Create a Profile'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -55,7 +55,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               controller: usernameController,
               decoration: const InputDecoration(
                 labelText: 'Username',
-                hintText: 'Enter username',
+                hintText: 'Choose a username',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -64,7 +64,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               controller: displayNameController,
               decoration: const InputDecoration(
                 labelText: 'Display Name',
-                hintText: 'Enter display name',
+                hintText: 'Your display name',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -90,7 +90,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
       if (username.isEmpty || displayName.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please fill in all fields')),
+            const SnackBar(content: Text('Please fill in all fields to continue')),
           );
         }
         return;
@@ -103,7 +103,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to create user. Username may already exist.')),
+          const SnackBar(content: Text("Couldn't create your account. That username may already be taken.")),
         );
       }
     }
@@ -127,7 +127,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select User'),
+        title: const Text('Switch Profile'),
         backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
       ),
       body: _isLoading
@@ -139,7 +139,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 children: [
                   const SizedBox(height: 20),
                   const Text(
-                    'Select a user to continue',
+                    "Who's using Plutus?",
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -156,12 +156,12 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                             Icon(Icons.people_outline, size: 80, color: Colors.grey),
                             SizedBox(height: 20),
                             Text(
-                              'No users found',
+                              'No profiles found',
                               style: TextStyle(fontSize: 18, color: Colors.grey),
                             ),
                             SizedBox(height: 10),
                             Text(
-                              'Create a new user to get started',
+                              'Create a profile to get started',
                               style: TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],
@@ -271,7 +271,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                   ElevatedButton.icon(
                     onPressed: _showCreateUserDialog,
                     icon: const Icon(Icons.person_add),
-                    label: const Text('Create New User'),
+                    label: const Text('Create a Profile'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: const Color(0xFF4285F4),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../services/backend_ffi_service.dart';
 import '../services/settings_service.dart';
@@ -67,6 +68,60 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
     }
   }
 
+  Widget _buildGauge(double value, bool isCompact) {
+    final clampedValue = value.clamp(-100.0, 100.0);
+    final normalizedValue = (clampedValue + 100) / 200;
+    final gaugeColor = clampedValue >= 0 ? const Color(0xFF5DADE2) : Colors.red;
+
+    return SizedBox(
+      height: isCompact ? 70 : 90,
+      width: isCompact ? 70 : 90,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          PieChart(
+            PieChartData(
+              startDegreeOffset: 180,
+              sectionsSpace: 0,
+              centerSpaceRadius: isCompact ? 22 : 28,
+              sections: [
+                PieChartSectionData(
+                  color: gaugeColor.withOpacity(0.8),
+                  value: normalizedValue * 180,
+                  title: '',
+                  radius: isCompact ? 10 : 14,
+                ),
+                PieChartSectionData(
+                  color: Colors.white.withOpacity(0.1),
+                  value: (1 - normalizedValue) * 180,
+                  title: '',
+                  radius: isCompact ? 10 : 14,
+                ),
+                PieChartSectionData(
+                  color: Colors.transparent,
+                  value: 180,
+                  title: '',
+                  radius: isCompact ? 10 : 14,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              '$_irrValue%',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isCompact ? 13 : 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -83,65 +138,39 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.show_chart, size: isCompact ? 28 : 40, color: Colors.white),
-                SizedBox(height: isCompact ? 6 : 12),
                 Text(
                   AppLocalizations.of(context).irr,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: isCompact ? 14 : 18,
+                    fontSize: isCompact ? 14 : 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (!isCompact) ...[
-                  const SizedBox(height: 8),
+                if (!isCompact)
                   Text(
                     AppLocalizations.of(context).internalRateOfReturn,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
                     textAlign: TextAlign.center,
                   ),
-                ],
-                SizedBox(height: isCompact ? 8 : 16),
-                GlassContainer(
-                  padding: EdgeInsets.all(isCompact ? 8 : 12),
-                  color: Colors.white,
-                  opacity: 0.1,
-                  borderRadius: 8,
-                  child: Column(
-                    children: [
-                      _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              '$_irrValue%',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isCompact ? 18 : 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                      if (!isCompact) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          AppLocalizations.of(context).currentIrr,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
+                SizedBox(height: isCompact ? 4 : 8),
+                _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
                         ),
-                      ],
-                    ],
+                      )
+                    : _buildGauge(double.tryParse(_irrValue) ?? 0, isCompact),
+                if (!isCompact)
+                  Text(
+                    AppLocalizations.of(context).currentIrr,
+                    style: const TextStyle(color: Colors.white54, fontSize: 10),
                   ),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 IconButton(
-                  icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
+                  icon: const Icon(Icons.refresh, color: Colors.white70, size: 18),
                   onPressed: _loadIrrData,
                   tooltip: 'Refresh',
                   padding: EdgeInsets.zero,

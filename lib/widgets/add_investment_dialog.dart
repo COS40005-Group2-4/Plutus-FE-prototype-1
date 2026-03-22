@@ -108,7 +108,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   DropdownButtonFormField<AssetType>(
                     value: _assetType,
                     decoration: InputDecoration(
-                      labelText: 'Asset Type *',
+                      labelText: 'Investment Type',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -142,8 +142,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     controller: _assetNameController,
                     decoration: InputDecoration(
                       labelText: _assetType == AssetType.other
-                          ? 'Asset Name *'
-                          : 'Symbol/Ticker *',
+                          ? 'Investment Name'
+                          : 'Ticker Symbol',
                       hintText: _assetType == AssetType.stock
                           ? 'e.g., AAPL, GOOGL'
                           : _assetType == AssetType.crypto
@@ -171,7 +171,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   TextFormField(
                     controller: _quantityController,
                     decoration: InputDecoration(
-                      labelText: 'Quantity *',
+                      labelText: 'Quantity',
                       hintText: 'e.g., 10, 0.5',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -183,23 +183,23 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     ],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Quantity is required';
+                        return 'Please enter a quantity';
                       }
                       final num = double.tryParse(value);
                       if (num == null || num <= 0) {
-                        return 'Must be a positive number';
+                        return 'Please enter a number greater than 0';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Purchase Value field
                   TextFormField(
                     controller: _purchaseValueController,
                     decoration: InputDecoration(
-                      labelText: 'Total Purchase Value *',
-                      hintText: 'Total amount paid',
+                      labelText: 'Total Amount Paid',
+                      hintText: 'How much did you pay in total?',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -210,11 +210,11 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     ],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Purchase value is required';
+                        return 'Please enter the amount you paid';
                       }
                       final num = double.tryParse(value);
                       if (num == null || num <= 0) {
-                        return 'Must be a positive number';
+                        return 'Please enter a number greater than 0';
                       }
                       return null;
                     },
@@ -225,7 +225,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   DropdownButtonFormField<Currency>(
                     value: _currency,
                     decoration: InputDecoration(
-                      labelText: 'Currency *',
+                      labelText: 'Currency',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -255,7 +255,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'Purchase Date *',
+                        labelText: 'Purchase Date',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

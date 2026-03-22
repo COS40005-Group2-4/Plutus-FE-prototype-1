@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/investment_model.dart';
-import '../services/investment_service.dart';
+import '../services/interfaces/i_investment_service.dart';
+import '../di/service_locator.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/glass_background.dart';
 import '../widgets/add_investment_dialog.dart';
@@ -15,7 +18,7 @@ class InvestmentListScreen extends StatefulWidget {
 }
 
 class _InvestmentListScreenState extends State<InvestmentListScreen> {
-  final InvestmentService _service = InvestmentService();
+  final IInvestmentService _service = sl<IInvestmentService>();
   List<InvestmentModel>? _investments;
   bool _isLoading = false;
   String? _error;
@@ -23,6 +26,11 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
   @override
   void initState() {
     super.initState();
+    // Set user ID in the investment service for database operations
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUserId != null) {
+      _service.setUserId(authProvider.currentUserId!);
+    }
     _loadData();
   }
 
@@ -74,13 +82,17 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             );
             
             // Save to backend (this fetches price data)
-            final service = InvestmentService();
+            final service = sl<IInvestmentService>();
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.currentUserId != null) {
+              service.setUserId(authProvider.currentUserId!);
+            }
             await service.saveInvestment(investment);
             
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Added $assetName'),
+                  content: Text('$assetName added to your portfolio'),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -95,7 +107,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Failed to add investment: $e'),
+                  content: const Text("Couldn't add investment. Please try again."),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -209,7 +221,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap + to add your first investment',
+              'Tap + to start tracking your investments',
               style: TextStyle(
                 color: isDark ? Colors.white54 : Colors.black45,
               ),
@@ -301,7 +313,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
         onTap: () {
           // TODO: Navigate to detail screen
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('View ${investment.assetName} details')),
+            SnackBar(content: Text('Opening ${investment.assetName}')),
           );
         },
       ),

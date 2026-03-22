@@ -1,5 +1,7 @@
+import 'package:equatable/equatable.dart';
+
 /// Profile model extending user information with personal details
-class Profile {
+class Profile extends Equatable {
   final int userId;
   final String? avatarPath;
   final String? dateOfBirth;
@@ -13,7 +15,7 @@ class Profile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  Profile({
+  const Profile({
     required this.userId,
     this.avatarPath,
     this.dateOfBirth,
@@ -27,6 +29,9 @@ class Profile {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  @override
+  List<Object?> get props => [userId, avatarPath, dateOfBirth, position, placeOfEmployment, showName, showEmail, showDateOfBirth, showPosition, showPlaceOfEmployment, createdAt, updatedAt];
 
   factory Profile.fromMap(Map<String, dynamic> map) {
     return Profile(

@@ -11,8 +11,9 @@ import 'package:path_provider/path_provider.dart';
 
 import '../config/aws_config.dart';
 import '../models/backup_models.dart';
+import 'interfaces/i_backup_service.dart';
 
-class BackupService {
+class BackupService implements IBackupService {
   static final BackupService _instance = BackupService._internal();
   factory BackupService() => _instance;
   BackupService._internal();

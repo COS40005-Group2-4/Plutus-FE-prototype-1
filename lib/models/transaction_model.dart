@@ -1,19 +1,23 @@
+import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
-class Transaction {
+class Transaction extends Equatable {
   final int? id;
   final int date;
   final String payee;
   final String description;
   final List<Posting> postings;
 
-  Transaction({
+  const Transaction({
     this.id,
     required this.date,
     required this.payee,
     required this.description,
     required this.postings,
   });
+
+  @override
+  List<Object?> get props => [id, date, payee, description, postings];
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
@@ -88,16 +92,19 @@ class Transaction {
   }
 }
 
-class Posting {
+class Posting extends Equatable {
   final String account;
   final double amount;
   final String commodity;
 
-  Posting({
+  const Posting({
     required this.account,
     required this.amount,
     required this.commodity,
   });
+
+  @override
+  List<Object?> get props => [account, amount, commodity];
 
   factory Posting.fromJson(Map<String, dynamic> json) {
     double amountValue = 0.0;
