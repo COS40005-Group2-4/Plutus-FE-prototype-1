@@ -7,10 +7,29 @@ A new Flutter project.
 flutter run --dart-define-from-file=.env
 
 ###Build libc
-go build -o libplutus.dll -buildmode=c-shared ./main.go
+```bash
+go build -o libplutus.dll -buildmode=c-shared ./ffi.go
+```
+
+for Linux:
+```bash
+go build -o libplutus.dll -buildmode=c-shared ./ffi.go
+```
+
+Copy `libplutus.so` to folder `linux` in project root dir
+
+
+for Android (ARMv8):
+```bash
+GOARCH=arm64 go build -o libplutus.so -buildmode=c-shared ./ffi.go
+```
+
+Copy `libplutus.so` to folder `android/src/main/jniLibs/arm64-v8a/` in project root dir
 
 ###Build APK on emulator
+```bash
 flutter install -d emulator-5554
+```
 
 ## Sample Resoureces
 
