@@ -55,6 +55,9 @@ abstract class IDatabaseService {
   Future<void> markInvestmentAsSynced(String investmentId);
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId);
 
+  // Data consent
+  Future<void> setUserDataConsent(int userId, bool consent);
+
   // Utility
   Future<void> clearAllData();
   Future<void> clearUserData(int userId);

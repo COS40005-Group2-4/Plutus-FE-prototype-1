@@ -23,6 +23,7 @@ for Android (ARMv8):
 ```bash
 GOARCH=arm64 go build -o libplutus.so -buildmode=c-shared ./ffi.go
 ```
+sudo xcode-select -s /Application/Xcode.app/Contents/Developer
 
 Copy `libplutus.so` to folder `android/src/main/jniLibs/arm64-v8a/` in project root dir
 

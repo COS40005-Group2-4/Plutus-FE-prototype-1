@@ -5,8 +5,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/profile_model.dart';
+import 'interfaces/i_database_service.dart';
 
-class DatabaseService {
+class DatabaseService implements IDatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   
@@ -756,6 +757,76 @@ class DatabaseService {
     );
   }
   
+  // Investment operations
+  Future<int> insertInvestment(int userId, Map<String, dynamic> investment) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    investment['user_id'] = userId;
+    investment['created_at'] = investment['created_at'] ?? now;
+    investment['updated_at'] = investment['updated_at'] ?? now;
+    investment['is_synced'] = 0;
+    return await db.insert('investments', investment);
+  }
+
+  Future<List<Map<String, dynamic>>> getInvestmentsByUserId(int userId) async {
+    final db = await database;
+    return await db.query(
+      'investments',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  Future<Map<String, dynamic>?> getInvestmentById(String investmentId) async {
+    final db = await database;
+    final results = await db.query(
+      'investments',
+      where: 'id = ?',
+      whereArgs: [investmentId],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> updateInvestment(String investmentId, Map<String, dynamic> investment) async {
+    final db = await database;
+    investment['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'investments',
+      investment,
+      where: 'id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<void> deleteInvestment(String investmentId) async {
+    final db = await database;
+    await db.delete(
+      'investments',
+      where: 'id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<void> markInvestmentAsSynced(String investmentId) async {
+    final db = await database;
+    await db.update(
+      'investments',
+      {'is_synced': 1, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'id = ?',
+      whereArgs: [investmentId],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId) async {
+    final db = await database;
+    return await db.query(
+      'investments',
+      where: 'user_id = ? AND is_synced = 0',
+      whereArgs: [userId],
+    );
+  }
+
   Future<void> close() async {
     final db = await database;
     await db.close();

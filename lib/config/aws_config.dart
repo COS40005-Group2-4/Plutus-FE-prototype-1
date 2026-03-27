@@ -32,6 +32,13 @@ class AWSConfig {
         'PLUTUS_AWS_S3_BUCKET_NAME',
         defaultValue: 'your-s3-bucket-name',
       );
+
+  static String get dynamoTcTableName =>
+      dotenv.env['PLUTUS_DYNAMO_TC_TABLE_NAME'] ??
+      const String.fromEnvironment(
+        'PLUTUS_DYNAMO_TC_TABLE_NAME',
+        defaultValue: 'plutus-tc-acceptance',
+      );
 }
 
 extension StringExtension on String {

@@ -12,6 +12,7 @@ import '../services/settings_service.dart';
 import '../services/bill_service.dart';
 import '../services/investment_service.dart';
 import '../services/sync_manager.dart';
+import '../services/consent_service.dart';
 import '../transaction_service.dart';
 
 final GetIt sl = GetIt.instance;
@@ -23,6 +24,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<IPriceApiService>(() => PriceApiService());
   sl.registerLazySingleton<IGoogleAuthService>(() => GoogleAuthService());
   sl.registerLazySingleton<IBackupService>(() => BackupService());
+  sl.registerLazySingleton<IConsentService>(() => ConsentService());
 
   // Tier 1: Services depending on Tier 0
   sl.registerLazySingleton<IUserService>(

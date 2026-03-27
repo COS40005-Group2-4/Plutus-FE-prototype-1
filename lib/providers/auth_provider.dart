@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/google_auth_service.dart';
 import '../services/user_service.dart';
 import '../services/settings_service.dart';
+import '../services/interfaces/i_consent_service.dart';
+import '../di/service_locator.dart';
 import '../models/user_model.dart';
 import '../widgets/consent_dialog.dart';
 
@@ -12,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _authService = GoogleAuthService();
   final UserService _userService = UserService();
   final SettingsService _settingsService = SettingsService();
+  final IConsentService _consentService = sl<IConsentService>();
   
   bool _isAuthenticated = false;
   bool _isGuest = false;
@@ -335,8 +338,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Check and prompt for data consent if user has OAuth but hasn't consented yet.
+  /// Checks DynamoDB first (authoritative), falls back to local SQLite if offline.
   /// Returns true if consent is granted, false if declined.
-  /// This should be called from a BuildContext (e.g., in main.dart after auth initialization).
   Future<bool> checkDataConsent(BuildContext context) async {
     // No user logged in - no consent needed
     if (_currentUser == null) return true;
@@ -344,16 +347,45 @@ class AuthProvider extends ChangeNotifier {
     // User doesn't have OAuth (offline/guest mode) - no consent needed
     if (!_currentUser!.hasOAuth) return true;
 
-    // User has already consented - proceed
+    final email = _currentUser!.email;
+    if (email == null || email.isEmpty) return true;
+
+    // 1. Check DynamoDB first (authoritative source)
+    try {
+      final acceptedRemotely = await _consentService.hasAcceptedTerms(email);
+      if (acceptedRemotely) {
+        // Sync to local if not already set
+        if (!_currentUser!.dataConsent) {
+          await _userService.setDataConsent(_currentUser!.id, true);
+          _currentUser = await _userService.getUserById(_currentUser!.id);
+          notifyListeners();
+        }
+        return true;
+      }
+    } catch (e) {
+      // DynamoDB unreachable - fall back to local
+      if (kDebugMode) {
+        print('ConsentService: DynamoDB check failed, using local: $e');
+      }
+      if (_currentUser!.dataConsent) return true;
+    }
+
+    // 2. If local says consented (offline scenario), trust it
     if (_currentUser!.dataConsent) return true;
 
-    // Show consent dialog
+    // 3. Neither remote nor local consent - show dialog
     final agreed = await showDataConsentDialog(context);
 
     if (agreed) {
-      // User agreed - save consent
+      // Write to DynamoDB (best-effort), then local
+      try {
+        await _consentService.recordAcceptance(email);
+      } catch (e) {
+        if (kDebugMode) {
+          print('ConsentService: DynamoDB write failed, saved locally: $e');
+        }
+      }
       await _userService.setDataConsent(_currentUser!.id, true);
-      // Reload user to get updated data
       _currentUser = await _userService.getUserById(_currentUser!.id);
       notifyListeners();
       return true;
