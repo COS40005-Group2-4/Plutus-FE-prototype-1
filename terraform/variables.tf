@@ -9,3 +9,32 @@ variable "tc_table_name" {
   type        = string
   default     = "plutus-tc-acceptance"
 }
+
+variable "data_table_name" {
+  description = "Name of the main DynamoDB data table"
+  type        = string
+  default     = "plutus-data"
+}
+
+variable "lambda_zip_path" {
+  description = "Path to the Lambda deployment package (zip file)"
+  type        = string
+  default     = "../Plutus-backend-prototype-2/function.zip"
+}
+
+variable "google_client_id" {
+  description = "Google OAuth client ID for JWT validation"
+  type        = string
+}
+
+variable "s3_bucket_name" {
+  description = "Name of the existing S3 bucket for backups"
+  type        = string
+  default     = "pluwus-backups"
+}
+
+variable "cors_allow_origins" {
+  description = "Allowed origins for CORS"
+  type        = list(string)
+  default     = ["https://main.d3adjr6i7jedcz.amplifyapp.com", "http://localhost:8080"]
+}

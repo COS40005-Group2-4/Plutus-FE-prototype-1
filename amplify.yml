@@ -6,12 +6,13 @@ frontend:
         - echo "Installing Flutter dependencies..."
         - if [ ! -d flutter ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
         - export PATH=$PATH:$PWD/flutter/bin
+        - touch .env
         - flutter clean
         - flutter pub get
     build:
       commands:
         - echo "Building Flutter web application..."
-        - flutter build web --release --no-tree-shake-icons --no-wasm --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID --dart-define=GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID --dart-define=GOOGLE_DESKTOP_CLIENT_ID=$GOOGLE_DESKTOP_CLIENT_ID --dart-define=GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=$GOOGLE_DESKTOP_CLIENT_SECRET --dart-define=REDIRECT_URL=$REDIRECT_URL --dart-define=PLUTUS_AWS_ACCESS_KEY_ID=$PLUTUS_AWS_ACCESS_KEY_ID --dart-define=PLUTUS_AWS_SECRET_ACCESS_KEY=$PLUTUS_AWS_SECRET_ACCESS_KEY --dart-define=PLUTUS_AWS_REGION=$PLUTUS_AWS_REGION --dart-define=PLUTUS_AWS_S3_BUCKET_NAME=$PLUTUS_AWS_S3_BUCKET_NAME --dart-define=EXCHANGE_RATE_API_KEY=$EXCHANGE_RATE_API_KEY
+        - flutter build web --release --no-tree-shake-icons --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID --dart-define=GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID --dart-define=GOOGLE_DESKTOP_CLIENT_ID=$GOOGLE_DESKTOP_CLIENT_ID --dart-define=GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=$GOOGLE_DESKTOP_CLIENT_SECRET --dart-define=REDIRECT_URL=$REDIRECT_URL --dart-define=PLUTUS_AWS_ACCESS_KEY_ID=$PLUTUS_AWS_ACCESS_KEY_ID --dart-define=PLUTUS_AWS_SECRET_ACCESS_KEY=$PLUTUS_AWS_SECRET_ACCESS_KEY --dart-define=PLUTUS_AWS_REGION=$PLUTUS_AWS_REGION --dart-define=PLUTUS_AWS_S3_BUCKET_NAME=$PLUTUS_AWS_S3_BUCKET_NAME --dart-define=EXCHANGE_RATE_API_KEY=$EXCHANGE_RATE_API_KEY --dart-define=API_BASE_URL=$API_BASE_URL
   artifacts:
     baseDirectory: build/web
     files:
