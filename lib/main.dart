@@ -22,7 +22,6 @@ import 'services/sync_manager.dart';
 import 'transaction_service.dart';
 import 'l10n/app_localizations.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'widgets/conflict_dialog.dart';
 import 'widgets/backup_found_dialog.dart';
@@ -34,12 +33,10 @@ import 'theme/app_colors.dart';
 ///
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // On web, environment variables are injected at build time via --dart-define.
-  // The .env file may not exist in CI builds (it's in .gitignore).
-  // isOptional: true prevents failure when the file is missing.
-  if (!kIsWeb) {
-    await dotenv.load(fileName: ".env", isOptional: true);
-  }
+  // isOptional: true prevents failure when the file is missing or empty
+  // (e.g., in CI/web builds where .env is not committed to git).
+  // On web, env vars come from --dart-define at build time instead.
+  await dotenv.load(fileName: ".env", isOptional: true);
   await setupServiceLocator();
 
   ///
