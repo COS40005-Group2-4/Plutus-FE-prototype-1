@@ -8,11 +8,10 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../services/budget_service.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
-const Color blue = Color(0xFF4285F4);
-const Color red = Color(0xFFEA4335);
-const Color yellow = Color(0xFFFBBC05);
-const Color green = Color(0xFF34A853);
+const Color blue = AppColors.primary;
+const Color yellow = AppColors.warning;
 
 // Budget Tracking Display Widget
 class BudgetTrackingWidget extends StatefulWidget {
@@ -737,7 +736,7 @@ class _BudgetContentState extends State<_BudgetContent> {
                         strokeWidth: strokeWidth,
                         backgroundColor: Colors.transparent,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          (predictedUsage < 0.7 ? Colors.green : (predictedUsage < 0.9 ? Colors.orange : Colors.red))
+                          (predictedUsage < 0.7 ? AppColors.positive(Theme.of(context).brightness) : (predictedUsage < 0.9 ? Colors.orange : AppColors.negative(Theme.of(context).brightness)))
                               .withOpacity(0.3),
                         ),
                       ),
@@ -750,7 +749,7 @@ class _BudgetContentState extends State<_BudgetContent> {
                       strokeWidth: strokeWidth,
                       backgroundColor: Colors.transparent,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
+                        usage < 0.7 ? AppColors.positive(Theme.of(context).brightness) : (usage < 0.9 ? Colors.orange : AppColors.negative(Theme.of(context).brightness)),
                       ),
                     ),
                   ),
@@ -785,7 +784,7 @@ class _BudgetContentState extends State<_BudgetContent> {
                       Text(
                         '${(usage * 100).toStringAsFixed(0)}%',
                         style: TextStyle(
-                          color: usage < 0.7 ? Colors.green : (usage < 0.9 ? Colors.orange : Colors.red),
+                          color: usage < 0.7 ? AppColors.positive(Theme.of(context).brightness) : (usage < 0.9 ? Colors.orange : AppColors.negative(Theme.of(context).brightness)),
                           fontSize: percentFontSize,
                           fontWeight: FontWeight.bold,
                         ),
@@ -828,13 +827,13 @@ class _BudgetContentState extends State<_BudgetContent> {
           _buildSummaryRow(
             AppLocalizations.of(context).income,
             _totalIncome,
-            Colors.green,
+            AppColors.positive(Theme.of(context).brightness),
           ),
           const SizedBox(height: 8),
           _buildSummaryRow(
             AppLocalizations.of(context).expense,
             _totalExpense,
-            Colors.red,
+            AppColors.negative(Theme.of(context).brightness),
           ),
           if (isCurrentPeriod && predictedExpense > _totalExpense) ...[
             const SizedBox(height: 8),
@@ -848,7 +847,7 @@ class _BudgetContentState extends State<_BudgetContent> {
           _buildSummaryRow(
             'Balance',
             balance,
-            balance >= 0 ? Colors.green : Colors.red,
+            balance >= 0 ? AppColors.positive(Theme.of(context).brightness) : AppColors.negative(Theme.of(context).brightness),
             isBold: true,
           ),
         ],

@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
 import '../widgets/glass_container.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 class UserSelectionScreen extends StatefulWidget {
   const UserSelectionScreen({super.key});
@@ -59,7 +62,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: displayNameController,
               decoration: const InputDecoration(
@@ -128,16 +131,16 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Switch Profile'),
-        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
                   const Text(
                     "Who's using Plutus?",
                     style: TextStyle(
@@ -146,7 +149,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: AppSpacing.xxxl),
                   if (_users.isEmpty)
                     const Expanded(
                       child: Center(
@@ -154,12 +157,12 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.people_outline, size: 80, color: Colors.grey),
-                            SizedBox(height: 20),
+                            SizedBox(height: AppSpacing.xl),
                             Text(
                               'No profiles found',
                               style: TextStyle(fontSize: 18, color: Colors.grey),
                             ),
-                            SizedBox(height: 10),
+                            SizedBox(height: AppSpacing.sm),
                             Text(
                               'Create a profile to get started',
                               style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -175,21 +178,21 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                         itemBuilder: (context, index) {
                           final user = _users[index];
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
+                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
                             child: GlassContainer(
-                              borderRadius: 12,
+                              borderRadius: AppRadius.md,
                               opacity: 0.1,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
+                                  horizontal: AppSpacing.xl,
+                                  vertical: AppSpacing.sm,
                                 ),
                                 leading: CircleAvatar(
                                   backgroundColor: user.isGuest
                                       ? Colors.grey
                                       : user.hasOAuth
-                                          ? Colors.blue
-                                          : Colors.green,
+                                          ? AppColors.primary
+                                          : AppColors.success,
                                   child: Text(
                                     user.displayName[0].toUpperCase(),
                                     style: const TextStyle(
@@ -216,36 +219,36 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                                         style: const TextStyle(fontSize: 12),
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: AppSpacing.xs),
                                     Row(
                                       children: [
                                         if (user.hasOAuth)
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
+                                              horizontal: AppSpacing.sm,
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.blue.withValues(alpha: 0.2),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: AppColors.primary.withValues(alpha: 0.2),
+                                              borderRadius: AppRadius.borderMd,
                                             ),
                                             child: const Text(
                                               'Google',
                                               style: TextStyle(
                                                 fontSize: 10,
-                                                color: Colors.blue,
+                                                color: AppColors.primary,
                                               ),
                                             ),
                                           ),
                                         if (user.isGuest)
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
+                                              horizontal: AppSpacing.sm,
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.grey.withValues(alpha: 0.2),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius: AppRadius.borderMd,
                                             ),
                                             child: const Text(
                                               'Guest',
@@ -267,27 +270,27 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                         },
                       ),
                     ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xl),
                   ElevatedButton.icon(
                     onPressed: _showCreateUserDialog,
                     icon: const Icon(Icons.person_add),
                     label: const Text('Create a Profile'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: const Color(0xFF4285F4),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
                     onPressed: _createGuestUser,
                     icon: const Icon(Icons.person_outline),
                     label: const Text('Continue as Guest'),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   TextButton.icon(
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, '/login');

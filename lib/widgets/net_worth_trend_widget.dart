@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -38,7 +39,7 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFF1ABC9C),
+          color: AppColors.netWorthAccent,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
@@ -237,8 +238,9 @@ class _NetWorthContentState extends State<_NetWorthContent> {
       );
     }
 
+    final brightness = Theme.of(context).brightness;
     final trendUp = _spots.last.y >= _spots.first.y;
-    final lineColor = trendUp ? Colors.green : Colors.red;
+    final lineColor = trendUp ? AppColors.positive(brightness) : AppColors.negative(brightness);
     final maxY = _spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     final minY = _spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
     final range = maxY - minY;
@@ -258,7 +260,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
               Text(
                 '${widget.settings.currency.symbol}${PlutusChartStyle.formatCompactCurrency(_currentNetWorth)}',
                 style: TextStyle(
-                  color: _currentNetWorth >= 0 ? Colors.green : Colors.red,
+                  color: _currentNetWorth >= 0 ? AppColors.positive(brightness) : AppColors.negative(brightness),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -285,7 +287,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                   },
                 ),
               ),
-              gridData: PlutusChartStyle.defaultGridData(maxValue: range > 0 ? range : 1),
+              gridData: PlutusChartStyle.defaultGridData(maxValue: range > 0 ? range : 1, brightness: Theme.of(context).brightness),
               titlesData: FlTitlesData(
                 show: true,
                 bottomTitles: AxisTitles(
@@ -318,7 +320,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                 topTitles: PlutusChartStyle.hiddenAxisTitles(),
                 rightTitles: PlutusChartStyle.hiddenAxisTitles(),
               ),
-              borderData: PlutusChartStyle.lineBorderData(),
+              borderData: PlutusChartStyle.lineBorderData(brightness: Theme.of(context).brightness),
               lineBarsData: [
                 LineChartBarData(
                   spots: _spots,

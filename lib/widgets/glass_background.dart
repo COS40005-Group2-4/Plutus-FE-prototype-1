@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class GlassBackground extends StatelessWidget {
   final Widget child;
@@ -8,24 +9,24 @@ class GlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Stack(
       children: [
-        // Base gradient - Figma-inspired dark navy/teal
+        // Base gradient
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isDark 
+              colors: isDark
                   ? [
-                      const Color(0xFF0A1828), // Deep navy
-                      const Color(0xFF132D3F), // Dark teal-blue
-                      const Color(0xFF1A3A4A), // Medium teal
+                      AppColors.backgroundDark,
+                      AppColors.surfaceMidDark,
+                      AppColors.surfaceDark,
                     ]
                   : [
-                      const Color(0xFFE0C3FC),
-                      const Color(0xFF8EC5FC),
+                      AppColors.backgroundLightStart,
+                      AppColors.backgroundLightEnd,
                     ],
             ),
           ),
@@ -42,7 +43,7 @@ class GlassBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF2A5470).withValues(alpha: 0.15),
+                    AppColors.borderDark.withValues(alpha: 0.15),
                     Colors.transparent,
                   ],
                 ),
@@ -59,7 +60,7 @@ class GlassBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF1E4A5F).withValues(alpha: 0.12),
+                    AppColors.surfaceElevatedDark.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -82,7 +83,7 @@ class GlassBackground extends StatelessWidget {
                     blurRadius: 100,
                     spreadRadius: 20,
                   )
-                ]
+                ],
               ),
             ),
           ),
@@ -101,7 +102,7 @@ class GlassBackground extends StatelessWidget {
                     blurRadius: 100,
                     spreadRadius: 20,
                   )
-                ]
+                ],
               ),
             ),
           ),

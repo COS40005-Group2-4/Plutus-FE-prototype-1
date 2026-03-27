@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/market_data_model.dart';
 import '../services/interfaces/i_price_api_service.dart';
 import '../di/service_locator.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -128,7 +129,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      color: const Color(0xFF2A4570),
+      color: AppColors.borderDark,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),
@@ -231,7 +232,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
 
   Widget _buildMetrics(MarketData data) {
     final isPositive = data.priceChangePercent24h >= 0;
-    final changeColor = isPositive ? const Color(0xFF34A853) : const Color(0xFFEA4335);
+    final changeColor = isPositive ? AppColors.success : AppColors.error;
     final changeSign = isPositive ? '+' : '';
 
     return Column(
@@ -372,8 +373,8 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
             ),
           ),
         ),
-        gridData: PlutusChartStyle.defaultGridData(maxValue: maxY - minY),
-        borderData: PlutusChartStyle.lineBorderData(),
+        gridData: PlutusChartStyle.defaultGridData(maxValue: maxY - minY, brightness: Theme.of(context).brightness),
+        borderData: PlutusChartStyle.lineBorderData(brightness: Theme.of(context).brightness),
         lineBarsData: [
           LineChartBarData(
             spots: spots,

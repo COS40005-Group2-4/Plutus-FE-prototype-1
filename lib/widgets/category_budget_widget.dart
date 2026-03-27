@@ -10,6 +10,7 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../services/budget_service.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 // Category Budget Widget - Budget focused on each category
 class CategoryBudgetWidget extends StatefulWidget {
@@ -736,7 +737,7 @@ class _CategoryBudgetContentState extends State<_CategoryBudgetContent> {
                     Text(
                       '${_currencyService.formatCurrency(amount: spent, currencyCode: widget.budgetCurrency.code)} / ${_currencyService.formatCurrency(amount: budget, currencyCode: widget.budgetCurrency.code)}',
                       style: TextStyle(
-                        color: isOverBudget ? Colors.red : Colors.white70,
+                        color: isOverBudget ? AppColors.negative(Theme.of(context).brightness) : Colors.white70,
                         fontSize: 11,
                       ),
                     ),
@@ -749,7 +750,7 @@ class _CategoryBudgetContentState extends State<_CategoryBudgetContent> {
                     value: progress.clamp(0.0, 1.0),
                     backgroundColor: Colors.white.withOpacity(0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progress < 0.7 ? Colors.green : (progress < 0.9 ? Colors.orange : Colors.red),
+                      progress < 0.7 ? AppColors.positive(Theme.of(context).brightness) : (progress < 0.9 ? Colors.orange : AppColors.negative(Theme.of(context).brightness)),
                     ),
                     minHeight: 8,
                   ),
@@ -816,7 +817,7 @@ class _CategoryBudgetContentState extends State<_CategoryBudgetContent> {
                       currencyCode: widget.budgetCurrency.code,
                     ),
                     style: TextStyle(
-                      color: isOverBudget ? Colors.red : Colors.white,
+                      color: isOverBudget ? AppColors.negative(Theme.of(context).brightness) : Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),

@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -37,7 +38,7 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFFF39C12),
+          color: AppColors.savingsAccent,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
@@ -169,10 +170,10 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
     }
   }
 
-  Color _getRateColor(double rate) {
-    if (rate >= 20) return Colors.green;
+  Color _getRateColor(double rate, Brightness brightness) {
+    if (rate >= 20) return AppColors.positive(brightness);
     if (rate >= 10) return Colors.orange;
-    return Colors.red;
+    return AppColors.negative(brightness);
   }
 
   @override
@@ -181,7 +182,8 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
-    final rateColor = _getRateColor(_currentRate);
+    final brightness = Theme.of(context).brightness;
+    final rateColor = _getRateColor(_currentRate, brightness);
 
     return Column(
       children: [
@@ -231,7 +233,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                       return spots.map((spot) {
                         return LineTooltipItem(
                           '${spot.y.toStringAsFixed(1)}%',
-                          TextStyle(color: _getRateColor(spot.y), fontSize: 11, fontWeight: FontWeight.bold),
+                          TextStyle(color: _getRateColor(spot.y, brightness), fontSize: 11, fontWeight: FontWeight.bold),
                         );
                       }).toList();
                     },
@@ -273,18 +275,18 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                   topTitles: PlutusChartStyle.hiddenAxisTitles(),
                   rightTitles: PlutusChartStyle.hiddenAxisTitles(),
                 ),
-                borderData: PlutusChartStyle.lineBorderData(),
+                borderData: PlutusChartStyle.lineBorderData(brightness: Theme.of(context).brightness),
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     HorizontalLine(
                       y: 20,
-                      color: Colors.green.withOpacity(0.3),
+                      color: AppColors.positive(brightness).withOpacity(0.3),
                       strokeWidth: 1,
                       dashArray: [4, 4],
                       label: HorizontalLineLabel(
                         show: true,
                         alignment: Alignment.topRight,
-                        style: const TextStyle(color: Colors.green, fontSize: 8),
+                        style: TextStyle(color: AppColors.positive(brightness), fontSize: 8),
                         labelResolver: (_) => '20%',
                       ),
                     ),
@@ -295,7 +297,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                     spots: _spots,
                     isCurved: true,
                     gradient: LinearGradient(
-                      colors: [Colors.red, Colors.orange, Colors.green],
+                      colors: [AppColors.negative(brightness), Colors.orange, AppColors.positive(brightness)],
                       stops: const [0.0, 0.4, 1.0],
                     ),
                     barWidth: 2.5,
@@ -305,7 +307,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
                           radius: 3,
-                          color: _getRateColor(spot.y),
+                          color: _getRateColor(spot.y, brightness),
                           strokeWidth: 1,
                           strokeColor: Colors.white,
                         );
@@ -317,7 +319,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.green.withOpacity(0.15),
+                          AppColors.positive(brightness).withOpacity(0.15),
                           Colors.transparent,
                         ],
                       ),

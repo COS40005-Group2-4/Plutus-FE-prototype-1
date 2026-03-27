@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
 import '../models/investment_model.dart';
+import '../theme/app_colors.dart';
 
 /// Dialog for adding a new investment
 class AddInvestmentDialog extends StatefulWidget {
@@ -86,7 +87,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
           borderRadius: 16,
           blur: 15.0,
           opacity: isDark ? 0.35 : 0.1,
-          color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
+          color: isDark ? AppColors.surfaceDark : Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -286,7 +287,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       ElevatedButton(
                         onPressed: _handleSave,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A90E2),
+                          backgroundColor: AppColors.primaryDark,
                           foregroundColor: Colors.white,
                         ),
                         child: Text(localizations.save),

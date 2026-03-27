@@ -28,6 +28,7 @@ import 'widgets/backup_found_dialog.dart';
 import 'models/backup_models.dart';
 import 'widgets/glass_background.dart';
 import 'di/service_locator.dart';
+import 'theme/app_colors.dart';
 
 ///
 void main() async {
@@ -147,11 +148,29 @@ class _MyAppState extends State<MyApp> {
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.textOnLight,
               ),
               dialogBackgroundColor: Colors.transparent,
+              textTheme: const TextTheme(
+                displayLarge: TextStyle(color: AppColors.textOnLight),
+                displayMedium: TextStyle(color: AppColors.textOnLight),
+                displaySmall: TextStyle(color: AppColors.textOnLight),
+                headlineLarge: TextStyle(color: AppColors.textOnLight),
+                headlineMedium: TextStyle(color: AppColors.textOnLight),
+                headlineSmall: TextStyle(color: AppColors.textOnLight),
+                titleLarge: TextStyle(color: AppColors.textOnLight),
+                titleMedium: TextStyle(color: AppColors.textOnLight),
+                titleSmall: TextStyle(color: AppColors.textOnLight),
+                bodyLarge: TextStyle(color: AppColors.textOnLight),
+                bodyMedium: TextStyle(color: AppColors.textOnLight),
+                bodySmall: TextStyle(color: AppColors.textOnLightSecondary),
+                labelLarge: TextStyle(color: AppColors.textOnLight),
+                labelMedium: TextStyle(color: AppColors.textOnLight),
+                labelSmall: TextStyle(color: AppColors.textOnLightSecondary),
+              ),
+              iconTheme: const IconThemeData(color: AppColors.textOnLight),
               colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(0xFF4285F4),
+                seedColor: AppColors.primary,
                 brightness: Brightness.light,
               ),
             ),
@@ -160,16 +179,15 @@ class _MyAppState extends State<MyApp> {
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.textOnDark,
               ),
               dialogBackgroundColor: Colors.transparent,
               colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(0xFF2A5470),
+                seedColor: AppColors.borderDark,
                 brightness: Brightness.dark,
-                primary: const Color(0xFF4A90E2),
-                secondary: const Color(0xFF5DADE2),
-                surface: const Color(0xFF1A3A4A),
-                background: const Color(0xFF0A1828),
+                primary: AppColors.primaryDark,
+                secondary: AppColors.accent,
+                surface: AppColors.surfaceDark,
               ),
             ),
             themeMode: settingsProvider.themeMode,

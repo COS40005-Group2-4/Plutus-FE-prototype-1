@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -37,7 +38,7 @@ class _SpendingHeatmapWidgetState extends State<SpendingHeatmapWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFF48C9B0),
+          color: AppColors.heatmapAccent,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
@@ -224,7 +225,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
           topTitles: PlutusChartStyle.hiddenAxisTitles(),
           rightTitles: PlutusChartStyle.hiddenAxisTitles(),
         ),
-        gridData: PlutusChartStyle.defaultGridData(maxValue: maxVal),
+        gridData: PlutusChartStyle.defaultGridData(maxValue: maxVal, brightness: Theme.of(context).brightness),
         borderData: PlutusChartStyle.defaultBorderData(),
         barGroups: List.generate(7, (i) {
           final weekday = i + 1; // 1=Mon to 7=Sun

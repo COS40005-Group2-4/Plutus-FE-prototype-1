@@ -11,6 +11,9 @@ import '../providers/dashboard_provider.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
   @override
@@ -25,7 +28,7 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
       return GlassContainer(
         color: Colors.red,
         opacity: 0.2,
-        borderRadius: 10,
+        borderRadius: AppRadius.md,
       );
     }
 
@@ -133,8 +136,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
       ),
       appBar: AppBar(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1A3A4A).withValues(alpha: 0.3)
-            : const Color(0xFF4285F4).withValues(alpha: 0.2),
+            ? AppColors.surfaceDark.withValues(alpha: 0.3)
+            : AppColors.primary.withValues(alpha: 0.2),
         flexibleSpace: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -153,7 +156,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                 }
               },
               offset: const Offset(0, 40),
-              color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
+              color: AppColors.menuBackground.withValues(alpha: 0.95),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -164,8 +167,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                         fontWeight: FontWeight.w300,
                         letterSpacing: 2.0,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF5DADE2)
-                            : Colors.white,
+                            ? AppColors.accent
+                            : AppColors.textOnLight,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -173,8 +176,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                   Icon(
                     Icons.arrow_drop_down,
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF5DADE2)
-                        : Colors.white,
+                        ? AppColors.accent
+                        : AppColors.textOnLight,
                   ),
                 ],
               ),
@@ -186,7 +189,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                     child: Row(
                       children: [
                         if (dash.id == dashProvider.activeDashboardId)
-                          const Icon(Icons.check, color: Color(0xFF4285F4), size: 18)
+                          const Icon(Icons.check, color: AppColors.primary, size: 18)
                         else
                           const SizedBox(width: 18),
                         const SizedBox(width: 8),
@@ -207,11 +210,11 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                     value: '__new__',
                     child: Row(
                       children: [
-                        const Icon(Icons.add, color: Color(0xFF4285F4), size: 18),
+                        const Icon(Icons.add, color: AppColors.primary, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           l10n.newDashboard,
-                          style: const TextStyle(color: Color(0xFF4285F4)),
+                          style: const TextStyle(color: AppColors.primary),
                         ),
                       ],
                     ),
@@ -227,7 +230,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
             builder: (context, dashProvider, _) {
               return PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
+                color: AppColors.menuBackground.withValues(alpha: 0.95),
                 onSelected: (value) => _handleMenuAction(value, dashProvider),
                 itemBuilder: (context) => [
                   PopupMenuItem(
@@ -309,15 +312,15 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                             (context, item, x, y, editing) {
                               return const GlassContainer(
-                                borderRadius: 10,
+                                borderRadius: AppRadius.md,
                                 borderOpacity: 0.1,
                                 opacity: 0.05,
                               );
                             },
                           ),
-                          padding: const EdgeInsets.all(8),
-                          horizontalSpace: 8,
-                          verticalSpace: 8,
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          horizontalSpace: AppSpacing.sm,
+                          verticalSpace: AppSpacing.sm,
                           slotAspectRatio: aspectRatio,
                           animateEverytime: true,
                           dashboardItemController: itemController,
@@ -333,13 +336,13 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                                 children: [
                                 const Icon(Icons.dashboard_customize,
                                     size: 48, color: Colors.grey),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSpacing.lg),
                                 Text(
                                   AppLocalizations.of(context).noWidgetsSelected,
                                   style: const TextStyle(
                                       fontSize: 16, color: Colors.grey),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppSpacing.sm),
                                 Text(
                                   AppLocalizations.of(context).openMenuEnableWidgets,
                                   style: const TextStyle(
@@ -354,7 +357,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                             clipBehavior: Clip.antiAliasWithSaveLayer,
                             elevation: 5,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
                             ),
                           ),
                           physics: const RangeMaintainingScrollPhysics(),
@@ -384,10 +387,10 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                                 return Stack(
                                   children: [
                                     GlassContainer(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: const EdgeInsets.all(AppSpacing.md),
                                       color: item.color,
                                       opacity: 0.3,
-                                      borderRadius: 10,
+                                      borderRadius: AppRadius.md,
                                       child: SizedBox(
                                         width: double.infinity,
                                         height: double.infinity,
@@ -401,8 +404,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                                     ),
                                     if (_itemController.isEditing)
                                       Positioned(
-                                        right: 5,
-                                        top: 5,
+                                        right: AppSpacing.xs,
+                                        top: AppSpacing.xs,
                                         child: InkResponse(
                                           radius: 20,
                                           onTap: () {
@@ -431,7 +434,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Text(label, style: TextStyle(color: color)),
       ],
     );
@@ -596,7 +599,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -623,10 +626,10 @@ class _DashboardWidgetState extends State<DashboardWidget> {
         ),
         Expanded(
           child: Container(
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: DataWidget(item: dummyItem),
           ),

@@ -1,32 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../theme/app_colors.dart';
 
 class PlutusChartColors {
-  static const List<Color> palette = [
-    Color(0xFF4285F4), // Blue
-    Color(0xFF34A853), // Green
-    Color(0xFFEA4335), // Red
-    Color(0xFFFBBC05), // Yellow
-    Color(0xFF5DADE2), // Light Blue
-    Color(0xFFAF7AC5), // Purple
-    Color(0xFF48C9B0), // Teal
-    Color(0xFFF39C12), // Orange
-    Color(0xFFE74C3C), // Dark Red
-    Color(0xFF1ABC9C), // Cyan
-  ];
+  static const List<Color> palette = AppColors.chartPalette;
 
   static Color get(int index) => palette[index % palette.length];
 }
 
 class PlutusChartStyle {
-  static FlGridData defaultGridData({double? maxValue}) {
+  static FlGridData defaultGridData({double? maxValue, required Brightness brightness}) {
     return FlGridData(
       show: true,
       drawVerticalLine: false,
       horizontalInterval: maxValue != null && maxValue > 0 ? maxValue / 4 : 1,
       getDrawingHorizontalLine: (value) {
         return FlLine(
-          color: Colors.white.withOpacity(0.1),
+          color: AppColors.gridLine(brightness),
           strokeWidth: 1,
         );
       },
@@ -37,12 +27,12 @@ class PlutusChartStyle {
     return FlBorderData(show: false);
   }
 
-  static FlBorderData lineBorderData() {
+  static FlBorderData lineBorderData({required Brightness brightness}) {
     return FlBorderData(
       show: true,
       border: Border(
-        bottom: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
-        left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+        bottom: BorderSide(color: AppColors.borderLine(brightness), width: 1),
+        left: BorderSide(color: AppColors.borderLine(brightness), width: 1),
       ),
     );
   }

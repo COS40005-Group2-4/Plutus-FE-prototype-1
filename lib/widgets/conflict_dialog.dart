@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
+import '../theme/app_colors.dart';
 
 /// Shows a glassmorphic conflict dialog with three radio options.
 /// Pre-selects "Keep local and upload" as default.
@@ -30,20 +31,20 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
 
     return AlertDialog(
       backgroundColor: isDark
-          ? const Color(0xFF1A3A4A).withValues(alpha: 0.9)
+          ? AppColors.surfaceDark.withValues(alpha: 0.9)
           : Colors.white.withValues(alpha: 0.9),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: isDark
-              ? const Color(0xFF2A5470).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.2),
+              ? AppColors.borderDark.withValues(alpha: 0.3)
+              : Colors.black.withValues(alpha: 0.08),
         ),
       ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded,
-              color: isDark ? const Color(0xFF5DADE2) : Colors.orange),
+              color: isDark ? AppColors.accent : Colors.orange),
           const SizedBox(width: 8),
           Expanded(child: Text(l10n.backupConflictTitle)),
         ],

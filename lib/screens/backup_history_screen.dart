@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
 import '../providers/backup_provider.dart';
 import '../widgets/glass_container.dart';
+import '../theme/app_colors.dart';
 
 class BackupHistoryScreen extends StatefulWidget {
   const BackupHistoryScreen({super.key});
@@ -80,7 +81,7 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backupHistory),
-        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
       body: Consumer<BackupProvider>(
         builder: (context, provider, _) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
+import '../theme/app_colors.dart';
 import '../services/backend_ffi_service.dart';
 import '../services/settings_service.dart';
 import '../l10n/app_localizations.dart';
@@ -71,7 +72,8 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
   Widget _buildGauge(double value, bool isCompact) {
     final clampedValue = value.clamp(-100.0, 100.0);
     final normalizedValue = (clampedValue + 100) / 200; // 0 to 1
-    final gaugeColor = clampedValue >= 0 ? Colors.green : Colors.red;
+    final brightness = Theme.of(context).brightness;
+    final gaugeColor = clampedValue >= 0 ? AppColors.positive(brightness) : AppColors.negative(brightness);
 
     return SizedBox(
       height: isCompact ? 70 : 90,
@@ -126,7 +128,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
     return GlassContainer(
-      color: const Color(0xFF4A90E2),
+      color: AppColors.primaryDark,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),

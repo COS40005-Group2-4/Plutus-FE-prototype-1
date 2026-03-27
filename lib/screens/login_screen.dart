@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
 import '../widgets/glass_container.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,9 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: GlassContainer(
-            margin: EdgeInsets.all(isSmall ? 16 : 20),
-            padding: EdgeInsets.all(isSmall ? 20 : 30),
-            borderRadius: 20,
+            margin: EdgeInsets.all(isSmall ? AppSpacing.lg : AppSpacing.xl),
+            padding: EdgeInsets.all(isSmall ? AppSpacing.xl : AppSpacing.xxxl),
+            borderRadius: AppRadius.xl,
             opacity: 0.1,
             blur: 15,
             child: Column(
@@ -82,9 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
             Icon(
               Icons.account_balance_wallet,
               size: isSmall ? 72 : 100,
-              color: Colors.blue,
+              color: AppColors.primary,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               'Welcome to Plutus',
               style: TextStyle(
@@ -97,20 +100,20 @@ class _LoginScreenState extends State<LoginScreen> {
             // Show error message if present
             if (_errorMessage != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    border: Border.all(color: Colors.red),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.error.withValues(alpha: 0.15),
+                    border: Border.all(color: AppColors.error),
+                    borderRadius: AppRadius.borderSm,
                   ),
                   child: Text(
                     _errorMessage!,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 5,
                     style: TextStyle(
-                      color: Colors.red[900],
+                      color: AppColors.error,
                       fontSize: 14,
                     ),
                   ),
@@ -139,12 +142,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: const Text('Sign in with Google'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
+                    horizontal: AppSpacing.xxxl,
+                    vertical: AppSpacing.lg,
                   ),
                 ),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             TextButton(
               onPressed: () async {
                 // Navigate to user selection where they can create guest account
@@ -152,11 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pushReplacementNamed(context, '/user_selection');
                 }
               },
-              child: const Text(
+              child: Text(
                 'Continue as Guest',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey,
+                  color: AppColors.textOnLightTertiary,
                   decoration: TextDecoration.underline,
                 ),
               ),

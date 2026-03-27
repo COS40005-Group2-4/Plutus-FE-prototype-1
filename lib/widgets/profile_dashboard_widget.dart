@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/profile_widget.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 // Profile Display Widget for Dashboard
 class ProfileDashboardWidget extends StatefulWidget {
@@ -21,10 +24,10 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
 
         if (currentUser == null) {
           return GlassContainer(
-            color: Colors.purple,
+            color: AppColors.profileAccent,
             opacity: 0.2,
-            borderRadius: 16,
-            padding: const EdgeInsets.all(16),
+            borderRadius: AppRadius.lg,
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: const Center(
               child: Text(
                 'No user logged in',
@@ -35,10 +38,10 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
         }
 
         return GlassContainer(
-          color: Colors.purple,
+          color: AppColors.profileAccent,
           opacity: 0.2,
-          borderRadius: 16,
-          padding: const EdgeInsets.all(16),
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: SingleChildScrollView(
             child: ProfileWidget(
             user: currentUser,

@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import 'glass_container.dart';
 import 'add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 /// Investment Dashboard Widget
 /// 
@@ -102,7 +103,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
         blur: 10.0,
         borderOpacity: isDark ? 0.3 : 0.2,
         opacity: isDark ? 0.3 : 0.1,
-        color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
@@ -256,7 +257,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Add Investment'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4A90E2),
+            backgroundColor: AppColors.primaryDark,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -299,7 +300,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
 
   Widget _buildCompactInvestmentCard(InvestmentModel investment, bool isDark) {
     final color = investment.isPositiveReturn()
-        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        ? (isDark ? AppColors.accent : AppColors.primaryDark)
         : (isDark ? Colors.redAccent : Colors.red);
 
     final currentValue = investment.getCurrentValue();
@@ -513,7 +514,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
 
   Widget _buildPortfolioSummary(double totalValue, double gainLoss, bool isDark) {
     final color = gainLoss >= 0
-        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        ? (isDark ? AppColors.accent : AppColors.primaryDark)
         : (isDark ? Colors.redAccent : Colors.red);
 
     return Row(
@@ -599,7 +600,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
     final isPositive = lastPrice >= firstPrice;
     
     final lineColor = isPositive
-        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        ? (isDark ? AppColors.accent : AppColors.primaryDark)
         : (isDark ? Colors.redAccent : Colors.red);
 
     return SizedBox(
@@ -653,7 +654,7 @@ class _InvestmentListDialog extends StatelessWidget {
         borderRadius: 16,
         blur: 15.0,
         opacity: isDark ? 0.35 : 0.1,
-        color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -742,7 +743,7 @@ class _InvestmentListDialog extends StatelessWidget {
     VoidCallback onRefresh,
   ) {
     final color = investment.isPositiveReturn()
-        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        ? (isDark ? AppColors.accent : AppColors.primaryDark)
         : (isDark ? Colors.redAccent : Colors.red);
 
     final currentValue = investment.getCurrentValue();
@@ -967,7 +968,7 @@ class _InvestmentListDialog extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1A3A4A) : Colors.white,
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         title: const Text('Delete Investment'),
         content: Text('Are you sure you want to delete ${investment.assetName}?'),
         actions: [
@@ -1112,7 +1113,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
           borderRadius: 16,
           blur: 15.0,
           opacity: isDark ? 0.35 : 0.1,
-          color: isDark ? const Color(0xFF1A3A4A) : Colors.white,
+          color: isDark ? AppColors.surfaceDark : Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -1206,7 +1207,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                       ElevatedButton(
                         onPressed: _handleSave,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4A90E2),
+                          backgroundColor: AppColors.primaryDark,
                           foregroundColor: Colors.white,
                         ),
                         child: Text(localizations.save),

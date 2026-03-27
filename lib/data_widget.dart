@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'storage.dart';
+import 'theme/app_colors.dart';
 import 'widgets/profile_widget.dart';
 import 'widgets/roi_widget.dart';
 import 'widgets/irr_widget.dart';
@@ -21,10 +22,10 @@ import 'widgets/income_trend_widget.dart';
 import 'widgets/savings_rate_widget.dart';
 import 'widgets/market_trending_widget.dart';
 
-const Color blue = Color(0xFF4285F4);
-const Color red = Color(0xFFEA4335);
-const Color yellow = Color(0xFFFBBC05);
-const Color green = Color(0xFF34A853);
+const Color blue = AppColors.primary;
+const Color red = AppColors.error;
+const Color yellow = AppColors.warning;
+const Color green = AppColors.success;
 
 class DataWidget extends StatelessWidget {
   DataWidget({super.key, required this.item});

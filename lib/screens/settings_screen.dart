@@ -5,6 +5,9 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/backup_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,7 +20,7 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings),
-        backgroundColor: const Color(0xFF4285F4).withValues(alpha: 0.2),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
       body: authProvider.isAuthenticated 
         ? _buildAuthenticatedSettings(context, authProvider)
@@ -32,14 +35,14 @@ class SettingsScreen extends StatelessWidget {
     
     return ListView(
       children: [
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         CircleAvatar(
           radius: 50,
-          backgroundColor: currentUser?.hasOAuth == true 
-              ? Colors.blue 
-              : currentUser?.isGuest == true 
-                  ? Colors.grey 
-                  : Colors.green,
+          backgroundColor: currentUser?.hasOAuth == true
+              ? AppColors.primary
+              : currentUser?.isGuest == true
+                  ? Colors.grey
+                  : AppColors.success,
           child: Text(
             authProvider.userName.isNotEmpty 
                 ? authProvider.userName[0].toUpperCase() 
@@ -47,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
             style: const TextStyle(fontSize: 40, color: Colors.white),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Center(
           child: Text(
             authProvider.userName,
@@ -58,7 +61,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.sm),
         Center(
           child: Text(
             currentUser?.username != null ? '@${currentUser!.username}' : '',
@@ -72,7 +75,7 @@ class SettingsScreen extends StatelessWidget {
         if (authProvider.userEmail.isNotEmpty)
           Center(
             child: Padding(
-              padding: const EdgeInsets.only(top: 5),
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
                 authProvider.userEmail,
                 overflow: TextOverflow.ellipsis,
@@ -83,7 +86,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.sm),
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
@@ -93,23 +96,23 @@ class SettingsScreen extends StatelessWidget {
               if (currentUser?.hasOAuth == true)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    borderRadius: AppRadius.borderMd,
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cloud, size: 14, color: Colors.blue),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.cloud, size: 14, color: AppColors.primary),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         l10n.googleLinked,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.blue,
+                          color: AppColors.primary,
                         ),
                       ),
                     ],
@@ -118,12 +121,12 @@ class SettingsScreen extends StatelessWidget {
               if (currentUser?.isGuest == true)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.grey.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.borderMd,
                   ),
                   child: Text(
                     l10n.guestMode,
@@ -137,26 +140,26 @@ class SettingsScreen extends StatelessWidget {
               if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.success.withValues(alpha: 0.2),
+                    borderRadius: AppRadius.borderMd,
                   ),
                   child: Text(
                     l10n.localAccount,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.green,
+                      color: AppColors.success,
                     ),
                   ),
                 ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         // Session info
         FutureBuilder<Map<String, dynamic>>(
           future: authProvider.getSessionInfo(),
@@ -166,10 +169,10 @@ class SettingsScreen extends StatelessWidget {
               final daysUntilExpiry = sessionInfo['daysUntilExpiry'] as int?;
               
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: GlassContainer(
                   borderRadius: 12,
-                  color: Colors.blue,
+                  color: AppColors.primary,
                   opacity: 0.1,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -178,8 +181,8 @@ class SettingsScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.offline_bolt, color: Colors.blue),
-                            const SizedBox(width: 8),
+                            const Icon(Icons.offline_bolt, color: AppColors.primary),
+                            const SizedBox(width: AppSpacing.sm),
                             const Text(
                               'Offline Access',
                               style: TextStyle(
@@ -189,13 +192,13 @@ class SettingsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         if (daysUntilExpiry != null)
                           Text(
                             'You can use Plutus offline for $daysUntilExpiry more days',
-                            style: const TextStyle(fontSize: 14, color: Colors.black87),
+                            style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
                           ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         const Text(
                           "You're using Plutus offline. We'll verify your account when you reconnect.",
                           style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -209,11 +212,11 @@ class SettingsScreen extends StatelessWidget {
             return const SizedBox.shrink();
           },
         ),
-        const SizedBox(height: 20),
-        
+        const SizedBox(height: AppSpacing.xl),
+
         // Appearance Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
             l10n.appearance,
             style: const TextStyle(
@@ -227,7 +230,7 @@ class SettingsScreen extends StatelessWidget {
         
         // Preferences Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
             l10n.preferences,
             style: const TextStyle(
@@ -245,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
         
         // Account Settings Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
             l10n.accountSettings,
             style: const TextStyle(
@@ -256,7 +259,7 @@ class SettingsScreen extends StatelessWidget {
         ),
         if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
           ListTile(
-            leading: const Icon(Icons.link, color: Colors.blue),
+            leading: const Icon(Icons.link, color: AppColors.primary),
             title: Text(l10n.linkGoogle),
             subtitle: const Text('Back up your data and sync across devices'),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -339,7 +342,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         const Divider(),
         ListTile(
-          leading: const Icon(Icons.switch_account, color: Colors.blue),
+          leading: const Icon(Icons.switch_account, color: AppColors.primary),
           title: Text(l10n.switchUser),
           trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () {
@@ -347,10 +350,10 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         ListTile(
-          leading: const Icon(Icons.logout, color: Colors.red),
+          leading: const Icon(Icons.logout, color: AppColors.error),
           title: Text(
             l10n.signOut,
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: AppColors.error),
           ),
           onTap: () async {
             final confirm = await showDialog<bool>(
@@ -396,7 +399,7 @@ class SettingsScreen extends StatelessWidget {
             color: Colors.grey,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Center(
           child: Text(
             l10n.guestMode,
@@ -406,7 +409,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.sm),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 40),
           child: Text(
@@ -428,8 +431,8 @@ class SettingsScreen extends StatelessWidget {
             icon: const Icon(Icons.login),
             label: Text(l10n.signIn),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              backgroundColor: const Color(0xFF4285F4),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -440,7 +443,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildThemeModeSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -451,7 +454,7 @@ class SettingsScreen extends StatelessWidget {
               Text(l10n.themeMode),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ThemeMode>(
@@ -573,7 +576,7 @@ class SettingsScreen extends StatelessWidget {
     final backupProvider = context.watch<BackupProvider>();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       child: GlassContainer(
         borderRadius: 12,
         opacity: 0.1,
@@ -583,8 +586,8 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.cloud_upload, color: Colors.blue),
-                const SizedBox(width: 8),
+                const Icon(Icons.cloud_upload, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   l10n.backupSettings,
                   style: const TextStyle(
@@ -594,7 +597,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -615,7 +618,7 @@ class SettingsScreen extends StatelessWidget {
               '${l10n.backupLastSync}: --',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -633,15 +636,15 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             if (backupProvider.errorMessage != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 l10n.translate(backupProvider.errorMessage!),
-                style: const TextStyle(fontSize: 12, color: Colors.red),
+                style: const TextStyle(fontSize: 12, color: AppColors.error),
               ),
             ],
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             ListTile(
-              leading: const Icon(Icons.history, color: Colors.blue),
+              leading: const Icon(Icons.history, color: AppColors.primary),
               title: Text(l10n.backupHistory),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => Navigator.pushNamed(context, '/backup-history'),

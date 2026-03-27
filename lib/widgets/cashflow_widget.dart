@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 
 class CashflowWidget extends StatefulWidget {
@@ -40,7 +41,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFF2A5470),
+          color: AppColors.borderDark,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
@@ -448,12 +449,13 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildLegend() {
+    final brightness = Theme.of(context).brightness;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem(Colors.green, AppLocalizations.of(context).income),
+        _buildLegendItem(AppColors.positive(brightness), AppLocalizations.of(context).income),
         const SizedBox(width: 24),
-        _buildLegendItem(Colors.red, AppLocalizations.of(context).expense),
+        _buildLegendItem(AppColors.negative(brightness), AppLocalizations.of(context).expense),
       ],
     );
   }
@@ -493,19 +495,19 @@ class _CashflowContentState extends State<_CashflowContent> {
           _buildSummaryRow(
             AppLocalizations.of(context).income,
             income,
-            Colors.green,
+            AppColors.positive(Theme.of(context).brightness),
           ),
           const SizedBox(height: 8),
           _buildSummaryRow(
             AppLocalizations.of(context).expense,
             expense,
-            Colors.red,
+            AppColors.negative(Theme.of(context).brightness),
           ),
           const Divider(color: Colors.white30),
           _buildSummaryRow(
             AppLocalizations.of(context).netCashflow,
             netCashflow,
-            netCashflow >= 0 ? Colors.green : Colors.red,
+            netCashflow >= 0 ? AppColors.positive(Theme.of(context).brightness) : AppColors.negative(Theme.of(context).brightness),
             isBold: true,
           ),
         ],
@@ -660,6 +662,7 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   List<BarChartGroupData> _buildBarGroups() {
+    final brightness = Theme.of(context).brightness;
     final groups = <BarChartGroupData>[];
     final keys = _incomeData.keys.toList()..sort();
 
@@ -671,7 +674,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           barRods: [
             BarChartRodData(
               toY: _incomeData[key] ?? 0,
-              color: Colors.green.withOpacity(0.7),
+              color: AppColors.positive(brightness).withOpacity(0.7),
               width: widget.viewMode == 0 ? 8 : 16,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
@@ -680,7 +683,7 @@ class _CashflowContentState extends State<_CashflowContent> {
             ),
             BarChartRodData(
               toY: _expenseData[key] ?? 0,
-              color: Colors.red.withOpacity(0.7),
+              color: AppColors.negative(brightness).withOpacity(0.7),
               width: widget.viewMode == 0 ? 8 : 16,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
@@ -727,7 +730,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                     currencyCode: widget.settings.currency.code,
                     )}',
                   TextStyle(
-                    color: spot.barIndex == 0 ? Colors.green : Colors.red,
+                    color: spot.barIndex == 0 ? AppColors.positive(Theme.of(context).brightness) : AppColors.negative(Theme.of(context).brightness),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -817,7 +820,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           LineChartBarData(
             spots: _buildLineSpots(_incomeData),
             isCurved: false,
-            color: Colors.green,
+            color: AppColors.positive(Theme.of(context).brightness),
             barWidth: 2,
             isStrokeCapRound: false,
             dotData: const FlDotData(show: false),
@@ -827,8 +830,8 @@ class _CashflowContentState extends State<_CashflowContent> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.green.withOpacity(0.3),
-                  Colors.green.withOpacity(0.05),
+                  AppColors.positive(Theme.of(context).brightness).withOpacity(0.3),
+                  AppColors.positive(Theme.of(context).brightness).withOpacity(0.05),
                 ],
               ),
             ),
@@ -836,7 +839,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           LineChartBarData(
             spots: _buildLineSpots(_expenseData),
             isCurved: false,
-            color: Colors.red,
+            color: AppColors.negative(Theme.of(context).brightness),
             barWidth: 2,
             isStrokeCapRound: false,
             dotData: const FlDotData(show: false),
@@ -846,8 +849,8 @@ class _CashflowContentState extends State<_CashflowContent> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.red.withOpacity(0.3),
-                  Colors.red.withOpacity(0.05),
+                  AppColors.negative(Theme.of(context).brightness).withOpacity(0.3),
+                  AppColors.negative(Theme.of(context).brightness).withOpacity(0.05),
                 ],
               ),
             ),

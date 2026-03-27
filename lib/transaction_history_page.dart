@@ -13,6 +13,7 @@ import 'services/export_service.dart';
 import 'services/user_service.dart';
 import 'utils/date_time_formatter.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_colors.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
@@ -150,6 +151,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                         itemBuilder: (context, index) {
                           final transaction = _transactions[index];
                           
+                          final brightness = Theme.of(context).brightness;
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                             child: GestureDetector(
@@ -173,8 +175,8 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                           ? Icons.arrow_downward
                                           : Icons.arrow_upward,
                                       color: transaction.isExpense
-                                          ? Colors.red
-                                          : Colors.green,
+                                          ? AppColors.negative(brightness)
+                                          : AppColors.positive(brightness),
                                       size: 20,
                                     ),
                                     const SizedBox(width: 12),
@@ -323,6 +325,7 @@ class _TransactionAmountState extends State<_TransactionAmount> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     if (_isLoading) {
       return const SizedBox(
         width: 16,
@@ -351,7 +354,7 @@ class _TransactionAmountState extends State<_TransactionAmount> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: widget.transaction.isExpense ? Colors.red : Colors.green,
+            color: widget.transaction.isExpense ? AppColors.negative(brightness) : AppColors.positive(brightness),
           ),
         ),
         if (!isOriginal && widget.transaction.currency != widget.settings.currency.code)

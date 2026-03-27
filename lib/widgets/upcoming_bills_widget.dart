@@ -12,6 +12,7 @@ import '../transaction_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -47,7 +48,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFFEA4335),
+          color: AppColors.billsAccent,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),

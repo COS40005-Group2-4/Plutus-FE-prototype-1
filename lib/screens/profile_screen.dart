@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/profile_widget.dart';
 import '../widgets/glass_container.dart';
+import '../theme/app_spacing.dart';
 
 /// Profile Screen for displaying user profile
 class ProfileScreen extends StatefulWidget {
@@ -34,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           return SafeArea(
             child: GlassContainer(
-              margin: const EdgeInsets.all(8),
+              margin: const EdgeInsets.all(AppSpacing.sm),
               padding: const EdgeInsets.all(0),
               child: ProfileWidget(
                 user: currentUser,

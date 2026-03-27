@@ -5,30 +5,32 @@ import 'data_widget.dart';
 import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_radius.dart';
 
 /// Central registry: widget ID → display metadata.
 /// Adding a new widget to this map is the only change needed for it to appear
 /// in the sidebar automatically.
 const Map<String, _WidgetMeta> _widgetRegistry = {
-  'profile':            _WidgetMeta('Profile',               Icons.person,                  Color(0xFFAB47BC)),
-  'budget':             _WidgetMeta('Budget Tracking',       Icons.account_balance_wallet,  Color(0xFF4285F4)),
-  'categoryBudget':     _WidgetMeta('Category Budget',       Icons.category,                Color(0xFF00897B)),
-  'history':            _WidgetMeta('Transaction History',   Icons.history,                 Color(0xFF34A853)),
-  'cashflow':           _WidgetMeta('Cash Flow',             Icons.waterfall_chart,         Color(0xFF1E88E5)),
-  'expenseBreakdown':   _WidgetMeta('Expense Breakdown',     Icons.pie_chart,               Color(0xFFAF7AC5)),
-  'incomeTrend':        _WidgetMeta('Income Trend',          Icons.trending_up,             Color(0xFF43A047)),
-  'savingsRate':        _WidgetMeta('Savings Rate',          Icons.savings,                 Color(0xFFF39C12)),
-  'netWorthTrend':      _WidgetMeta('Net Worth Trend',       Icons.timeline,                Color(0xFF1ABC9C)),
-  'spendingHeatmap':    _WidgetMeta('Spending Heatmap',      Icons.calendar_view_week,      Color(0xFF48C9B0)),
-  'portfolioAllocation':_WidgetMeta('Portfolio Allocation',  Icons.donut_large,             Color(0xFF4285F4)),
-  'investment':         _WidgetMeta('Investments',           Icons.show_chart,              Color(0xFF4A90E2)),
-  'roi':                _WidgetMeta('ROI',                   Icons.trending_up,             Color(0xFF5DADE2)),
-  'irr':                _WidgetMeta('IRR',                   Icons.analytics,               Color(0xFF5DADE2)),
-  'marketTrending':     _WidgetMeta('Market Trending',       Icons.candlestick_chart,       Color(0xFF26A69A)),
-  'bills':              _WidgetMeta('Upcoming Bills',        Icons.receipt_long,            Color(0xFFEA4335)),
-  'tax':                _WidgetMeta('Tax Estimation',        Icons.account_balance,         Color(0xFF2A5470)),
-  'import':             _WidgetMeta('Import Report',         Icons.upload_file,             Color(0xFFFBBC05)),
-  'export':             _WidgetMeta('Export Report',         Icons.download,                Color(0xFFEA4335)),
+  'profile':            _WidgetMeta('Profile',               Icons.person,                  AppColors.profileAccent),
+  'budget':             _WidgetMeta('Budget Tracking',       Icons.account_balance_wallet,  AppColors.budgetAccent),
+  'categoryBudget':     _WidgetMeta('Category Budget',       Icons.category,                AppColors.categoryBudgetAccent),
+  'history':            _WidgetMeta('Transaction History',   Icons.history,                 AppColors.historyAccent),
+  'cashflow':           _WidgetMeta('Cash Flow',             Icons.waterfall_chart,         AppColors.cashflowAccent),
+  'expenseBreakdown':   _WidgetMeta('Expense Breakdown',     Icons.pie_chart,               AppColors.expenseAccent),
+  'incomeTrend':        _WidgetMeta('Income Trend',          Icons.trending_up,             AppColors.incomeAccent),
+  'savingsRate':        _WidgetMeta('Savings Rate',          Icons.savings,                 AppColors.savingsAccent),
+  'netWorthTrend':      _WidgetMeta('Net Worth Trend',       Icons.timeline,                AppColors.netWorthAccent),
+  'spendingHeatmap':    _WidgetMeta('Spending Heatmap',      Icons.calendar_view_week,      AppColors.heatmapAccent),
+  'portfolioAllocation':_WidgetMeta('Portfolio Allocation',  Icons.donut_large,             AppColors.primary),
+  'investment':         _WidgetMeta('Investments',           Icons.show_chart,              AppColors.primaryDark),
+  'roi':                _WidgetMeta('ROI',                   Icons.trending_up,             AppColors.accent),
+  'irr':                _WidgetMeta('IRR',                   Icons.analytics,               AppColors.accent),
+  'marketTrending':     _WidgetMeta('Market Trending',       Icons.candlestick_chart,       AppColors.marketAccent),
+  'bills':              _WidgetMeta('Upcoming Bills',        Icons.receipt_long,            AppColors.billsAccent),
+  'tax':                _WidgetMeta('Tax Estimation',        Icons.account_balance,         AppColors.taxAccent),
+  'import':             _WidgetMeta('Import Report',         Icons.upload_file,             AppColors.importAccent),
+  'export':             _WidgetMeta('Export Report',         Icons.download,                AppColors.exportAccent),
 };
 
 class SidebarMenu extends StatefulWidget {
@@ -51,7 +53,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
           backgroundColor: Colors.transparent,
           child: GlassContainer(
             borderRadius: 0,
-            color: const Color(0xFF2C3E50),
+            color: AppColors.menuBackground,
             opacity: 0.6,
             blur: 15,
             child: ListView(
@@ -59,7 +61,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4285F4).withValues(alpha: 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                   ),
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) {
@@ -118,7 +120,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.borderSm,
                             color: isVisible
                                 ? meta.color.withValues(alpha: 0.2)
                                 : Colors.transparent,
@@ -183,7 +185,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/settings');
                     },
-                    hoverColor: Colors.blue.withValues(alpha: 0.2),
+                    hoverColor: AppColors.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 const Divider(color: Colors.white24),
@@ -212,8 +214,8 @@ class _SidebarMenuState extends State<SidebarMenu> {
                           }
                         },
                         hoverColor: auth.isAuthenticated
-                            ? Colors.red.withValues(alpha: 0.1)
-                            : Colors.green.withValues(alpha: 0.1),
+                            ? AppColors.error.withValues(alpha: 0.1)
+                            : AppColors.success.withValues(alpha: 0.1),
                       );
                     },
                   ),

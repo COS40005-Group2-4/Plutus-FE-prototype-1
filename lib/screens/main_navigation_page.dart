@@ -6,6 +6,8 @@ import '../transaction_history_page.dart';
 import '../import_transaction_page.dart';
 import '../transaction_service.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'dashboard_screen.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -37,20 +39,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF1A3A4A).withValues(alpha: 0.4)
-                  : Colors.white.withValues(alpha: 0.15),
+                  ? AppColors.surfaceDark.withValues(alpha: 0.4)
+                  : Colors.white.withValues(alpha: 0.65),
               border: Border(
                 top: BorderSide(
                   color: isDark
-                      ? const Color(0xFF2A5470).withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.2),
+                      ? AppColors.borderDark.withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.4),
                 ),
               ),
             ),
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -83,26 +85,30 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = AppColors.primaryDark;
+    final inactiveColor = isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary;
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpacing.sm),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                color: isSelected ? const Color(0xFF4A90E2) : Colors.white54,
+                color: isSelected ? activeColor : inactiveColor,
                 size: 24,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF4A90E2) : Colors.white54,
-                  fontSize: 11,
+                  color: isSelected ? activeColor : inactiveColor,
+                  fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -134,11 +140,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            colors: [Color(0xFF4A90E2), Color(0xFF5DADE2)],
+            colors: [AppColors.primaryDark, AppColors.accent],
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4A90E2).withValues(alpha: 0.4),
+              color: AppColors.primaryDark.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

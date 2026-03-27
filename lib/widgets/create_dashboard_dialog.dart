@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 class CreateDashboardResult {
   final String name;
@@ -47,12 +48,21 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.textOnLight;
+    final secondaryTextColor = isDark ? Colors.white70 : AppColors.textOnLightSecondary;
+    final tertiaryTextColor = isDark ? Colors.white54 : AppColors.textOnLightTertiary;
+    final containerColor = isDark ? AppColors.menuBackground : Colors.white;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.black.withValues(alpha: 0.15);
+
     return AlertDialog(
       backgroundColor: Colors.transparent,
       contentPadding: EdgeInsets.zero,
       content: GlassContainer(
-        color: const Color(0xFF2C3E50),
-        opacity: 0.85,
+        color: containerColor,
+        opacity: isDark ? 0.85 : 0.9,
         borderRadius: 16,
         blur: 15,
         padding: const EdgeInsets.all(24),
@@ -64,8 +74,8 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
             children: [
               Text(
                 l10n.createDashboard,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -74,28 +84,28 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
               TextField(
                 controller: _controller,
                 maxLength: 20,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   labelText: l10n.dashboardName,
-                  labelStyle: const TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: secondaryTextColor),
                   errorText: _error,
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    borderSide: BorderSide(color: borderColor),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF4285F4)),
+                    borderSide: BorderSide(color: AppColors.primary),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.red),
+                    borderSide: const BorderSide(color: AppColors.error),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.red),
+                    borderSide: const BorderSide(color: AppColors.error),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  counterStyle: const TextStyle(color: Colors.white54),
+                  counterStyle: TextStyle(color: tertiaryTextColor),
                 ),
                 onChanged: (_) {
                   if (_error != null) setState(() => _error = null);
@@ -107,8 +117,8 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 groupValue: _useDefaults,
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startWithDefaults,
-                    style: const TextStyle(color: Colors.white, fontSize: 14)),
-                activeColor: const Color(0xFF4285F4),
+                    style: TextStyle(color: textColor, fontSize: 14)),
+                activeColor: AppColors.primary,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),
@@ -117,8 +127,8 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 groupValue: _useDefaults,
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startEmpty,
-                    style: const TextStyle(color: Colors.white, fontSize: 14)),
-                activeColor: const Color(0xFF4285F4),
+                    style: TextStyle(color: textColor, fontSize: 14)),
+                activeColor: AppColors.primary,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),
@@ -129,13 +139,14 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(l10n.cancel,
-                        style: const TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: secondaryTextColor)),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _validate,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4285F4),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                     ),
                     child: Text(l10n.create),
                   ),

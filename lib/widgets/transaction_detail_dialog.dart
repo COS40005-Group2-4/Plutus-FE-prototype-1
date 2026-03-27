@@ -5,6 +5,7 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 
 class TransactionDetailDialog extends StatelessWidget {
@@ -258,7 +259,7 @@ class _DetailAmountState extends State<_DetailAmount> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: widget.transaction.isExpense ? Colors.red : Colors.green,
+            color: widget.transaction.isExpense ? AppColors.negative(Theme.of(context).brightness) : AppColors.positive(Theme.of(context).brightness),
           ),
         ),
         if (!isOriginal && widget.transaction.currency != widget.settings.currency.code)
@@ -388,7 +389,7 @@ class _PostingDetailRowState extends State<_PostingDetailRow> {
           Text(
             '$sign$formatted',
             style: TextStyle(
-              color: isNegative ? Colors.red : Colors.green,
+              color: isNegative ? AppColors.negative(Theme.of(context).brightness) : AppColors.positive(Theme.of(context).brightness),
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),

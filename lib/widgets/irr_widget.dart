@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
+import '../theme/app_colors.dart';
 import '../services/backend_ffi_service.dart';
 import '../services/settings_service.dart';
 import '../l10n/app_localizations.dart';
@@ -71,7 +72,7 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
   Widget _buildGauge(double value, bool isCompact) {
     final clampedValue = value.clamp(-100.0, 100.0);
     final normalizedValue = (clampedValue + 100) / 200;
-    final gaugeColor = clampedValue >= 0 ? const Color(0xFF5DADE2) : Colors.red;
+    final gaugeColor = clampedValue >= 0 ? AppColors.accent : Colors.red;
 
     return SizedBox(
       height: isCompact ? 70 : 90,
@@ -126,7 +127,7 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
     return GlassContainer(
-      color: const Color(0xFF5DADE2),
+      color: AppColors.accent,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),

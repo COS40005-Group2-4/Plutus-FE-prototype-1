@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../providers/profile_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 import 'avatar_editor_widget.dart';
 
 /// Main Profile Widget for displaying and editing user profile
@@ -109,7 +110,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF2C3E50).withValues(alpha: 0.95),
+          color: AppColors.menuBackground.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.1),

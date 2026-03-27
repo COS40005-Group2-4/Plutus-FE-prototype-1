@@ -5,6 +5,7 @@ import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -22,8 +23,8 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
   int _touchedIndex = -1;
 
   static const Map<AssetType, Color> _assetColors = {
-    AssetType.stock: Color(0xFF4285F4),
-    AssetType.bond: Color(0xFF34A853),
+    AssetType.stock: AppColors.primary,
+    AssetType.bond: AppColors.success,
     AssetType.crypto: Color(0xFFF39C12),
     AssetType.other: Color(0xFF95A5A6),
   };
@@ -63,7 +64,7 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      color: const Color(0xFF4285F4),
+      color: AppColors.primary,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),

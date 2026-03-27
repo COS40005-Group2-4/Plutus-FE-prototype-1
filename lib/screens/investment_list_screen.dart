@@ -8,6 +8,7 @@ import '../widgets/glass_container.dart';
 import '../widgets/glass_background.dart';
 import '../widgets/add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 /// Full screen view of all investments
 class InvestmentListScreen extends StatefulWidget {
@@ -161,7 +162,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
-        backgroundColor: const Color(0xFF4A90E2),
+        backgroundColor: AppColors.primaryDark,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -246,7 +247,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
 
   Widget _buildInvestmentCard(InvestmentModel investment, bool isDark) {
     final color = investment.isPositiveReturn()
-        ? (isDark ? const Color(0xFF5DADE2) : const Color(0xFF4A90E2))
+        ? (isDark ? AppColors.accent : AppColors.primaryDark)
         : (isDark ? Colors.redAccent : Colors.red);
 
     return GlassContainer(

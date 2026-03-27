@@ -11,6 +11,7 @@ import '../services/currency_service.dart';
 import '../services/database_service.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 const Color green = Color(0xFF34A853);
 
@@ -175,8 +176,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
       spots.add(FlSpot(i.toDouble(), dailyNet[sortedKeys[i]]!));
     }
 
+    final brightness = Theme.of(context).brightness;
     final hasPositive = spots.any((s) => s.y >= 0);
-    final lineColor = hasPositive ? Colors.green : Colors.red;
+    final lineColor = hasPositive ? AppColors.positive(brightness) : AppColors.negative(brightness);
 
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 4),
@@ -517,6 +519,7 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     if (_isLoading) {
       return const SizedBox(
         width: 12,
@@ -538,7 +541,7 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
     return Text(
       '${widget.transaction.isExpense ? '-' : '+'}$formatted',
       style: TextStyle(
-        color: widget.transaction.isExpense ? Colors.red : Colors.green,
+        color: widget.transaction.isExpense ? AppColors.negative(brightness) : AppColors.positive(brightness),
         fontWeight: FontWeight.bold,
         fontSize: 14,
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 /// Shows a dialog asking for user consent to data collection.
 /// Returns true if user agrees, false if they decline.
@@ -22,13 +23,13 @@ class _DataConsentDialogContent extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: isDark
-          ? const Color(0xFF1A3A4A).withValues(alpha: 0.95)
+          ? AppColors.surfaceDark.withValues(alpha: 0.95)
           : Colors.white.withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: isDark
-              ? const Color(0xFF2A5470).withValues(alpha: 0.3)
+              ? AppColors.borderDark.withValues(alpha: 0.3)
               : Colors.grey.withValues(alpha: 0.3),
         ),
       ),
@@ -36,7 +37,7 @@ class _DataConsentDialogContent extends StatelessWidget {
         children: [
           Icon(
             Icons.privacy_tip_outlined,
-            color: isDark ? const Color(0xFF5DADE2) : Colors.blue,
+            color: isDark ? AppColors.accent : Colors.blue,
             size: 28,
           ),
           const SizedBox(width: 12),
@@ -140,7 +141,7 @@ class _DataConsentDialogContent extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: isDark ? const Color(0xFF5DADE2) : Colors.blue,
+          color: isDark ? AppColors.accent : Colors.blue,
         ),
         const SizedBox(width: 12),
         Expanded(

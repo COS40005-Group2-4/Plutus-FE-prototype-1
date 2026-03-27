@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -37,7 +38,7 @@ class _IncomeTrendWidgetState extends State<IncomeTrendWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: const Color(0xFF34A853),
+          color: AppColors.historyAccent,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(16),
@@ -176,6 +177,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
       );
     }
 
+    final brightness = Theme.of(context).brightness;
     final maxY = _spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
 
     return Column(
@@ -206,13 +208,13 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                     return spots.map((spot) {
                       return LineTooltipItem(
                         _currencyService.formatCurrency(amount: spot.y, currencyCode: widget.settings.currency.code),
-                        const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+                        TextStyle(color: AppColors.positive(brightness), fontSize: 10, fontWeight: FontWeight.bold),
                       );
                     }).toList();
                   },
                 ),
               ),
-              gridData: PlutusChartStyle.defaultGridData(maxValue: maxY),
+              gridData: PlutusChartStyle.defaultGridData(maxValue: maxY, brightness: Theme.of(context).brightness),
               titlesData: FlTitlesData(
                 show: true,
                 bottomTitles: AxisTitles(
@@ -241,7 +243,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 topTitles: PlutusChartStyle.hiddenAxisTitles(),
                 rightTitles: PlutusChartStyle.hiddenAxisTitles(),
               ),
-              borderData: PlutusChartStyle.lineBorderData(),
+              borderData: PlutusChartStyle.lineBorderData(brightness: Theme.of(context).brightness),
               extraLinesData: ExtraLinesData(
                 horizontalLines: [
                   HorizontalLine(
@@ -256,7 +258,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 LineChartBarData(
                   spots: _spots,
                   isCurved: true,
-                  color: Colors.green,
+                  color: AppColors.positive(brightness),
                   barWidth: 2.5,
                   isStrokeCapRound: true,
                   dotData: FlDotData(
@@ -264,7 +266,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                     getDotPainter: (spot, percent, barData, index) {
                       return FlDotCirclePainter(
                         radius: 3,
-                        color: Colors.green,
+                        color: AppColors.positive(brightness),
                         strokeWidth: 1,
                         strokeColor: Colors.white,
                       );
@@ -276,8 +278,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.green.withOpacity(0.25),
-                        Colors.green.withOpacity(0.02),
+                        AppColors.positive(brightness).withOpacity(0.25),
+                        AppColors.positive(brightness).withOpacity(0.02),
                       ],
                     ),
                   ),
