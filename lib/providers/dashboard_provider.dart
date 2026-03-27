@@ -80,6 +80,43 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
+  /// Add a new instance of a widget type to the dashboard.
+  /// Returns the new instance ID.
+  Future<String> addWidgetInstance(String widgetType) async {
+    final index = activeDashboard.nextInstanceIndex(widgetType);
+    final instanceId = DashboardConfig.makeInstanceId(widgetType, index);
+    activeDashboard.widgetVisibility[instanceId] = true;
+    await _saveDashboards();
+    notifyListeners();
+    return instanceId;
+  }
+
+  /// Remove a specific widget instance from the dashboard.
+  Future<void> removeWidgetInstance(String instanceId) async {
+    activeDashboard.widgetVisibility.remove(instanceId);
+    await _saveDashboards();
+    notifyListeners();
+  }
+
+  /// Returns a map of widget type → count of visible instances.
+  Map<String, int> getInstanceCounts() {
+    final counts = <String, int>{};
+    for (final entry in activeDashboard.widgetVisibility.entries) {
+      if (entry.value) {
+        final type = DashboardConfig.typeFromInstanceId(entry.key);
+        counts[type] = (counts[type] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
+  /// Count visible instances of a specific widget type.
+  int instanceCountForType(String widgetType) {
+    return activeDashboard.widgetVisibility.entries
+        .where((e) => e.value && DashboardConfig.typeFromInstanceId(e.key) == widgetType)
+        .length;
+  }
+
   // ── Dashboard CRUD ────────────────────────────────────────────────────
 
   Future<void> createDashboard({
@@ -153,8 +190,11 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   Future<void> hardReset() async {
-    // Set all widgets visible
-    activeDashboard.widgetVisibility.updateAll((key, value) => true);
+    // Reset to single instance per widget type, all visible
+    activeDashboard.widgetVisibility = {
+      for (var wid in DashboardConfig.defaultWidgetIds)
+        DashboardConfig.makeInstanceId(wid, 0): true,
+    };
 
     // Clear live layout keys so storage re-initializes from defaults
     for (var s in _slotCounts) {
@@ -219,6 +259,18 @@ class DashboardProvider extends ChangeNotifier {
       } catch (_) {}
       await _preferences?.remove('widget_visibility');
     }
+
+    // Migrate old keys to instance ID format
+    final migratedVis = <String, bool>{};
+    for (final entry in config.widgetVisibility.entries) {
+      final key = entry.key;
+      if (DashboardConfig.typeFromInstanceId(key) == key) {
+        migratedVis[DashboardConfig.makeInstanceId(key, 0)] = entry.value;
+      } else {
+        migratedVis[key] = entry.value;
+      }
+    }
+    config.widgetVisibility = migratedVis;
 
     _dashboards = [config];
     _activeDashboardId = 'default';

@@ -329,6 +329,19 @@ class AppLocalizations {
       'delete_warning': 'Are you sure you want to delete this dashboard? This cannot be undone.',
       'max_dashboards_reached': "You've reached the limit of 5 dashboards",
       'cannot_delete_last': 'You must keep at least one dashboard',
+
+      // Sidebar categories & search
+      'search_widgets': 'Search widgets...',
+      'category_overview': 'Overview',
+      'category_analytics': 'Analytics',
+      'category_investments': 'Investments',
+      'category_tools': 'Tools',
+      'add_widget': 'Add',
+      'remove_instance': 'Remove',
+      'add_duplicate': 'Add another',
+      'max_instances': 'Max reached',
+      'widget_count': 'on dashboard',
+      'widgets_on_dashboard': 'widgets on dashboard',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -647,6 +660,19 @@ class AppLocalizations {
       'delete_warning': 'Bạn có chắc chắn muốn xóa bảng điều khiển này? Không thể hoàn tác.',
       'max_dashboards_reached': 'Bạn đã đạt giới hạn 5 bảng điều khiển',
       'cannot_delete_last': 'Bạn cần giữ ít nhất một bảng điều khiển',
+
+      // Sidebar categories & search
+      'search_widgets': 'Tìm kiếm widget...',
+      'category_overview': 'Tổng quan',
+      'category_analytics': 'Phân tích',
+      'category_investments': 'Đầu tư',
+      'category_tools': 'Công cụ',
+      'add_widget': 'Thêm',
+      'remove_instance': 'Xóa',
+      'add_duplicate': 'Thêm bản sao',
+      'max_instances': 'Đã đạt tối đa',
+      'widget_count': 'trên bảng',
+      'widgets_on_dashboard': 'widget trên bảng',
     },
   };
 
@@ -963,6 +989,19 @@ class AppLocalizations {
   String get deleteWarning => translate('delete_warning');
   String get maxDashboardsReached => translate('max_dashboards_reached');
   String get cannotDeleteLast => translate('cannot_delete_last');
+
+  // Sidebar categories & search
+  String get searchWidgets => translate('search_widgets');
+  String get categoryOverview => translate('category_overview');
+  String get categoryAnalytics => translate('category_analytics');
+  String get categoryInvestments => translate('category_investments');
+  String get categoryTools => translate('category_tools');
+  String get addWidget => translate('add_widget');
+  String get removeInstance => translate('remove_instance');
+  String get addDuplicate => translate('add_duplicate');
+  String get maxInstances => translate('max_instances');
+  String get widgetCount => translate('widget_count');
+  String get widgetsOnDashboard => translate('widgets_on_dashboard');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

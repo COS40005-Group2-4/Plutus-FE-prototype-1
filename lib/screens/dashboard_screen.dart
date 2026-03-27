@@ -133,6 +133,13 @@ class _DashboardWidgetState extends State<DashboardWidget> {
             _selectedWidget = widgetId;
           });
         },
+        onWidgetAdded: (instanceId, widgetType) {
+          final item = storage.createDefaultItem(instanceId, widgetType, slot ?? 2);
+          _itemController.add(item);
+        },
+        onWidgetRemoved: (instanceId) {
+          _itemController.delete(instanceId);
+        },
       ),
       appBar: AppBar(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
