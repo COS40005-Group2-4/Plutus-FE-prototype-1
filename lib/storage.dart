@@ -61,112 +61,106 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   // ─────────────────────────────────────────────────────────────────────────
   // Default layouts — one entry per column count.
   //
-  // Grouping logic (top → bottom):
-  //   Overview   : profile, budget, categoryBudget
-  //   Metrics    : savingsRate, roi, irr, tax
+  // Grouping logic (top → bottom) — Budget-First Story:
+  //   Hero       : profile, budget, categoryBudget
+  //   Spending   : savingsRate, expenseBreakdown, spendingHeatmap
   //   Activity   : history, cashflow
-  //   Analysis   : expenseBreakdown, incomeTrend, portfolioAllocation
-  //   Wealth     : netWorthTrend, investment
-  //   Market     : marketTrending, bills, spendingHeatmap
+  //   Obligations: bills, tax, roi, irr
+  //   Wealth     : netWorthTrend, incomeTrend
+  //   Investments: investment, portfolioAllocation, marketTrending
   //   Tools      : import, export
   // ─────────────────────────────────────────────────────────────────────────
   final Map<int, List<ColoredDashboardItem>> _default = {
 
     // ── 2-COLUMN (mobile) ─────────────────────────────────────────────────
-    // All widgets span the full 2-col width. ROI/IRR and Import/Export are
-    // paired side-by-side at w=1.
     2: <ColoredDashboardItem>[
-      // Overview
+      // Hero
       ColoredDashboardItem(startX: 0, startY: 0,  width: 2, height: 2, identifier: "profile_0",             data: "profile"),
-      ColoredDashboardItem(startX: 0, startY: 2,  width: 2, height: 3, identifier: "budget_0",              data: "budget"),
-      ColoredDashboardItem(startX: 0, startY: 5,  width: 2, height: 3, identifier: "categoryBudget_0",      data: "categoryBudget"),
+      ColoredDashboardItem(startX: 0, startY: 2,  width: 2, height: 1, identifier: "budget_0",              data: "budget"),
+      ColoredDashboardItem(startX: 0, startY: 3,  width: 2, height: 2, identifier: "categoryBudget_0",      data: "categoryBudget"),
+      // Spending
+      ColoredDashboardItem(startX: 0, startY: 5,  width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
+      ColoredDashboardItem(startX: 0, startY: 7,  width: 2, height: 2, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
+      ColoredDashboardItem(startX: 0, startY: 9,  width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
       // Activity
-      ColoredDashboardItem(startX: 0, startY: 8,  width: 2, height: 4, identifier: "history_0",             data: "history"),
-      ColoredDashboardItem(startX: 0, startY: 12, width: 2, height: 4, identifier: "cashflow_0",            data: "cashflow"),
-      // Analysis
-      ColoredDashboardItem(startX: 0, startY: 16, width: 2, height: 3, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
-      ColoredDashboardItem(startX: 0, startY: 19, width: 2, height: 3, identifier: "incomeTrend_0",         data: "incomeTrend"),
-      ColoredDashboardItem(startX: 0, startY: 22, width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
-      // Wealth
-      ColoredDashboardItem(startX: 0, startY: 24, width: 2, height: 3, identifier: "netWorthTrend_0",       data: "netWorthTrend"),
-      ColoredDashboardItem(startX: 0, startY: 27, width: 2, height: 3, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
-      ColoredDashboardItem(startX: 0, startY: 30, width: 2, height: 4, identifier: "investment_0",          data: "investment"),
-      // Metrics (compact pairs)
-      ColoredDashboardItem(startX: 0, startY: 34, width: 1, height: 2, identifier: "roi_0",                 data: "roi"),
-      ColoredDashboardItem(startX: 1, startY: 34, width: 1, height: 2, identifier: "irr_0",                 data: "irr"),
-      // Market
-      ColoredDashboardItem(startX: 0, startY: 36, width: 2, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
+      ColoredDashboardItem(startX: 0, startY: 11, width: 2, height: 4, identifier: "history_0",             data: "history"),
+      ColoredDashboardItem(startX: 0, startY: 15, width: 2, height: 2, identifier: "cashflow_0",            data: "cashflow"),
       // Obligations
-      ColoredDashboardItem(startX: 0, startY: 39, width: 2, height: 3, identifier: "bills_0",               data: "bills",           minWidth: 2),
-      ColoredDashboardItem(startX: 0, startY: 42, width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
-      // Misc
-      ColoredDashboardItem(startX: 0, startY: 44, width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
-      // Tools (paired)
-      ColoredDashboardItem(startX: 0, startY: 46, width: 1, height: 1, identifier: "import_0",              data: "import"),
-      ColoredDashboardItem(startX: 1, startY: 46, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      ColoredDashboardItem(startX: 0, startY: 17, width: 2, height: 2, identifier: "bills_0",               data: "bills",           minWidth: 2),
+      ColoredDashboardItem(startX: 0, startY: 19, width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
+      ColoredDashboardItem(startX: 0, startY: 21, width: 1, height: 1, identifier: "roi_0",                 data: "roi"),
+      ColoredDashboardItem(startX: 1, startY: 21, width: 1, height: 1, identifier: "irr_0",                 data: "irr"),
+      // Wealth
+      ColoredDashboardItem(startX: 0, startY: 22, width: 2, height: 2, identifier: "netWorthTrend_0",       data: "netWorthTrend",   minWidth: 2),
+      ColoredDashboardItem(startX: 0, startY: 24, width: 2, height: 2, identifier: "incomeTrend_0",         data: "incomeTrend",     minWidth: 2),
+      // Investments
+      ColoredDashboardItem(startX: 0, startY: 26, width: 2, height: 3, identifier: "investment_0",          data: "investment"),
+      ColoredDashboardItem(startX: 0, startY: 29, width: 2, height: 2, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
+      ColoredDashboardItem(startX: 0, startY: 31, width: 2, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
+      // Tools
+      ColoredDashboardItem(startX: 0, startY: 34, width: 1, height: 1, identifier: "import_0",              data: "import"),
+      ColoredDashboardItem(startX: 1, startY: 34, width: 1, height: 1, identifier: "export_0",              data: "export"),
     ],
 
     // ── 4-COLUMN (tablet) ─────────────────────────────────────────────────
-    // Logical pairs fill each row. Charts are sized to breathe.
     4: <ColoredDashboardItem>[
-      // Overview row
+      // Hero: profile + budget side by side, savingsRate fills under budget
       ColoredDashboardItem(startX: 0, startY: 0,  width: 2, height: 2, identifier: "profile_0",             data: "profile"),
-      ColoredDashboardItem(startX: 2, startY: 0,  width: 2, height: 2, identifier: "budget_0",              data: "budget"),
-      // Metrics row
+      ColoredDashboardItem(startX: 2, startY: 0,  width: 2, height: 1, identifier: "budget_0",              data: "budget"),
+      ColoredDashboardItem(startX: 2, startY: 1,  width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
       ColoredDashboardItem(startX: 0, startY: 2,  width: 2, height: 2, identifier: "categoryBudget_0",      data: "categoryBudget"),
-      ColoredDashboardItem(startX: 2, startY: 2,  width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
-      // Activity row (tall — needs height to show content)
-      ColoredDashboardItem(startX: 0, startY: 4,  width: 2, height: 4, identifier: "history_0",             data: "history"),
-      ColoredDashboardItem(startX: 2, startY: 4,  width: 2, height: 4, identifier: "cashflow_0",            data: "cashflow"),
-      // Analysis row
-      ColoredDashboardItem(startX: 0, startY: 8,  width: 2, height: 3, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
-      ColoredDashboardItem(startX: 2, startY: 8,  width: 2, height: 3, identifier: "incomeTrend_0",         data: "incomeTrend"),
-      // Wealth (full-width net worth chart, then pair below)
-      ColoredDashboardItem(startX: 0, startY: 11, width: 4, height: 3, identifier: "netWorthTrend_0",       data: "netWorthTrend"),
-      ColoredDashboardItem(startX: 0, startY: 14, width: 2, height: 3, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
-      ColoredDashboardItem(startX: 2, startY: 14, width: 2, height: 4, identifier: "investment_0",          data: "investment"),
-      // Compact metrics + market (share a row)
-      ColoredDashboardItem(startX: 0, startY: 17, width: 1, height: 2, identifier: "roi_0",                 data: "roi"),
-      ColoredDashboardItem(startX: 1, startY: 17, width: 1, height: 2, identifier: "irr_0",                 data: "irr"),
-      ColoredDashboardItem(startX: 0, startY: 19, width: 2, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
+      // Spending: stagger expenseBreakdown + spendingHeatmap so rows align cleanly
+      ColoredDashboardItem(startX: 0, startY: 4,  width: 2, height: 2, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
+      ColoredDashboardItem(startX: 2, startY: 4,  width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
+      ColoredDashboardItem(startX: 0, startY: 6,  width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
+      // Activity: history (3-wide) + roi/irr in last col, no gaps
+      ColoredDashboardItem(startX: 0, startY: 8,  width: 3, height: 4, identifier: "history_0",             data: "history"),
+      ColoredDashboardItem(startX: 3, startY: 8,  width: 1, height: 1, identifier: "roi_0",                 data: "roi"),
+      ColoredDashboardItem(startX: 3, startY: 9,  width: 1, height: 1, identifier: "irr_0",                 data: "irr"),
+      ColoredDashboardItem(startX: 0, startY: 12, width: 4, height: 2, identifier: "cashflow_0",            data: "cashflow"),
       // Obligations
-      ColoredDashboardItem(startX: 2, startY: 18, width: 2, height: 3, identifier: "bills_0",               data: "bills",           minWidth: 2),
-      ColoredDashboardItem(startX: 0, startY: 22, width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
-      // Misc + tools
-      ColoredDashboardItem(startX: 2, startY: 21, width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
-      ColoredDashboardItem(startX: 0, startY: 24, width: 1, height: 1, identifier: "import_0",              data: "import"),
-      ColoredDashboardItem(startX: 1, startY: 24, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      ColoredDashboardItem(startX: 0, startY: 14, width: 2, height: 2, identifier: "bills_0",               data: "bills",           minWidth: 2),
+      ColoredDashboardItem(startX: 2, startY: 14, width: 2, height: 2, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
+      // Wealth: full-width to prevent squishing
+      ColoredDashboardItem(startX: 0, startY: 16, width: 4, height: 2, identifier: "netWorthTrend_0",       data: "netWorthTrend",   minWidth: 2),
+      ColoredDashboardItem(startX: 0, startY: 18, width: 4, height: 2, identifier: "incomeTrend_0",         data: "incomeTrend",     minWidth: 2),
+      // Investments
+      ColoredDashboardItem(startX: 0, startY: 20, width: 3, height: 3, identifier: "investment_0",          data: "investment"),
+      ColoredDashboardItem(startX: 0, startY: 23, width: 3, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
+      // Tools
+      ColoredDashboardItem(startX: 0, startY: 26, width: 1, height: 1, identifier: "import_0",              data: "import"),
+      ColoredDashboardItem(startX: 1, startY: 26, width: 1, height: 1, identifier: "export_0",              data: "export"),
     ],
 
     // ── 6-COLUMN (desktop) ────────────────────────────────────────────────
-    // Full-grid utilisation. Each logical group fills exactly 6 columns.
     6: <ColoredDashboardItem>[
-      // Row y=0–1: Overview (fills 6 cols)
+      // Hero: profile | budget + savingsRate | categoryBudget
       ColoredDashboardItem(startX: 0, startY: 0,  width: 2, height: 2, identifier: "profile_0",             data: "profile"),
-      ColoredDashboardItem(startX: 2, startY: 0,  width: 2, height: 2, identifier: "budget_0",              data: "budget"),
+      ColoredDashboardItem(startX: 2, startY: 0,  width: 2, height: 1, identifier: "budget_0",              data: "budget"),
       ColoredDashboardItem(startX: 4, startY: 0,  width: 2, height: 2, identifier: "categoryBudget_0",      data: "categoryBudget"),
-      // Row y=2–3: Quick metrics (fills 6 cols)
-      ColoredDashboardItem(startX: 0, startY: 2,  width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
-      ColoredDashboardItem(startX: 2, startY: 2,  width: 1, height: 2, identifier: "roi_0",                 data: "roi"),
-      ColoredDashboardItem(startX: 3, startY: 2,  width: 1, height: 2, identifier: "irr_0",                 data: "irr"),
-      ColoredDashboardItem(startX: 4, startY: 2,  width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
-      // Row y=4–6: Activity (fills 6 cols, taller for content)
-      ColoredDashboardItem(startX: 0, startY: 4,  width: 3, height: 3, identifier: "history_0",             data: "history"),
-      ColoredDashboardItem(startX: 3, startY: 4,  width: 3, height: 3, identifier: "cashflow_0",            data: "cashflow"),
-      // Row y=7–9: Analysis trio (fills 6 cols)
-      ColoredDashboardItem(startX: 0, startY: 7,  width: 2, height: 3, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
-      ColoredDashboardItem(startX: 2, startY: 7,  width: 2, height: 3, identifier: "incomeTrend_0",         data: "incomeTrend"),
-      ColoredDashboardItem(startX: 4, startY: 7,  width: 2, height: 3, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
-      // Row y=10–12: Wealth pair (fills 6 cols)
-      ColoredDashboardItem(startX: 0, startY: 10, width: 3, height: 3, identifier: "netWorthTrend_0",       data: "netWorthTrend"),
-      ColoredDashboardItem(startX: 3, startY: 10, width: 3, height: 3, identifier: "investment_0",          data: "investment"),
-      // Row y=13–15: Market / Obligations / Heatmap (fills 6 cols)
-      ColoredDashboardItem(startX: 0, startY: 13, width: 2, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
-      ColoredDashboardItem(startX: 2, startY: 13, width: 2, height: 3, identifier: "bills_0",               data: "bills",           minWidth: 2),
-      ColoredDashboardItem(startX: 4, startY: 13, width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
-      // Tools (tucked under heatmap)
-      ColoredDashboardItem(startX: 4, startY: 15, width: 1, height: 1, identifier: "import_0",              data: "import"),
-      ColoredDashboardItem(startX: 5, startY: 15, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      ColoredDashboardItem(startX: 2, startY: 1,  width: 2, height: 2, identifier: "savingsRate_0",         data: "savingsRate"),
+      // Spending: expenseBreakdown | roi+irr | portfolioAllocation
+      ColoredDashboardItem(startX: 0, startY: 2,  width: 2, height: 2, identifier: "expenseBreakdown_0",    data: "expenseBreakdown"),
+      ColoredDashboardItem(startX: 2, startY: 3,  width: 1, height: 1, identifier: "roi_0",                 data: "roi"),
+      ColoredDashboardItem(startX: 3, startY: 3,  width: 1, height: 1, identifier: "irr_0",                 data: "irr"),
+      ColoredDashboardItem(startX: 4, startY: 2,  width: 2, height: 2, identifier: "portfolioAllocation_0", data: "portfolioAllocation"),
+      // Analytics: spendingHeatmap | tax
+      ColoredDashboardItem(startX: 0, startY: 4,  width: 2, height: 2, identifier: "spendingHeatmap_0",     data: "spendingHeatmap"),
+      ColoredDashboardItem(startX: 2, startY: 4,  width: 2, height: 2, identifier: "tax_0",                 data: "tax"),
+      // Activity: history | cashflow
+      ColoredDashboardItem(startX: 0, startY: 6,  width: 3, height: 4, identifier: "history_0",             data: "history"),
+      ColoredDashboardItem(startX: 3, startY: 6,  width: 3, height: 2, identifier: "cashflow_0",            data: "cashflow"),
+      // Obligations: bills
+      ColoredDashboardItem(startX: 3, startY: 8,  width: 2, height: 2, identifier: "bills_0",               data: "bills",           minWidth: 2),
+      // Wealth: netWorthTrend | incomeTrend (3+3 = 6 cols)
+      ColoredDashboardItem(startX: 0, startY: 10, width: 3, height: 2, identifier: "netWorthTrend_0",       data: "netWorthTrend",   minWidth: 2),
+      ColoredDashboardItem(startX: 3, startY: 10, width: 3, height: 2, identifier: "incomeTrend_0",         data: "incomeTrend",     minWidth: 2),
+      // Investments: investment | marketTrending (3+3 = 6 cols)
+      ColoredDashboardItem(startX: 0, startY: 12, width: 3, height: 3, identifier: "investment_0",          data: "investment"),
+      ColoredDashboardItem(startX: 3, startY: 12, width: 3, height: 3, identifier: "marketTrending_0",      data: "marketTrending", minWidth: 2),
+      // Tools
+      ColoredDashboardItem(startX: 0, startY: 15, width: 1, height: 1, identifier: "import_0",              data: "import"),
+      ColoredDashboardItem(startX: 1, startY: 15, width: 1, height: 1, identifier: "export_0",              data: "export"),
     ],
   };
 
@@ -186,7 +180,8 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       return Future.microtask(() async {
         _preferences = await SharedPreferences.getInstance();
 
-        var init = _preferences.getBool("init_$dashboardId") ?? false;
+        // v3: bump whenever _default changes to force re-initialization.
+        var init = _preferences.getBool("init_${dashboardId}_v3") ?? false;
 
         if (!init) {
           _localItems = {
@@ -207,7 +202,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
             );
           }
 
-          await _preferences.setBool("init_$dashboardId", true);
+          await _preferences.setBool("init_${dashboardId}_v3", true);
         } else {
           // Load existing layout data or use defaults
           _localItems = {};
@@ -379,7 +374,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       await _preferences.remove("layout_data_${dashboardId}_$s");
     }
     _localItems = null;
-    await _preferences.setBool("init_$dashboardId", false);
+    await _preferences.setBool("init_${dashboardId}_v3", false);
   }
 
   ColoredDashboardItem createDefaultItem(String instanceId, String widgetType, int slotCount) {

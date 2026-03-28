@@ -254,7 +254,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
     // Filter widgets by search
     final filtered = _searchQuery.isEmpty
         ? widgets
-        : widgets.where((m) => m.label.toLowerCase().contains(_searchQuery)).toList();
+        : widgets.where((m) => l10n.translate(m.label).toLowerCase().contains(_searchQuery)).toList();
 
     if (filtered.isEmpty) return const SizedBox.shrink();
 
@@ -434,7 +434,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
               // Label
               Expanded(
                 child: Text(
-                  meta.label,
+                  AppLocalizations.of(context).translate(meta.label),
                   style: TextStyle(
                     color: isActive
                         ? (isDark ? Colors.white : AppColors.textOnLight)
@@ -753,16 +753,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
   // ─────────────────────────────────────────────────────────────────────────
 
   String _getCategoryLabel(WidgetCategory cat, AppLocalizations l10n) {
-    switch (cat) {
-      case WidgetCategory.overview:
-        return l10n.categoryOverview;
-      case WidgetCategory.analytics:
-        return l10n.categoryAnalytics;
-      case WidgetCategory.investments:
-        return l10n.categoryInvestments;
-      case WidgetCategory.tools:
-        return l10n.categoryTools;
-    }
+    return l10n.translate(WidgetCatalog.categoryLabelKey(cat));
   }
 
   Color _getCategoryColor(WidgetCategory cat) {

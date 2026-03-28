@@ -46,3 +46,12 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 sudo xcode-select -s /Application/Xcode.app/Contents/Developer
+
+cd Plutus-backend-prototype-2
+GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bootstrap cmd/lambda/main.go
+zip function.zip bootstrap
+
+cd ../terraform
+terraform init
+terraform plan -var="google_client_id=YOUR_GOOGLE_CLIENT_ID"
+terraform apply -var="google_client_id=YOUR_GOOGLE_CLIENT_ID"

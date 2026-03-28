@@ -8,6 +8,7 @@ import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
+import '../l10n/app_localizations.dart';
 
 class BudgetSummaryWidget extends StatefulWidget {
   const BudgetSummaryWidget({super.key});
@@ -34,6 +35,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
   Widget build(BuildContext context) {
     return Consumer<BudgetProvider>(
       builder: (context, provider, _) {
+        final l10n = AppLocalizations.of(context);
         final budget = provider.activeBudget;
 
         // Loading state with no budget yet
@@ -55,7 +57,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'No budget set up yet',
+                    l10n.budgetNoBudgetYet,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -69,7 +71,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                         builder: (_) => const BudgetSettingsSheet(),
                       );
                     },
-                    child: const Text('Create Budget'),
+                    child: Text(l10n.budgetCreate),
                   ),
                 ],
               ),
@@ -118,6 +120,15 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // 0. Widget title
+                Text(
+                  l10n.widgetBudgetTracking,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
                 // 1. Period navigation
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -195,18 +206,18 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                 Row(
                   children: [
                     _SummaryTile(
-                      label: 'BUDGETED',
+                      label: l10n.budgetBudgeted,
                       value: fmtCurrency(totalBudgeted),
                       valueColor:
                           Theme.of(context).colorScheme.onSurface,
                     ),
                     _SummaryTile(
-                      label: 'SPENT',
+                      label: l10n.budgetSpent,
                       value: fmtCurrency(totalSpent),
                       valueColor: Colors.red.shade400,
                     ),
                     _SummaryTile(
-                      label: 'LEFT',
+                      label: l10n.budgetLeft,
                       value: fmtCurrency(totalRemaining.abs()),
                       valueColor: totalRemaining >= 0
                           ? Colors.green.shade400
@@ -295,10 +306,10 @@ class _AlertBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final parts = <String>[];
     if (overBudgetCount > 0) {
-      parts.add('$overBudgetCount over budget');
+      parts.add('$overBudgetCount ${AppLocalizations.of(context).budgetOver}');
     }
     if (warningCount > 0) {
-      parts.add('$warningCount approaching limit');
+      parts.add('$warningCount ${AppLocalizations.of(context).budgetApproaching}');
     }
     final message = parts.join(' · ');
 

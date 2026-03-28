@@ -61,6 +61,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
 
   List<String> _lastVisibilityKey = [];
   String? _lastDashboardId;
+  int _controllerVersion = 0;
 
   @override
   void initState() {
@@ -91,6 +92,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     _itemController = DashboardItemController.withDelegate(
       itemStorageDelegate: storage,
     );
+    _controllerVersion++;
 
     if (mounted) {
       setState(() {});
@@ -103,9 +105,9 @@ class _DashboardWidgetState extends State<DashboardWidget>
   }
 
   double _getAspectRatio(double width) {
-    if (width < 600) return 0.85;
-    if (width < 900) return 0.95;
-    return 1.0;
+    if (width < 600) return 0.80;
+    if (width < 900) return 0.90;
+    return 0.95;
   }
 
   @override
@@ -304,7 +306,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             return _selectedWidget != null
                 ? _buildWidgetPreview(_selectedWidget!)
                 : Dashboard<ColoredDashboardItem>(
-                          key: ValueKey('${dashProvider.activeDashboardId}_${visibleWidgets.join(',')}'),
+                          key: ValueKey('${dashProvider.activeDashboardId}_${visibleWidgets.join(',')}_$_controllerVersion'),
                           shrinkToPlace: true,
                           slideToTop: true,
                           absorbPointer: false,
@@ -317,9 +319,9 @@ class _DashboardWidgetState extends State<DashboardWidget>
                               );
                             },
                           ),
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          horizontalSpace: AppSpacing.sm,
-                          verticalSpace: AppSpacing.sm,
+                          padding: const EdgeInsets.all(6.0),
+                          horizontalSpace: 6.0,
+                          verticalSpace: 6.0,
                           slotAspectRatio: aspectRatio,
                           animateEverytime: false,
                           dashboardItemController: itemController,
@@ -451,6 +453,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         }
         break;
       case 'reset':
+        _lastVisibilityKey = [];
         await dashProvider.resetToSaved();
         if (mounted) {
           _recreateStorageAndController(
@@ -478,12 +481,20 @@ class _DashboardWidgetState extends State<DashboardWidget>
           ),
         );
         if (confirmed == true) {
-          await dashProvider.hardReset();
-          if (mounted) {
-            _recreateStorageAndController(
-              dashProvider.activeDashboardId,
-              dashProvider.getVisibleWidgets(),
-            );
+          try {
+            final dashId = dashProvider.activeDashboardId;
+            _lastVisibilityKey = [];
+            await dashProvider.hardReset();
+            if (mounted) {
+              _recreateStorageAndController(
+                dashId,
+                dashProvider.getVisibleWidgets(),
+              );
+            }
+          } catch (e, stackTrace) {
+            debugPrint('=== HARD RESET ERROR ===');
+            debugPrint('$e');
+            debugPrint('$stackTrace');
           }
         }
         break;
@@ -604,7 +615,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             children: [
               Expanded(
                 child: Text(
-                  'Widget Preview: $widgetId',
+                  '${AppLocalizations.of(context).widgetPreview}: $widgetId',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

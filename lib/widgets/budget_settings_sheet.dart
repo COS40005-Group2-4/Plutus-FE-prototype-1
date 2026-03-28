@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:get_it/get_it.dart';
+import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
 import 'package:plutus_fe_prototype/providers/auth_provider.dart';
 import 'package:plutus_fe_prototype/providers/budget_provider.dart';
@@ -94,8 +95,9 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
       final authProvider = context.read<AuthProvider>();
       if (authProvider.currentUserId == null) {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in first')),
+            SnackBar(content: Text(l10n.budgetPleaseLogin)),
           );
         }
         return;
@@ -108,8 +110,9 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
       final currencyCode =
           currency.isOriginal ? 'USD' : currency.code;
 
+      final l10nCreate = AppLocalizations.of(context);
       await _budgetService.createBudget(
-        name: 'My Budget',
+        name: l10nCreate.budgetMyBudget,
         mode: BudgetMode.spendingLimit,
         periodType: BudgetPeriodType.monthly,
         currencyCode: currencyCode,
@@ -136,6 +139,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
   // ---------------------------------------------------------------------------
 
   Future<void> _showAddCategoryDialog(Budget budget) async {
+    final l10n = AppLocalizations.of(context);
     final amountController = TextEditingController();
     final customNameController = TextEditingController();
     final customPatternController = TextEditingController();
@@ -167,7 +171,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return AlertDialog(
-            title: const Text('Add Category'),
+            title: Text(l10n.budgetAddCategory),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
@@ -183,7 +187,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       isExpanded: true,
                       initialValue: selectedKey,
                       validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Select a category' : null,
+                          (v == null || v.isEmpty) ? l10n.budgetSelectCategory : null,
                       items: [
                         // Common categories
                         if (availableDefaults.isNotEmpty) ...[
@@ -191,7 +195,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                             enabled: false,
                             value: '__header_common__',
                             child: Text(
-                              'Common Categories',
+                              l10n.budgetCommonCategories,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -222,7 +226,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                             enabled: false,
                             value: '__header_user__',
                             child: Text(
-                              'From Your Transactions',
+                              l10n.budgetFromTransactions,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -250,13 +254,13 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                         ],
 
                         // Other (custom)
-                        const DropdownMenuItem<String>(
+                        DropdownMenuItem<String>(
                           value: 'other',
                           child: Row(
                             children: [
-                              Text('✏️', style: TextStyle(fontSize: 16)),
-                              SizedBox(width: 8),
-                              Text('Other (custom)'),
+                              const Text('✏️', style: TextStyle(fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Text(l10n.budgetOtherCustom),
                             ],
                           ),
                         ),
@@ -274,8 +278,8 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: customNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Category Name',
+                        decoration: InputDecoration(
+                          labelText: l10n.budgetCategoryName,
                           hintText: 'e.g., Pet Care',
                         ),
                         validator: (v) => isOther && (v == null || v.trim().isEmpty)
@@ -285,10 +289,10 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: customPatternController,
-                        decoration: const InputDecoration(
-                          labelText: 'Account Pattern',
+                        decoration: InputDecoration(
+                          labelText: l10n.budgetAccountPattern,
                           hintText: 'e.g., Expenses:Pets',
-                          helperText: 'Matches transactions starting with this prefix',
+                          helperText: l10n.budgetPatternHint,
                         ),
                         validator: (v) => isOther && (v == null || v.trim().isEmpty)
                             ? 'Required'
@@ -302,7 +306,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                     TextFormField(
                       controller: amountController,
                       decoration: InputDecoration(
-                        labelText: 'Budget Amount',
+                        labelText: l10n.budgetAmount,
                         prefixText: '$symbol ',
                         suffixText: currency,
                       ),
@@ -327,7 +331,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () async {
@@ -372,7 +376,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                   await _reloadProvider();
                   await _loadUserAccounts();
                 },
-                child: const Text('Add'),
+                child: Text(l10n.budgetAdd),
               ),
             ],
           );
@@ -407,7 +411,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('CURRENCY'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetCurrencyLabel),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: DropdownButtonFormField<String>(
@@ -480,20 +484,20 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('BUDGET MODE'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetMode),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: SegmentedButton<BudgetMode>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: BudgetMode.spendingLimit,
-                label: Text('Spending Limits'),
-                icon: Icon(Icons.shield_outlined),
+                label: Text(AppLocalizations.of(context).budgetSpendingLimits),
+                icon: const Icon(Icons.shield_outlined),
               ),
               ButtonSegment(
                 value: BudgetMode.zeroBased,
-                label: Text('Zero-Based'),
-                icon: Icon(Icons.balance_outlined),
+                label: Text(AppLocalizations.of(context).budgetZeroBased),
+                icon: const Icon(Icons.balance_outlined),
               ),
             ],
             selected: {budget.mode},
@@ -511,14 +515,14 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('BUDGET PERIOD'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetPeriod),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: SegmentedButton<BudgetPeriodType>(
-            segments: const [
-              ButtonSegment(value: BudgetPeriodType.monthly, label: Text('Monthly')),
-              ButtonSegment(value: BudgetPeriodType.weekly, label: Text('Weekly')),
-              ButtonSegment(value: BudgetPeriodType.biweekly, label: Text('Biweekly')),
+            segments: [
+              ButtonSegment(value: BudgetPeriodType.monthly, label: Text(AppLocalizations.of(context).budgetMonthly)),
+              ButtonSegment(value: BudgetPeriodType.weekly, label: Text(AppLocalizations.of(context).budgetWeekly)),
+              ButtonSegment(value: BudgetPeriodType.biweekly, label: Text(AppLocalizations.of(context).budgetBiweekly)),
             ],
             selected: {budget.periodType},
             onSelectionChanged: (selected) async {
@@ -590,14 +594,14 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       await _deleteCategory(cat.id!);
                     }
                   },
-                  itemBuilder: (_) => const [
+                  itemBuilder: (_) => [
                     PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline, size: 18),
-                          SizedBox(width: 8),
-                          Text('Delete'),
+                          const Icon(Icons.delete_outline, size: 18),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context).budgetDeleteCategory),
                         ],
                       ),
                     ),
@@ -609,7 +613,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Rollover', style: Theme.of(context).textTheme.bodySmall),
+                Text(AppLocalizations.of(context).budgetRollover, style: Theme.of(context).textTheme.bodySmall),
                 Switch(
                   value: cat.rolloverEnabled,
                   onChanged: cat.id != null
@@ -628,7 +632,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('CATEGORIES'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetCategoriesLabel),
         if (budget.categories.isEmpty)
           Padding(
             padding: EdgeInsets.symmetric(
@@ -636,7 +640,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
               vertical: AppSpacing.md,
             ),
             child: Text(
-              'No categories yet. Add one below.',
+              AppLocalizations.of(context).budgetNoCategories,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -651,7 +655,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
           child: OutlinedButton.icon(
             onPressed: () => _showAddCategoryDialog(budget),
             icon: const Icon(Icons.add),
-            label: const Text('Add Category'),
+            label: Text(AppLocalizations.of(context).budgetAddCategory),
           ),
         ),
       ],
@@ -662,7 +666,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('SUGGESTED FROM TRANSACTIONS'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetSuggested),
         FutureBuilder<List<SuggestedCategory>>(
           future: _budgetService.suggestCategoriesFromAccounts(),
           builder: (context, snapshot) {
@@ -681,7 +685,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                   vertical: AppSpacing.md,
                 ),
                 child: Text(
-                  'No suggestions available.',
+                  AppLocalizations.of(context).budgetNoSuggestions,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -717,7 +721,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       await _reloadProvider();
                       await _loadUserAccounts();
                     },
-                    child: const Text('+ Add'),
+                    child: Text('+ ${AppLocalizations.of(context).budgetAdd}'),
                   ),
                 );
               }).toList(),
@@ -732,11 +736,11 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('NOTIFICATIONS'),
+        _buildSectionLabel(AppLocalizations.of(context).budgetNotifications),
         SwitchListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          title: const Text('Alert at spending threshold'),
-          subtitle: const Text('Default: 90%'),
+          title: Text(AppLocalizations.of(context).budgetAlertThreshold),
+          subtitle: Text(AppLocalizations.of(context).budgetAlertDefault),
           value: _alertEnabled,
           onChanged: (val) => setState(() => _alertEnabled = val),
         ),
@@ -777,7 +781,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                       vertical: AppSpacing.sm,
                     ),
                     child: Text(
-                      'Budget Settings',
+                      AppLocalizations.of(context).budgetSettings,
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge
@@ -802,12 +806,12 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                           ),
                           SizedBox(height: AppSpacing.md),
                           Text(
-                            'No budget yet',
+                            AppLocalizations.of(context).budgetNoBudgetYet,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           SizedBox(height: AppSpacing.sm),
                           Text(
-                            'Create a budget to start tracking your spending by category.',
+                            AppLocalizations.of(context).budgetNoBudgetYetLong,
                             textAlign: TextAlign.center,
                             style: Theme.of(context)
                                 .textTheme
@@ -822,7 +826,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                           FilledButton.icon(
                             onPressed: _createNewBudget,
                             icon: const Icon(Icons.add),
-                            label: const Text('Create Budget'),
+                            label: Text(AppLocalizations.of(context).budgetCreate),
                           ),
                         ],
                       ),

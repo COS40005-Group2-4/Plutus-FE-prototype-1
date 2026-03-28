@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
@@ -44,13 +45,13 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.savings, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.savings, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
                   Text(
-                    'Savings Rate',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    AppLocalizations.of(context).savingsRate,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -63,8 +64,8 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
                       return const Center(child: CircularProgressIndicator(color: Colors.white));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No data available', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      return Center(
+                        child: Text(AppLocalizations.of(context).savingsNoData, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                       );
                     }
                     return _SavingsRateContent(
@@ -182,6 +183,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
+    final l10n = AppLocalizations.of(context);
     final brightness = Theme.of(context).brightness;
     final rateColor = _getRateColor(_currentRate, brightness);
 
@@ -208,9 +210,9 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('This Month', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                  Text(l10n.savingsThisMonth, style: const TextStyle(color: Colors.white54, fontSize: 10)),
                   Text(
-                    _currentRate >= 20 ? 'Great!' : _currentRate >= 10 ? 'Good' : 'Low',
+                    _currentRate >= 20 ? l10n.savingsGreat : _currentRate >= 10 ? l10n.savingsGood : l10n.savingsLow,
                     style: TextStyle(color: rateColor, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -330,9 +332,9 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
             ),
           )
         else
-          const Expanded(
+          Expanded(
             child: Center(
-              child: Text('Not enough data for trend', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              child: Text(l10n.savingsNoTrendData, style: const TextStyle(color: Colors.white54, fontSize: 11)),
             ),
           ),
       ],

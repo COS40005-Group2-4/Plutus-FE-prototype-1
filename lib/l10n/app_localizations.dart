@@ -342,6 +342,140 @@ class AppLocalizations {
       'max_instances': 'Max reached',
       'widget_count': 'on dashboard',
       'widgets_on_dashboard': 'widgets on dashboard',
+
+      // ── Budget Summary Widget ──
+      'budget_no_budget_yet': 'No budget set up yet',
+      'budget_create': 'Create Budget',
+      'budget_budgeted': 'BUDGETED',
+      'budget_spent': 'SPENT',
+      'budget_left': 'LEFT',
+
+      // ── Budget Settings Sheet ──
+      'budget_settings': 'Budget Settings',
+      'budget_please_login': 'Please log in first',
+      'budget_mode': 'Budget Mode',
+      'budget_spending_limits': 'Spending Limits',
+      'budget_zero_based': 'Zero-Based',
+      'budget_period': 'Budget Period',
+      'budget_monthly': 'Monthly',
+      'budget_weekly': 'Weekly',
+      'budget_biweekly': 'Biweekly',
+      'budget_currency_label': 'Currency',
+      'budget_categories_label': 'Categories',
+      'budget_add_category': 'Add Category',
+      'budget_notifications': 'Notifications',
+      'budget_rollover': 'Rollover',
+      'budget_category_name': 'Category Name',
+      'budget_account_pattern': 'Account Pattern',
+      'budget_amount': 'Budget Amount',
+      'budget_common_categories': 'Common Categories',
+      'budget_from_transactions': 'From Your Transactions',
+      'budget_other_custom': 'Other (custom)',
+      'budget_no_active': 'No active budget found',
+      'budget_add': 'Add',
+      'budget_save': 'Save Budget',
+      'budget_delete_category': 'Delete',
+      'budget_no_categories': 'No categories yet. Add one below.',
+      'budget_no_budget_yet_long': 'Create a budget to start tracking your spending by category.',
+      'budget_my_budget': 'My Budget',
+      'budget_select_category': 'Select a category',
+      'budget_alert_threshold': 'Alert at spending threshold',
+      'budget_alert_default': 'Default: 90%',
+      'budget_suggested': 'Suggested from Transactions',
+      'budget_no_suggestions': 'No suggestions available.',
+      'budget_pattern_hint': 'Matches transactions starting with this prefix',
+
+      // ── Category Budget Widget ──
+      'category_budget_title': 'Category Budgets',
+      'budget_over': 'over budget',
+      'budget_approaching': 'approaching limit',
+      'budget_unbudgeted': 'Unbudgeted Spending',
+      'budget_add_quick': '+ Budget',
+      'budget_rollover_badge': 'Rollover',
+      'budget_pace_warning': 'Ahead of pace',
+      'budget_of': 'of',
+      'budget_remaining': 'remaining',
+      'budget_over_label': 'over',
+      'budget_left_label': 'left',
+      'budget_spent_label': 'spent',
+      'budget_rolled': 'rolled',
+      'budget_budgeted_label': 'budgeted',
+      'budget_pace': 'pace',
+      'budget_edit_for': 'Edit budget for',
+      'budget_for': 'Budget for',
+      'budget_current_spending': 'Current spending',
+      'budget_monthly_amount': 'Monthly budget amount',
+      'budget_settings_title': 'Budget settings',
+
+      // ── Savings Rate Widget ──
+      'savings_no_data': 'No data available',
+      'savings_this_month': 'This Month',
+      'savings_great': 'Great!',
+      'savings_good': 'Good',
+      'savings_low': 'Low',
+      'savings_no_trend_data': 'Not enough data for trend',
+
+      // ── Add Investment Dialog ──
+      'investment_type': 'Investment Type',
+      'investment_stock': 'Stock',
+      'investment_bond': 'Bond',
+      'investment_crypto': 'Cryptocurrency',
+      'investment_other': 'Other',
+      'investment_total_paid': 'Total Amount Paid',
+      'investment_purchase_date': 'Purchase Date',
+      'investment_currency_label': 'Currency',
+      'investment_how_much': 'How much did you pay in total?',
+      'investment_enter_amount': 'Please enter the amount you paid',
+      'investment_enter_quantity': 'Please enter a quantity',
+      'investment_greater_than_zero': 'Please enter a number greater than 0',
+      'investment_ticker_hint_stock': 'e.g., AAPL, GOOGL',
+      'investment_ticker_hint_crypto': 'e.g., BTC, ETH',
+      'investment_ticker_hint_bond': 'e.g., US10Y',
+      'investment_ticker_hint_other': 'e.g., Gold, Real Estate',
+      'investment_quantity_hint': 'e.g., 10, 0.5',
+
+      // ── Avatar Editor Widget ──
+      'avatar_edit': 'Edit Avatar',
+      'avatar_rotate': 'Rotate',
+      'avatar_zoom_in': 'Zoom In',
+      'avatar_zoom_out': 'Zoom Out',
+      'avatar_reset': 'Reset',
+      'avatar_source_title': 'Choose Avatar Source',
+      'avatar_camera': 'Camera',
+      'avatar_gallery': 'Gallery',
+
+      // ── Cash Flow Widget ──
+      'cashflow_select_year': 'Select Year',
+
+      // ── Widget Catalog Labels ──
+      'widget_label_profile': 'Profile',
+      'widget_label_budget': 'Budget Summary',
+      'widget_label_category_budget': 'Category Budget',
+      'widget_label_savings_rate': 'Savings Rate',
+      'widget_label_net_worth_trend': 'Net Worth Trend',
+      'widget_label_history': 'Transaction History',
+      'widget_label_cashflow': 'Cash Flow',
+      'widget_label_expense_breakdown': 'Expense Breakdown',
+      'widget_label_income_trend': 'Income Trend',
+      'widget_label_spending_heatmap': 'Spending Heatmap',
+      'widget_label_tax': 'Tax Estimation',
+      'widget_label_investment': 'Investments',
+      'widget_label_portfolio_allocation': 'Portfolio Allocation',
+      'widget_label_roi': 'ROI',
+      'widget_label_irr': 'IRR',
+      'widget_label_market_trending': 'Market Trending',
+      'widget_label_bills': 'Upcoming Bills',
+      'widget_label_import': 'Import Report',
+      'widget_label_export': 'Export Report',
+
+      // ── Widget Catalog Category Labels ──
+      'widget_cat_overview': 'Overview',
+      'widget_cat_analytics': 'Analytics',
+      'widget_cat_investments': 'Investments',
+      'widget_cat_tools': 'Tools',
+
+      // ── Dashboard Screen ──
+      'widget_preview': 'Widget Preview',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -673,6 +807,140 @@ class AppLocalizations {
       'max_instances': 'Đã đạt tối đa',
       'widget_count': 'trên bảng',
       'widgets_on_dashboard': 'widget trên bảng',
+
+      // ── Budget Summary Widget ──
+      'budget_no_budget_yet': 'Chưa thiết lập ngân sách',
+      'budget_create': 'Tạo ngân sách',
+      'budget_budgeted': 'NGÂN SÁCH',
+      'budget_spent': 'ĐÃ CHI',
+      'budget_left': 'CÒN LẠI',
+
+      // ── Budget Settings Sheet ──
+      'budget_settings': 'Cài đặt ngân sách',
+      'budget_please_login': 'Vui lòng đăng nhập trước',
+      'budget_mode': 'Chế độ ngân sách',
+      'budget_spending_limits': 'Giới hạn chi tiêu',
+      'budget_zero_based': 'Ngân sách từ 0',
+      'budget_period': 'Kỳ ngân sách',
+      'budget_monthly': 'Hàng tháng',
+      'budget_weekly': 'Hàng tuần',
+      'budget_biweekly': 'Hai tuần',
+      'budget_currency_label': 'Tiền tệ',
+      'budget_categories_label': 'Danh mục',
+      'budget_add_category': 'Thêm danh mục',
+      'budget_notifications': 'Thông báo',
+      'budget_rollover': 'Chuyển tiếp',
+      'budget_category_name': 'Tên danh mục',
+      'budget_account_pattern': 'Mẫu tài khoản',
+      'budget_amount': 'Số tiền ngân sách',
+      'budget_common_categories': 'Danh mục phổ biến',
+      'budget_from_transactions': 'Từ giao dịch của bạn',
+      'budget_other_custom': 'Khác (tùy chỉnh)',
+      'budget_no_active': 'Không tìm thấy ngân sách',
+      'budget_add': 'Thêm',
+      'budget_save': 'Lưu ngân sách',
+      'budget_delete_category': 'Xóa',
+      'budget_no_categories': 'Chưa có danh mục. Thêm danh mục bên dưới.',
+      'budget_no_budget_yet_long': 'Tạo ngân sách để bắt đầu theo dõi chi tiêu theo danh mục.',
+      'budget_my_budget': 'Ngân sách của tôi',
+      'budget_select_category': 'Chọn danh mục',
+      'budget_alert_threshold': 'Cảnh báo khi đạt ngưỡng chi tiêu',
+      'budget_alert_default': 'Mặc định: 90%',
+      'budget_suggested': 'Gợi ý từ giao dịch',
+      'budget_no_suggestions': 'Không có gợi ý.',
+      'budget_pattern_hint': 'Khớp giao dịch bắt đầu bằng tiền tố này',
+
+      // ── Category Budget Widget ──
+      'category_budget_title': 'Ngân sách theo danh mục',
+      'budget_over': 'vượt ngân sách',
+      'budget_approaching': 'gần đạt giới hạn',
+      'budget_unbudgeted': 'Chi tiêu ngoài ngân sách',
+      'budget_add_quick': '+ Ngân sách',
+      'budget_rollover_badge': 'Chuyển tiếp',
+      'budget_pace_warning': 'Nhanh hơn dự kiến',
+      'budget_of': 'trên',
+      'budget_remaining': 'còn lại',
+      'budget_over_label': 'vượt',
+      'budget_left_label': 'còn',
+      'budget_spent_label': 'đã chi',
+      'budget_rolled': 'chuyển tiếp',
+      'budget_budgeted_label': 'ngân sách',
+      'budget_pace': 'tốc độ',
+      'budget_edit_for': 'Chỉnh sửa ngân sách cho',
+      'budget_for': 'Ngân sách cho',
+      'budget_current_spending': 'Chi tiêu hiện tại',
+      'budget_monthly_amount': 'Số tiền ngân sách hàng tháng',
+      'budget_settings_title': 'Cài đặt ngân sách',
+
+      // ── Savings Rate Widget ──
+      'savings_no_data': 'Không có dữ liệu',
+      'savings_this_month': 'Tháng này',
+      'savings_great': 'Tuyệt vời!',
+      'savings_good': 'Tốt',
+      'savings_low': 'Thấp',
+      'savings_no_trend_data': 'Không đủ dữ liệu để phân tích xu hướng',
+
+      // ── Add Investment Dialog ──
+      'investment_type': 'Loại đầu tư',
+      'investment_stock': 'Cổ phiếu',
+      'investment_bond': 'Trái phiếu',
+      'investment_crypto': 'Tiền điện tử',
+      'investment_other': 'Khác',
+      'investment_total_paid': 'Tổng số tiền đã trả',
+      'investment_purchase_date': 'Ngày mua',
+      'investment_currency_label': 'Tiền tệ',
+      'investment_how_much': 'Bạn đã trả bao nhiêu tổng cộng?',
+      'investment_enter_amount': 'Vui lòng nhập số tiền đã trả',
+      'investment_enter_quantity': 'Vui lòng nhập số lượng',
+      'investment_greater_than_zero': 'Vui lòng nhập số lớn hơn 0',
+      'investment_ticker_hint_stock': 'vd: AAPL, GOOGL',
+      'investment_ticker_hint_crypto': 'vd: BTC, ETH',
+      'investment_ticker_hint_bond': 'vd: US10Y',
+      'investment_ticker_hint_other': 'vd: Vàng, Bất động sản',
+      'investment_quantity_hint': 'vd: 10, 0.5',
+
+      // ── Avatar Editor Widget ──
+      'avatar_edit': 'Chỉnh sửa ảnh đại diện',
+      'avatar_rotate': 'Xoay',
+      'avatar_zoom_in': 'Phóng to',
+      'avatar_zoom_out': 'Thu nhỏ',
+      'avatar_reset': 'Đặt lại',
+      'avatar_source_title': 'Chọn nguồn ảnh đại diện',
+      'avatar_camera': 'Máy ảnh',
+      'avatar_gallery': 'Thư viện',
+
+      // ── Cash Flow Widget ──
+      'cashflow_select_year': 'Chọn năm',
+
+      // ── Widget Catalog Labels ──
+      'widget_label_profile': 'Hồ sơ',
+      'widget_label_budget': 'Tổng quan ngân sách',
+      'widget_label_category_budget': 'Ngân sách danh mục',
+      'widget_label_savings_rate': 'Tỷ lệ tiết kiệm',
+      'widget_label_net_worth_trend': 'Xu hướng tài sản ròng',
+      'widget_label_history': 'Lịch sử giao dịch',
+      'widget_label_cashflow': 'Dòng tiền',
+      'widget_label_expense_breakdown': 'Phân tích chi tiêu',
+      'widget_label_income_trend': 'Xu hướng thu nhập',
+      'widget_label_spending_heatmap': 'Biểu đồ chi tiêu',
+      'widget_label_tax': 'Ước tính thuế',
+      'widget_label_investment': 'Đầu tư',
+      'widget_label_portfolio_allocation': 'Phân bổ danh mục',
+      'widget_label_roi': 'ROI',
+      'widget_label_irr': 'IRR',
+      'widget_label_market_trending': 'Xu hướng thị trường',
+      'widget_label_bills': 'Hóa đơn sắp tới',
+      'widget_label_import': 'Báo cáo nhập',
+      'widget_label_export': 'Báo cáo xuất',
+
+      // ── Widget Catalog Category Labels ──
+      'widget_cat_overview': 'Tổng quan',
+      'widget_cat_analytics': 'Phân tích',
+      'widget_cat_investments': 'Đầu tư',
+      'widget_cat_tools': 'Công cụ',
+
+      // ── Dashboard Screen ──
+      'widget_preview': 'Xem trước widget',
     },
   };
 
@@ -1002,6 +1270,113 @@ class AppLocalizations {
   String get maxInstances => translate('max_instances');
   String get widgetCount => translate('widget_count');
   String get widgetsOnDashboard => translate('widgets_on_dashboard');
+
+  // Budget Summary Widget
+  String get budgetNoBudgetYet => translate('budget_no_budget_yet');
+  String get budgetCreate => translate('budget_create');
+  String get budgetBudgeted => translate('budget_budgeted');
+  String get budgetSpent => translate('budget_spent');
+  String get budgetLeft => translate('budget_left');
+
+  // Budget Settings Sheet
+  String get budgetSettings => translate('budget_settings');
+  String get budgetPleaseLogin => translate('budget_please_login');
+  String get budgetMode => translate('budget_mode');
+  String get budgetSpendingLimits => translate('budget_spending_limits');
+  String get budgetZeroBased => translate('budget_zero_based');
+  String get budgetPeriod => translate('budget_period');
+  String get budgetMonthly => translate('budget_monthly');
+  String get budgetWeekly => translate('budget_weekly');
+  String get budgetBiweekly => translate('budget_biweekly');
+  String get budgetCurrencyLabel => translate('budget_currency_label');
+  String get budgetCategoriesLabel => translate('budget_categories_label');
+  String get budgetAddCategory => translate('budget_add_category');
+  String get budgetNotifications => translate('budget_notifications');
+  String get budgetRollover => translate('budget_rollover');
+  String get budgetCategoryName => translate('budget_category_name');
+  String get budgetAccountPattern => translate('budget_account_pattern');
+  String get budgetAmount => translate('budget_amount');
+  String get budgetCommonCategories => translate('budget_common_categories');
+  String get budgetFromTransactions => translate('budget_from_transactions');
+  String get budgetOtherCustom => translate('budget_other_custom');
+  String get budgetNoActive => translate('budget_no_active');
+  String get budgetAdd => translate('budget_add');
+  String get budgetSave => translate('budget_save');
+  String get budgetDeleteCategory => translate('budget_delete_category');
+  String get budgetNoCategories => translate('budget_no_categories');
+  String get budgetNoBudgetYetLong => translate('budget_no_budget_yet_long');
+  String get budgetMyBudget => translate('budget_my_budget');
+  String get budgetSelectCategory => translate('budget_select_category');
+  String get budgetAlertThreshold => translate('budget_alert_threshold');
+  String get budgetAlertDefault => translate('budget_alert_default');
+  String get budgetSuggested => translate('budget_suggested');
+  String get budgetNoSuggestions => translate('budget_no_suggestions');
+  String get budgetPatternHint => translate('budget_pattern_hint');
+
+  // Category Budget Widget
+  String get categoryBudgetTitle => translate('category_budget_title');
+  String get budgetOver => translate('budget_over');
+  String get budgetApproaching => translate('budget_approaching');
+  String get budgetUnbudgeted => translate('budget_unbudgeted');
+  String get budgetAddQuick => translate('budget_add_quick');
+  String get budgetRolloverBadge => translate('budget_rollover_badge');
+  String get budgetPaceWarning => translate('budget_pace_warning');
+  String get budgetOf => translate('budget_of');
+  String get budgetRemaining => translate('budget_remaining');
+  String get budgetOverLabel => translate('budget_over_label');
+  String get budgetLeftLabel => translate('budget_left_label');
+  String get budgetSpentLabel => translate('budget_spent_label');
+  String get budgetRolled => translate('budget_rolled');
+  String get budgetBudgetedLabel => translate('budget_budgeted_label');
+  String get budgetPace => translate('budget_pace');
+  String get budgetEditFor => translate('budget_edit_for');
+  String get budgetFor => translate('budget_for');
+  String get budgetCurrentSpending => translate('budget_current_spending');
+  String get budgetMonthlyAmount => translate('budget_monthly_amount');
+  String get budgetSettingsTitle => translate('budget_settings_title');
+
+  // Savings Rate Widget
+  String get savingsNoData => translate('savings_no_data');
+  String get savingsThisMonth => translate('savings_this_month');
+  String get savingsGreat => translate('savings_great');
+  String get savingsGood => translate('savings_good');
+  String get savingsLow => translate('savings_low');
+  String get savingsNoTrendData => translate('savings_no_trend_data');
+
+  // Add Investment Dialog
+  String get investmentType => translate('investment_type');
+  String get investmentStock => translate('investment_stock');
+  String get investmentBond => translate('investment_bond');
+  String get investmentCrypto => translate('investment_crypto');
+  String get investmentOther => translate('investment_other');
+  String get investmentTotalPaid => translate('investment_total_paid');
+  String get investmentPurchaseDate => translate('investment_purchase_date');
+  String get investmentCurrencyLabel => translate('investment_currency_label');
+  String get investmentHowMuch => translate('investment_how_much');
+  String get investmentEnterAmount => translate('investment_enter_amount');
+  String get investmentEnterQuantity => translate('investment_enter_quantity');
+  String get investmentGreaterThanZero => translate('investment_greater_than_zero');
+  String get investmentTickerHintStock => translate('investment_ticker_hint_stock');
+  String get investmentTickerHintCrypto => translate('investment_ticker_hint_crypto');
+  String get investmentTickerHintBond => translate('investment_ticker_hint_bond');
+  String get investmentTickerHintOther => translate('investment_ticker_hint_other');
+  String get investmentQuantityHint => translate('investment_quantity_hint');
+
+  // Avatar Editor Widget
+  String get avatarEdit => translate('avatar_edit');
+  String get avatarRotate => translate('avatar_rotate');
+  String get avatarZoomIn => translate('avatar_zoom_in');
+  String get avatarZoomOut => translate('avatar_zoom_out');
+  String get avatarReset => translate('avatar_reset');
+  String get avatarSourceTitle => translate('avatar_source_title');
+  String get avatarCamera => translate('avatar_camera');
+  String get avatarGallery => translate('avatar_gallery');
+
+  // Cash Flow Widget
+  String get cashflowSelectYear => translate('cashflow_select_year');
+
+  // Dashboard Screen
+  String get widgetPreview => translate('widget_preview');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

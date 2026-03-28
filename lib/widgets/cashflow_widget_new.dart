@@ -319,7 +319,7 @@ class _YearPickerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Select Year'),
+      title: Text(AppLocalizations.of(context).cashflowSelectYear),
       content: SizedBox(
         width: 300,
         height: 400,

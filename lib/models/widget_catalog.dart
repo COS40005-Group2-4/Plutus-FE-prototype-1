@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 enum WidgetCategory { overview, analytics, investments, tools }
@@ -32,7 +33,7 @@ class WidgetCatalog {
     // ── Overview ──
     'profile': WidgetMeta(
       widgetType: 'profile',
-      label: 'Profile',
+      label: 'widget_label_profile',
       icon: Icons.person,
       color: AppColors.profileAccent,
       category: WidgetCategory.overview,
@@ -42,25 +43,25 @@ class WidgetCatalog {
     ),
     'budget': WidgetMeta(
       widgetType: 'budget',
-      label: 'Budget Tracking',
+      label: 'widget_label_budget',
       icon: Icons.account_balance_wallet,
       color: AppColors.budgetAccent,
       category: WidgetCategory.overview,
       defaultWidth: 2,
-      defaultHeight: 3,
+      defaultHeight: 1,
     ),
     'categoryBudget': WidgetMeta(
       widgetType: 'categoryBudget',
-      label: 'Category Budget',
+      label: 'widget_label_category_budget',
       icon: Icons.category,
       color: AppColors.categoryBudgetAccent,
       category: WidgetCategory.overview,
       defaultWidth: 2,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
     'savingsRate': WidgetMeta(
       widgetType: 'savingsRate',
-      label: 'Savings Rate',
+      label: 'widget_label_savings_rate',
       icon: Icons.savings,
       color: AppColors.savingsAccent,
       category: WidgetCategory.overview,
@@ -69,18 +70,18 @@ class WidgetCatalog {
     ),
     'netWorthTrend': WidgetMeta(
       widgetType: 'netWorthTrend',
-      label: 'Net Worth Trend',
+      label: 'widget_label_net_worth_trend',
       icon: Icons.timeline,
       color: AppColors.netWorthAccent,
       category: WidgetCategory.overview,
       defaultWidth: 3,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
 
     // ── Analytics ──
     'history': WidgetMeta(
       widgetType: 'history',
-      label: 'Transaction History',
+      label: 'widget_label_history',
       icon: Icons.history,
       color: AppColors.historyAccent,
       category: WidgetCategory.analytics,
@@ -89,34 +90,34 @@ class WidgetCatalog {
     ),
     'cashflow': WidgetMeta(
       widgetType: 'cashflow',
-      label: 'Cash Flow',
+      label: 'widget_label_cashflow',
       icon: Icons.waterfall_chart,
       color: AppColors.cashflowAccent,
       category: WidgetCategory.analytics,
       defaultWidth: 3,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
     'expenseBreakdown': WidgetMeta(
       widgetType: 'expenseBreakdown',
-      label: 'Expense Breakdown',
+      label: 'widget_label_expense_breakdown',
       icon: Icons.pie_chart,
       color: AppColors.expenseAccent,
       category: WidgetCategory.analytics,
       defaultWidth: 2,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
     'incomeTrend': WidgetMeta(
       widgetType: 'incomeTrend',
-      label: 'Income Trend',
+      label: 'widget_label_income_trend',
       icon: Icons.trending_up,
       color: AppColors.incomeAccent,
       category: WidgetCategory.analytics,
-      defaultWidth: 2,
-      defaultHeight: 3,
+      defaultWidth: 3,
+      defaultHeight: 2,
     ),
     'spendingHeatmap': WidgetMeta(
       widgetType: 'spendingHeatmap',
-      label: 'Spending Heatmap',
+      label: 'widget_label_spending_heatmap',
       icon: Icons.calendar_view_week,
       color: AppColors.heatmapAccent,
       category: WidgetCategory.analytics,
@@ -125,7 +126,7 @@ class WidgetCatalog {
     ),
     'tax': WidgetMeta(
       widgetType: 'tax',
-      label: 'Tax Estimation',
+      label: 'widget_label_tax',
       icon: Icons.account_balance,
       color: AppColors.taxAccent,
       category: WidgetCategory.analytics,
@@ -136,7 +137,7 @@ class WidgetCatalog {
     // ── Investments ──
     'investment': WidgetMeta(
       widgetType: 'investment',
-      label: 'Investments',
+      label: 'widget_label_investment',
       icon: Icons.show_chart,
       color: AppColors.primaryDark,
       category: WidgetCategory.investments,
@@ -145,34 +146,34 @@ class WidgetCatalog {
     ),
     'portfolioAllocation': WidgetMeta(
       widgetType: 'portfolioAllocation',
-      label: 'Portfolio Allocation',
+      label: 'widget_label_portfolio_allocation',
       icon: Icons.donut_large,
       color: AppColors.primary,
       category: WidgetCategory.investments,
       defaultWidth: 2,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
     'roi': WidgetMeta(
       widgetType: 'roi',
-      label: 'ROI',
+      label: 'widget_label_roi',
       icon: Icons.trending_up,
       color: AppColors.accent,
       category: WidgetCategory.investments,
       defaultWidth: 1,
-      defaultHeight: 2,
+      defaultHeight: 1,
     ),
     'irr': WidgetMeta(
       widgetType: 'irr',
-      label: 'IRR',
+      label: 'widget_label_irr',
       icon: Icons.analytics,
       color: AppColors.accent,
       category: WidgetCategory.investments,
       defaultWidth: 1,
-      defaultHeight: 2,
+      defaultHeight: 1,
     ),
     'marketTrending': WidgetMeta(
       widgetType: 'marketTrending',
-      label: 'Market Trending',
+      label: 'widget_label_market_trending',
       icon: Icons.candlestick_chart,
       color: AppColors.marketAccent,
       category: WidgetCategory.investments,
@@ -183,16 +184,16 @@ class WidgetCatalog {
     // ── Tools ──
     'bills': WidgetMeta(
       widgetType: 'bills',
-      label: 'Upcoming Bills',
+      label: 'widget_label_bills',
       icon: Icons.receipt_long,
       color: AppColors.billsAccent,
       category: WidgetCategory.tools,
       defaultWidth: 2,
-      defaultHeight: 3,
+      defaultHeight: 2,
     ),
     'import': WidgetMeta(
       widgetType: 'import',
-      label: 'Import Report',
+      label: 'widget_label_import',
       icon: Icons.upload_file,
       color: AppColors.importAccent,
       category: WidgetCategory.tools,
@@ -201,7 +202,7 @@ class WidgetCatalog {
     ),
     'export': WidgetMeta(
       widgetType: 'export',
-      label: 'Export Report',
+      label: 'widget_label_export',
       icon: Icons.download,
       color: AppColors.exportAccent,
       category: WidgetCategory.tools,
@@ -224,16 +225,16 @@ class WidgetCatalog {
     return all.values.where((m) => m.label.toLowerCase().contains(q)).toList();
   }
 
-  static String categoryLabel(WidgetCategory cat) {
+  static String categoryLabelKey(WidgetCategory cat) {
     switch (cat) {
       case WidgetCategory.overview:
-        return 'Overview';
+        return 'widget_cat_overview';
       case WidgetCategory.analytics:
-        return 'Analytics';
+        return 'widget_cat_analytics';
       case WidgetCategory.investments:
-        return 'Investments';
+        return 'widget_cat_investments';
       case WidgetCategory.tools:
-        return 'Tools';
+        return 'widget_cat_tools';
     }
   }
 
@@ -248,6 +249,14 @@ class WidgetCatalog {
       case WidgetCategory.tools:
         return Icons.build_outlined;
     }
+  }
+
+  static List<WidgetMeta> searchLocalized(String query, AppLocalizations l10n) {
+    if (query.isEmpty) return all.values.toList();
+    final q = query.toLowerCase();
+    return all.values
+        .where((m) => l10n.translate(m.label).toLowerCase().contains(q))
+        .toList();
   }
 
   static const int maxInstancesPerType = 5;

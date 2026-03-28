@@ -42,6 +42,14 @@ void main() async {
   await dotenv.load(fileName: ".env", isOptional: true);
   await setupServiceLocator();
 
+  // Temporary: catch all Flutter errors to log stack traces
+  FlutterError.onError = (details) {
+    debugPrint('=== FLUTTER ERROR ===');
+    debugPrint('${details.exception}');
+    debugPrint('${details.stack}');
+    FlutterError.presentError(details);
+  };
+
   ///
   runApp(const MyApp());
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../l10n/app_localizations.dart';
 
 /// Callback for avatar selection
 typedef AvatarCallback = void Function(File imageFile);
@@ -55,6 +56,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -67,8 +69,8 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Edit Avatar',
+              Text(
+                l10n.avatarEdit,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -111,26 +113,26 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
               children: [
                 _buildControlButton(
                   icon: Icons.rotate_right,
-                  label: 'Rotate',
+                  label: l10n.avatarRotate,
                   onPressed: _rotateClockwise,
                 ),
                 _buildControlButton(
                   icon: Icons.zoom_in,
-                  label: 'Zoom In',
+                  label: l10n.avatarZoomIn,
                   onPressed: () {
                     _controller.value.scale(1.2);
                   },
                 ),
                 _buildControlButton(
                   icon: Icons.zoom_out,
-                  label: 'Zoom Out',
+                  label: l10n.avatarZoomOut,
                   onPressed: () {
                     _controller.value.scale(0.8);
                   },
                 ),
                 _buildControlButton(
                   icon: Icons.refresh,
-                  label: 'Reset',
+                  label: l10n.avatarReset,
                   onPressed: _resetTransform,
                 ),
               ],
@@ -145,7 +147,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                 ElevatedButton.icon(
                   onPressed: widget.onCancel,
                   icon: const Icon(Icons.close),
-                  label: const Text('Cancel'),
+                  label: Text(l10n.cancel),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[700],
                     foregroundColor: Colors.white,
@@ -161,7 +163,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                     Navigator.pop(context);
                   },
                   icon: const Icon(Icons.check),
-                  label: const Text('Confirm'),
+                  label: Text(l10n.confirm),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
@@ -260,6 +262,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -267,9 +270,9 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            const Text(
-              'Choose Avatar Source',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.avatarSourceTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             Wrap(
@@ -279,12 +282,12 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
               children: [
                 _buildSourceButton(
                   icon: Icons.camera_alt,
-                  label: 'Camera',
+                  label: l10n.avatarCamera,
                   onPressed: () => _pickImage(ImageSource.camera),
                 ),
                 _buildSourceButton(
                   icon: Icons.image,
-                  label: 'Gallery',
+                  label: l10n.avatarGallery,
                   onPressed: () => _pickImage(ImageSource.gallery),
                 ),
               ],
@@ -292,7 +295,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
           ],
           ),

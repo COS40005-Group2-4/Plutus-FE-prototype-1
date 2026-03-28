@@ -8,6 +8,7 @@ import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
+import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 
 class CategoryBudgetWidget extends StatelessWidget {
   const CategoryBudgetWidget({super.key});
@@ -58,6 +59,7 @@ class CategoryBudgetWidget extends StatelessWidget {
     BudgetProvider provider,
     CategorySpending cs,
   ) {
+    final l10n = AppLocalizations.of(context);
     final currency = provider.activeBudget?.currencyCode ?? 'USD';
     final controller = TextEditingController(
       text: cs.budgetedAmount.toStringAsFixed(0),
@@ -66,7 +68,7 @@ class CategoryBudgetWidget extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Edit budget for ${cs.category.name}'),
+        title: Text('${l10n.budgetEditFor} ${cs.category.name}'),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -79,7 +81,7 @@ class CategoryBudgetWidget extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -87,7 +89,7 @@ class CategoryBudgetWidget extends StatelessWidget {
               provider.quickUpdateAmount(cs.category.id!, amount);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -98,18 +100,19 @@ class CategoryBudgetWidget extends StatelessWidget {
     BuildContext context,
     UnbudgetedEntry entry,
   ) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
 
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Budget for "${entry.accountName}"'),
+        title: Text('${l10n.budgetFor} "${entry.accountName}"'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Current spending: \$${NumberFormat('#,##0', 'en_US').format(entry.spent)}',
+              '${l10n.budgetCurrentSpending}: \$${NumberFormat('#,##0', 'en_US').format(entry.spent)}',
               style: Theme.of(ctx).textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -118,8 +121,8 @@ class CategoryBudgetWidget extends StatelessWidget {
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: false),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Monthly budget amount',
+              decoration: InputDecoration(
+                labelText: l10n.budgetMonthlyAmount,
                 prefixText: '\$ ',
               ),
             ),
@@ -128,7 +131,7 @@ class CategoryBudgetWidget extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -136,7 +139,7 @@ class CategoryBudgetWidget extends StatelessWidget {
               // settings sheet — close for now.
               Navigator.of(ctx).pop();
             },
-            child: const Text('Add'),
+            child: Text(l10n.budgetAdd),
           ),
         ],
       ),
@@ -157,6 +160,7 @@ class CategoryBudgetWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Consumer<BudgetProvider>(
       builder: (context, provider, _) {
         // Loading state
@@ -177,6 +181,22 @@ class CategoryBudgetWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── Widget title ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: Text(
+                  l10n.categoryBudgetTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+
               // ── Header ────────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -200,7 +220,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                     TextButton.icon(
                       onPressed: () => _openSettings(context),
                       icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Add'),
+                      label: Text(l10n.budgetAdd),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                         padding: const EdgeInsets.symmetric(
@@ -215,7 +235,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                       icon: const Icon(Icons.settings_outlined, size: 20),
                       onPressed: () => _openSettings(context),
                       visualDensity: VisualDensity.compact,
-                      tooltip: 'Budget settings',
+                      tooltip: l10n.budgetSettingsTitle,
                     ),
                   ],
                 ),
@@ -329,8 +349,8 @@ class CategoryBudgetWidget extends StatelessWidget {
                                       ),
                                       TextSpan(
                                         text: cs.remaining < 0
-                                            ? ' over'
-                                            : ' left',
+                                            ? ' ${l10n.budgetOverLabel}'
+                                            : ' ${l10n.budgetLeftLabel}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -370,7 +390,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                                   spacing: AppSpacing.sm,
                                   children: [
                                     Text(
-                                      '${_formatAmount(cs.spent, currency)} spent',
+                                      '${_formatAmount(cs.spent, currency)} ${l10n.budgetSpentLabel}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
@@ -383,7 +403,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                                     if (cs.projectedSpending >
                                         cs.budgetedAmount)
                                       Text(
-                                        '⚡ pace: ${_formatAmount(cs.projectedSpending, currency)}',
+                                        '⚡ ${l10n.budgetPace}: ${_formatAmount(cs.projectedSpending, currency)}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -399,8 +419,8 @@ class CategoryBudgetWidget extends StatelessWidget {
                               // Right: budgeted amount (with rollover if present)
                               Text(
                                 hasRollover
-                                    ? '${_formatAmount(cs.category.budgetedAmount, currency)} + ${_formatAmount(rolloverAmount.abs(), currency)} rolled'
-                                    : '${_formatAmount(cs.budgetedAmount, currency)} budgeted',
+                                    ? '${_formatAmount(cs.category.budgetedAmount, currency)} + ${_formatAmount(rolloverAmount.abs(), currency)} ${l10n.budgetRolled}'
+                                    : '${_formatAmount(cs.budgetedAmount, currency)} ${l10n.budgetBudgetedLabel}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -435,7 +455,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Unbudgeted Spending',
+                        l10n.budgetUnbudgeted,
                         style: Theme.of(context)
                             .textTheme
                             .titleSmall
@@ -514,7 +534,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                                 vertical: AppSpacing.xs,
                               ),
                             ),
-                            child: const Text('+ Budget'),
+                            child: Text(l10n.budgetAddQuick),
                           ),
                         ],
                       ),

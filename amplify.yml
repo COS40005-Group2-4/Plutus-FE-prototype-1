@@ -9,6 +9,7 @@ frontend:
         - touch .env
         - flutter clean
         - flutter pub get
+        - flutter pub upgrade
     build:
       commands:
         - echo "Building Flutter web application..."

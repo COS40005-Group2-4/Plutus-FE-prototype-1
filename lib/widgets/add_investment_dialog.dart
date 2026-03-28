@@ -109,7 +109,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   DropdownButtonFormField<AssetType>(
                     value: _assetType,
                     decoration: InputDecoration(
-                      labelText: 'Investment Type',
+                      labelText: localizations.investmentType,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -117,19 +117,19 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     items: [
                       DropdownMenuItem(
                         value: AssetType.stock,
-                        child: Text('Stock'),
+                        child: Text(localizations.investmentStock),
                       ),
                       DropdownMenuItem(
                         value: AssetType.bond,
-                        child: Text('Bond'),
+                        child: Text(localizations.investmentBond),
                       ),
                       DropdownMenuItem(
                         value: AssetType.crypto,
-                        child: Text('Cryptocurrency'),
+                        child: Text(localizations.investmentCrypto),
                       ),
                       DropdownMenuItem(
                         value: AssetType.other,
-                        child: Text('Other'),
+                        child: Text(localizations.investmentOther),
                       ),
                     ],
                     onChanged: (value) {
@@ -143,15 +143,15 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     controller: _assetNameController,
                     decoration: InputDecoration(
                       labelText: _assetType == AssetType.other
-                          ? 'Investment Name'
-                          : 'Ticker Symbol',
+                          ? localizations.investmentName
+                          : localizations.commoditySymbol,
                       hintText: _assetType == AssetType.stock
-                          ? 'e.g., AAPL, GOOGL'
+                          ? localizations.investmentTickerHintStock
                           : _assetType == AssetType.crypto
-                              ? 'e.g., BTC, ETH'
+                              ? localizations.investmentTickerHintCrypto
                               : _assetType == AssetType.bond
-                                  ? 'e.g., US10Y'
-                                  : 'e.g., Gold, Real Estate',
+                                  ? localizations.investmentTickerHintBond
+                                  : localizations.investmentTickerHintOther,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -161,7 +161,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                         : TextCapitalization.characters,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'This field is required';
+                        return localizations.requiredField;
                       }
                       return null;
                     },
@@ -172,8 +172,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   TextFormField(
                     controller: _quantityController,
                     decoration: InputDecoration(
-                      labelText: 'Quantity',
-                      hintText: 'e.g., 10, 0.5',
+                      labelText: localizations.quantity,
+                      hintText: localizations.investmentQuantityHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -184,11 +184,11 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     ],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a quantity';
+                        return localizations.investmentEnterQuantity;
                       }
                       final num = double.tryParse(value);
                       if (num == null || num <= 0) {
-                        return 'Please enter a number greater than 0';
+                        return localizations.investmentGreaterThanZero;
                       }
                       return null;
                     },
@@ -199,8 +199,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   TextFormField(
                     controller: _purchaseValueController,
                     decoration: InputDecoration(
-                      labelText: 'Total Amount Paid',
-                      hintText: 'How much did you pay in total?',
+                      labelText: localizations.investmentTotalPaid,
+                      hintText: localizations.investmentHowMuch,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -211,11 +211,11 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     ],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter the amount you paid';
+                        return localizations.investmentEnterAmount;
                       }
                       final num = double.tryParse(value);
                       if (num == null || num <= 0) {
-                        return 'Please enter a number greater than 0';
+                        return localizations.investmentGreaterThanZero;
                       }
                       return null;
                     },
@@ -226,7 +226,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   DropdownButtonFormField<Currency>(
                     value: _currency,
                     decoration: InputDecoration(
-                      labelText: 'Currency',
+                      labelText: localizations.investmentCurrencyLabel,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -256,7 +256,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'Purchase Date',
+                        labelText: localizations.investmentPurchaseDate,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
