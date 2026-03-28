@@ -20,14 +20,24 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
   final GlobalKey<TransactionHistoryPageState> _historyKey = GlobalKey();
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
         children: [
           const DashboardWidget(),
           TransactionHistoryPage(key: _historyKey),
@@ -60,14 +70,22 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                       icon: Icons.dashboard,
                       label: AppLocalizations.of(context).dashboard,
                       isSelected: _currentIndex == 0,
-                      onTap: () => setState(() => _currentIndex = 0),
+                      onTap: () => _pageController.animateToPage(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      ),
                     ),
                     _buildFab(),
                     _buildNavItem(
                       icon: Icons.history,
                       label: AppLocalizations.of(context).history,
                       isSelected: _currentIndex == 1,
-                      onTap: () => setState(() => _currentIndex = 1),
+                      onTap: () => _pageController.animateToPage(
+                        1,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      ),
                     ),
                   ],
                 ),

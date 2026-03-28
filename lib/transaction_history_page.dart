@@ -22,7 +22,10 @@ class TransactionHistoryPage extends StatefulWidget {
   State<TransactionHistoryPage> createState() => TransactionHistoryPageState();
 }
 
-class TransactionHistoryPageState extends State<TransactionHistoryPage> {
+class TransactionHistoryPageState extends State<TransactionHistoryPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   late TransactionService _service;
   final ExportService _exportService = ExportService();
   final UserService _userService = UserService();
@@ -126,6 +129,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return Scaffold(

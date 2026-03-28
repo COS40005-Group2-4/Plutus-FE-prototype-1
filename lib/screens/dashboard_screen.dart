@@ -43,12 +43,13 @@ class DashboardWidget extends StatefulWidget {
   State<DashboardWidget> createState() => _DashboardWidgetState();
 }
 
-class _DashboardWidgetState extends State<DashboardWidget> {
+class _DashboardWidgetState extends State<DashboardWidget>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final ScrollController scrollController = ScrollController();
 
   late DashboardItemController<ColoredDashboardItem> _itemController;
-
-  bool refreshing = false;
 
   late MyItemStorage storage;
 
@@ -83,11 +84,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
     });
   }
 
-  void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) async {
-    setState(() {
-      refreshing = true;
-    });
-
+  void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) {
     storage = MyItemStorage(dashboardId: dashboardId);
     storage.setVisibilityFilter(visibleWidgets);
 
@@ -95,12 +92,8 @@ class _DashboardWidgetState extends State<DashboardWidget> {
       itemStorageDelegate: storage,
     );
 
-    await Future.delayed(const Duration(milliseconds: 200));
-
     if (mounted) {
-      setState(() {
-        refreshing = false;
-      });
+      setState(() {});
     }
   }
 
@@ -117,6 +110,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     var w = MediaQuery.of(context).size.width;
     slot = w > 600
         ? w > 900
@@ -309,9 +303,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
 
             return _selectedWidget != null
                 ? _buildWidgetPreview(_selectedWidget!)
-                : (refreshing
-                      ? const Center(child: CircularProgressIndicator())
-                      : Dashboard<ColoredDashboardItem>(
+                : Dashboard<ColoredDashboardItem>(
                           key: ValueKey('${dashProvider.activeDashboardId}_${visibleWidgets.join(',')}'),
                           shrinkToPlace: true,
                           slideToTop: true,
@@ -329,7 +321,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                           horizontalSpace: AppSpacing.sm,
                           verticalSpace: AppSpacing.sm,
                           slotAspectRatio: aspectRatio,
-                          animateEverytime: true,
+                          animateEverytime: false,
                           dashboardItemController: itemController,
                           slotCount: slot ?? 2,
                           errorPlaceholder: (e, s) {
@@ -430,7 +422,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                               },
                             );
                           },
-                        ));
+                        );
           },
         ),
       ),

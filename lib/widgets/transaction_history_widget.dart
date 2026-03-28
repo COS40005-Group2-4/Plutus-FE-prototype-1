@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../widgets/glass_container.dart';
@@ -159,64 +158,6 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     }
   }
 
-  Widget _buildSparkline(List<Transaction> transactions) {
-    // Aggregate daily net amounts
-    final Map<int, double> dailyNet = {};
-    for (var tx in transactions) {
-      final dayKey = tx.dateTime.millisecondsSinceEpoch ~/ 86400000;
-      final amount = tx.isExpense ? -tx.totalAmount : tx.totalAmount;
-      dailyNet[dayKey] = (dailyNet[dayKey] ?? 0) + amount;
-    }
-
-    final sortedKeys = dailyNet.keys.toList()..sort();
-    if (sortedKeys.length < 2) return const SizedBox.shrink();
-
-    final spots = <FlSpot>[];
-    for (int i = 0; i < sortedKeys.length; i++) {
-      spots.add(FlSpot(i.toDouble(), dailyNet[sortedKeys[i]]!));
-    }
-
-    final brightness = Theme.of(context).brightness;
-    final hasPositive = spots.any((s) => s.y >= 0);
-    final lineColor = hasPositive ? AppColors.positive(brightness) : AppColors.negative(brightness);
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 4),
-      child: SizedBox(
-        height: 50,
-        child: LineChart(
-          LineChartData(
-            lineTouchData: const LineTouchData(enabled: false),
-            gridData: const FlGridData(show: false),
-            titlesData: const FlTitlesData(show: false),
-            borderData: FlBorderData(show: false),
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                color: lineColor,
-                barWidth: 2,
-                isStrokeCapRound: true,
-                dotData: const FlDotData(show: false),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      lineColor.withOpacity(0.25),
-                      lineColor.withOpacity(0.02),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
@@ -332,8 +273,6 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                         ),
                     ],
                     ),
-                    if (filteredTransactions.length > 2)
-                      _buildSparkline(filteredTransactions),
                     const SizedBox(height: 8),
                   ListView.builder(
                     shrinkWrap: true,
