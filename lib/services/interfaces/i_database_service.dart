@@ -58,6 +58,35 @@ abstract class IDatabaseService {
   // Data consent
   Future<void> setUserDataConsent(int userId, bool consent);
 
+  // Budget CRUD
+  Future<int> insertBudget(Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> getBudgetsByUserId(int userId);
+  Future<Map<String, dynamic>?> getActiveBudgetByUserId(int userId);
+  Future<void> updateBudget(int id, Map<String, dynamic> data);
+  Future<void> deleteBudget(int id);
+
+  // Budget Category CRUD
+  Future<int> insertBudgetCategory(Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> getBudgetCategoriesByBudgetId(int budgetId);
+  Future<void> updateBudgetCategory(int id, Map<String, dynamic> data);
+  Future<void> deleteBudgetCategory(int id);
+  Future<void> deleteBudgetCategoriesByBudgetId(int budgetId);
+
+  // Budget Period CRUD
+  Future<int> insertBudgetPeriod(Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> getBudgetPeriodsByCategoryId(int categoryId);
+  Future<Map<String, dynamic>?> getBudgetPeriodForDate(int categoryId, String date);
+  Future<void> deleteBudgetPeriodsByCategoryId(int categoryId);
+
+  // Notification Rule CRUD
+  Future<int> insertNotificationRule(Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> getNotificationRulesByCategoryId(int categoryId);
+  Future<void> updateNotificationRule(int id, Map<String, dynamic> data);
+  Future<void> deleteNotificationRulesByCategoryId(int categoryId);
+
+  // Budget spending queries
+  Future<List<Map<String, dynamic>>> getExpensePostingsForPeriod(int userId, String startDate, String endDate);
+
   // Utility
   Future<void> clearAllData();
   Future<void> clearUserData(int userId);

@@ -10,8 +10,11 @@ import 'transaction_history_page.dart';
 import 'import_transaction_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/backup_provider.dart';
+import 'providers/budget_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/dashboard_provider.dart';
+import 'services/interfaces/i_budget_service.dart';
+import 'services/budget_notification_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
@@ -98,6 +101,12 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(value: _backupProvider),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => BudgetProvider(
+            budgetService: sl<IBudgetService>(),
+            notificationService: sl<BudgetNotificationService>(),
+          ),
+        ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, _) {
@@ -276,6 +285,9 @@ class _MainPageState extends State<MainPage> {
                 // User is logged in, set up transaction service and go to dashboard
                 final transactionService = TransactionService();
                 transactionService.setCurrentUser(authProvider.currentUserId!);
+                // Set user on budget service so budget widgets work
+                final budgetProvider = context.read<BudgetProvider>();
+                budgetProvider.setCurrentUser(authProvider.currentUserId!);
                 _initBackupAndNavigate(context, authProvider.currentUserId!);
               } else {
                 // No user logged in, show user selection screen

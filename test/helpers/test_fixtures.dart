@@ -4,6 +4,7 @@ import 'package:plutus_fe_prototype/models/bill_model.dart';
 import 'package:plutus_fe_prototype/models/profile_model.dart';
 import 'package:plutus_fe_prototype/models/investment_model.dart';
 import 'package:plutus_fe_prototype/models/backup_models.dart';
+import 'package:plutus_fe_prototype/models/budget_model.dart';
 
 User createTestUser({
   int id = 1,
@@ -168,4 +169,91 @@ Map<String, dynamic> createTestUserMap({
     'last_login': now,
     'is_active': 1,
   };
+}
+
+Budget createTestBudget({
+  int? id = 1,
+  int userId = 1,
+  String name = 'Test Budget',
+  BudgetMode mode = BudgetMode.spendingLimit,
+  BudgetPeriodType periodType = BudgetPeriodType.monthly,
+  DateTime? periodStart,
+  String currencyCode = 'USD',
+  bool isActive = true,
+  List<BudgetCategory>? categories,
+}) {
+  return Budget(
+    id: id,
+    userId: userId,
+    name: name,
+    mode: mode,
+    periodType: periodType,
+    periodStart: periodStart,
+    currencyCode: currencyCode,
+    isActive: isActive,
+    categories: categories ?? [],
+  );
+}
+
+BudgetCategory createTestBudgetCategory({
+  int? id = 1,
+  int budgetId = 1,
+  String name = 'Food',
+  List<String> accountPatterns = const ['Expenses:Food'],
+  double budgetedAmount = 400.0,
+  bool rolloverEnabled = false,
+  RolloverBehavior rolloverBehavior = RolloverBehavior.carry,
+  int sortOrder = 0,
+  String? icon = '🍔',
+}) {
+  return BudgetCategory(
+    id: id,
+    budgetId: budgetId,
+    name: name,
+    accountPatterns: accountPatterns,
+    budgetedAmount: budgetedAmount,
+    rolloverEnabled: rolloverEnabled,
+    rolloverBehavior: rolloverBehavior,
+    sortOrder: sortOrder,
+    icon: icon,
+  );
+}
+
+BudgetPeriod createTestBudgetPeriod({
+  int? id = 1,
+  int budgetCategoryId = 1,
+  DateTime? periodStart,
+  DateTime? periodEnd,
+  double budgetedAmount = 400.0,
+  double rolloverAmount = 0.0,
+}) {
+  return BudgetPeriod(
+    id: id,
+    budgetCategoryId: budgetCategoryId,
+    periodStart: periodStart ?? DateTime(2026, 3, 1),
+    periodEnd: periodEnd ?? DateTime(2026, 4, 1),
+    budgetedAmount: budgetedAmount,
+    rolloverAmount: rolloverAmount,
+  );
+}
+
+CategorySpending createTestCategorySpending({
+  BudgetCategory? category,
+  BudgetPeriod? period,
+  double spent = 200.0,
+  double budgetedAmount = 400.0,
+  double? remaining,
+  double projectedSpending = 300.0,
+  BudgetStatus status = BudgetStatus.onTrack,
+}) {
+  final cat = category ?? createTestBudgetCategory();
+  return CategorySpending(
+    category: cat,
+    period: period,
+    spent: spent,
+    budgetedAmount: budgetedAmount,
+    remaining: remaining ?? (budgetedAmount - spent),
+    projectedSpending: projectedSpending,
+    status: status,
+  );
 }

@@ -18,7 +18,25 @@ class DatabaseService implements IDatabaseService {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+    // Safety net: ensure budget tables exist even if migration was skipped
+    await _ensureBudgetTables(_database!);
     return _database!;
+  }
+
+  Future<void> _ensureBudgetTables(Database db) async {
+    final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='budgets'");
+    if (tables.isEmpty) {
+      if (kDebugMode) print('Budget tables missing — creating now');
+      await db.execute('CREATE TABLE IF NOT EXISTS budgets (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, name TEXT NOT NULL, mode TEXT NOT NULL, period_type TEXT NOT NULL, period_start TEXT, currency_code TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE)');
+      await db.execute('CREATE TABLE IF NOT EXISTS budget_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, budget_id INTEGER NOT NULL, name TEXT NOT NULL, account_patterns TEXT NOT NULL, budgeted_amount REAL NOT NULL, rollover_enabled INTEGER DEFAULT 0, rollover_behavior TEXT DEFAULT \'carry\', sort_order INTEGER DEFAULT 0, icon TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE)');
+      await db.execute('CREATE TABLE IF NOT EXISTS budget_periods (id INTEGER PRIMARY KEY AUTOINCREMENT, budget_category_id INTEGER NOT NULL, period_start TEXT NOT NULL, period_end TEXT NOT NULL, budgeted_amount REAL NOT NULL, rollover_amount REAL DEFAULT 0, created_at INTEGER NOT NULL, FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE)');
+      await db.execute('CREATE TABLE IF NOT EXISTS notification_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, budget_category_id INTEGER NOT NULL, threshold_pct REAL NOT NULL, enabled INTEGER DEFAULT 1, FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_categories_budget_id ON budget_categories(budget_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_periods_category_id ON budget_periods(budget_category_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_notification_rules_category_id ON notification_rules(budget_category_id)');
+    }
   }
   
   Future<Database> _initDatabase() async {
@@ -37,7 +55,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -178,6 +196,66 @@ class DatabaseService implements IDatabaseService {
       )
     ''');
     
+    // Create budgets table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        period_type TEXT NOT NULL,
+        period_start TEXT,
+        currency_code TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create budget_categories table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS budget_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        budget_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        account_patterns TEXT NOT NULL,
+        budgeted_amount REAL NOT NULL,
+        rollover_enabled INTEGER DEFAULT 0,
+        rollover_behavior TEXT DEFAULT 'carry',
+        sort_order INTEGER DEFAULT 0,
+        icon TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create budget_periods table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS budget_periods (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        budget_category_id INTEGER NOT NULL,
+        period_start TEXT NOT NULL,
+        period_end TEXT NOT NULL,
+        budgeted_amount REAL NOT NULL,
+        rollover_amount REAL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create notification_rules table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS notification_rules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        budget_category_id INTEGER NOT NULL,
+        threshold_pct REAL NOT NULL,
+        enabled INTEGER DEFAULT 1,
+        FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
@@ -186,7 +264,11 @@ class DatabaseService implements IDatabaseService {
     await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
     await db.execute('CREATE INDEX idx_bills_user_id ON bills(user_id)');
     await db.execute('CREATE INDEX idx_bills_due_date ON bills(due_date)');
-    
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_categories_budget_id ON budget_categories(budget_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_periods_category_id ON budget_periods(budget_category_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_notification_rules_category_id ON notification_rules(budget_category_id)');
+
     if (kDebugMode) {
       print('Database tables created successfully');
     }
@@ -342,6 +424,70 @@ class DatabaseService implements IDatabaseService {
         }
         rethrow;
       }
+    }
+
+    // Upgrade from version 5 to 6: Add budget tables
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS budgets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          mode TEXT NOT NULL,
+          period_type TEXT NOT NULL,
+          period_start TEXT,
+          currency_code TEXT NOT NULL,
+          is_active INTEGER DEFAULT 1,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS budget_categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          budget_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          account_patterns TEXT NOT NULL,
+          budgeted_amount REAL NOT NULL,
+          rollover_enabled INTEGER DEFAULT 0,
+          rollover_behavior TEXT DEFAULT 'carry',
+          sort_order INTEGER DEFAULT 0,
+          icon TEXT,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS budget_periods (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          budget_category_id INTEGER NOT NULL,
+          period_start TEXT NOT NULL,
+          period_end TEXT NOT NULL,
+          budgeted_amount REAL NOT NULL,
+          rollover_amount REAL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS notification_rules (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          budget_category_id INTEGER NOT NULL,
+          threshold_pct REAL NOT NULL,
+          enabled INTEGER DEFAULT 1,
+          FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_categories_budget_id ON budget_categories(budget_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_periods_category_id ON budget_periods(budget_category_id)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_notification_rules_category_id ON notification_rules(budget_category_id)');
     }
   }
   
@@ -824,6 +970,192 @@ class DatabaseService implements IDatabaseService {
       'investments',
       where: 'user_id = ? AND is_synced = 0',
       whereArgs: [userId],
+    );
+  }
+
+  // Budget CRUD
+  Future<int> insertBudget(Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('budgets', data);
+  }
+
+  Future<List<Map<String, dynamic>>> getBudgetsByUserId(int userId) async {
+    final db = await database;
+    return await db.query(
+      'budgets',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<Map<String, dynamic>?> getActiveBudgetByUserId(int userId) async {
+    final db = await database;
+    final results = await db.query(
+      'budgets',
+      where: 'user_id = ? AND is_active = 1',
+      whereArgs: [userId],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> updateBudget(int id, Map<String, dynamic> data) async {
+    final db = await database;
+    final updated = Map<String, dynamic>.from(data);
+    updated['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'budgets',
+      updated,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteBudget(int id) async {
+    final db = await database;
+    await db.delete(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Budget Category CRUD
+  Future<int> insertBudgetCategory(Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('budget_categories', data);
+  }
+
+  Future<List<Map<String, dynamic>>> getBudgetCategoriesByBudgetId(int budgetId) async {
+    final db = await database;
+    return await db.query(
+      'budget_categories',
+      where: 'budget_id = ?',
+      whereArgs: [budgetId],
+      orderBy: 'sort_order ASC',
+    );
+  }
+
+  Future<void> updateBudgetCategory(int id, Map<String, dynamic> data) async {
+    final db = await database;
+    final updated = Map<String, dynamic>.from(data);
+    updated['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'budget_categories',
+      updated,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteBudgetCategory(int id) async {
+    final db = await database;
+    await db.delete(
+      'budget_categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteBudgetCategoriesByBudgetId(int budgetId) async {
+    final db = await database;
+    await db.delete(
+      'budget_categories',
+      where: 'budget_id = ?',
+      whereArgs: [budgetId],
+    );
+  }
+
+  // Budget Period CRUD
+  Future<int> insertBudgetPeriod(Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('budget_periods', data);
+  }
+
+  Future<List<Map<String, dynamic>>> getBudgetPeriodsByCategoryId(int categoryId) async {
+    final db = await database;
+    return await db.query(
+      'budget_periods',
+      where: 'budget_category_id = ?',
+      whereArgs: [categoryId],
+      orderBy: 'period_start DESC',
+    );
+  }
+
+  Future<Map<String, dynamic>?> getBudgetPeriodForDate(int categoryId, String date) async {
+    final db = await database;
+    final results = await db.query(
+      'budget_periods',
+      where: 'budget_category_id = ? AND period_start <= ? AND period_end > ?',
+      whereArgs: [categoryId, date, date],
+      orderBy: 'period_start DESC',
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<void> deleteBudgetPeriodsByCategoryId(int categoryId) async {
+    final db = await database;
+    await db.delete(
+      'budget_periods',
+      where: 'budget_category_id = ?',
+      whereArgs: [categoryId],
+    );
+  }
+
+  // Notification Rule CRUD
+  Future<int> insertNotificationRule(Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.insert('notification_rules', data);
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationRulesByCategoryId(int categoryId) async {
+    final db = await database;
+    return await db.query(
+      'notification_rules',
+      where: 'budget_category_id = ?',
+      whereArgs: [categoryId],
+    );
+  }
+
+  Future<void> updateNotificationRule(int id, Map<String, dynamic> data) async {
+    final db = await database;
+    await db.update(
+      'notification_rules',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteNotificationRulesByCategoryId(int categoryId) async {
+    final db = await database;
+    await db.delete(
+      'notification_rules',
+      where: 'budget_category_id = ?',
+      whereArgs: [categoryId],
+    );
+  }
+
+  // Budget spending queries
+  Future<List<Map<String, dynamic>>> getExpensePostingsForPeriod(
+    int userId,
+    String startDate,
+    String endDate,
+  ) async {
+    final db = await database;
+    return await db.rawQuery(
+      '''
+      SELECT p.* FROM postings p
+      JOIN transactions t ON p.transaction_id = t.id
+      WHERE t.user_id = ?
+        AND t.date >= ?
+        AND t.date < ?
+        AND p.account LIKE 'Expenses:%'
+        AND p.amount > 0
+      ''',
+      [userId, startDate, endDate],
     );
   }
 

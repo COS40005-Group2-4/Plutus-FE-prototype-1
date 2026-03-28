@@ -145,6 +145,8 @@ class CurrencyService {
         return '¥';
       case 'CNY':
         return '¥';
+      case 'ORIGINAL':
+        return '\$';
       default:
         return currency;
     }

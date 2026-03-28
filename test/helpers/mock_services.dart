@@ -14,5 +14,6 @@ import 'package:plutus_fe_prototype/services/interfaces/interfaces.dart';
   IGoogleAuthService,
   IPriceApiService,
   ISyncManager,
+  IBudgetService,
 ])
 void main() {}

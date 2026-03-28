@@ -13,6 +13,9 @@ import '../services/bill_service.dart';
 import '../services/investment_service.dart';
 import '../services/sync_manager.dart';
 import '../services/consent_service.dart';
+import '../services/budget_service.dart';
+import '../services/budget_notification_service.dart';
+import '../services/budget_migration_service.dart';
 import '../transaction_service.dart';
 
 final GetIt sl = GetIt.instance;
@@ -52,10 +55,19 @@ Future<void> setupServiceLocator() async {
       dbService: sl<IDatabaseService>(),
     ),
   );
+  sl.registerLazySingleton<IBudgetService>(
+    () => BudgetService(db: sl<IDatabaseService>()),
+  );
 
   // Tier 2: Top-tier services
   sl.registerLazySingleton<ISyncManager>(
     () => SyncManager(backupService: sl<IBackupService>()),
+  );
+  sl.registerLazySingleton<BudgetNotificationService>(
+    () => BudgetNotificationService(budgetService: sl<IBudgetService>()),
+  );
+  sl.registerLazySingleton<BudgetMigrationService>(
+    () => BudgetMigrationService(budgetService: sl<IBudgetService>()),
   );
 }
 

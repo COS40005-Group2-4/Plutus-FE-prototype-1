@@ -8,7 +8,7 @@ import 'widgets/cashflow_widget.dart';
 import 'widgets/upcoming_bills_widget.dart';
 import 'widgets/tax_estimation_widget.dart';
 import 'widgets/investment_widget.dart';
-import 'widgets/budget_tracking_widget.dart';
+import 'widgets/budget_summary_widget.dart';
 import 'widgets/category_budget_widget.dart';
 import 'widgets/transaction_history_widget.dart';
 import 'widgets/report_import_widget.dart';
@@ -34,7 +34,7 @@ class DataWidget extends StatelessWidget {
 
   final Map<String, Widget Function(ColoredDashboardItem i)> _map = {
     "profile": (l) => const ProfileDashboardWidget(),
-    "budget": (l) => const BudgetTrackingWidget(),
+    "budget": (l) => const BudgetSummaryWidget(),
     "categoryBudget": (l) => const CategoryBudgetWidget(),
     "history": (l) => const TransactionHistoryWidget(),
     "import": (l) => const ReportImportWidget(),
