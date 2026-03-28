@@ -53,4 +53,24 @@ class PlutusChartStyle {
     }
     return value.toStringAsFixed(0);
   }
+
+  static const List<String> _monthAbbreviations = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  /// Returns a short axis label for a YYYY-MM key.
+  /// The first label in a series (prevYYYYMM == null) or any label where the
+  /// year differs from the previous label gets a year suffix: "Jan '24".
+  /// All other labels return only the 3-letter month abbreviation: "Feb".
+  static String monthAxisLabel(String yyyyMM, String? prevYYYYMM) {
+    final parts = yyyyMM.split('-');
+    final year = parts[0];
+    final monthIndex = int.parse(parts[1]) - 1;
+    final abbr = _monthAbbreviations[monthIndex];
+    if (prevYYYYMM == null || prevYYYYMM.split('-')[0] != year) {
+      return "$abbr '${year.substring(2)}";
+    }
+    return abbr;
+  }
 }

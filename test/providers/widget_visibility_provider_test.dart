@@ -8,12 +8,12 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('all 12 widgets visible by default', () async {
+    test('all widgets visible by default', () async {
       final provider = WidgetVisibilityProvider();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      expect(provider.visibleWidgetsCount, 12);
-      expect(provider.getVisibleWidgets().length, 12);
+      expect(provider.visibleWidgetsCount, 19);
+      expect(provider.getVisibleWidgets().length, 19);
       expect(provider.hiddenWidgetIds, isEmpty);
     });
 
@@ -43,7 +43,7 @@ void main() {
       await provider.hideWidget('profile');
 
       expect(provider.isWidgetVisible('profile'), false);
-      expect(provider.visibleWidgetsCount, 11);
+      expect(provider.visibleWidgetsCount, 18);
       expect(provider.hiddenWidgetIds, contains('profile'));
       expect(notified, true);
     });
@@ -75,7 +75,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       await provider.hideWidget('nonexistent');
-      expect(provider.visibleWidgetsCount, 12);
+      expect(provider.visibleWidgetsCount, 19);
     });
 
     test('reset makes all widgets visible', () async {
@@ -85,10 +85,10 @@ void main() {
       await provider.hideWidget('profile');
       await provider.hideWidget('budget');
       await provider.hideWidget('history');
-      expect(provider.visibleWidgetsCount, 9);
+      expect(provider.visibleWidgetsCount, 16);
 
       provider.reset();
-      expect(provider.visibleWidgetsCount, 12);
+      expect(provider.visibleWidgetsCount, 19);
     });
 
     test('getVisibleWidgets returns only visible ones', () async {
@@ -101,7 +101,7 @@ void main() {
       final visible = provider.getVisibleWidgets();
       expect(visible, isNot(contains('roi')));
       expect(visible, isNot(contains('irr')));
-      expect(visible.length, 10);
+      expect(visible.length, 17);
     });
 
     test('persistence: saves and loads visibility', () async {

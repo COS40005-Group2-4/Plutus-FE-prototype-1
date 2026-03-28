@@ -66,7 +66,7 @@ class WidgetCatalog {
       color: AppColors.savingsAccent,
       category: WidgetCategory.overview,
       defaultWidth: 2,
-      defaultHeight: 2,
+      defaultHeight: 1,
     ),
     'netWorthTrend': WidgetMeta(
       widgetType: 'netWorthTrend',

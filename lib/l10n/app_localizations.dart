@@ -410,9 +410,16 @@ class AppLocalizations {
       // ── Savings Rate Widget ──
       'savings_no_data': 'No data available',
       'savings_this_month': 'This Month',
-      'savings_great': 'Great!',
-      'savings_good': 'Good',
-      'savings_low': 'Low',
+      'savings_on_track': 'On track',
+      'savings_almost_there': 'Almost there',
+      'savings_below_target': 'Below target',
+      'savings_saved_this_month': 'saved this month',
+      'savings_progress_label': 'Progress toward 20% target',
+      'savings_rule_label': '50/30/20 rule',
+      'savings_vs_last_month': 'vs last month',
+      'savings_income_label': 'Income',
+      'savings_expenses_label': 'Expenses',
+      'savings_saved_label': 'Saved',
       'savings_no_trend_data': 'Not enough data for trend',
 
       // ── Add Investment Dialog ──
@@ -875,9 +882,16 @@ class AppLocalizations {
       // ── Savings Rate Widget ──
       'savings_no_data': 'Không có dữ liệu',
       'savings_this_month': 'Tháng này',
-      'savings_great': 'Tuyệt vời!',
-      'savings_good': 'Tốt',
-      'savings_low': 'Thấp',
+      'savings_on_track': 'Đạt mục tiêu',
+      'savings_almost_there': 'Gần đạt',
+      'savings_below_target': 'Dưới mục tiêu',
+      'savings_saved_this_month': 'tiết kiệm tháng này',
+      'savings_progress_label': 'Tiến độ đến mục tiêu 20%',
+      'savings_rule_label': 'Quy tắc 50/30/20',
+      'savings_vs_last_month': 'so với tháng trước',
+      'savings_income_label': 'Thu nhập',
+      'savings_expenses_label': 'Chi tiêu',
+      'savings_saved_label': 'Tiết kiệm',
       'savings_no_trend_data': 'Không đủ dữ liệu để phân tích xu hướng',
 
       // ── Add Investment Dialog ──
@@ -1338,9 +1352,16 @@ class AppLocalizations {
   // Savings Rate Widget
   String get savingsNoData => translate('savings_no_data');
   String get savingsThisMonth => translate('savings_this_month');
-  String get savingsGreat => translate('savings_great');
-  String get savingsGood => translate('savings_good');
-  String get savingsLow => translate('savings_low');
+  String get savingsOnTrack => translate('savings_on_track');
+  String get savingsAlmostThere => translate('savings_almost_there');
+  String get savingsBelowTarget => translate('savings_below_target');
+  String get savingsSavedThisMonth => translate('savings_saved_this_month');
+  String get savingsProgressLabel => translate('savings_progress_label');
+  String get savingsRuleLabel => translate('savings_rule_label');
+  String get savingsVsLastMonth => translate('savings_vs_last_month');
+  String get savingsIncomeLabel => translate('savings_income_label');
+  String get savingsExpensesLabel => translate('savings_expenses_label');
+  String get savingsSavedLabel => translate('savings_saved_label');
   String get savingsNoTrendData => translate('savings_no_trend_data');
 
   // Add Investment Dialog

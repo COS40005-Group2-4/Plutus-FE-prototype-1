@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ^3.11.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -64,12 +64,12 @@ dependencies:
   google_sign_in_all_platforms_desktop: ^0.2.0
   web: ^1.1.1
   image_picker: ^1.2.1
-  csv: ^6.0.0
+  csv: ^8.0.0
   aws_common: ^0.7.12
   aws_signature_v4: ^0.6.10
   google_mlkit_text_recognition: ^0.15.0
   ffi: ^2.1.2
-  flutter_dotenv: ^5.1.0
+  flutter_dotenv: ^6.0.0
   sqflite: ^2.3.0
   sqflite_common_ffi: ^2.3.0
   path_provider: ^2.1.1
@@ -78,11 +78,11 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4
   open_file: ^3.5.10
-  google_fonts: ^6.2.1
-  fl_chart: ^0.69.0
+  google_fonts: ^8.0.2
+  fl_chart: ^1.2.0
 
   # Dependency Injection
-  get_it: ^8.0.3
+  get_it: ^9.2.1
 
   # Value equality for models
   equatable: ^2.0.7

@@ -26,11 +26,15 @@ class DashboardProvider extends ChangeNotifier {
   String get activeDashboardId => _activeDashboardId;
   bool get canCreateDashboard => _dashboards.length < maxDashboards;
 
-  DashboardConfig get activeDashboard =>
-      _dashboards.firstWhere(
-        (d) => d.id == _activeDashboardId,
-        orElse: () => _dashboards.first,
-      );
+  DashboardConfig get activeDashboard {
+    if (_dashboards.isEmpty) {
+      return DashboardConfig.withDefaults('default', 'Main');
+    }
+    return _dashboards.firstWhere(
+      (d) => d.id == _activeDashboardId,
+      orElse: () => _dashboards.first,
+    );
+  }
 
   // ── Visibility delegates ──────────────────────────────────────────────
 

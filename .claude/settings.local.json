@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter analyze lib/widgets/consent_dialog.dart lib/providers/auth_provider.dart lib/main.dart)"
+      "Bash(flutter analyze lib/widgets/consent_dialog.dart lib/providers/auth_provider.dart lib/main.dart)",
+      "Bash(flutter pub:*)"
     ]
   }
 }

@@ -544,7 +544,7 @@ class TransactionService implements ITransactionService {
   Future<List<Map<String, dynamic>>> parseCsvFile(String csvContent) async {
     try {
       // Simple CSV parser assuming headers: Date, Payee, Amount, Currency, Category, Description
-      List<List<dynamic>> rows = const CsvToListConverter().convert(csvContent);
+      List<List<dynamic>> rows = CsvDecoder().convert(csvContent);
       
       if (rows.isEmpty) return [];
 
