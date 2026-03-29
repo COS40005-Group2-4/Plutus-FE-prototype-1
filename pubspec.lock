@@ -260,10 +260,9 @@ packages:
   dashboard:
     dependency: "direct main"
     description:
-      name: dashboard
-      sha256: b593dbd9707befe19171918a0df9bb21289cae3969264d2c3b45babea2ab9c36
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/dashboard"
+      relative: true
+    source: path
     version: "0.0.4"
   dbus:
     dependency: transitive

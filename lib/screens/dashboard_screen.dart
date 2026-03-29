@@ -23,11 +23,12 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
     int x,
     int y,
     bool editing,
+    bool isSwapTarget,
   ) {
     if (item != null) {
       return GlassContainer(
-        color: Colors.red,
-        opacity: 0.2,
+        color: isSwapTarget ? const Color(0xFF4CAF50) : Colors.red,
+        opacity: isSwapTarget ? 0.3 : 0.2,
         borderRadius: AppRadius.md,
       );
     }
@@ -369,6 +370,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                             resizeCursorSide: 15,
                             curve: Curves.easeOut,
                             duration: const Duration(milliseconds: 150),
+                            swapEnabled: true,
                             backgroundStyle: const EditModeBackgroundStyle(
                               lineColor: Colors.white24,
                               lineWidth: 1,
