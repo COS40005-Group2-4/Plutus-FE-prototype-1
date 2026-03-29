@@ -6,23 +6,23 @@ frontend:
         - echo "Installing Flutter dependencies..."
         - if [ ! -d flutter ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
         - export PATH=$PATH:$PWD/flutter/bin
-        - echo "GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" > .env
-        - echo "GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID" >> .env
-        - echo "GOOGLE_DESKTOP_CLIENT_ID=$GOOGLE_DESKTOP_CLIENT_ID" >> .env
-        - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
-        - echo "GOOGLE_DESKTOP_CLIENT_SECRET=$GOOGLE_DESKTOP_CLIENT_SECRET" >> .env
-        - echo "REDIRECT_URL=$REDIRECT_URL" >> .env
-        - echo "PLUTUS_AWS_ACCESS_KEY_ID=$PLUTUS_AWS_ACCESS_KEY_ID" >> .env
-        - echo "PLUTUS_AWS_SECRET_ACCESS_KEY=$PLUTUS_AWS_SECRET_ACCESS_KEY" >> .env
-        - echo "PLUTUS_AWS_SESSION_TOKEN=$PLUTUS_AWS_SESSION_TOKEN" >> .env
-        - echo "PLUTUS_AWS_REGION=$PLUTUS_AWS_REGION" >> .env
-        - echo "PLUTUS_AWS_S3_BUCKET_NAME=$PLUTUS_AWS_S3_BUCKET_NAME" >> .env
-        - echo "PLUTUS_DYNAMO_TC_TABLE_NAME=$PLUTUS_DYNAMO_TC_TABLE_NAME" >> .env
-        - echo "EXCHANGE_RATE_API_KEY=$EXCHANGE_RATE_API_KEY" >> .env
-        - echo "COINGECKO_API_KEY=$COINGECKO_API_KEY" >> .env
-        - echo "ALPHA_VANTAGE_API_KEY=$ALPHA_VANTAGE_API_KEY" >> .env
-        - echo "AI_API_GATEWAY_URL=$AI_API_GATEWAY_URL" >> .env
-        - echo "AI_API_KEY=$AI_API_KEY" >> .env
+        - echo "GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" > app.env
+        - echo "GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID" >> app.env
+        - echo "GOOGLE_DESKTOP_CLIENT_ID=$GOOGLE_DESKTOP_CLIENT_ID" >> app.env
+        - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> app.env
+        - echo "GOOGLE_DESKTOP_CLIENT_SECRET=$GOOGLE_DESKTOP_CLIENT_SECRET" >> app.env
+        - echo "REDIRECT_URL=$REDIRECT_URL" >> app.env
+        - echo "PLUTUS_AWS_ACCESS_KEY_ID=$PLUTUS_AWS_ACCESS_KEY_ID" >> app.env
+        - echo "PLUTUS_AWS_SECRET_ACCESS_KEY=$PLUTUS_AWS_SECRET_ACCESS_KEY" >> app.env
+        - echo "PLUTUS_AWS_SESSION_TOKEN=$PLUTUS_AWS_SESSION_TOKEN" >> app.env
+        - echo "PLUTUS_AWS_REGION=$PLUTUS_AWS_REGION" >> app.env
+        - echo "PLUTUS_AWS_S3_BUCKET_NAME=$PLUTUS_AWS_S3_BUCKET_NAME" >> app.env
+        - echo "PLUTUS_DYNAMO_TC_TABLE_NAME=$PLUTUS_DYNAMO_TC_TABLE_NAME" >> app.env
+        - echo "EXCHANGE_RATE_API_KEY=$EXCHANGE_RATE_API_KEY" >> app.env
+        - echo "COINGECKO_API_KEY=$COINGECKO_API_KEY" >> app.env
+        - echo "ALPHA_VANTAGE_API_KEY=$ALPHA_VANTAGE_API_KEY" >> app.env
+        - echo "AI_API_GATEWAY_URL=$AI_API_GATEWAY_URL" >> app.env
+        - echo "AI_API_KEY=$AI_API_KEY" >> app.env
         - flutter clean
         - flutter pub get
         - flutter pub upgrade

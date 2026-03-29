@@ -39,7 +39,7 @@ void main() async {
   // isOptional: true prevents failure when the file is missing or empty
   // (e.g., in CI/web builds where .env is not committed to git).
   // On web, env vars come from --dart-define at build time instead.
-  await dotenv.load(fileName: ".env", isOptional: true);
+  await dotenv.load(fileName: "app.env", isOptional: true);
   await setupServiceLocator();
 
   // Temporary: catch all Flutter errors to log stack traces
