@@ -10,8 +10,7 @@ import 'interfaces/i_google_auth_service.dart';
 
 // Conditional import for web/non-web helper
 import 'web_helper_stub.dart'
-    if (dart.library.js_util) 'web_helper_web.dart'
-    if (dart.library.html) 'web_helper_web.dart';
+    if (dart.library.js_interop) 'web_helper_web.dart';
 
 class GoogleAuthService implements IGoogleAuthService {
   late final gsi.GoogleSignIn _googleSignIn;
