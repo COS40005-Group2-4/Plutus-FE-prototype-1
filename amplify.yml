@@ -26,6 +26,7 @@ frontend:
         - flutter clean
         - flutter pub get
         - flutter pub upgrade
+        - dart run sqflite_common_ffi_web:setup
     build:
       commands:
         - echo "Building Flutter web application..."

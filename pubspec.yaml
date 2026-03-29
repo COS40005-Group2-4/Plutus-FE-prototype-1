@@ -90,6 +90,7 @@ dependencies:
 
   # Crypto for backup checksums (used by backup_service)
   crypto: ^3.0.6
+  sqflite_common_ffi_web: ^1.1.1
 
 dev_dependencies:
   flutter_test:
