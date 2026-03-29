@@ -29,7 +29,7 @@ frontend:
     build:
       commands:
         - echo "Building Flutter web application..."
-        - flutter build web --release --no-tree-shake-icons --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define-from-file=app.env
+        - flutter build web --release --no-tree-shake-icons --source-maps --dart-define=FLUTTER_WEB_AUTO_DETECT=true --dart-define-from-file=app.env
   artifacts:
     baseDirectory: build/web
     files:

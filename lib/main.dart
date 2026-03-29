@@ -314,7 +314,3 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
-// MainNavigationPage and DashboardWidget have been extracted to:
-// - lib/screens/main_navigation_page.dart
-// - lib/screens/dashboard_screen.dart
