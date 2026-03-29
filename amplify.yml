@@ -6,7 +6,26 @@ frontend:
         - echo "Installing Flutter dependencies..."
         - if [ ! -d flutter ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
         - export PATH=$PATH:$PWD/flutter/bin
-        - touch .env
+        - |
+          cat > .env << EOF
+          GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID
+          GOOGLE_ANDROID_CLIENT_ID=$GOOGLE_ANDROID_CLIENT_ID
+          GOOGLE_DESKTOP_CLIENT_ID=$GOOGLE_DESKTOP_CLIENT_ID
+          GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+          GOOGLE_DESKTOP_CLIENT_SECRET=$GOOGLE_DESKTOP_CLIENT_SECRET
+          REDIRECT_URL=$REDIRECT_URL
+          PLUTUS_AWS_ACCESS_KEY_ID=$PLUTUS_AWS_ACCESS_KEY_ID
+          PLUTUS_AWS_SECRET_ACCESS_KEY=$PLUTUS_AWS_SECRET_ACCESS_KEY
+          PLUTUS_AWS_SESSION_TOKEN=$PLUTUS_AWS_SESSION_TOKEN
+          PLUTUS_AWS_REGION=$PLUTUS_AWS_REGION
+          PLUTUS_AWS_S3_BUCKET_NAME=$PLUTUS_AWS_S3_BUCKET_NAME
+          PLUTUS_DYNAMO_TC_TABLE_NAME=$PLUTUS_DYNAMO_TC_TABLE_NAME
+          EXCHANGE_RATE_API_KEY=$EXCHANGE_RATE_API_KEY
+          COINGECKO_API_KEY=$COINGECKO_API_KEY
+          ALPHA_VANTAGE_API_KEY=$ALPHA_VANTAGE_API_KEY
+          AI_API_GATEWAY_URL=$AI_API_GATEWAY_URL
+          AI_API_KEY=$AI_API_KEY
+          EOF
         - flutter clean
         - flutter pub get
         - flutter pub upgrade

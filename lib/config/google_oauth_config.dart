@@ -2,29 +2,34 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GoogleOAuthConfig {
   // Web Client ID (Authorized JavaScript Origin required)
-  static String get webClientId =>
-      dotenv.env['GOOGLE_WEB_CLIENT_ID'] ??
-      const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID', defaultValue: '');
+  static String get webClientId => dotenv.get(
+    'GOOGLE_WEB_CLIENT_ID',
+    fallback: '',
+  );
 
   // Android Client ID (Package name and SHA-1 required)
-  static String get androidClientId =>
-      dotenv.env['GOOGLE_ANDROID_CLIENT_ID'] ??
-      const String.fromEnvironment('GOOGLE_ANDROID_CLIENT_ID', defaultValue: '');
+  static String get androidClientId => dotenv.get(
+    'GOOGLE_ANDROID_CLIENT_ID',
+    fallback: '',
+  );
 
   // Desktop Client ID
-  static String get desktopClientId =>
-      dotenv.env['GOOGLE_DESKTOP_CLIENT_ID'] ??
-      const String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_ID', defaultValue: '');
+  static String get desktopClientId => dotenv.get(
+    'GOOGLE_DESKTOP_CLIENT_ID',
+    fallback: '',
+  );
 
   // Client Secret (General/Web)
-  static String get clientSecret =>
-      dotenv.env['GOOGLE_CLIENT_SECRET'] ??
-      const String.fromEnvironment('GOOGLE_CLIENT_SECRET', defaultValue: '');
+  static String get clientSecret => dotenv.get(
+    'GOOGLE_CLIENT_SECRET',
+    fallback: '',
+  );
 
   // Desktop Client Secret
-  static String get desktopClientSecret =>
-      dotenv.env['GOOGLE_DESKTOP_CLIENT_SECRET'] ??
-      const String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_SECRET', defaultValue: '');
+  static String get desktopClientSecret => dotenv.get(
+    'GOOGLE_DESKTOP_CLIENT_SECRET',
+    fallback: '',
+  );
 
   // Production redirect URL (Amplify)
   static const String redirectUrlProduction = 'https://main.d3eqrozysqvds5.amplifyapp.com';
