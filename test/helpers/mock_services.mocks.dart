@@ -8,6 +8,7 @@ import 'dart:io' as _i19;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i9;
+import 'package:plutus_fe_prototype/models/ai/category_context.dart' as _i30;
 import 'package:plutus_fe_prototype/models/ai/category_suggestion.dart' as _i27;
 import 'package:plutus_fe_prototype/models/ai/correction.dart' as _i28;
 import 'package:plutus_fe_prototype/models/backup_models.dart' as _i13;
@@ -18,6 +19,8 @@ import 'package:plutus_fe_prototype/models/market_data_model.dart' as _i23;
 import 'package:plutus_fe_prototype/models/profile_model.dart' as _i4;
 import 'package:plutus_fe_prototype/models/transaction_model.dart' as _i11;
 import 'package:plutus_fe_prototype/models/user_model.dart' as _i3;
+import 'package:plutus_fe_prototype/services/interfaces/i_ai_category_pipeline.dart'
+    as _i29;
 import 'package:plutus_fe_prototype/services/interfaces/i_ai_service.dart'
     as _i26;
 import 'package:plutus_fe_prototype/services/interfaces/i_backend_ffi_service.dart'
@@ -2249,4 +2252,66 @@ class MockIAIService extends _i1.Mock implements _i26.IAIService {
             returnValue: _i7.Future<_i27.CategorySuggestion?>.value(),
           )
           as _i7.Future<_i27.CategorySuggestion?>);
+
+  @override
+  _i7.Future<List<_i27.CategorySuggestion?>> categorizeBatch(
+    List<_i11.Transaction>? transactions,
+    List<String>? accounts,
+    List<_i28.Correction>? corrections,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#categorizeBatch, [
+              transactions,
+              accounts,
+              corrections,
+            ]),
+            returnValue: _i7.Future<List<_i27.CategorySuggestion?>>.value(
+              <_i27.CategorySuggestion?>[],
+            ),
+          )
+          as _i7.Future<List<_i27.CategorySuggestion?>>);
+}
+
+/// A class which mocks [IAICategoryPipeline].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIAICategoryPipeline extends _i1.Mock
+    implements _i29.IAICategoryPipeline {
+  MockIAICategoryPipeline() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<List<_i27.CategorySuggestion>> suggest(
+    _i30.CategoryContext? context,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#suggest, [context]),
+            returnValue: _i7.Future<List<_i27.CategorySuggestion>>.value(
+              <_i27.CategorySuggestion>[],
+            ),
+          )
+          as _i7.Future<List<_i27.CategorySuggestion>>);
+
+  @override
+  _i7.Stream<List<_i27.CategorySuggestion>> suggestStream(
+    _i30.CategoryContext? context,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#suggestStream, [context]),
+            returnValue: _i7.Stream<List<_i27.CategorySuggestion>>.empty(),
+          )
+          as _i7.Stream<List<_i27.CategorySuggestion>>);
+
+  @override
+  _i7.Future<List<List<_i27.CategorySuggestion>>> suggestBatch(
+    List<_i30.CategoryContext>? contexts,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#suggestBatch, [contexts]),
+            returnValue: _i7.Future<List<List<_i27.CategorySuggestion>>>.value(
+              <List<_i27.CategorySuggestion>>[],
+            ),
+          )
+          as _i7.Future<List<List<_i27.CategorySuggestion>>>);
 }

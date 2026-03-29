@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../services/ocr_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -245,7 +246,21 @@ class SettingsScreen extends StatelessWidget {
         _buildTimeFormatSelector(context, settingsProvider, l10n),
         _buildBackupCard(context, l10n),
         const Divider(),
-        
+
+        // OCR Preferences Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+          child: const Text(
+            'OCR Preferences',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        _buildOcrModeSelector(context, settingsProvider),
+        const Divider(),
+
         // Account Settings Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
@@ -568,6 +583,54 @@ class SettingsScreen extends StatelessWidget {
             settingsProvider.setTimeFormat(newFormat);
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildOcrModeSelector(BuildContext context, SettingsProvider settingsProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        borderRadius: AppRadius.lg,
+        opacity: 0.08,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Scanning Mode',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<OCRMode>(
+              value: settingsProvider.ocrMode,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: const [
+                DropdownMenuItem(value: OCRMode.auto, child: Text('Auto (recommended)')),
+                DropdownMenuItem(value: OCRMode.online, child: Text('Online only')),
+                DropdownMenuItem(value: OCRMode.offline, child: Text('Offline only')),
+              ],
+              onChanged: (val) {
+                if (val != null) settingsProvider.setOcrMode(val);
+              },
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              settingsProvider.ocrMode == OCRMode.auto
+                  ? 'Picks the best OCR engine automatically based on connectivity'
+                  : settingsProvider.ocrMode == OCRMode.online
+                      ? 'Uses AWS Textract (requires internet)'
+                      : 'Uses Tesseract/ML Kit (no internet needed)',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

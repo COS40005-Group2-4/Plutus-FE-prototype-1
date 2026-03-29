@@ -9,8 +9,15 @@ echo "Cleaning build directory..."
 rm -rf "$BUILD_DIR" "$OUTPUT"
 mkdir -p "$BUILD_DIR"
 
-echo "Installing dependencies..."
-pip3 install -r "$SCRIPT_DIR/requirements.txt" -t "$BUILD_DIR" --quiet
+echo "Installing dependencies (targeting Lambda linux/x86_64)..."
+pip3 install \
+  -r "$SCRIPT_DIR/requirements.txt" \
+  -t "$BUILD_DIR" \
+  --platform manylinux2014_x86_64 \
+  --implementation cp \
+  --python-version 3.12 \
+  --only-binary=:all: \
+  --quiet
 
 echo "Copying source code..."
 cp -r "$SCRIPT_DIR/shared" "$BUILD_DIR/"

@@ -49,5 +49,5 @@ variable "ai_lambda_zip_path" {
 variable "bedrock_model_id" {
   description = "Bedrock model ID for AI features"
   type        = string
-  default     = "anthropic.claude-haiku-4-5-20251001"
+  default     = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 }

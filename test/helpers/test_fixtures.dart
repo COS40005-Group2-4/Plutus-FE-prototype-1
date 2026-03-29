@@ -5,6 +5,8 @@ import 'package:plutus_fe_prototype/models/profile_model.dart';
 import 'package:plutus_fe_prototype/models/investment_model.dart';
 import 'package:plutus_fe_prototype/models/backup_models.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
+import 'package:plutus_fe_prototype/models/ai/category_suggestion.dart';
+import 'package:plutus_fe_prototype/models/ai/category_context.dart';
 
 User createTestUser({
   int id = 1,
@@ -246,7 +248,7 @@ CategorySpending createTestCategorySpending({
   double projectedSpending = 300.0,
   BudgetStatus status = BudgetStatus.onTrack,
 }) {
-  final cat = category ?? createTestBudgetCategory();
+  final BudgetCategory cat = category ?? createTestBudgetCategory();
   return CategorySpending(
     category: cat,
     period: period,
@@ -255,5 +257,30 @@ CategorySpending createTestCategorySpending({
     remaining: remaining ?? (budgetedAmount - spent),
     projectedSpending: projectedSpending,
     status: status,
+  );
+}
+
+CategorySuggestion createTestCategorySuggestion({
+  String account = 'Expenses:Food',
+  double confidence = 0.92,
+}) {
+  return CategorySuggestion(account: account, confidence: confidence);
+}
+
+CategoryContext createTestCategoryContext({
+  String? payee = 'Starbucks',
+  String? description,
+  double? amount = 85000,
+  String? currency = 'VND',
+  List<Map<String, dynamic>>? items,
+  String? ocrText,
+}) {
+  return CategoryContext(
+    payee: payee,
+    description: description,
+    amount: amount,
+    currency: currency,
+    items: items,
+    ocrText: ocrText,
   );
 }

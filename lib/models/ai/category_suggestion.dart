@@ -25,6 +25,13 @@ class CategorySuggestion extends Equatable {
 
   bool get isHighConfidence => confidence > 0.8;
 
+  /// Derives a display name from the account path.
+  /// e.g., 'Expenses:Food' → 'Food', 'Income:Salary' → 'Salary'
+  String get displayName {
+    final parts = account.split(':');
+    return parts.length > 1 ? parts.last : account;
+  }
+
   @override
   List<Object?> get props => [account, confidence];
 }

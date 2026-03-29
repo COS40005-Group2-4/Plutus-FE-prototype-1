@@ -1,11 +1,20 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../models/ai/category_context.dart';
+import '../../models/ai/category_suggestion.dart';
+import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/ocr_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../transaction_service.dart';
 import '../../widgets/glass_container.dart';
+import '../../widgets/import/ai_category_field.dart';
+import '../../widgets/import/zoomable_image_viewer.dart';
 import '../../l10n/app_localizations.dart';
-import 'manual_import_tab.dart';
 
 class ScanImportTab extends StatefulWidget {
   const ScanImportTab({super.key});
@@ -17,116 +26,205 @@ class ScanImportTab extends StatefulWidget {
 class _ScanImportTabState extends State<ScanImportTab> {
   final OCRService _ocrService = OCRService();
   final ImagePicker _picker = ImagePicker();
+  late TransactionService _service;
+  late IAICategoryPipeline _aiPipeline;
 
   XFile? _imageFile;
   Map<String, dynamic>? _scannedData;
   bool _scanning = false;
-  OCRMode _ocrMode = OCRMode.auto;
+  bool _saving = false;
+
+  // Editable extracted fields
+  late TextEditingController _payeeController;
+  late TextEditingController _amountController;
+  late TextEditingController _descController;
+  String _currency = 'VND';
+  DateTime _selectedDate = DateTime.now();
+  final String _type = 'expense';
+
+  // AI category state
+  List<CategorySuggestion> _aiSuggestions = [];
+  bool _isAiLoading = false;
+  bool _isAiSuggested = false;
+  String? _selectedCategory;
+
+  static const List<String> _expenseCategories = [
+    'Food', 'Transportation', 'Entertainment', 'Shopping',
+    'Bills', 'Healthcare', 'Education', 'Other',
+  ];
 
   @override
   void initState() {
     super.initState();
-    // Default to auto mode for all platforms
-    _ocrMode = OCRMode.auto;
+    _payeeController = TextEditingController();
+    _amountController = TextEditingController();
+    _descController = TextEditingController();
+
+    _service = TransactionService();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUserId != null) {
+      _service.setCurrentUser(authProvider.currentUserId!);
+    }
+    _aiPipeline = GetIt.instance<IAICategoryPipeline>();
+  }
+
+  @override
+  void dispose() {
+    _payeeController.dispose();
+    _amountController.dispose();
+    _descController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    // Platform check removed for file picking to allow Desktop testing (even if OCR lib is limited)
     try {
       final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
         setState(() {
           _imageFile = image;
           _scannedData = null;
+          _aiSuggestions = [];
+          _isAiSuggested = false;
         });
         _processImage();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context).errorPickingImage}$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context).errorPickingImage}$e')),
+        );
+      }
     }
   }
 
   Future<void> _processImage() async {
     if (_imageFile == null) return;
-
     setState(() => _scanning = true);
 
     try {
-      final details = await _ocrService.processInvoice(_imageFile!.path, mode: _ocrMode);
+      // Read OCR mode from settings
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final ocrMode = settingsProvider.ocrMode;
+
+      final details = await _ocrService.processInvoice(_imageFile!.path, mode: ocrMode);
 
       if (details != null && !details.containsKey('error')) {
-        // For online OCR (AWS Textract), add context-aware category suggestion
-        if (_ocrMode == OCRMode.online || _ocrMode == OCRMode.auto) {
-          final detailsWithCategory = _ocrService.processWithCategorySuggestion(details);
-          setState(() {
-            _scannedData = detailsWithCategory;
-          });
-        } else {
-          setState(() {
-            _scannedData = details;
-          });
-        }
+        setState(() {
+          _scannedData = details;
+          _payeeController.text = details['payee']?.toString() ?? '';
+          _amountController.text = details['amount']?.toString() ?? '';
+          if (details['date'] != null) {
+            try {
+              _selectedDate = DateTime.parse(details['date']);
+            } catch (_) {}
+          }
+          if (details['currency'] != null) {
+            final c = details['currency'].toString().toUpperCase();
+            if (['VND', 'USD', 'EUR'].contains(c)) _currency = c;
+          }
+        });
+
+        // Run AI categorization in parallel
+        _categorizeScannedData(details);
       } else {
+        final error = details?['error'] ?? 'Could not read text from image';
         if (mounted) {
-          final error = details?['error'] ?? 'Could not read text from image';
-          // Show error in a dialog for better visibility
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context).ocrError,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Text(error),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(AppLocalizations.of(context).ok),
-                ),
-              ],
-            ),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        showDialog(
-          context: context,
-            builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context).ocrError,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              content: Text('Unexpected error: $e', overflow: TextOverflow.ellipsis),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(AppLocalizations.of(context).ok),
-              ),
-            ],
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('OCR error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
-      setState(() => _scanning = false);
+      if (mounted) setState(() => _scanning = false);
+    }
+  }
+
+  Future<void> _categorizeScannedData(Map<String, dynamic> data) async {
+    setState(() => _isAiLoading = true);
+    try {
+      final context = CategoryContext(
+        payee: data['payee']?.toString(),
+        amount: (data['amount'] as num?)?.toDouble(),
+        currency: data['currency']?.toString(),
+        items: (data['items'] as List?)?.cast<Map<String, dynamic>>(),
+      );
+      final suggestions = await _aiPipeline.suggest(context);
+      if (mounted) {
+        setState(() {
+          _aiSuggestions = suggestions;
+          _isAiLoading = false;
+          if (suggestions.isNotEmpty) {
+            _isAiSuggested = true;
+            _selectedCategory = suggestions.first.displayName;
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isAiLoading = false);
+    }
+  }
+
+  Future<void> _saveTransaction() async {
+    if (_amountController.text.isEmpty) return;
+    setState(() => _saving = true);
+
+    try {
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+      final categoryPath = _selectedCategory ?? 'Other';
+      const assetAccount = 'Assets:Cash';
+      final categoryAccount = _type == 'expense'
+          ? 'Expenses:$categoryPath'
+          : 'Income:$categoryPath';
+
+      final postings = _type == 'expense'
+          ? [
+              {'account': assetAccount, 'amount': -amount.abs(), 'commodity': _currency},
+              {'account': categoryAccount, 'amount': amount.abs(), 'commodity': _currency},
+            ]
+          : [
+              {'account': assetAccount, 'amount': amount.abs(), 'commodity': _currency},
+              {'account': categoryAccount, 'amount': -amount.abs(), 'commodity': _currency},
+            ];
+
+      final transaction = {
+        'date': _selectedDate.toIso8601String(),
+        'payee': _payeeController.text,
+        'description': _descController.text,
+        'postings': postings,
+        'amount': _type == 'expense' ? -amount.abs() : amount.abs(),
+        'currency': _currency,
+        'type': _type,
+        'category': categoryAccount,
+        'account': assetAccount,
+      };
+
+      await _service.importTransaction(transaction);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) Navigator.of(context).pop(true);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -139,147 +237,194 @@ class _ScanImportTabState extends State<ScanImportTab> {
         borderRadius: 16,
         opacity: 0.1,
         child: Column(
-        children: [
-          // OCR Mode Selector
-          const Text(
-            'Scanning Mode',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          SegmentedButton<OCRMode>(
-            segments: [
-              ButtonSegment<OCRMode>(
-                value: OCRMode.offline,
-                label: Text(AppLocalizations.of(context).offline),
-                icon: const Icon(Icons.computer),
-                enabled: !kIsWeb,
-              ),
-              ButtonSegment<OCRMode>(
-                value: OCRMode.online,
-                label: Text(AppLocalizations.of(context).online),
-                icon: Icon(Icons.cloud),
-              ),
-              ButtonSegment<OCRMode>(
-                value: OCRMode.auto,
-                label: Text(AppLocalizations.of(context).auto),
-                icon: const Icon(Icons.auto_mode),
-              ),
-            ],
-            selected: {_ocrMode},
-            onSelectionChanged: (Set<OCRMode> newSelection) {
-              setState(() {
-                _ocrMode = newSelection.first;
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _ocrMode == OCRMode.offline
-                ? 'Works offline, supports Vietnamese'
-                : _ocrMode == OCRMode.online
-                    ? 'Cloud-powered, requires internet'
-                    : 'Picks the best option automatically',
-            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-            textAlign: TextAlign.center,
-          ),
-          if (!kIsWeb && Platform.isWindows && _ocrMode == OCRMode.offline)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue),
+          children: [
+            // Pick image buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _scanning ? null : () => _pickImage(ImageSource.gallery),
+                  icon: const Icon(Icons.image),
+                  label: Text(AppLocalizations.of(context).selectInvoiceImage),
                 ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                              'Offline Scanning on Windows',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Requires Tesseract OCR to be installed and added to your system PATH. '
-                      'Vietnamese support requires the vie.traineddata language file.',
-                      style: TextStyle(fontSize: 11, color: Colors.blue),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Replaced Camera with File Picker focus as requested
-              ElevatedButton.icon(
-                onPressed: _scanning ? null : () => _pickImage(ImageSource.gallery),
-                icon: const Icon(Icons.image),
-                label: Text(AppLocalizations.of(context).selectInvoiceImage),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          if (_imageFile != null) ...[
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: kIsWeb
-                    ? Image.network(_imageFile!.path, fit: BoxFit.cover)
-                    : Image.file(File(_imageFile!.path), fit: BoxFit.cover),
-              ),
+                if (!kIsWeb)
+                  ElevatedButton.icon(
+                    onPressed: _scanning ? null : () => _pickImage(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Camera'),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
-          ],
 
-          if (_scanning)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(),
-            ),
-
-          if (_scannedData != null) ...[
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Review Scanned Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ManualImportTab(
-              initialData: _scannedData,
-              onSuccess: () {
-                // Auto-redirect to dashboard after successful OCR entry
-                Future.delayed(const Duration(milliseconds: 500), () {
-                  if (mounted) {
-                    Navigator.of(context).pop(true);
+            if (_imageFile != null) ...[
+              // Adaptive layout
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth >= 600) {
+                    return _buildSideBySideLayout();
                   }
-                });
-              },
+                  return _buildStackedLayout();
+                },
+              ),
+            ],
+
+            if (_scanning)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSideBySideLayout() {
+    return SizedBox(
+      height: 500,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ZoomableImageViewer(
+              imageProvider: kIsWeb
+                  ? NetworkImage(_imageFile!.path)
+                  : FileImage(File(_imageFile!.path)) as ImageProvider,
             ),
-          ]
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: SingleChildScrollView(child: _buildExtractedFields())),
         ],
       ),
-      ),
+    );
+  }
+
+  Widget _buildStackedLayout() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 250,
+          child: ZoomableImageViewer(
+            imageProvider: kIsWeb
+                ? NetworkImage(_imageFile!.path)
+                : FileImage(File(_imageFile!.path)) as ImageProvider,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildExtractedFields(),
+      ],
+    );
+  }
+
+  Widget _buildExtractedFields() {
+    if (_scannedData == null && !_scanning) {
+      return const Center(child: Text('Processing image...'));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Extracted Fields', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _payeeController,
+          decoration: const InputDecoration(labelText: 'Payee', border: OutlineInputBorder(), isDense: true),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                controller: _amountController,
+                decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder(), isDense: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: _currency,
+                decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                items: const [
+                  DropdownMenuItem(value: 'VND', child: Text('VND')),
+                  DropdownMenuItem(value: 'USD', child: Text('USD')),
+                  DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                ],
+                onChanged: (val) => setState(() => _currency = val!),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        InkWell(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _selectedDate,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2101),
+            );
+            if (picked != null) setState(() => _selectedDate = picked);
+          },
+          child: InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Date',
+              border: OutlineInputBorder(),
+              isDense: true,
+              suffixIcon: Icon(Icons.calendar_today, size: 18),
+            ),
+            child: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        AiCategoryField(
+          categories: _expenseCategories,
+          selectedCategory: _selectedCategory,
+          isExpense: _type == 'expense',
+          onCategoryChanged: (val) {
+            setState(() {
+              _selectedCategory = val;
+              _isAiSuggested = false;
+            });
+          },
+          aiSuggestions: _aiSuggestions,
+          isAiLoading: _isAiLoading,
+          isAiSuggested: _isAiSuggested,
+        ),
+        const SizedBox(height: 12),
+        if (_scannedData != null && _scannedData!['items'] != null) ...[
+          Text('Items', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 4),
+          ...(_scannedData!['items'] as List).map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(item['description'] ?? '', style: const TextStyle(fontSize: 13))),
+                    Text('${item['amount']}', style: const TextStyle(fontSize: 13)),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 8),
+        ],
+        TextFormField(
+          controller: _descController,
+          decoration: const InputDecoration(labelText: 'Note', border: OutlineInputBorder(), isDense: true),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _saving || _scanning ? null : _saveTransaction,
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+          child: _saving
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('Confirm & Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        ),
+      ],
     );
   }
 }

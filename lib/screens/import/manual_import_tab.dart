@@ -1,8 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../models/ai/category_context.dart';
+import '../../models/ai/category_suggestion.dart';
+import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../transaction_service.dart';
 import '../../widgets/glass_container.dart';
+import '../../widgets/import/ai_category_field.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -38,6 +44,15 @@ class _ManualImportTabState extends State<ManualImportTab> {
   bool _isCustomCategory = false;
   final TextEditingController _customCategoryController = TextEditingController();
 
+  // AI category suggestions
+  List<CategorySuggestion> _aiSuggestions = [];
+  bool _isAiLoading = false;
+  bool _isAiSuggested = false;
+  bool _userManuallySelectedCategory = false;
+  StreamSubscription<List<CategorySuggestion>>? _aiSubscription;
+  late IAICategoryPipeline _aiPipeline;
+  Timer? _debounceTimer;
+
   // Common expense categories (aligned with Category Budget widget)
   static const List<String> _commonExpenseCategories = [
     'Food',
@@ -72,6 +87,8 @@ class _ManualImportTabState extends State<ManualImportTab> {
       _service.setCurrentUser(authProvider.currentUserId!);
     }
     _initControllers();
+    _aiPipeline = GetIt.instance<IAICategoryPipeline>();
+    _payeeController.addListener(_onPayeeChanged);
   }
 
   void _initControllers() {
@@ -122,6 +139,54 @@ class _ManualImportTabState extends State<ManualImportTab> {
     }
   }
 
+  void _onPayeeChanged() {
+    if (_userManuallySelectedCategory) return;
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      final payee = _payeeController.text.trim();
+      if (payee.isEmpty) {
+        setState(() {
+          _aiSuggestions = [];
+          _isAiSuggested = false;
+          _isAiLoading = false;
+        });
+        return;
+      }
+
+      setState(() => _isAiLoading = true);
+
+      final context = CategoryContext(
+        payee: payee,
+        amount: double.tryParse(_amountController.text),
+        currency: _currency,
+      );
+
+      _aiSubscription?.cancel();
+      _aiSubscription = _aiPipeline.suggestStream(context).listen(
+        (suggestions) {
+          if (!mounted || _userManuallySelectedCategory) return;
+          setState(() {
+            _aiSuggestions = suggestions;
+            _isAiLoading = false;
+            if (suggestions.isNotEmpty) {
+              _isAiSuggested = true;
+              final topCategory = suggestions.first.displayName;
+              if (_currentCategories.contains(topCategory)) {
+                _selectedCategory = topCategory;
+                _categoryController.text = topCategory;
+                _isCustomCategory = false;
+              }
+            }
+          });
+        },
+        onError: (_) {
+          if (mounted) setState(() => _isAiLoading = false);
+        },
+      );
+    });
+  }
+
   @override
   void didUpdateWidget(ManualImportTab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -137,6 +202,8 @@ class _ManualImportTabState extends State<ManualImportTab> {
     _categoryController.dispose();
     _descController.dispose();
     _customCategoryController.dispose();
+    _debounceTimer?.cancel();
+    _aiSubscription?.cancel();
     super.dispose();
   }
 
@@ -381,57 +448,55 @@ class _ManualImportTabState extends State<ManualImportTab> {
                 DropdownMenuItem(value: 'income', child: Text(AppLocalizations.of(context).income)),
                 DropdownMenuItem(value: 'expense', child: Text(AppLocalizations.of(context).expense)),
               ],
-              onChanged: (val) => setState(() => _type = val!),
+              onChanged: (val) => setState(() {
+                _type = val!;
+                _userManuallySelectedCategory = false;
+                _isAiSuggested = false;
+                _aiSuggestions = [];
+              }),
             ),
             const SizedBox(height: 16),
 
-            // Category
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: _isCustomCategory ? 'Other' : _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    ..._currentCategories.map((category) => DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    )),
-                  ],
-                  onChanged: (val) {
-                    if (val == 'Other') {
-                      setState(() {
-                        _isCustomCategory = true;
-                        _selectedCategory = null;
-                      });
-                    } else {
-                      setState(() {
-                        _selectedCategory = val;
-                        _isCustomCategory = false;
-                        _categoryController.text = val ?? '';
-                      });
-                    }
-                  },
-                ),
-                if (_isCustomCategory) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _customCategoryController,
-                    decoration: const InputDecoration(
-                      labelText: 'New Category',
-                      border: OutlineInputBorder(),
-                      hintText: 'Category name',
-                    ),
-                    onChanged: (val) {
-                      _categoryController.text = val;
-                    },
-                  ),
-                ],
-              ],
+            // Category (AI-enhanced)
+            AiCategoryField(
+              categories: _currentCategories,
+              selectedCategory: _isCustomCategory ? 'Other' : _selectedCategory,
+              isExpense: _type == 'expense',
+              onCategoryChanged: (val) {
+                _userManuallySelectedCategory = true;
+                if (val == 'Other') {
+                  setState(() {
+                    _isCustomCategory = true;
+                    _selectedCategory = null;
+                    _isAiSuggested = false;
+                  });
+                } else {
+                  setState(() {
+                    _selectedCategory = val;
+                    _isCustomCategory = false;
+                    _categoryController.text = val ?? '';
+                    _isAiSuggested = false;
+                  });
+                }
+              },
+              aiSuggestions: _aiSuggestions,
+              isAiLoading: _isAiLoading,
+              isAiSuggested: _isAiSuggested,
             ),
+            if (_isCustomCategory) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _customCategoryController,
+                decoration: const InputDecoration(
+                  labelText: 'New Category',
+                  border: OutlineInputBorder(),
+                  hintText: 'Category name',
+                ),
+                onChanged: (val) {
+                  _categoryController.text = val;
+                },
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Description

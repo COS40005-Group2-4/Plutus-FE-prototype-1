@@ -12,4 +12,13 @@ class AIServiceOffline implements IAIService {
   ) async {
     return null;
   }
+
+  @override
+  Future<List<CategorySuggestion?>> categorizeBatch(
+    List<Transaction> transactions,
+    List<String> accounts,
+    List<Correction> corrections,
+  ) async {
+    return List.filled(transactions.length, null);
+  }
 }

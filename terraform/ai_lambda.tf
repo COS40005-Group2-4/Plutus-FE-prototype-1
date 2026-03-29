@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 # IAM Role for AI Lambda functions
 resource "aws_iam_role" "ai_lambda_exec" {
   name = "plutus-ai-lambda-role"
@@ -30,7 +32,10 @@ resource "aws_iam_role_policy" "ai_lambda_bedrock" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["bedrock:InvokeModel"]
-      Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.bedrock_model_id}"
+      Resource = [
+        "arn:aws:bedrock:${var.aws_region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_id}",
+        "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0"
+      ]
     }]
   })
 }

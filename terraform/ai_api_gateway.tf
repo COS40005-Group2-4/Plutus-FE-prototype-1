@@ -23,7 +23,7 @@ resource "aws_api_gateway_method" "categorize_post" {
   resource_id      = aws_api_gateway_resource.categorize.id
   http_method      = "POST"
   authorization    = "NONE"
-  api_key_required = true
+  api_key_required = false
 }
 
 # OPTIONS /categorize for CORS
@@ -93,6 +93,15 @@ resource "aws_lambda_permission" "ai_categorize_apigw" {
 # Deployment
 resource "aws_api_gateway_deployment" "ai" {
   rest_api_id = aws_api_gateway_rest_api.ai.id
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_method.categorize_post,
+      aws_api_gateway_method.categorize_options,
+      aws_api_gateway_integration.categorize_lambda,
+      aws_api_gateway_integration.categorize_options,
+    ]))
+  }
 
   depends_on = [
     aws_api_gateway_integration.categorize_lambda,

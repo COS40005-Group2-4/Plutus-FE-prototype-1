@@ -19,8 +19,9 @@ class DatabaseService implements IDatabaseService {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
-    // Safety net: ensure budget tables exist even if migration was skipped
+    // Safety net: ensure tables exist even if migration was skipped
     await _ensureBudgetTables(_database!);
+    await _ensureAICorrectionsTables(_database!);
     return _database!;
   }
 
@@ -40,6 +41,26 @@ class DatabaseService implements IDatabaseService {
     }
   }
   
+  Future<void> _ensureAICorrectionsTables(Database db) async {
+    final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='ai_corrections'");
+    if (tables.isEmpty) {
+      if (kDebugMode) print('AI corrections table missing — creating now');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ai_corrections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          feature TEXT NOT NULL,
+          transaction_id TEXT NOT NULL,
+          ai_suggested TEXT NOT NULL,
+          user_chose TEXT NOT NULL,
+          payee TEXT,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
+    }
+  }
+
   Future<Database> _initDatabase() async {
     if (kIsWeb) {
       // Use sqflite_common_ffi_web for browser (IndexedDB-backed SQLite via WASM)

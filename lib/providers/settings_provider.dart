@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/ocr_service.dart';
 
 enum AppLanguage {
   english('en', 'English'),
@@ -77,12 +78,14 @@ class SettingsProvider extends ChangeNotifier {
   static const String _currencyKey = 'currency';
   static const String _dateFormatKey = 'date_format';
   static const String _timeFormatKey = 'time_format';
+  static const String _ocrModeKey = 'ocr_mode';
 
   ThemeMode _themeMode = ThemeMode.system;
   AppLanguage _language = AppLanguage.english;
   AppCurrency _currency = AppCurrency.vnd;
   DateFormatType _dateFormat = DateFormatType.ddMMyyyy;
   TimeFormatType _timeFormat = TimeFormatType.format24h;
+  OCRMode _ocrMode = OCRMode.auto;
 
   bool _isInitialized = false;
 
@@ -96,6 +99,7 @@ class SettingsProvider extends ChangeNotifier {
   AppCurrency get currency => _currency;
   DateFormatType get dateFormat => _dateFormat;
   TimeFormatType get timeFormat => _timeFormat;
+  OCRMode get ocrMode => _ocrMode;
   bool get isInitialized => _isInitialized;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale get locale => Locale(_language.code);
@@ -135,6 +139,15 @@ class SettingsProvider extends ChangeNotifier {
     final storedTimeFormat = prefs.getString(_timeFormatKey);
     if (storedTimeFormat != null) {
       _timeFormat = TimeFormatType.fromString(storedTimeFormat);
+    }
+
+    // Load OCR mode
+    final storedOcrMode = prefs.getString(_ocrModeKey);
+    if (storedOcrMode != null) {
+      _ocrMode = OCRMode.values.firstWhere(
+        (mode) => mode.name == storedOcrMode,
+        orElse: () => OCRMode.auto,
+      );
     }
 
     _isInitialized = true;
@@ -177,6 +190,13 @@ class SettingsProvider extends ChangeNotifier {
     _timeFormat = format;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_timeFormatKey, format.name);
+    notifyListeners();
+  }
+
+  Future<void> setOcrMode(OCRMode mode) async {
+    _ocrMode = mode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_ocrModeKey, mode.name);
     notifyListeners();
   }
 }

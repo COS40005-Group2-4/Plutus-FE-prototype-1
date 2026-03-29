@@ -7,7 +7,7 @@ import boto3
 class BedrockClient:
     """Wrapper for Amazon Bedrock model invocation."""
 
-    DEFAULT_MODEL_ID = "anthropic.claude-haiku-4-5-20251001"
+    DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 
     def __init__(
         self,
@@ -39,7 +39,13 @@ class BedrockClient:
         )
 
         response_body = json.loads(response["body"].read())
-        text = response_body["content"][0]["text"]
+        text = response_body["content"][0]["text"].strip()
+
+        # Strip markdown code fences if the model wraps its JSON response
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]  # remove opening ```json
+            text = text.rsplit("```", 1)[0]  # remove closing ```
+            text = text.strip()
 
         try:
             return json.loads(text)

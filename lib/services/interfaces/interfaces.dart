@@ -13,3 +13,4 @@ export 'i_price_api_service.dart';
 export 'i_consent_service.dart';
 export 'i_budget_service.dart';
 export 'i_ai_service.dart';
+export 'i_ai_category_pipeline.dart';

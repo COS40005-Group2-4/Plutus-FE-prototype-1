@@ -144,3 +144,4 @@ terraform/terraform.tfstate
 /terraform/.terraform
 /.superpowers
 /lambda/.build
+lambda/package.zip

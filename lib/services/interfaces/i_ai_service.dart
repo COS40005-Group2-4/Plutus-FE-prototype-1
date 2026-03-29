@@ -8,4 +8,10 @@ abstract class IAIService {
     List<String> accounts,
     List<Correction> corrections,
   );
+
+  Future<List<CategorySuggestion?>> categorizeBatch(
+    List<Transaction> transactions,
+    List<String> accounts,
+    List<Correction> corrections,
+  );
 }

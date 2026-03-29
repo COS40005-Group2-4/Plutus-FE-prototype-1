@@ -31,6 +31,7 @@ def handler(event: dict, context: Any) -> dict:
 
     try:
         client = BedrockClient(
+            model_id=os.environ.get("BEDROCK_MODEL_ID", BedrockClient.DEFAULT_MODEL_ID),
             region=os.environ.get("AWS_REGION", "ap-southeast-1"),
         )
 

@@ -395,64 +395,261 @@ class OCRService {
 
     final text = fullText.toString();
 
-    // Category keyword mappings - aligned with Category Budget widget
+    // Category keyword mappings — Vietnam, USA & Europe
     final categoryKeywords = {
       'Food': [
-        'restaurant', 'cafe', 'coffee', 'food', 'pizza', 'burger', 'sushi',
-        'grocery', 'supermarket', 'convenience', 'bakery', 'doordash',
-        'grabfood', 'baemin', 'shopeefood', 'thue', 'ăn', 'nhà hàng',
-        'starbucks', 'mcdonald', 'kfc', 'lotteria', 'bếp', 'cơm',
+        // === Vietnam ===
+        'phở', 'bún', 'bánh mì', 'cơm tấm', 'cơm bình dân', 'cơm văn phòng',
+        'hủ tiếu', 'bún bò', 'bún chả', 'bún riêu', 'bánh cuốn', 'bánh xèo',
+        'chè', 'trà sữa', 'trà đào', 'nước mía', 'sinh tố', 'nước ép',
+        'nhà hàng', 'quán ăn', 'quán nhậu', 'ăn uống', 'ăn sáng', 'ăn trưa',
+        'ăn tối', 'cơm', 'bếp', 'đồ ăn', 'thức ăn', 'ẩm thực',
+        'highlands coffee', 'phúc long', 'the coffee house', 'cộng cà phê',
+        'trung nguyên', 'king coffee', 'passio', 'ông bầu',
+        'jollibee', 'lotteria', 'golden gate', 'kichi kichi', 'gogi house',
+        'sumo bbq', 'manwah', 'haidilao', 'hotpot', 'lẩu', 'nướng', 'bbq',
+        'grabfood', 'shopee food', 'shopeefood', 'baemin', 'beamin',
+        'loship', 'now.vn', 'gojek food',
+        'bách hóa xanh', 'winmart', 'vinmart', 'co.op mart', 'coopmart',
+        'big c', 'mega market', 'lotte mart', 'aeon', 'emart',
+        'circle k', 'ministop', 'gs25', 'family mart', '7-eleven',
+        'annam gourmet', 'satra',
+        // === USA ===
+        'walmart', 'kroger', 'costco', 'trader joe', 'whole foods',
+        'safeway', 'target', 'publix', 'aldi', 'wegmans',
+        'chipotle', 'chick-fil-a', 'wendy', 'taco bell', 'panda express',
+        'five guys', 'shake shack', 'in-n-out', 'panera', 'sweetgreen',
+        'doordash', 'uber eats', 'grubhub', 'instacart', 'postmates',
+        'dunkin', 'tim hortons', 'cvs pharmacy',
+        // === Europe ===
+        'carrefour', 'lidl', 'aldi', 'tesco', 'sainsbury', 'asda',
+        'marks & spencer', 'waitrose', 'monoprix', 'leclerc', 'auchan',
+        'edeka', 'rewe', 'albert heijn', 'delhaize', 'mercadona', 'esselunga',
+        'deliveroo', 'just eat', 'uber eats', 'glovo', 'wolt',
+        'boulangerie', 'bäckerei', 'patisserie', 'traiteur',
+        'pret a manger', 'paul', 'leon', 'itsu', 'nando',
+        // General
+        'restaurant', 'cafe', 'coffee', 'food', 'grocery', 'supermarket',
+        'bakery', 'pizza', 'burger', 'sushi', 'convenience',
+        'kfc', 'mcdonald', 'burger king', 'pizza hut', 'dominos',
+        'starbucks', 'texas chicken', 'popeyes', 'subway',
       ],
       'Transportation': [
-        'uber', 'lyft', 'grab', 'gojek', 'taxi', 'gas', 'petrol',
-        'fuel', 'shell', 'caltex', 'petronas', ' petrolimex', 'pvoil',
-        'parking', 'toll', 'xe', 'ô tô', 'xăng', 'dầu', 'đổ xăng',
-        'vietnam airlines', 'vietjet', 'jetstar', 'bus', 'metro',
+        // === Vietnam ===
+        'grab', 'grabcar', 'grabbike', 'be', 'be group', 'xanh sm',
+        'gojek', 'go-viet', 'mai linh', 'vinasun', 'sun taxi',
+        'taxi', 'xe ôm', 'xe máy', 'xe buýt', 'xe khách',
+        'petrolimex', 'pvoil', 'saigon petro', 'mipec', 'thanh lễ',
+        'xăng', 'dầu', 'đổ xăng', 'trạm xăng',
+        'bãi đỗ xe', 'giữ xe', 'phí cầu đường',
+        'vietnam airlines', 'vietjet', 'vietjet air', 'bamboo airways',
+        'pacific airlines', 'jetstar', 'vietravel airlines',
+        'xe lửa', 'đường sắt', 'ga sài gòn', 'ga hà nội',
+        'phương trang', 'futa', 'hoàng long', 'kumho', 'the sinh tourist',
+        'ô tô', 'xe', 'vé xe', 'vé máy bay', 'phà', 'tàu',
+        // === USA ===
+        'uber', 'lyft', 'amtrak', 'greyhound', 'megabus',
+        'delta', 'united airlines', 'american airlines', 'southwest',
+        'spirit airlines', 'frontier', 'alaska airlines',
+        'shell', 'chevron', 'exxon', 'bp', 'sunoco', 'speedway',
+        'ez pass', 'ezpass', 'turnpike', 'mta', 'bart', 'caltrain',
+        'nj transit', 'wmata', 'cta', 'septa',
+        // === Europe ===
+        'ryanair', 'easyjet', 'wizz air', 'lufthansa', 'air france',
+        'klm', 'british airways', 'vueling', 'transavia', 'norwegian',
+        'eurostar', 'thalys', 'sncf', 'tgv', 'deutsche bahn', 'db',
+        'renfe', 'trenitalia', 'flixbus', 'blablacar',
+        'total energies', 'esso', 'aral', 'repsol',
+        'tfl', 'oyster', 'navigo', 'ov-chipkaart',
+        'bolt', 'free now', 'freenow', 'cabify',
+        // General
+        'gas', 'petrol', 'fuel', 'parking', 'toll',
+        'train', 'metro', 'bus', 'ferry',
       ],
       'Entertainment': [
-        'cinema', 'movie', 'netflix', 'spotify', 'youtube', 'premium',
-        'game', 'steam', 'playstation', 'xbox', 'nintendo', 'karaoke',
-        'bar', 'pub', 'club', 'bowling', 'gym', 'fitness', 'massage',
-        'spa', 'giải trí', 'rạp chiếu', 'thể thao', 'sport',
+        // === Vietnam ===
+        'cgv', 'lotte cinema', 'galaxy cinema', 'beta cinemas', 'bhd star',
+        'rạp chiếu phim', 'rạp phim', 'xem phim', 'rạp chiếu',
+        'karaoke', 'icool', 'kingdom', 'nhà văn hóa',
+        'công viên', 'đầm sen', 'suối tiên', 'vinwonders', 'vinpearl',
+        'sun world', 'bà nà hills', 'dragon park',
+        'california fitness', 'citigym', 'elite fitness',
+        'quán bar', 'bia', 'nhậu',
+        'fpt play', 'viettel tv',
+        'giải trí', 'vui chơi', 'thể thao',
+        // === USA ===
+        'amc', 'regal cinemas', 'cinemark', 'imax',
+        'disneyland', 'disney world', 'universal studios', 'six flags',
+        'planet fitness', 'equinox', 'orangetheory', 'la fitness',
+        'peloton', 'soulcycle', 'crossfit',
+        'ticketmaster', 'stubhub', 'eventbrite',
+        'hbo max', 'hulu', 'peacock', 'paramount+', 'apple tv',
+        'topgolf', 'dave and busters',
+        // === Europe ===
+        'odeon', 'vue cinemas', 'pathé', 'gaumont', 'cineplex',
+        'europapark', 'disneyland paris', 'port aventura', 'tivoli',
+        'david lloyd', 'virgin active', 'pure gym', 'basic-fit',
+        'sky', 'dazn', 'canal+', 'joyn',
+        // General
+        'gym', 'yoga', 'fitness', 'sport', 'bơi', 'hồ bơi',
+        'spa', 'massage', 'nail', 'làm đẹp', 'thẩm mỹ',
+        'pub', 'club', 'bar', 'bowling',
+        'netflix', 'spotify', 'youtube', 'disney+',
+        'game', 'steam', 'playstation', 'xbox', 'nintendo',
       ],
       'Shopping': [
-        'shopee', 'lazada', 'tiki', 'amazon', 'ebay', 'walmart',
-        'target', 'costco', 'mall', 'department store', 'clothing',
-        'fashion', 'electronics', 'phone', 'laptop', ' accessory',
-        'siêu thị', 'mua sắm', 'điện thoại', 'quần áo',
+        // === Vietnam ===
+        'shopee', 'lazada', 'tiki', 'sendo', 'thế giới di động',
+        'điện máy xanh', 'fpt shop', 'cellphones', 'cellphoneS',
+        'hoàng hà mobile', 'viettel store', 'phong vũ', 'nguyễn kim',
+        'hnam mobile', 'di động việt',
+        'vincom', 'aeon mall', 'crescent mall', 'saigon centre',
+        'takashimaya', 'parkson', 'lotte mall', 'gigamall', 'nowzone',
+        'diamond plaza', 'landmark 81', 'bitexco',
+        'canifa', 'routine', 'yody', 'owen', 'aristino', 'ivy moda',
+        'elise', 'juno', 'vascara',
+        'mua sắm', 'siêu thị', 'cửa hàng', 'thời trang',
+        'quần áo', 'giày dép', 'điện thoại', 'máy tính',
+        'phụ kiện', 'đồ gia dụng', 'nội thất',
+        // === USA ===
+        'amazon', 'ebay', 'best buy', 'home depot', 'lowe',
+        'macy', 'nordstrom', 'bloomingdale', 'saks', 'neiman marcus',
+        'tj maxx', 'marshalls', 'ross', 'burlington',
+        'apple store', 'microsoft store', 'gamestop',
+        'nike', 'adidas', 'gap', 'old navy', 'banana republic',
+        'bath & body works', 'sephora', 'ulta',
+        'wayfair', 'pottery barn', 'crate & barrel', 'ikea',
+        // === Europe ===
+        'john lewis', 'selfridges', 'harrods', 'galeries lafayette',
+        'el corte ingles', 'karstadt', 'de bijenkorf',
+        'primark', 'decathlon', 'mediamarkt', 'saturn', 'fnac', 'darty',
+        'zalando', 'asos', 'about you', 'otto', 'cdiscount',
+        'uniqlo', 'zara', 'h&m', 'muji', 'mango', 'pull&bear',
+        'charles & keith', 'sandro', 'maje',
+        // General
+        'shop', 'mall', 'clothing', 'fashion', 'electronics', 'laptop',
       ],
       'Bills': [
-        'electricity', 'electric', 'water', 'internet', 'phone bill',
-        'utility', 'power', 'evn', 'viettel', 'vnpt', 'fpt',
-        'điện', 'nước', 'internet', 'tiện ích', 'hóa đơn',
-        'vnpt', 'mobifone', 'vinaphone', 'wifi',
+        // === Vietnam ===
+        'evn', 'điện lực', 'tiền điện', 'hóa đơn điện',
+        'sawaco', 'tiền nước', 'hóa đơn nước', 'nước sạch',
+        'viettel', 'mobifone', 'vinaphone', 'vnpt', 'fpt telecom',
+        'sctv', 'vtv cab', 'k+', 'truyền hình',
+        'fpt internet', 'vnpt internet', 'viettel internet',
+        'cáp quang', 'mạng',
+        'tiền nhà', 'thuê nhà', 'phí quản lý', 'phí dịch vụ chung cư',
+        'bảo hiểm', 'tiền gas',
+        'hóa đơn', 'tiện ích', 'phí', 'cước',
+        // === USA ===
+        'comcast', 'xfinity', 'at&t', 'verizon', 't-mobile', 'sprint',
+        'spectrum', 'cox', 'centurylink', 'frontier communications',
+        'pg&e', 'con edison', 'duke energy', 'dominion energy',
+        'state farm', 'geico', 'allstate', 'progressive',
+        'rent', 'mortgage', 'hoa', 'property tax',
+        // === Europe ===
+        'edf', 'engie', 'british gas', 'eon', 'vattenfall', 'iberdrola',
+        'vodafone', 'orange', 'o2', 'three', 'deutsche telekom', 'swisscom',
+        'sky', 'bt', 'free mobile', 'bouygues', 'sfr',
+        'thames water', 'veolia', 'suez',
+        'council tax', 'gez', 'loyer', 'miete',
+        // General
+        'electricity', 'electric', 'water', 'wifi', 'internet',
+        'phone bill', 'utility', 'power', 'insurance',
       ],
       'Healthcare': [
+        // === Vietnam ===
+        'vinmec', 'fv hospital', 'hoàn mỹ', 'chợ rẫy', 'bạch mai',
+        'đại học y dược', 'y khoa', 'bệnh viện', 'phòng khám',
+        'nha khoa', 'mắt', 'da liễu', 'tai mũi họng',
+        'nhà thuốc', 'pharmacity', 'long châu', 'an khang',
+        'thuốc', 'dược', 'y tế', 'khám bệnh', 'xét nghiệm',
+        'nha sĩ', 'bác sĩ', 'chữa bệnh', 'điều trị',
+        'bảo hiểm y tế', 'bhyt',
+        // === USA ===
+        'cvs', 'walgreens', 'rite aid', 'kaiser', 'cigna', 'aetna',
+        'united health', 'blue cross', 'blue shield', 'humana',
+        'mayo clinic', 'cleveland clinic', 'johns hopkins',
+        'zocdoc', 'one medical', 'teladoc', 'goodrx',
+        // === Europe ===
+        'boots', 'superdrug', 'lloyds pharmacy', 'apotheke', 'pharmacie',
+        'doctolib', 'nhs', 'krankenkasse', 'sécurité sociale',
+        'bupa', 'axa health', 'sanitas',
+        // General
         'pharmacy', 'hospital', 'clinic', 'doctor', 'medical',
-        'health', 'dental', 'vision', 'medicine', 'drugstore',
-        'bệnh viện', 'phòng khám', 'y tế', 'thuốc', 'dược',
-        'nhà thuốc', 'khám bệnh',
+        'health', 'dental', 'medicine', 'drugstore',
       ],
       'Education': [
+        // === Vietnam ===
+        'đại học', 'cao đẳng', 'trung học', 'tiểu học', 'mầm non',
+        'trường', 'học phí', 'sách giáo khoa', 'sách vở',
+        'trung tâm anh ngữ', 'vus', 'iig', 'ielts', 'toeic',
+        'apax', 'yola', 'wall street english', 'british council',
+        'topica', 'funix',
+        'gia sư', 'luyện thi', 'khóa học', 'dạy thêm', 'học thêm',
+        'nhà sách', 'fahasa', 'phương nam', 'tiki sách',
+        'du học', 'học bổng',
+        // === USA ===
+        'chegg', 'khan academy', 'masterclass', 'skillshare',
+        'linkedin learning', 'pluralsight', 'datacamp',
+        'college board', 'sat', 'act', 'gre', 'gmat',
+        'barnes & noble', 'amazon textbook',
+        'student loan', 'tuition', 'semester',
+        // === Europe ===
+        'open university', 'futurelearn', 'guardian masterclasses',
+        'goethe institut', 'alliance française', 'cervantes',
+        'erasmus', 'waterstones', 'thalia', 'fnac livres',
+        // General
         'school', 'university', 'college', 'course', 'book',
-        'tutorial', 'training', 'certificate', 'education', 'learning',
-        'trường', 'học', 'đại học', 'sách', 'khóa học', 'udemy',
-        'coursera', 'skillshare', 'du học',
+        'training', 'certificate', 'education', 'learning',
+        'edx', 'coursera', 'udemy',
       ],
       'Salary': [
-        'salary', 'payroll', 'wage', 'bonus', 'lương', 'thưởng',
-        'monthly salary', 'lương tháng',
+        // Vietnam
+        'lương', 'lương tháng', 'lương cơ bản', 'thưởng', 'phụ cấp',
+        'tiền lương', 'chuyển lương', 'nhận lương', 'trả lương',
+        'lương net', 'lương gross', 'tháng 13', 'thưởng tết',
+        // General
+        'salary', 'payroll', 'wage', 'bonus', 'monthly salary',
+        'direct deposit', 'gehalt', 'salaire', 'stipendio',
       ],
       'Freelance': [
+        // Vietnam
+        'tự do', 'hợp đồng', 'dự án', 'phí dịch vụ',
+        'khoán', 'cộng tác viên', 'ctv', 'part-time',
+        // General
         'freelance', 'contract', 'project fee', 'consulting',
-        'dịch vụ', 'phí dịch vụ', 'hợp đồng',
+        'dịch vụ', 'invoice', 'gig', 'fiverr', 'upwork',
       ],
       'Investment': [
+        // === Vietnam ===
+        'chứng khoán', 'cổ phiếu', 'trái phiếu', 'quỹ đầu tư',
+        'vn-index', 'vnindex', 'ssi', 'vndirect', 'tcbs', 'fpts',
+        'vps', 'mirae asset', 'kis', 'bsc',
+        'lãi suất', 'tiền gửi', 'tiết kiệm', 'ngân hàng',
+        'vietcombank', 'vcb', 'techcombank', 'tcb', 'mb bank',
+        'bidv', 'agribank', 'vpbank', 'acb', 'tpbank', 'sacombank',
+        'cổ tức', 'lãi', 'đầu tư',
+        // === USA ===
+        'robinhood', 'fidelity', 'charles schwab', 'vanguard', 'etrade',
+        'td ameritrade', 'merrill', 'sofi', 'wealthfront', 'betterment',
+        's&p 500', 'nasdaq', 'dow jones', 'nyse',
+        'coinbase', 'kraken', 'gemini',
+        // === Europe ===
+        'degiro', 'trading 212', 'etoro', 'revolut invest', 'scalable capital',
+        'trade republic', 'saxo', 'interactive brokers',
+        'binance', 'bitstamp',
+        'dax', 'ftse', 'cac 40', 'euronext',
+        // General
         'dividend', 'interest', 'stock', 'bond', 'fund', 'investment',
-        'cổ tức', 'lãi', 'đầu tư', 'chứng khoán',
+        'crypto', 'bitcoin', 'ethereum', 'etf', '401k', 'ira',
       ],
       'Gift': [
-        'gift', 'present', 'donation', 'quà tặng', 'từ thiện',
+        // Vietnam
+        'quà tặng', 'quà', 'biếu', 'mừng', 'lì xì', 'tiền mừng',
+        'từ thiện', 'quyên góp', 'ủng hộ', 'thiện nguyện',
+        // General
+        'gift', 'present', 'donation', 'charity', 'gofundme',
+        'cadeau', 'geschenk', 'regalo',
       ],
     };
 

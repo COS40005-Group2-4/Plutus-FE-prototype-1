@@ -18,6 +18,8 @@ import '../services/budget_notification_service.dart';
 import '../services/budget_migration_service.dart';
 import '../transaction_service.dart';
 import '../services/ai_service.dart';
+import '../services/ai_category_pipeline.dart';
+import '../services/ocr_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -61,6 +63,13 @@ Future<void> setupServiceLocator() async {
   );
   sl.registerLazySingleton<IAIService>(
     () => AIService(),
+  );
+  sl.registerLazySingleton<OCRService>(() => OCRService());
+  sl.registerLazySingleton<IAICategoryPipeline>(
+    () => AICategoryPipeline(
+      aiService: sl<IAIService>(),
+      ocrService: sl<OCRService>(),
+    ),
   );
 
   // Tier 2: Top-tier services
