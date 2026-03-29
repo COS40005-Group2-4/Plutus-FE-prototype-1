@@ -8,6 +8,8 @@ import 'dart:io' as _i19;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i9;
+import 'package:plutus_fe_prototype/models/ai/category_suggestion.dart' as _i27;
+import 'package:plutus_fe_prototype/models/ai/correction.dart' as _i28;
 import 'package:plutus_fe_prototype/models/backup_models.dart' as _i13;
 import 'package:plutus_fe_prototype/models/bill_model.dart' as _i15;
 import 'package:plutus_fe_prototype/models/budget_model.dart' as _i5;
@@ -16,6 +18,8 @@ import 'package:plutus_fe_prototype/models/market_data_model.dart' as _i23;
 import 'package:plutus_fe_prototype/models/profile_model.dart' as _i4;
 import 'package:plutus_fe_prototype/models/transaction_model.dart' as _i11;
 import 'package:plutus_fe_prototype/models/user_model.dart' as _i3;
+import 'package:plutus_fe_prototype/services/interfaces/i_ai_service.dart'
+    as _i26;
 import 'package:plutus_fe_prototype/services/interfaces/i_backend_ffi_service.dart'
     as _i8;
 import 'package:plutus_fe_prototype/services/interfaces/i_backup_service.dart'
@@ -629,6 +633,28 @@ class MockIDatabaseService extends _i1.Mock implements _i6.IDatabaseService {
               startDate,
               endDate,
             ]),
+            returnValue: _i7.Future<List<Map<String, dynamic>>>.value(
+              <Map<String, dynamic>>[],
+            ),
+          )
+          as _i7.Future<List<Map<String, dynamic>>>);
+
+  @override
+  _i7.Future<void> insertAICorrection(Map<String, dynamic>? correction) =>
+      (super.noSuchMethod(
+            Invocation.method(#insertAICorrection, [correction]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<List<Map<String, dynamic>>> getAICorrections(
+    String? feature, {
+    int? limit = 10,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAICorrections, [feature], {#limit: limit}),
             returnValue: _i7.Future<List<Map<String, dynamic>>>.value(
               <Map<String, dynamic>>[],
             ),
@@ -2198,4 +2224,29 @@ class MockIBudgetService extends _i1.Mock implements _i25.IBudgetService {
             returnValueForMissingStub: _i7.Future<void>.value(),
           )
           as _i7.Future<void>);
+}
+
+/// A class which mocks [IAIService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIAIService extends _i1.Mock implements _i26.IAIService {
+  MockIAIService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<_i27.CategorySuggestion?> categorizeTransaction(
+    _i11.Transaction? transaction,
+    List<String>? accounts,
+    List<_i28.Correction>? corrections,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#categorizeTransaction, [
+              transaction,
+              accounts,
+              corrections,
+            ]),
+            returnValue: _i7.Future<_i27.CategorySuggestion?>.value(),
+          )
+          as _i7.Future<_i27.CategorySuggestion?>);
 }

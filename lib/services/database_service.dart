@@ -55,7 +55,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -268,6 +268,21 @@ class DatabaseService implements IDatabaseService {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_categories_budget_id ON budget_categories(budget_id)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_periods_category_id ON budget_periods(budget_category_id)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_notification_rules_category_id ON notification_rules(budget_category_id)');
+
+    // AI corrections table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ai_corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        feature TEXT NOT NULL,
+        transaction_id TEXT NOT NULL,
+        ai_suggested TEXT NOT NULL,
+        user_chose TEXT NOT NULL,
+        payee TEXT,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
 
     if (kDebugMode) {
       print('Database tables created successfully');
@@ -489,8 +504,25 @@ class DatabaseService implements IDatabaseService {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_budget_periods_category_id ON budget_periods(budget_category_id)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_notification_rules_category_id ON notification_rules(budget_category_id)');
     }
+
+    // Upgrade from version 6 to 7: Add AI corrections table
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ai_corrections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          feature TEXT NOT NULL,
+          transaction_id TEXT NOT NULL,
+          ai_suggested TEXT NOT NULL,
+          user_chose TEXT NOT NULL,
+          payee TEXT,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
+    }
   }
-  
+
   // User operations
   Future<int> createUser({
     required String username,
@@ -1156,6 +1188,25 @@ class DatabaseService implements IDatabaseService {
         AND p.amount > 0
       ''',
       [userId, startDate, endDate],
+    );
+  }
+
+  // AI Corrections
+  @override
+  Future<void> insertAICorrection(Map<String, dynamic> correction) async {
+    final db = await database;
+    await db.insert('ai_corrections', correction);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAICorrections(String feature, {int limit = 10}) async {
+    final db = await database;
+    return await db.query(
+      'ai_corrections',
+      where: 'feature = ?',
+      whereArgs: [feature],
+      orderBy: 'created_at DESC',
+      limit: limit,
     );
   }
 

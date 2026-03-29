@@ -23,7 +23,7 @@ class AWSConfig {
       dotenv.env['PLUTUS_AWS_REGION'] ??
       const String.fromEnvironment(
         'PLUTUS_AWS_REGION',
-        defaultValue: 'us-east-1',
+        defaultValue: 'ap-southeast-1',
       );
 
   static String get bucketName =>

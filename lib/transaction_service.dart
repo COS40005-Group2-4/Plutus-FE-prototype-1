@@ -11,6 +11,8 @@ import 'services/interfaces/i_database_service.dart';
 import 'services/interfaces/i_transaction_service.dart';
 import 'services/file_handler.dart';
 import 'models/transaction_model.dart';
+import 'models/ai/correction.dart';
+import 'services/interfaces/i_ai_service.dart';
 import 'di/service_locator.dart';
 
 class TransactionService implements ITransactionService {
@@ -25,6 +27,7 @@ class TransactionService implements ITransactionService {
 
   final IBackendFfiService _ffiService;
   final IDatabaseService _db;
+  final IAIService _aiService;
 
   int? _currentUserId;
 
@@ -38,8 +41,10 @@ class TransactionService implements ITransactionService {
   TransactionService({
     IBackendFfiService? ffiService,
     IDatabaseService? db,
+    IAIService? aiService,
   })  : _ffiService = ffiService ?? sl<IBackendFfiService>(),
-        _db = db ?? sl<IDatabaseService>() {
+        _db = db ?? sl<IDatabaseService>(),
+        _aiService = aiService ?? sl<IAIService>() {
     _transactionStreamController = StreamController<List<Transaction>>.broadcast();
   }
   
@@ -905,7 +910,10 @@ class TransactionService implements ITransactionService {
       
       // Notify listeners of transaction update
       notifyTransactionUpdate();
-      
+
+      // AI auto-categorization (non-blocking)
+      _autoCategorizeTransaction(transaction);
+
       // Try to sync with backend in the background (non-blocking)
       _syncTransactionToBackend(transaction);
     } catch (e) {
@@ -931,7 +939,83 @@ class TransactionService implements ITransactionService {
       }
     }
   }
-  
+
+  /// Fire-and-forget AI categorization after transaction is saved.
+  Future<void> _autoCategorizeTransaction(Map<String, dynamic> transaction) async {
+    try {
+      if (_currentUserId == null) return;
+
+      // Build a Transaction object from the map for the AI service
+      final txn = Transaction(
+        date: _parseDateForAI(transaction),
+        payee: transaction['payee'] as String? ?? '',
+        description: transaction['description'] as String? ?? '',
+        postings: _parsePostingsForAI(transaction),
+      );
+
+      // Get user's existing accounts from recent transactions
+      final recentTxns = await getTransactions();
+      final accounts = recentTxns
+          .expand((t) => t.postings.map((p) => p.account))
+          .toSet()
+          .toList();
+
+      if (accounts.isEmpty) return;
+
+      // Get past corrections for few-shot learning
+      final correctionMaps = await _db.getAICorrections('categorize', limit: 10);
+      final corrections = correctionMaps.map((m) => Correction.fromMap(m)).toList();
+
+      final suggestion = await _aiService.categorizeTransaction(txn, accounts, corrections);
+
+      if (suggestion != null && suggestion.isHighConfidence) {
+        // Update the transaction's category in the database
+        final db = await _db.database;
+        final txnId = transaction['transaction_id'] as String?;
+        if (txnId != null) {
+          await db.update(
+            'transactions',
+            {'category': suggestion.account},
+            where: 'transaction_id = ?',
+            whereArgs: [txnId],
+          );
+
+          if (kDebugMode) {
+            print('AI auto-categorized "$txnId" as "${suggestion.account}" '
+                '(confidence: ${suggestion.confidence})');
+          }
+
+          notifyTransactionUpdate();
+        }
+      }
+    } catch (e) {
+      // AI categorization is non-critical — log and continue
+      if (kDebugMode) {
+        print('AI auto-categorize error: $e');
+      }
+    }
+  }
+
+  int _parseDateForAI(Map<String, dynamic> transaction) {
+    final dateValue = transaction['date'];
+    if (dateValue is int) return dateValue;
+    if (dateValue is String) {
+      final parsed = DateTime.tryParse(dateValue);
+      if (parsed != null) return parsed.millisecondsSinceEpoch ~/ 1000;
+    }
+    return DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  }
+
+  List<Posting> _parsePostingsForAI(Map<String, dynamic> transaction) {
+    final postingsData = transaction['postings'];
+    if (postingsData is List) {
+      return postingsData
+          .map((p) => Posting.fromJson(p as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
   Future<List<Map<String, dynamic>>> getUnsyncedTransactions() async {
     if (_currentUserId == null) return [];
     

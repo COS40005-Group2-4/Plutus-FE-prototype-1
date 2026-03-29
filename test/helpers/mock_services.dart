@@ -15,5 +15,6 @@ import 'package:plutus_fe_prototype/services/interfaces/interfaces.dart';
   IPriceApiService,
   ISyncManager,
   IBudgetService,
+  IAIService,
 ])
 void main() {}

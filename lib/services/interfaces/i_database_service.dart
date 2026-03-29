@@ -87,6 +87,10 @@ abstract class IDatabaseService {
   // Budget spending queries
   Future<List<Map<String, dynamic>>> getExpensePostingsForPeriod(int userId, String startDate, String endDate);
 
+  // AI Corrections
+  Future<void> insertAICorrection(Map<String, dynamic> correction);
+  Future<List<Map<String, dynamic>>> getAICorrections(String feature, {int limit = 10});
+
   // Utility
   Future<void> clearAllData();
   Future<void> clearUserData(int userId);

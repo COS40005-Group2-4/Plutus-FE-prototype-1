@@ -17,6 +17,7 @@ import '../services/budget_service.dart';
 import '../services/budget_notification_service.dart';
 import '../services/budget_migration_service.dart';
 import '../transaction_service.dart';
+import '../services/ai_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -57,6 +58,9 @@ Future<void> setupServiceLocator() async {
   );
   sl.registerLazySingleton<IBudgetService>(
     () => BudgetService(db: sl<IDatabaseService>()),
+  );
+  sl.registerLazySingleton<IAIService>(
+    () => AIService(),
   );
 
   // Tier 2: Top-tier services

@@ -36,5 +36,18 @@ variable "s3_bucket_name" {
 variable "cors_allow_origins" {
   description = "Allowed origins for CORS"
   type        = list(string)
-  default     = ["https://main.d3adjr6i7jedcz.amplifyapp.com", "http://localhost:8080"]
+  default     = ["https://main.d3eqrozysqvds5.amplifyapp.com", "http://localhost:8080"]
+}
+
+# AI Lambda variables
+variable "ai_lambda_zip_path" {
+  description = "Path to the AI Lambda deployment package"
+  type        = string
+  default     = "../lambda/package.zip"
+}
+
+variable "bedrock_model_id" {
+  description = "Bedrock model ID for AI features"
+  type        = string
+  default     = "anthropic.claude-haiku-4-5-20251001"
 }
