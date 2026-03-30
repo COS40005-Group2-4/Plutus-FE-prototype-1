@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
@@ -44,13 +43,13 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
     });
 
     try {
-      print('InvestmentWidget: Loading investment data (forceRefresh: $forceRefresh)...');
+      debugPrint('InvestmentWidget: Loading investment data (forceRefresh: $forceRefresh)...');
       final investments = await _service.getInvestmentList(forceRefresh: forceRefresh);
-      print('InvestmentWidget: Loaded ${investments.length} investments');
+      debugPrint('InvestmentWidget: Loaded ${investments.length} investments');
       
       // Refresh price data for crypto/stock investments if forcing refresh
       if (forceRefresh && investments.isNotEmpty) {
-        print('InvestmentWidget: Refreshing price data for investments...');
+        debugPrint('InvestmentWidget: Refreshing price data for investments...');
         final updatedInvestments = <InvestmentModel>[];
         
         for (final investment in investments) {
@@ -68,7 +67,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
             _investments = updatedInvestments;
             _isLoading = false;
           });
-          print('InvestmentWidget: State updated with ${updatedInvestments.length} investments');
+          debugPrint('InvestmentWidget: State updated with ${updatedInvestments.length} investments');
         }
       } else {
         if (mounted) {
@@ -76,11 +75,11 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
             _investments = investments;
             _isLoading = false;
           });
-          print('InvestmentWidget: State updated with ${investments.length} investments');
+          debugPrint('InvestmentWidget: State updated with ${investments.length} investments');
         }
       }
     } catch (e) {
-      print('InvestmentWidget: Error loading investments: $e');
+      debugPrint('InvestmentWidget: Error loading investments: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -458,7 +457,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
       builder: (dialogContext) => AddInvestmentDialog(
         onSave: (assetType, assetName, quantity, purchaseValue, currency, purchaseDate) async {
           try {
-            print('Widget: Saving new investment $assetName');
+            debugPrint('Widget: Saving new investment $assetName');
 
             if (mounted) {
               setState(() {
@@ -478,7 +477,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
 
             final newId = await _service.saveInvestment(investment);
 
-            print('Widget: Investment saved with ID: $newId');
+            debugPrint('Widget: Investment saved with ID: $newId');
 
             if (mounted) {
               messenger.showSnackBar(
@@ -489,12 +488,12 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
                 ),
               );
 
-              print('Widget: Force refreshing investment list');
+              debugPrint('Widget: Force refreshing investment list');
               await _loadData(forceRefresh: true);
-              print('Widget: Refresh complete, investments count: ${_investments?.length}');
+              debugPrint('Widget: Refresh complete, investments count: ${_investments?.length}');
             }
           } catch (e) {
-            print('Widget: Save failed - $e');
+            debugPrint('Widget: Save failed - $e');
             if (mounted) {
               setState(() {
                 _isLoading = false;
@@ -512,122 +511,6 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
     );
   }
 
-  Widget _buildPortfolioSummary(double totalValue, double gainLoss, bool isDark) {
-    final color = gainLoss >= 0
-        ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? Colors.redAccent : Colors.red);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Total Value',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white60 : Colors.black45,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '\$${totalValue.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(
-              gainLoss >= 0 ? Icons.trending_up : Icons.trending_down,
-              size: 16,
-              color: color,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${gainLoss >= 0 ? '+' : ''}${gainLoss.toStringAsFixed(2)}%',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChart(bool isDark) {
-    // Get the first investment with price history
-    final investmentWithHistory = _investments!.firstWhere(
-      (inv) => inv.priceHistory != null && inv.priceHistory!.isNotEmpty,
-      orElse: () => _investments!.first,
-    );
-
-    if (investmentWithHistory.priceHistory == null || 
-        investmentWithHistory.priceHistory!.isEmpty) {
-      return Container(
-        height: 80,
-        alignment: Alignment.center,
-        child: Text(
-          'Price history will appear after refresh',
-          style: TextStyle(
-            fontSize: 11,
-            color: isDark ? Colors.white54 : Colors.black45,
-          ),
-        ),
-      );
-    }
-
-    final history = investmentWithHistory.priceHistory!;
-    
-    // Create spots from price history
-    final spots = history
-        .asMap()
-        .entries
-        .map((e) => FlSpot(e.key.toDouble(), e.value.price))
-        .toList();
-
-    // Determine if overall trend is positive
-    final firstPrice = history.first.price;
-    final lastPrice = history.last.price;
-    final isPositive = lastPrice >= firstPrice;
-    
-    final lineColor = isPositive
-        ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? Colors.redAccent : Colors.red);
-
-    return SizedBox(
-      height: 80,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              color: lineColor,
-              barWidth: 2,
-              dotData: FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: lineColor.withValues(alpha: 0.1),
-              ),
-            ),
-          ],
-          lineTouchData: LineTouchData(enabled: false),
-        ),
-      ),
-    );
-  }
 }
 
 
@@ -981,13 +864,13 @@ class _InvestmentListDialog extends StatelessWidget {
               Navigator.pop(dialogContext); // Close confirmation dialog
               
               try {
-                print('Widget: Starting delete for ${investment.id}');
+                debugPrint('Widget: Starting delete for ${investment.id}');
                 
                 // Delete from backend
                 final service = sl<IInvestmentService>();
                 await service.deleteInvestment(investment.id);
                 
-                print('Widget: Delete completed, closing dialog');
+                debugPrint('Widget: Delete completed, closing dialog');
                 
                 // Close the investment list dialog too
                 if (context.mounted) {
@@ -997,7 +880,7 @@ class _InvestmentListDialog extends StatelessWidget {
                 // Wait a bit for dialogs to close
                 await Future.delayed(const Duration(milliseconds: 150));
                 
-                print('Widget: Calling onRefresh');
+                debugPrint('Widget: Calling onRefresh');
                 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1011,7 +894,7 @@ class _InvestmentListDialog extends StatelessWidget {
                   onRefresh();
                 }
               } catch (e) {
-                print('Widget: Delete failed - $e');
+                debugPrint('Widget: Delete failed - $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

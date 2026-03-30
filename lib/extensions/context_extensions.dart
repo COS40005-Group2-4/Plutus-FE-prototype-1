@@ -60,7 +60,6 @@ extension SettingsContext on BuildContext {
     }
 
     final code = currencyCode ?? settings.currency.code;
-    final currency = AppCurrency.fromCode(code);
     
     // If the amount is in a different currency, convert it
     if (currencyCode != null && currencyCode != settings.currency.code) {

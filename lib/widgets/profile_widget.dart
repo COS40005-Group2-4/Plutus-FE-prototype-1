@@ -15,11 +15,11 @@ class ProfileWidget extends StatefulWidget {
   final bool isCompact;
 
   const ProfileWidget({
-    Key? key,
+    super.key,
     required this.user,
     required this.defaultAvatarAsset,
     this.isCompact = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ProfileWidget> createState() => _ProfileWidgetState();
@@ -100,7 +100,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget _buildEditDialog(Profile profile) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
-    final maxWidth = isSmallScreen ? double.infinity : 500.0;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
@@ -314,7 +313,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 await _profileProvider.toggleFieldVisibility(fieldName);
               }
             },
-            fillColor: MaterialStateProperty.resolveWith<Color>(
+            fillColor: WidgetStateProperty.resolveWith<Color>(
               (states) => Colors.blue,
             ),
             checkColor: Colors.white,
@@ -349,7 +348,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 await _profileProvider.toggleFieldVisibility(fieldName);
               }
             },
-            fillColor: MaterialStateProperty.resolveWith<Color>(
+            fillColor: WidgetStateProperty.resolveWith<Color>(
               (states) => Colors.blue,
             ),
             checkColor: Colors.white,

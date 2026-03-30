@@ -75,7 +75,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     );
   }
 
-  setSlot() {
+  void setSlot() {
     var w = MediaQuery.of(context).size.width;
     setState(() {
       slot = w > 600

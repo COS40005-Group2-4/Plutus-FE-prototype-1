@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../models/ai/insight.dart';
 import '../services/ocr_service.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -247,11 +248,11 @@ class SettingsScreen extends StatelessWidget {
         _buildBackupCard(context, l10n),
         const Divider(),
 
-        // OCR Preferences Section
+        // AI & OCR Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: const Text(
-            'OCR Preferences',
+            'AI & OCR',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -259,6 +260,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         _buildOcrModeSelector(context, settingsProvider),
+        _buildAiPrivacySelector(context, settingsProvider),
         const Divider(),
 
         // Account Settings Section
@@ -603,7 +605,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<OCRMode>(
-              value: settingsProvider.ocrMode,
+              initialValue: settingsProvider.ocrMode,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -624,6 +626,54 @@ class SettingsScreen extends StatelessWidget {
                   : settingsProvider.ocrMode == OCRMode.online
                       ? 'Uses AWS Textract (requires internet)'
                       : 'Uses Tesseract/ML Kit (no internet needed)',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiPrivacySelector(BuildContext context, SettingsProvider settingsProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        borderRadius: AppRadius.lg,
+        opacity: 0.08,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'AI Data Privacy',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<PrivacyLevel>(
+              initialValue: settingsProvider.privacyLevel,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: const [
+                DropdownMenuItem(value: PrivacyLevel.minimal, child: Text('Minimal — category totals only')),
+                DropdownMenuItem(value: PrivacyLevel.standard, child: Text('Standard (recommended)')),
+                DropdownMenuItem(value: PrivacyLevel.full, child: Text('Full — individual transactions')),
+              ],
+              onChanged: (val) {
+                if (val != null) settingsProvider.setPrivacyLevel(val);
+              },
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              settingsProvider.privacyLevel == PrivacyLevel.minimal
+                  ? 'Only sends category totals to AI — most private, basic insights'
+                  : settingsProvider.privacyLevel == PrivacyLevel.standard
+                      ? 'Sends category totals and top merchants — good balance of privacy and insight quality'
+                      : 'Sends individual transactions — richest, most personalized insights',
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),

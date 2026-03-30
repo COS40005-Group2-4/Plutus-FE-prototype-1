@@ -173,7 +173,7 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: _viewMode == mode ? Colors.white.withOpacity(0.3) : Colors.transparent,
+          color: _viewMode == mode ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -299,7 +299,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                         sections: List.generate(sorted.length, (i) {
                           final isTouched = i == _touchedIndex;
                           return PieChartSectionData(
-                            color: PlutusChartColors.get(i).withOpacity(0.8),
+                            color: PlutusChartColors.get(i).withValues(alpha:0.8),
                             value: sorted[i].value,
                             title: isTouched ? '${(sorted[i].value / total * 100).toStringAsFixed(0)}%' : '',
                             radius: isTouched ? 40 : 32,

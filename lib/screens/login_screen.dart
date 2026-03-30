@@ -1,4 +1,3 @@
-import 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart' as gsi;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
@@ -34,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (snapshot.hasData && snapshot.data != null && !_hasRedirected) {
                     _hasRedirected = true;
                     if (kDebugMode) {
-                      print('Authentication state changed (snapshot has data) - navigating to dashboard');
+                      debugPrint('Authentication state changed (snapshot has data) - navigating to dashboard');
                     }
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {

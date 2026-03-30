@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
-enum WidgetCategory { overview, analytics, investments, tools }
+enum WidgetCategory { overview, analytics, investments, tools, insights }
 
 class WidgetMeta {
   final String widgetType;
@@ -209,6 +209,44 @@ class WidgetCatalog {
       defaultWidth: 1,
       defaultHeight: 1,
     ),
+
+    // ── Insights ──
+    'insightsFeed': WidgetMeta(
+      widgetType: 'insightsFeed',
+      label: 'widget_label_insights_feed',
+      icon: Icons.lightbulb_outline,
+      color: AppColors.accent,
+      category: WidgetCategory.insights,
+      defaultWidth: 3,
+      defaultHeight: 3,
+    ),
+    'healthScore': WidgetMeta(
+      widgetType: 'healthScore',
+      label: 'widget_label_health_score',
+      icon: Icons.health_and_safety,
+      color: AppColors.savingsAccent,
+      category: WidgetCategory.insights,
+      defaultWidth: 2,
+      defaultHeight: 2,
+    ),
+    'cashFlowForecast': WidgetMeta(
+      widgetType: 'cashFlowForecast',
+      label: 'widget_label_cash_flow_forecast',
+      icon: Icons.auto_graph,
+      color: AppColors.cashflowAccent,
+      category: WidgetCategory.insights,
+      defaultWidth: 3,
+      defaultHeight: 2,
+    ),
+    'coachingTips': WidgetMeta(
+      widgetType: 'coachingTips',
+      label: 'widget_label_coaching_tips',
+      icon: Icons.school,
+      color: AppColors.incomeAccent,
+      category: WidgetCategory.insights,
+      defaultWidth: 2,
+      defaultHeight: 2,
+    ),
   };
 
   static Map<WidgetCategory, List<WidgetMeta>> get grouped {
@@ -235,6 +273,8 @@ class WidgetCatalog {
         return 'widget_cat_investments';
       case WidgetCategory.tools:
         return 'widget_cat_tools';
+      case WidgetCategory.insights:
+        return 'widget_cat_insights';
     }
   }
 
@@ -248,6 +288,8 @@ class WidgetCatalog {
         return Icons.trending_up;
       case WidgetCategory.tools:
         return Icons.build_outlined;
+      case WidgetCategory.insights:
+        return Icons.lightbulb_outline;
     }
   }
 

@@ -204,7 +204,7 @@ class DashboardProvider extends ChangeNotifier {
     for (var s in _slotCounts) {
       await _preferences?.remove('layout_data_${_activeDashboardId}_$s');
     }
-    await _preferences?.setBool('init_${_activeDashboardId}_v3', false);
+    await _preferences?.setBool('init_${_activeDashboardId}_v4', false);
 
     await _saveDashboards();
     notifyListeners();
@@ -361,7 +361,7 @@ class DashboardProvider extends ChangeNotifier {
       await _preferences?.remove('layout_data_${dashId}_$s');
       await _preferences?.remove('layout_saved_${dashId}_$s');
     }
-    await _preferences?.remove('init_${dashId}_v3');
+    await _preferences?.remove('init_${dashId}_v4');
     await _preferences?.remove('visibility_saved_$dashId');
   }
 }

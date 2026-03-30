@@ -7,10 +7,11 @@ import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
-import '../../transaction_service.dart';
+import '../../services/interfaces/i_transaction_service.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/file_preview_table.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/insights_provider.dart';
 import '../../l10n/app_localizations.dart';
 
 class FileImportTab extends StatefulWidget {
@@ -21,7 +22,7 @@ class FileImportTab extends StatefulWidget {
 }
 
 class _FileImportTabState extends State<FileImportTab> {
-  late TransactionService _service;
+  late ITransactionService _service;
   late IAICategoryPipeline _aiPipeline;
 
   String? _fileName;
@@ -38,7 +39,7 @@ class _FileImportTabState extends State<FileImportTab> {
   @override
   void initState() {
     super.initState();
-    _service = TransactionService();
+    _service = GetIt.instance<ITransactionService>();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.currentUserId != null) {
       _service.setCurrentUser(authProvider.currentUserId!);
@@ -151,7 +152,7 @@ class _FileImportTabState extends State<FileImportTab> {
         });
       }
     } catch (e) {
-      if (kDebugMode) print('Batch categorization error: $e');
+      if (kDebugMode) debugPrint('Batch categorization error: $e');
       if (mounted) setState(() => _isAiCategorizing = false);
     }
   }
@@ -171,7 +172,7 @@ class _FileImportTabState extends State<FileImportTab> {
           imported++;
         } catch (e) {
           skipped++;
-          if (kDebugMode) print('Skip row $index: $e');
+          if (kDebugMode) debugPrint('Skip row $index: $e');
         }
       }
 
@@ -182,6 +183,9 @@ class _FileImportTabState extends State<FileImportTab> {
             backgroundColor: Colors.green,
           ),
         );
+        if (context.mounted) {
+          context.read<InsightsProvider>().onTransactionsImported();
+        }
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.pop(context, true);
         });

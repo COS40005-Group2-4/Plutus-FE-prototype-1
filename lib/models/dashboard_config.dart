@@ -11,6 +11,7 @@ class DashboardConfig {
     'roi', 'irr', 'tax', 'cashflow', 'bills', 'investment',
     'expenseBreakdown', 'portfolioAllocation', 'netWorthTrend',
     'spendingHeatmap', 'incomeTrend', 'savingsRate', 'marketTrending',
+    'insightsFeed', 'healthScore', 'cashFlowForecast', 'coachingTips',
   ];
 
   DashboardConfig({

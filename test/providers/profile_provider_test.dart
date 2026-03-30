@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/providers/profile_provider.dart';
-import 'package:plutus_fe_prototype/models/profile_model.dart';
 import '../helpers/mock_services.mocks.dart';
 import '../helpers/test_fixtures.dart';
 

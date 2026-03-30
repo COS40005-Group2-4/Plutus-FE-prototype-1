@@ -49,7 +49,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
         title: const Text('Create a Profile'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

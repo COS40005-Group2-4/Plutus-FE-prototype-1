@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
-import '../models/user_model.dart';
 import '../services/interfaces/i_profile_service.dart';
 import '../di/service_locator.dart';
 
@@ -34,14 +33,12 @@ class ProfileProvider extends ChangeNotifier {
 
       Profile? existingProfile = await _profileService.getProfileByUserId(userId);
 
-      if (existingProfile == null) {
-        // Create default profile if it doesn't exist
-        existingProfile = await _profileService.createProfile(
-          userId: userId,
-          showName: true,
-          showEmail: true,
-        );
-      }
+      // Create default profile if it doesn't exist
+      existingProfile ??= await _profileService.createProfile(
+        userId: userId,
+        showName: true,
+        showEmail: true,
+      );
 
       _profile = existingProfile;
       _state = ProfileState.loaded;

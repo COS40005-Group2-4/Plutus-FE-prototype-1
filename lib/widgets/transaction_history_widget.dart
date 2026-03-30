@@ -45,7 +45,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     });
 
     if (kDebugMode) {
-      print('TransactionHistoryWidget: Initialized and listening to stream');
+      debugPrint('TransactionHistoryWidget: Initialized and listening to stream');
     }
   }
 
@@ -316,7 +316,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                                         }
                                       });
                                     },
-                                    fillColor: MaterialStateProperty.resolveWith<Color>(
+                                    fillColor: WidgetStateProperty.resolveWith<Color>(
                                       (states) => Colors.white,
                                     ),
                                   ),

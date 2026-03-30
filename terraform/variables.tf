@@ -47,7 +47,13 @@ variable "ai_lambda_zip_path" {
 }
 
 variable "bedrock_model_id" {
-  description = "Bedrock model ID for AI features"
+  description = "Bedrock model ID for AI categorization (Haiku)"
   type        = string
   default     = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "insights_bedrock_model_id" {
+  description = "Bedrock inference profile ID for AI insights (Sonnet 4.5)"
+  type        = string
+  default     = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 }

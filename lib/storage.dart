@@ -34,7 +34,7 @@ class ColoredDashboardItem extends DashboardItem {
   Map<String, dynamic> toMap() {
     var sup = super.toMap();
     if (color != null) {
-      sup["color"] = color!.value;
+      sup["color"] = color!.toARGB32;
     }
     if (data != null) {
       sup["data"] = data;
@@ -52,7 +52,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
   final List<int> _slotCounts = [2, 4, 6];
 
-  List<String> visibilityFilter = ['profile_0', 'budget_0', 'categoryBudget_0', 'history_0', 'import_0', 'export_0', 'roi_0', 'irr_0', 'investment_0', 'cashflow_0', 'bills_0', 'tax_0', 'expenseBreakdown_0', 'portfolioAllocation_0', 'netWorthTrend_0', 'spendingHeatmap_0', 'incomeTrend_0', 'savingsRate_0', 'marketTrending_0'];
+  List<String> visibilityFilter = ['profile_0', 'budget_0', 'categoryBudget_0', 'history_0', 'import_0', 'export_0', 'roi_0', 'irr_0', 'investment_0', 'cashflow_0', 'bills_0', 'tax_0', 'expenseBreakdown_0', 'portfolioAllocation_0', 'netWorthTrend_0', 'spendingHeatmap_0', 'incomeTrend_0', 'savingsRate_0', 'marketTrending_0', 'insightsFeed_0', 'healthScore_0', 'cashFlowForecast_0', 'coachingTips_0'];
 
   void setVisibilityFilter(List<String> visibleWidgets) {
     visibilityFilter = visibleWidgets;
@@ -69,6 +69,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   //   Wealth     : netWorthTrend, incomeTrend
   //   Investments: investment, portfolioAllocation, marketTrending
   //   Tools      : import, export
+  //   Insights   : insightsFeed, healthScore, cashFlowForecast, coachingTips
   // ─────────────────────────────────────────────────────────────────────────
   final Map<int, List<ColoredDashboardItem>> _default = {
 
@@ -100,6 +101,11 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       // Tools
       ColoredDashboardItem(startX: 0, startY: 34, width: 1, height: 1, identifier: "import_0",              data: "import"),
       ColoredDashboardItem(startX: 1, startY: 34, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      // Insights
+      ColoredDashboardItem(startX: 0, startY: 35, width: 2, height: 2, identifier: "healthScore_0",         data: "healthScore"),
+      ColoredDashboardItem(startX: 0, startY: 37, width: 2, height: 3, identifier: "insightsFeed_0",        data: "insightsFeed"),
+      ColoredDashboardItem(startX: 0, startY: 40, width: 2, height: 2, identifier: "cashFlowForecast_0",    data: "cashFlowForecast"),
+      ColoredDashboardItem(startX: 0, startY: 42, width: 2, height: 2, identifier: "coachingTips_0",        data: "coachingTips"),
     ],
 
     // ── 4-COLUMN (tablet) ─────────────────────────────────────────────────
@@ -130,6 +136,11 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       // Tools
       ColoredDashboardItem(startX: 0, startY: 26, width: 1, height: 1, identifier: "import_0",              data: "import"),
       ColoredDashboardItem(startX: 1, startY: 26, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      // Insights
+      ColoredDashboardItem(startX: 0, startY: 27, width: 2, height: 2, identifier: "healthScore_0",         data: "healthScore"),
+      ColoredDashboardItem(startX: 2, startY: 27, width: 2, height: 2, identifier: "coachingTips_0",        data: "coachingTips"),
+      ColoredDashboardItem(startX: 0, startY: 29, width: 3, height: 3, identifier: "insightsFeed_0",        data: "insightsFeed"),
+      ColoredDashboardItem(startX: 0, startY: 32, width: 4, height: 2, identifier: "cashFlowForecast_0",    data: "cashFlowForecast"),
     ],
 
     // ── 6-COLUMN (desktop) ────────────────────────────────────────────────
@@ -161,6 +172,11 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       // Tools
       ColoredDashboardItem(startX: 0, startY: 15, width: 1, height: 1, identifier: "import_0",              data: "import"),
       ColoredDashboardItem(startX: 1, startY: 15, width: 1, height: 1, identifier: "export_0",              data: "export"),
+      // Insights
+      ColoredDashboardItem(startX: 0, startY: 16, width: 3, height: 3, identifier: "insightsFeed_0",        data: "insightsFeed"),
+      ColoredDashboardItem(startX: 3, startY: 16, width: 2, height: 2, identifier: "healthScore_0",         data: "healthScore"),
+      ColoredDashboardItem(startX: 5, startY: 16, width: 1, height: 2, identifier: "coachingTips_0",        data: "coachingTips"),
+      ColoredDashboardItem(startX: 3, startY: 18, width: 3, height: 2, identifier: "cashFlowForecast_0",    data: "cashFlowForecast"),
     ],
   };
 
@@ -181,7 +197,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         _preferences = await SharedPreferences.getInstance();
 
         // v3: bump whenever _default changes to force re-initialization.
-        var init = _preferences.getBool("init_${dashboardId}_v3") ?? false;
+        var init = _preferences.getBool("init_${dashboardId}_v4") ?? false;
 
         if (!init) {
           _localItems = {
@@ -202,7 +218,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
             );
           }
 
-          await _preferences.setBool("init_${dashboardId}_v3", true);
+          await _preferences.setBool("init_${dashboardId}_v4", true);
         } else {
           // Load existing layout data or use defaults
           _localItems = {};
@@ -374,7 +390,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       await _preferences.remove("layout_data_${dashboardId}_$s");
     }
     _localItems = null;
-    await _preferences.setBool("init_${dashboardId}_v3", false);
+    await _preferences.setBool("init_${dashboardId}_v4", false);
   }
 
   ColoredDashboardItem createDefaultItem(String instanceId, String widgetType, int slotCount) {
@@ -392,7 +408,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
     );
   }
 
-  _setLocal() {
+  void _setLocal() {
     _localItems ??= {
       for (var s in _slotCounts)
         s: _default[s]!.asMap().map(

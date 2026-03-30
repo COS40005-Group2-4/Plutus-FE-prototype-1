@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
+import 'package:plutus_fe_prototype/models/transaction_model.dart';
 import 'package:plutus_fe_prototype/providers/budget_provider.dart';
 import 'package:plutus_fe_prototype/services/budget_notification_service.dart';
 import '../helpers/mock_services.mocks.dart';
@@ -9,27 +10,35 @@ import '../helpers/test_fixtures.dart';
 
 void main() {
   late MockIBudgetService mockBudgetService;
+  late MockITransactionService mockTransactionService;
   late BudgetNotificationService notificationService;
-  late StreamController<Budget?> streamController;
+  late StreamController<Budget?> budgetStreamController;
+  late StreamController<List<Transaction>> transactionStreamController;
 
   setUp(() {
     mockBudgetService = MockIBudgetService();
-    streamController = StreamController<Budget?>.broadcast();
+    mockTransactionService = MockITransactionService();
+    budgetStreamController = StreamController<Budget?>.broadcast();
+    transactionStreamController = StreamController<List<Transaction>>.broadcast();
 
     // Stub budgetStream to return our controller's stream
-    when(mockBudgetService.budgetStream).thenAnswer((_) => streamController.stream);
+    when(mockBudgetService.budgetStream).thenAnswer((_) => budgetStreamController.stream);
+    // Stub transactionStream
+    when(mockTransactionService.transactionStream).thenAnswer((_) => transactionStreamController.stream);
 
     notificationService = BudgetNotificationService(budgetService: mockBudgetService);
   });
 
   tearDown(() {
-    streamController.close();
+    budgetStreamController.close();
+    transactionStreamController.close();
   });
 
   BudgetProvider createProvider() {
     return BudgetProvider(
       budgetService: mockBudgetService,
       notificationService: notificationService,
+      transactionService: mockTransactionService,
     );
   }
 

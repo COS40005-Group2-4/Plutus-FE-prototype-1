@@ -90,19 +90,19 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             }
             await service.saveInvestment(investment);
             
-            if (mounted) {
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('$assetName added to your portfolio'),
                   backgroundColor: Colors.green,
                 ),
               );
-              
+
               // Reload data to show the new investment with price
               await _loadData();
             }
           } catch (e) {
-            if (mounted) {
+            if (context.mounted) {
               setState(() {
                 _isLoading = false;
               });
@@ -189,7 +189,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(color: Colors.redAccent.withOpacity(0.7)),
+              style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

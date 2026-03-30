@@ -63,10 +63,10 @@ class BudgetMigrationService {
 
       await prefs.remove('$_budgetPrefsPrefix$userId');
       await prefs.remove('$_categoryBudgetPrefsPrefix$userId');
-      if (kDebugMode) print('Budget migration complete for user $userId');
+      if (kDebugMode) debugPrint('Budget migration complete for user $userId');
       return true;
     } catch (e) {
-      if (kDebugMode) print('Budget migration failed: $e');
+      if (kDebugMode) debugPrint('Budget migration failed: $e');
       return false;
     }
   }

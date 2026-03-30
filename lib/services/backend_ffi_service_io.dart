@@ -2,6 +2,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'interfaces/i_backend_ffi_service.dart';
 
@@ -51,7 +52,6 @@ class BackendFfiService implements IBackendFfiService {
   late DynamicLibrary _lib;
   late Bootstrap _bootstrap;
   late Import _import;
-  late IncomeReport _incomeReport;
   late TransactionHistory _transactionHistory;
   late SaveTransaction _saveTransaction;
   late FreeString _freeString;
@@ -90,7 +90,7 @@ class BackendFfiService implements IBackendFfiService {
             final file = File(path);
             if (file.existsSync()) {
               libPath = file.absolute.path;
-              print('Found DLL at: $libPath');
+              debugPrint('Found DLL at: $libPath');
               break;
             }
           } catch (e) {
@@ -127,7 +127,7 @@ class BackendFfiService implements IBackendFfiService {
           try {
             if (File(path).existsSync()) {
               macLibPath = path;
-              print('Found dylib at: $macLibPath');
+              debugPrint('Found dylib at: $macLibPath');
               break;
             }
           } catch (e) {
@@ -142,7 +142,6 @@ class BackendFfiService implements IBackendFfiService {
 
       _bootstrap = _lib.lookupFunction<BootstrapFunc, Bootstrap>('Bootstrap');
       _import = _lib.lookupFunction<ImportFunc, Import>('Import');
-      _incomeReport = _lib.lookupFunction<IncomeReportFunc, IncomeReport>('IncomeReport');
       _transactionHistory = _lib.lookupFunction<TransactionHistoryFunc, TransactionHistory>('TransactionHistory');
       _saveTransaction = _lib.lookupFunction<SaveTransactionFunc, SaveTransaction>('SaveTransaction');
       _freeString = _lib.lookupFunction<FreeStringFunc, FreeString>('FreeString');
@@ -152,7 +151,7 @@ class BackendFfiService implements IBackendFfiService {
       try {
         _getROIWithCurrency = _lib.lookupFunction<GetROIWithCurrencyFunc, GetROIWithCurrency>('GetROIWithCurrency');
       } catch (e) {
-        print('GetROIWithCurrency not available in DLL, will use GetROI instead');
+        debugPrint('GetROIWithCurrency not available in DLL, will use GetROI instead');
       }
       
       _getInvestmentList = _lib.lookupFunction<GetInvestmentListFunc, GetInvestmentList>('GetInvestmentList');
@@ -166,22 +165,24 @@ class BackendFfiService implements IBackendFfiService {
       _freeString(resultPtr);
       
       if (result.isNotEmpty) {
-        print('Backend Bootstrap Error: $result');
+        debugPrint('Backend Bootstrap Error: $result');
         _hasError = true;
         _initError = result;
       } else {
         _isInitialized = true;
-        print('Backend FFI Initialized');
+        debugPrint('Backend FFI Initialized');
       }
     } catch (e) {
-      print('Failed to load backend library: $e');
+      debugPrint('Failed to load backend library: $e');
       _hasError = true;
       _initError = e.toString();
     }
   }
 
+  @override
   bool get isAvailable => _isInitialized && !_hasError;
 
+  @override
   Future<List<Map<String, dynamic>>> getTransactions() async {
     if (!isAvailable) return [];
 
@@ -202,11 +203,12 @@ class BackendFfiService implements IBackendFfiService {
       }
       return [];
     } catch (e) {
-      print('Error decoding transaction history: $e');
+      debugPrint('Error decoding transaction history: $e');
       return [];
     }
   }
 
+  @override
   Future<void> saveTransaction(Map<String, dynamic> transaction) async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
@@ -224,6 +226,7 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<void> importFile(String filePath) async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
@@ -236,6 +239,7 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<Map<String, dynamic>> getRoiData({String? currency}) async {
     if (!isAvailable) {
       return {
@@ -256,7 +260,7 @@ class BackendFfiService implements IBackendFfiService {
           resultPtr = _getROIWithCurrency!(currencyPtr);
           malloc.free(currencyPtr);
         } catch (e) {
-          print('GetROIWithCurrency failed, using GetROI: $e');
+          debugPrint('GetROIWithCurrency failed, using GetROI: $e');
           resultPtr = _getROI();
         }
       } else {
@@ -267,7 +271,7 @@ class BackendFfiService implements IBackendFfiService {
       _freeString(resultPtr);
 
       if (result.isEmpty || result.startsWith('Error:')) {
-        print('ROI Error: $result');
+        debugPrint('ROI Error: $result');
         return {
           'roi': '0.00',
           'irr': '0.00',
@@ -279,7 +283,7 @@ class BackendFfiService implements IBackendFfiService {
       final decoded = json.decode(result);
       return Map<String, dynamic>.from(decoded);
     } catch (e) {
-      print('Error getting ROI data: $e');
+      debugPrint('Error getting ROI data: $e');
       return {
         'roi': '0.00',
         'irr': '0.00',
@@ -289,6 +293,7 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<Map<String, dynamic>> getInvestmentList() async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
@@ -314,6 +319,7 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
@@ -342,10 +348,11 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<void> deleteInvestment(String investmentId) async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
-    print('FFI: Deleting investment with ID: $investmentId');
+    debugPrint('FFI: Deleting investment with ID: $investmentId');
     
     final idPtr = investmentId.toNativeUtf8();
     final resultPtr = _deleteInvestment(idPtr);
@@ -354,7 +361,7 @@ class BackendFfiService implements IBackendFfiService {
     malloc.free(idPtr);
     _freeString(resultPtr);
 
-    print('FFI: Delete response: $result');
+    debugPrint('FFI: Delete response: $result');
 
     if (result.isEmpty) {
       throw Exception("Empty response from backend");
@@ -369,7 +376,7 @@ class BackendFfiService implements IBackendFfiService {
         if (decoded['success'] != true) {
           throw Exception(decoded['message'] ?? 'Delete failed');
         }
-        print('FFI: Investment deleted successfully');
+        debugPrint('FFI: Investment deleted successfully');
       } else {
         throw Exception("Invalid response format");
       }
@@ -378,10 +385,11 @@ class BackendFfiService implements IBackendFfiService {
     }
   }
 
+  @override
   Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
     if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
 
-    print('FFI: Saving investment: $investmentData');
+    debugPrint('FFI: Saving investment: $investmentData');
 
     final jsonStr = json.encode(investmentData);
     final jsonPtr = jsonStr.toNativeUtf8();
@@ -392,7 +400,7 @@ class BackendFfiService implements IBackendFfiService {
     malloc.free(jsonPtr);
     _freeString(resultPtr);
 
-    print('FFI: Save response: $result');
+    debugPrint('FFI: Save response: $result');
 
     if (result.isEmpty) {
       throw Exception("Empty response from backend");
@@ -407,7 +415,7 @@ class BackendFfiService implements IBackendFfiService {
         if (decoded['success'] != true) {
           throw Exception(decoded['message'] ?? 'Save failed');
         }
-        print('FFI: Investment saved successfully with ID: ${decoded['id']}');
+        debugPrint('FFI: Investment saved successfully with ID: ${decoded['id']}');
         return decoded['id'] as String;
       } else {
         throw Exception("Invalid response format");

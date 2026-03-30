@@ -25,6 +25,10 @@ class WidgetVisibilityProvider extends ChangeNotifier {
     'incomeTrend': true,
     'savingsRate': true,
     'marketTrending': true,
+    'insightsFeed': true,
+    'healthScore': true,
+    'cashFlowForecast': true,
+    'coachingTips': true,
   };
 
   static const String _storageKey = 'widget_visibility';

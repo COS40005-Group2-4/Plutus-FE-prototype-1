@@ -43,7 +43,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
         final settingsService = SettingsService();
         currency = await settingsService.getDefaultCurrency(1);
       } catch (e) {
-        print('Could not load currency from settings, using default: $e');
+        debugPrint('Could not load currency from settings, using default: $e');
       }
       
       final data = await _ffiService.getRoiData(currency: currency);
@@ -59,7 +59,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
         });
       }
     } catch (e) {
-      print('Error loading ROI: $e');
+      debugPrint('Error loading ROI: $e');
       if (mounted) {
         setState(() {
           _roiValue = '0.00';
@@ -88,13 +88,13 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
               centerSpaceRadius: isCompact ? 22 : 28,
               sections: [
                 PieChartSectionData(
-                  color: gaugeColor.withOpacity(0.8),
+                  color: gaugeColor.withValues(alpha:0.8),
                   value: normalizedValue * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,
                 ),
                 PieChartSectionData(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha:0.1),
                   value: (1 - normalizedValue) * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,

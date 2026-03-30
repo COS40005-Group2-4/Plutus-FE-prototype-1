@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/models/ai/category_suggestion.dart';
-import 'package:plutus_fe_prototype/models/ai/category_context.dart';
 import 'package:plutus_fe_prototype/services/ai_category_pipeline.dart';
 import 'package:plutus_fe_prototype/services/ocr_service.dart';
 import '../helpers/mock_services.mocks.dart';

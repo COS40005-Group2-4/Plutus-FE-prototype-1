@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
+import 'package:plutus_fe_prototype/models/transaction_model.dart';
 import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
+import 'package:plutus_fe_prototype/services/interfaces/i_transaction_service.dart';
 import 'package:plutus_fe_prototype/services/budget_notification_service.dart';
 
 class BudgetProvider extends ChangeNotifier {
   final IBudgetService _budgetService;
   final BudgetNotificationService _notificationService;
+  final ITransactionService _transactionService;
   StreamSubscription<Budget?>? _budgetSubscription;
+  StreamSubscription<List<Transaction>>? _transactionSubscription;
 
   // Private state
   Budget? _activeBudget;
@@ -22,13 +26,20 @@ class BudgetProvider extends ChangeNotifier {
   BudgetProvider({
     required IBudgetService budgetService,
     required BudgetNotificationService notificationService,
+    required ITransactionService transactionService,
   })  : _budgetService = budgetService,
-        _notificationService = notificationService {
+        _notificationService = notificationService,
+        _transactionService = transactionService {
     final now = DateTime.now();
     _currentPeriodStart = DateTime(now.year, now.month, 1);
     _currentPeriodEnd = DateTime(now.year, now.month + 1, 1);
 
     _budgetSubscription = _budgetService.budgetStream.listen((_) {
+      refreshSpending();
+    });
+
+    // Also refresh when transactions change (add/edit/delete)
+    _transactionSubscription = _transactionService.transactionStream.listen((_) {
       refreshSpending();
     });
   }
@@ -254,6 +265,7 @@ class BudgetProvider extends ChangeNotifier {
   @override
   void dispose() {
     _budgetSubscription?.cancel();
+    _transactionSubscription?.cancel();
     super.dispose();
   }
 }

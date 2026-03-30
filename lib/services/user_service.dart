@@ -9,6 +9,7 @@ class UserService implements IUserService {
 
   UserService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
   
+  @override
   Future<User> createLocalUser({
     required String username,
     required String displayName,
@@ -35,12 +36,13 @@ class UserService implements IUserService {
       return User.fromMap(userMap);
     } catch (e) {
       if (kDebugMode) {
-        print('Error creating local user: $e');
+        debugPrint('Error creating local user: $e');
       }
       rethrow;
     }
   }
   
+  @override
   Future<User> createOAuthUser({
     required String username,
     required String displayName,
@@ -72,70 +74,76 @@ class UserService implements IUserService {
       return User.fromMap(userMap);
     } catch (e) {
       if (kDebugMode) {
-        print('Error creating OAuth user: $e');
+        debugPrint('Error creating OAuth user: $e');
       }
       rethrow;
     }
   }
   
+  @override
   Future<User?> getUserById(int userId) async {
     try {
       final userMap = await _db.getUserById(userId);
       return userMap != null ? User.fromMap(userMap) : null;
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting user by ID: $e');
+        debugPrint('Error getting user by ID: $e');
       }
       return null;
     }
   }
   
+  @override
   Future<User?> getUserByUsername(String username) async {
     try {
       final userMap = await _db.getUserByUsername(username);
       return userMap != null ? User.fromMap(userMap) : null;
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting user by username: $e');
+        debugPrint('Error getting user by username: $e');
       }
       return null;
     }
   }
   
+  @override
   Future<User?> getUserByOAuth(String provider, String oauthId) async {
     try {
       final userMap = await _db.getUserByOAuth(provider, oauthId);
       return userMap != null ? User.fromMap(userMap) : null;
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting user by OAuth: $e');
+        debugPrint('Error getting user by OAuth: $e');
       }
       return null;
     }
   }
   
+  @override
   Future<List<User>> getAllUsers() async {
     try {
       final userMaps = await _db.getAllUsers();
       return userMaps.map((map) => User.fromMap(map)).toList();
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting all users: $e');
+        debugPrint('Error getting all users: $e');
       }
       return [];
     }
   }
   
+  @override
   Future<void> updateLastLogin(int userId) async {
     try {
       await _db.updateUserLastLogin(userId);
     } catch (e) {
       if (kDebugMode) {
-        print('Error updating last login: $e');
+        debugPrint('Error updating last login: $e');
       }
     }
   }
   
+  @override
   Future<void> linkOAuthToUser({
     required int userId,
     required String provider,
@@ -146,29 +154,31 @@ class UserService implements IUserService {
       await _db.linkOAuthToUser(userId, provider, oauthId, email);
     } catch (e) {
       if (kDebugMode) {
-        print('Error linking OAuth to user: $e');
+        debugPrint('Error linking OAuth to user: $e');
       }
       rethrow;
     }
   }
   
+  @override
   Future<void> unlinkOAuthFromUser(int userId) async {
     try {
       await _db.unlinkOAuthFromUser(userId);
     } catch (e) {
       if (kDebugMode) {
-        print('Error unlinking OAuth from user: $e');
+        debugPrint('Error unlinking OAuth from user: $e');
       }
       rethrow;
     }
   }
   
+  @override
   Future<void> clearUserData(int userId) async {
     try {
       await _db.clearUserData(userId);
     } catch (e) {
       if (kDebugMode) {
-        print('Error clearing user data: $e');
+        debugPrint('Error clearing user data: $e');
       }
       rethrow;
     }
@@ -179,7 +189,7 @@ class UserService implements IUserService {
       await _db.setUserDataConsent(userId, consent);
     } catch (e) {
       if (kDebugMode) {
-        print('Error setting data consent: $e');
+        debugPrint('Error setting data consent: $e');
       }
       rethrow;
     }

@@ -11,6 +11,7 @@ class ProfileService implements IProfileService {
 
   ProfileService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
 
+  @override
   Future<Profile> createProfile({
     required int userId,
     String? avatarPath,
@@ -44,24 +45,26 @@ class ProfileService implements IProfileService {
       return profile;
     } catch (e) {
       if (kDebugMode) {
-        print('Error creating profile: $e');
+        debugPrint('Error creating profile: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<Profile?> getProfileByUserId(int userId) async {
     try {
       final profileMap = await _db.getProfileByUserId(userId);
       return profileMap != null ? Profile.fromMap(profileMap) : null;
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting profile: $e');
+        debugPrint('Error getting profile: $e');
       }
       return null;
     }
   }
 
+  @override
   Future<Profile> updateProfile(Profile profile) async {
     try {
       final updatedProfile = profile.copyWith(
@@ -71,12 +74,13 @@ class ProfileService implements IProfileService {
       return updatedProfile;
     } catch (e) {
       if (kDebugMode) {
-        print('Error updating profile: $e');
+        debugPrint('Error updating profile: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<String> saveAvatarImage(File imageFile, int userId) async {
     try {
       final directory = await getApplicationDocumentsDirectory();
@@ -93,12 +97,13 @@ class ProfileService implements IProfileService {
       return savedFile.path;
     } catch (e) {
       if (kDebugMode) {
-        print('Error saving avatar: $e');
+        debugPrint('Error saving avatar: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<void> deleteAvatarImage(String avatarPath) async {
     try {
       final file = File(avatarPath);
@@ -107,11 +112,12 @@ class ProfileService implements IProfileService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error deleting avatar: $e');
+        debugPrint('Error deleting avatar: $e');
       }
     }
   }
 
+  @override
   Future<void> deleteProfile(int userId) async {
     try {
       // Get profile to delete avatar
@@ -123,7 +129,7 @@ class ProfileService implements IProfileService {
       await _db.deleteProfile(userId);
     } catch (e) {
       if (kDebugMode) {
-        print('Error deleting profile: $e');
+        debugPrint('Error deleting profile: $e');
       }
       rethrow;
     }

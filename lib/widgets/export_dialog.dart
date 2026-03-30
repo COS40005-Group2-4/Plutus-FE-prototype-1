@@ -269,11 +269,11 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
+            color: isSelected ? Colors.blue : Colors.grey.withValues(alpha:0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? Colors.blue.withValues(alpha:0.1) : Colors.transparent,
         ),
         child: Column(
           children: [
@@ -320,11 +320,11 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
+            color: isSelected ? Colors.blue : Colors.grey.withValues(alpha:0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? Colors.blue.withValues(alpha:0.1) : Colors.transparent,
         ),
         child: Row(
           children: [

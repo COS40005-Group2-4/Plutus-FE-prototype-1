@@ -474,15 +474,64 @@ class AppLocalizations {
       'widget_label_bills': 'Upcoming Bills',
       'widget_label_import': 'Import Report',
       'widget_label_export': 'Export Report',
+      'widget_label_insights_feed': 'Insights Feed',
+      'widget_label_health_score': 'Financial Health Score',
+      'widget_label_cash_flow_forecast': 'Cash Flow Forecast',
+      'widget_label_coaching_tips': 'Coaching Tips',
 
       // ── Widget Catalog Category Labels ──
       'widget_cat_overview': 'Overview',
       'widget_cat_analytics': 'Analytics',
       'widget_cat_investments': 'Investments',
       'widget_cat_tools': 'Tools',
+      'widget_cat_insights': 'Insights',
 
       // ── Dashboard Screen ──
       'widget_preview': 'Widget Preview',
+
+      // ── Financial Insights & Coaching ──
+      'insights_title': 'Financial Insights',
+      'insights_tab_spending': 'Spending',
+      'insights_tab_forecast': 'Forecast',
+      'insights_tab_alerts': 'Alerts',
+      'insights_tab_coaching': 'Coaching',
+      'insights_generate': 'Generate Insights',
+      'insights_generating': 'Generating insights...',
+      'insights_analyzing_spending': 'Analyzing spending patterns...',
+      'insights_generating_forecast': 'Generating forecast...',
+      'insights_generating_coaching': 'Generating coaching tips...',
+      'insights_last_generated': 'Last generated',
+      'insights_empty': 'No insights yet',
+      'insights_empty_subtitle': 'Tap Generate Insights to get started',
+      'insights_error': 'Could not generate insights',
+      'insights_retry': 'Retry',
+      'insights_import_banner': 'New transactions imported. Generate fresh insights?',
+      'insights_import_banner_action': 'Generate',
+      'insights_health_score': 'Financial Health Score',
+      'insights_health_score_empty': 'Generate insights to see your score',
+      'insights_savings_rate': 'Savings Rate',
+      'insights_budget_adherence': 'Budget Adherence',
+      'insights_spending_consistency': 'Spending Consistency',
+      'insights_expense_to_income': 'Expense to Income',
+      'insights_forecast_title': 'Cash Flow Forecast',
+      'insights_forecast_empty': 'Generate insights for forecast',
+      'insights_forecast_projected': 'Projected balance',
+      'insights_forecast_optimistic': 'Best case',
+      'insights_forecast_likely': 'Likely',
+      'insights_forecast_pessimistic': 'Worst case',
+      'insights_alerts_empty': 'No alerts',
+      'insights_alerts_mark_read': 'Mark all as read',
+      'insights_coaching_empty': 'Generate insights for personalized tips',
+      'insights_coaching_save': 'Save',
+      'insights_coaching_dismiss': 'Dismiss',
+      'insights_coaching_saved': 'Tip saved',
+      'insights_coaching_difficulty_easy': 'Easy',
+      'insights_coaching_difficulty_medium': 'Medium',
+      'insights_coaching_difficulty_hard': 'Hard',
+      'insights_coaching_potential_savings': 'Potential savings',
+      'insights_privacy_minimal': 'Minimal',
+      'insights_privacy_standard': 'Standard',
+      'insights_privacy_full': 'Full',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -946,15 +995,64 @@ class AppLocalizations {
       'widget_label_bills': 'Hóa đơn sắp tới',
       'widget_label_import': 'Báo cáo nhập',
       'widget_label_export': 'Báo cáo xuất',
+      'widget_label_insights_feed': 'Bảng tin phân tích',
+      'widget_label_health_score': 'Điểm sức khỏe tài chính',
+      'widget_label_cash_flow_forecast': 'Dự báo dòng tiền',
+      'widget_label_coaching_tips': 'Lời khuyên tài chính',
 
       // ── Widget Catalog Category Labels ──
       'widget_cat_overview': 'Tổng quan',
       'widget_cat_analytics': 'Phân tích',
       'widget_cat_investments': 'Đầu tư',
       'widget_cat_tools': 'Công cụ',
+      'widget_cat_insights': 'Phân tích AI',
 
       // ── Dashboard Screen ──
       'widget_preview': 'Xem trước widget',
+
+      // ── Financial Insights & Coaching ──
+      'insights_title': 'Phân tích tài chính',
+      'insights_tab_spending': 'Chi tiêu',
+      'insights_tab_forecast': 'Dự báo',
+      'insights_tab_alerts': 'Cảnh báo',
+      'insights_tab_coaching': 'Lời khuyên',
+      'insights_generate': 'Phân tích ngay',
+      'insights_generating': 'Đang phân tích...',
+      'insights_analyzing_spending': 'Đang phân tích chi tiêu...',
+      'insights_generating_forecast': 'Đang tạo dự báo...',
+      'insights_generating_coaching': 'Đang tạo lời khuyên...',
+      'insights_last_generated': 'Lần phân tích gần nhất',
+      'insights_empty': 'Chưa có phân tích',
+      'insights_empty_subtitle': 'Nhấn Phân tích ngay để bắt đầu',
+      'insights_error': 'Không thể tạo phân tích',
+      'insights_retry': 'Thử lại',
+      'insights_import_banner': 'Đã nhập giao dịch mới. Phân tích lại?',
+      'insights_import_banner_action': 'Phân tích',
+      'insights_health_score': 'Điểm sức khỏe tài chính',
+      'insights_health_score_empty': 'Phân tích để xem điểm của bạn',
+      'insights_savings_rate': 'Tỷ lệ tiết kiệm',
+      'insights_budget_adherence': 'Tuân thủ ngân sách',
+      'insights_spending_consistency': 'Chi tiêu ổn định',
+      'insights_expense_to_income': 'Chi phí trên thu nhập',
+      'insights_forecast_title': 'Dự báo dòng tiền',
+      'insights_forecast_empty': 'Phân tích để xem dự báo',
+      'insights_forecast_projected': 'Số dư dự kiến',
+      'insights_forecast_optimistic': 'Khả quan nhất',
+      'insights_forecast_likely': 'Có khả năng',
+      'insights_forecast_pessimistic': 'Kém nhất',
+      'insights_alerts_empty': 'Không có cảnh báo',
+      'insights_alerts_mark_read': 'Đánh dấu đã đọc',
+      'insights_coaching_empty': 'Phân tích để nhận lời khuyên cá nhân',
+      'insights_coaching_save': 'Lưu',
+      'insights_coaching_dismiss': 'Bỏ qua',
+      'insights_coaching_saved': 'Đã lưu lời khuyên',
+      'insights_coaching_difficulty_easy': 'Dễ',
+      'insights_coaching_difficulty_medium': 'Trung bình',
+      'insights_coaching_difficulty_hard': 'Khó',
+      'insights_coaching_potential_savings': 'Tiết kiệm tiềm năng',
+      'insights_privacy_minimal': 'Tối thiểu',
+      'insights_privacy_standard': 'Tiêu chuẩn',
+      'insights_privacy_full': 'Đầy đủ',
     },
   };
 
@@ -1398,6 +1496,37 @@ class AppLocalizations {
 
   // Dashboard Screen
   String get widgetPreview => translate('widget_preview');
+
+  // Financial Insights & Coaching
+  String get insightsTitle => translate('insights_title');
+  String get insightsTabSpending => translate('insights_tab_spending');
+  String get insightsTabForecast => translate('insights_tab_forecast');
+  String get insightsTabAlerts => translate('insights_tab_alerts');
+  String get insightsTabCoaching => translate('insights_tab_coaching');
+  String get insightsGenerate => translate('insights_generate');
+  String get insightsGenerating => translate('insights_generating');
+  String get insightsLastGenerated => translate('insights_last_generated');
+  String get insightsEmpty => translate('insights_empty');
+  String get insightsEmptySubtitle => translate('insights_empty_subtitle');
+  String get insightsError => translate('insights_error');
+  String get insightsRetry => translate('insights_retry');
+  String get insightsImportBanner => translate('insights_import_banner');
+  String get insightsImportBannerAction => translate('insights_import_banner_action');
+  String get insightsHealthScore => translate('insights_health_score');
+  String get insightsHealthScoreEmpty => translate('insights_health_score_empty');
+  String get insightsForecastTitle => translate('insights_forecast_title');
+  String get insightsForecastEmpty => translate('insights_forecast_empty');
+  String get insightsForecastProjected => translate('insights_forecast_projected');
+  String get insightsForecastOptimistic => translate('insights_forecast_optimistic');
+  String get insightsForecastLikely => translate('insights_forecast_likely');
+  String get insightsForecastPessimistic => translate('insights_forecast_pessimistic');
+  String get insightsAlertsEmpty => translate('insights_alerts_empty');
+  String get insightsAlertsMarkRead => translate('insights_alerts_mark_read');
+  String get insightsCoachingEmpty => translate('insights_coaching_empty');
+  String get insightsCoachingSave => translate('insights_coaching_save');
+  String get insightsCoachingDismiss => translate('insights_coaching_dismiss');
+  String get insightsCoachingSaved => translate('insights_coaching_saved');
+  String get insightsCoachingPotentialSavings => translate('insights_coaching_potential_savings');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

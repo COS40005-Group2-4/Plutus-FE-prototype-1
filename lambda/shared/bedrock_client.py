@@ -8,24 +8,27 @@ class BedrockClient:
     """Wrapper for Amazon Bedrock model invocation."""
 
     DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+    DEFAULT_MAX_TOKENS = 1024
 
     def __init__(
         self,
         bedrock_client: Any = None,
         model_id: str = DEFAULT_MODEL_ID,
         region: str = "ap-southeast-1",
+        max_tokens: int = DEFAULT_MAX_TOKENS,
     ) -> None:
         self._client = bedrock_client or boto3.client(
             "bedrock-runtime", region_name=region
         )
         self._model_id = model_id
+        self._max_tokens = max_tokens
 
     def invoke(self, system_prompt: str, user_prompt: str) -> dict:
         """Send a prompt to Bedrock and return the parsed JSON response."""
         body = json.dumps(
             {
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1024,
+                "max_tokens": self._max_tokens,
                 "system": system_prompt,
                 "messages": [{"role": "user", "content": user_prompt}],
             }

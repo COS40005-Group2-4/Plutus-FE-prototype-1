@@ -116,7 +116,7 @@ class ConsentService implements IConsentService {
     }
 
     if (kDebugMode) {
-      print('ConsentService: Recorded T&C acceptance for $email');
+      debugPrint('ConsentService: Recorded T&C acceptance for $email');
     }
   }
 

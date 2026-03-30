@@ -57,21 +57,27 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
           const SizedBox(height: 16),
           RadioListTile<ConflictChoice>(
             value: ConflictChoice.overrideLocal,
+            // ignore: deprecated_member_use
             groupValue: _selected,
+            // ignore: deprecated_member_use
             onChanged: (v) => setState(() => _selected = v!),
             title: Text(l10n.backupConflictOverride),
             contentPadding: EdgeInsets.zero,
           ),
           RadioListTile<ConflictChoice>(
             value: ConflictChoice.keepLocal,
+            // ignore: deprecated_member_use
             groupValue: _selected,
+            // ignore: deprecated_member_use
             onChanged: (v) => setState(() => _selected = v!),
             title: Text(l10n.backupConflictKeepLocal),
             contentPadding: EdgeInsets.zero,
           ),
           RadioListTile<ConflictChoice>(
             value: ConflictChoice.cancel,
+            // ignore: deprecated_member_use
             groupValue: _selected,
+            // ignore: deprecated_member_use
             onChanged: (v) => setState(() => _selected = v!),
             title: Text(l10n.backupConflictCancel),
             contentPadding: EdgeInsets.zero,

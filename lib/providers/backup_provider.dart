@@ -4,12 +4,19 @@ import '../models/backup_models.dart';
 import '../services/interfaces/i_backup_service.dart';
 import '../services/interfaces/i_settings_service.dart';
 import '../services/interfaces/i_sync_manager.dart';
+import '../services/database_service.dart';
 import '../di/service_locator.dart';
+
+/// Callback invoked after a backup restore so providers can reload from DB.
+typedef PostRestoreCallback = Future<void> Function();
 
 class BackupProvider extends ChangeNotifier {
   final IBackupService _backupService;
   final ISyncManager _syncManager;
   final ISettingsService _settingsService;
+
+  /// Registered callbacks that run after a backup restore completes.
+  final List<PostRestoreCallback> _postRestoreCallbacks = [];
 
   bool _isBackupEnabled = false;
   bool _isLoading = false;
@@ -33,6 +40,19 @@ class BackupProvider extends ChangeNotifier {
   })  : _backupService = backupService ?? sl<IBackupService>(),
         _syncManager = syncManager ?? sl<ISyncManager>(),
         _settingsService = settingsService ?? sl<ISettingsService>();
+
+  /// Register a callback to run after every backup restore (e.g. reload cache).
+  void addPostRestoreCallback(PostRestoreCallback cb) {
+    _postRestoreCallbacks.add(cb);
+  }
+
+  /// After a restore, reset the DB connection and notify registered callbacks.
+  Future<void> _onPostRestore() async {
+    await DatabaseService().resetConnection();
+    for (final cb in _postRestoreCallbacks) {
+      await cb();
+    }
+  }
 
   /// Initialize the provider for a given user.
   Future<void> initialize(int userId) async {
@@ -136,6 +156,7 @@ class BackupProvider extends ChangeNotifier {
 
     try {
       await _backupService.restoreBackup(_userId!, version.s3ObjectKey);
+      await _onPostRestore();
     } on BackupException catch (e) {
       _errorMessage = _mapErrorCode(e.code);
     } catch (e) {
@@ -162,6 +183,7 @@ class BackupProvider extends ChangeNotifier {
           if (backups.isNotEmpty) {
             await _backupService.restoreBackup(
                 _userId!, backups.first.s3ObjectKey);
+            await _onPostRestore();
           }
           break;
         case ConflictChoice.keepLocal:

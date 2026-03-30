@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/bill_model.dart';
-import '../models/transaction_model.dart' as tx_model;
-import '../models/user_model.dart';
 import '../services/bill_service.dart';
 import '../services/database_service.dart';
 import '../services/currency_service.dart';
@@ -144,7 +142,8 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   Future<void> _showBillEditor(BuildContext context) async {
     // Get all bills (including paid ones for editing)
     final allBills = await _billService.getBills();
-    
+
+    if (!context.mounted) return;
     if (allBills.isEmpty) {
       // No bills exist, show add dialog
       await showDialog(
@@ -378,7 +377,7 @@ class _BillsContentState extends State<_BillsContent> {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value,
-                    color: colors[entry.key.clamp(0, 4)].withOpacity(0.7),
+                    color: colors[entry.key.clamp(0, 4)].withValues(alpha:0.7),
                     width: 20,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(4),
@@ -457,9 +456,9 @@ class _BillsContentState extends State<_BillsContent> {
                 width: 50,
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: dateColor.withOpacity(0.2),
+                  color: dateColor.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: dateColor.withOpacity(0.5)),
+                  border: Border.all(color: dateColor.withValues(alpha:0.5)),
                 ),
                 child: Column(
                   children: [
@@ -523,9 +522,9 @@ class _BillsContentState extends State<_BillsContent> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.25),
+                              color: Colors.red.withValues(alpha:0.25),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.red.withOpacity(0.6)),
+                              border: Border.all(color: Colors.red.withValues(alpha:0.6)),
                             ),
                             child: const Text(
                               'OVERDUE',
@@ -540,7 +539,7 @@ class _BillsContentState extends State<_BillsContent> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.2),
+                              color: Colors.blue.withValues(alpha:0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -561,7 +560,7 @@ class _BillsContentState extends State<_BillsContent> {
                 ElevatedButton(
                   onPressed: () => _handlePayBill(bill),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.withOpacity(0.8),
+                    backgroundColor: Colors.green.withValues(alpha:0.8),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
@@ -578,7 +577,7 @@ class _BillsContentState extends State<_BillsContent> {
                       scale: value,
                       child: Icon(
                         Icons.check_circle,
-                        color: Colors.green.withOpacity(value),
+                        color: Colors.green.withValues(alpha:value),
                         size: 20,
                       ),
                     );
@@ -710,7 +709,7 @@ class _BillEditorDialogState extends State<_BillEditorDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _currency,
+                initialValue: _currency,
                 decoration: const InputDecoration(labelText: 'Currency'),
                 items: ['VND', 'USD', 'EUR']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -736,7 +735,7 @@ class _BillEditorDialogState extends State<_BillEditorDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<BillRecurrence>(
-                value: _recurrence,
+                initialValue: _recurrence,
                 decoration: const InputDecoration(labelText: 'Recurrence'),
                 items: BillRecurrence.values
                     .map((r) => DropdownMenuItem(

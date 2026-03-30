@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../models/transaction_model.dart';
 import '../transaction_service.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
-import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import 'glass_container.dart';
@@ -76,7 +74,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                         : null;
 
                     return _CashflowContent(
-                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_isMonthlyView}_${_showBarChart}_${_showComparison}_${_comparisonDate}'),
+                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_isMonthlyView}_${_showBarChart}_${_showComparison}_$_comparisonDate'),
                       transactions: transactions,
                       comparisonTransactions: comparisonTransactions,
                       settings: settings,
@@ -116,7 +114,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _isMonthlyView ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      color: _isMonthlyView ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -135,7 +133,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: !_isMonthlyView ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      color: !_isMonthlyView ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -251,9 +249,9 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent.withOpacity(0.2),
+                    color: Colors.greenAccent.withValues(alpha:0.2),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
+                    border: Border.all(color: Colors.greenAccent.withValues(alpha:0.5)),
                   ),
                   child: Text(
                     _isMonthlyView
@@ -338,7 +336,7 @@ class _YearPickerDialog extends StatelessWidget {
               onTap: () => Navigator.of(context).pop(year),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.2),
+                  color: isSelected ? Colors.blue : Colors.grey.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,

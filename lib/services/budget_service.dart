@@ -252,9 +252,8 @@ class BudgetService implements IBudgetService {
 
     if (_currentUserId == null) return {};
 
-    final startTs =
-        (periodStart.millisecondsSinceEpoch ~/ 1000).toString();
-    final endTs = (periodEnd.millisecondsSinceEpoch ~/ 1000).toString();
+    final startTs = periodStart.toIso8601String();
+    final endTs = periodEnd.toIso8601String();
 
     final postings = await _db.getExpensePostingsForPeriod(
         _currentUserId!, startTs, endTs);
@@ -285,9 +284,8 @@ class BudgetService implements IBudgetService {
 
     if (_currentUserId == null) return [];
 
-    final startTs =
-        (periodStart.millisecondsSinceEpoch ~/ 1000).toString();
-    final endTs = (periodEnd.millisecondsSinceEpoch ~/ 1000).toString();
+    final startTs = periodStart.toIso8601String();
+    final endTs = periodEnd.toIso8601String();
 
     final postings = await _db.getExpensePostingsForPeriod(
         _currentUserId!, startTs, endTs);
@@ -326,9 +324,8 @@ class BudgetService implements IBudgetService {
     final threeMonthsAgo = DateTime.now().subtract(const Duration(days: 90));
     final now = DateTime.now();
 
-    final startTs =
-        (threeMonthsAgo.millisecondsSinceEpoch ~/ 1000).toString();
-    final endTs = (now.millisecondsSinceEpoch ~/ 1000).toString();
+    final startTs = threeMonthsAgo.toIso8601String();
+    final endTs = now.toIso8601String();
 
     final postings = await _db.getExpensePostingsForPeriod(
         _currentUserId!, startTs, endTs);

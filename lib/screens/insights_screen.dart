@@ -1,0 +1,728 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/insights_provider.dart';
+import '../models/ai/insight.dart';
+import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
+import '../widgets/chart_theme.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/insights/cash_flow_forecast_widget.dart';
+
+class InsightsScreen extends StatefulWidget {
+  const InsightsScreen({super.key});
+
+  @override
+  State<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final InsightsProvider provider = context.watch<InsightsProvider>();
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.insightsTitle),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: l10n.insightsTabSpending),
+            Tab(text: l10n.insightsTabForecast),
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.insightsTabAlerts),
+                  if (provider.unreadAlertCount > 0) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${provider.unreadAlertCount}',
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Tab(text: l10n.insightsTabCoaching),
+          ],
+          labelColor: AppColors.primary,
+          indicatorColor: AppColors.primary,
+        ),
+      ),
+      body: Column(
+        children: [
+          // Import banner
+          if (provider.showImportBanner)
+            _buildImportBanner(context, provider, l10n),
+          // Tab content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _SpendingTab(provider: provider, l10n: l10n),
+                _ForecastTab(provider: provider, l10n: l10n),
+                _AlertsTab(provider: provider, l10n: l10n),
+                _CoachingTab(provider: provider, l10n: l10n),
+              ],
+            ),
+          ),
+          // Generate button
+          _buildGenerateButton(context, provider, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportBanner(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      color: AppColors.primary.withValues(alpha: 0.1),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              l10n.insightsImportBanner,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: () => provider.generateInsights(),
+            child: Text(l10n.insightsImportBannerAction),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => provider.dismissImportBanner(),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenerateButton(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: provider.isGenerating ? null : () => provider.generateInsights(),
+              icon: provider.isGenerating
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.auto_awesome),
+              label: Text(provider.isGenerating ? l10n.insightsGenerating : l10n.insightsGenerate),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+              ),
+            ),
+          ),
+          if (provider.lastGenerated != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${l10n.insightsLastGenerated}: ${_formatTime(provider.lastGenerated!)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+          if (provider.error != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l10n.insightsError,
+              style: const TextStyle(fontSize: 12, color: AppColors.error),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime dt) {
+    final String day = dt.day.toString().padLeft(2, '0');
+    final String month = dt.month.toString().padLeft(2, '0');
+    final String hour = dt.hour.toString().padLeft(2, '0');
+    final String minute = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month $hour:$minute';
+  }
+}
+
+// ── Spending Tab ──
+class _SpendingTab extends StatelessWidget {
+  final InsightsProvider provider;
+  final AppLocalizations l10n;
+
+  const _SpendingTab({required this.provider, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<SpendingInsight> insights = provider.spendingInsights;
+    if (insights.isEmpty) {
+      return _EmptyState(
+        icon: Icons.analytics_outlined,
+        title: l10n.insightsEmpty,
+        subtitle: l10n.insightsEmptySubtitle,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: insights.length,
+      itemBuilder: (BuildContext context, int index) {
+        final SpendingInsight insight = insights[index];
+        return _InsightCard(
+          title: insight.title,
+          body: insight.body,
+          category: insight.category,
+          metric: insight.metric,
+        );
+      },
+    );
+  }
+}
+
+// ── Forecast Tab ──
+class _ForecastTab extends StatelessWidget {
+  final InsightsProvider provider;
+  final AppLocalizations l10n;
+
+  const _ForecastTab({required this.provider, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final Forecast? forecast = provider.forecast;
+    if (forecast == null) {
+      return _EmptyState(
+        icon: Icons.auto_graph,
+        title: l10n.insightsForecastEmpty,
+        subtitle: l10n.insightsEmptySubtitle,
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary card
+          GlassContainer(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            borderRadius: AppRadius.lg,
+            opacity: 0.08,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.insightsForecastTitle,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(forecast.summary, style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: AppSpacing.md),
+                // Projected balance breakdown
+                _ForecastRow(
+                  label: l10n.insightsForecastOptimistic,
+                  value: forecast.projectedBalance['optimistic'] ?? 0,
+                  color: AppColors.success,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _ForecastRow(
+                  label: l10n.insightsForecastLikely,
+                  value: forecast.projectedBalance['likely'] ?? 0,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _ForecastRow(
+                  label: l10n.insightsForecastPessimistic,
+                  value: forecast.projectedBalance['pessimistic'] ?? 0,
+                  color: AppColors.error,
+                ),
+              ],
+            ),
+          ),
+          if (forecast.dailyProjection.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            GlassContainer(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              borderRadius: AppRadius.lg,
+              opacity: 0.08,
+              child: SizedBox(
+                height: 200,
+                child: CashFlowForecastWidget.buildForecastChart(context, forecast),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ForecastRow extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+
+  const _ForecastRow({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: AppSpacing.sm),
+            Text(label, style: const TextStyle(fontSize: 13)),
+          ],
+        ),
+        Text(
+          PlutusChartStyle.formatCompactCurrency(value),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Alerts Tab ──
+class _AlertsTab extends StatelessWidget {
+  final InsightsProvider provider;
+  final AppLocalizations l10n;
+
+  const _AlertsTab({required this.provider, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Alert> alerts = provider.alerts;
+    if (alerts.isEmpty) {
+      return _EmptyState(
+        icon: Icons.notifications_none,
+        title: l10n.insightsAlertsEmpty,
+        subtitle: l10n.insightsEmptySubtitle,
+      );
+    }
+
+    return Column(
+      children: [
+        if (provider.unreadAlertCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md, top: AppSpacing.sm),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => provider.markAllAlertsRead(),
+                child: Text(l10n.insightsAlertsMarkRead),
+              ),
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            itemCount: alerts.length,
+            itemBuilder: (BuildContext context, int index) {
+              final Alert alert = alerts[index];
+              return _AlertCard(
+                alert: alert,
+                onTap: () => provider.markAlertRead(alert.id),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AlertCard extends StatelessWidget {
+  final Alert alert;
+  final VoidCallback onTap;
+
+  const _AlertCard({required this.alert, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color severityColor = alert.severity == Severity.warning
+        ? Colors.orange
+        : alert.severity == Severity.positive
+            ? AppColors.success
+            : AppColors.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: GestureDetector(
+        onTap: onTap,
+        child: GlassContainer(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          borderRadius: AppRadius.lg,
+          opacity: alert.isRead ? 0.04 : 0.1,
+          color: severityColor,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                alert.severity == Severity.warning
+                    ? Icons.warning_amber_rounded
+                    : alert.severity == Severity.positive
+                        ? Icons.thumb_up_alt_outlined
+                        : Icons.info_outline,
+                color: severityColor,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      alert.title,
+                      style: TextStyle(
+                        fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      alert.body,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!alert.isRead)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: severityColor, shape: BoxShape.circle),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Coaching Tab ──
+class _CoachingTab extends StatelessWidget {
+  final InsightsProvider provider;
+  final AppLocalizations l10n;
+
+  const _CoachingTab({required this.provider, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<CoachingTip> tips = provider.coachingTips;
+    if (tips.isEmpty) {
+      return _EmptyState(
+        icon: Icons.school_outlined,
+        title: l10n.insightsCoachingEmpty,
+        subtitle: l10n.insightsEmptySubtitle,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: tips.length,
+      itemBuilder: (BuildContext context, int index) {
+        final CoachingTip tip = tips[index];
+        return _CoachingCard(
+          tip: tip,
+          l10n: l10n,
+          onSave: () => provider.saveCoachingTip(tip.id),
+          onDismiss: () => provider.dismissCoachingTip(tip.id),
+        );
+      },
+    );
+  }
+}
+
+class _CoachingCard extends StatelessWidget {
+  final CoachingTip tip;
+  final AppLocalizations l10n;
+  final VoidCallback onSave;
+  final VoidCallback onDismiss;
+
+  const _CoachingCard({
+    required this.tip,
+    required this.l10n,
+    required this.onSave,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        borderRadius: AppRadius.lg,
+        opacity: 0.08,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    tip.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                _DifficultyBadge(difficulty: tip.difficulty, l10n: l10n),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(tip.body, style: const TextStyle(fontSize: 13)),
+            if (tip.savingsEstimate != null && tip.savingsEstimate! > 0) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  const Icon(Icons.savings_outlined, size: 16, color: AppColors.success),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${l10n.insightsCoachingPotentialSavings}: ${PlutusChartStyle.formatCompactCurrency(tip.savingsEstimate!)}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: onDismiss,
+                  child: Text(l10n.insightsCoachingDismiss),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                if (!tip.isSaved)
+                  ElevatedButton.icon(
+                    onPressed: onSave,
+                    icon: const Icon(Icons.bookmark_border, size: 16),
+                    label: Text(l10n.insightsCoachingSave),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  )
+                else
+                  const Icon(Icons.bookmark, color: AppColors.primary, size: 20),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class _DifficultyBadge extends StatelessWidget {
+  final CoachingDifficulty difficulty;
+  final AppLocalizations l10n;
+
+  const _DifficultyBadge({required this.difficulty, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final String label;
+    switch (difficulty) {
+      case CoachingDifficulty.easy:
+        color = AppColors.success;
+        label = l10n.translate('insights_coaching_difficulty_easy');
+      case CoachingDifficulty.medium:
+        color = Colors.orange;
+        label = l10n.translate('insights_coaching_difficulty_medium');
+      case CoachingDifficulty.hard:
+        color = AppColors.error;
+        label = l10n.translate('insights_coaching_difficulty_hard');
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+// ── Shared Components ──
+
+class _InsightCard extends StatelessWidget {
+  final String title;
+  final String body;
+  final String? category;
+  final InsightMetric? metric;
+
+  const _InsightCard({
+    required this.title,
+    required this.body,
+    this.category,
+    this.metric,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        borderRadius: AppRadius.lg,
+        opacity: 0.08,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (category != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      category!,
+                      style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                const Spacer(),
+                if (metric != null) _MetricBadge(metric: metric!),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(
+              body,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricBadge extends StatelessWidget {
+  final InsightMetric metric;
+
+  const _MetricBadge({required this.metric});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = metric.severity == Severity.warning
+        ? Colors.orange
+        : metric.severity == Severity.positive
+            ? AppColors.success
+            : AppColors.primary;
+
+    final IconData icon = metric.direction == 'up'
+        ? Icons.trending_up
+        : metric.direction == 'down'
+            ? Icons.trending_down
+            : Icons.trending_flat;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 2),
+          Text(metric.label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _EmptyState({required this.icon, required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
+          const SizedBox(height: AppSpacing.md),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

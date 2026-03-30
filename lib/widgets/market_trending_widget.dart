@@ -180,11 +180,11 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
             style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: 'Symbol',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha:0.5), fontSize: 13),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.1),
+              fillColor: Colors.white.withValues(alpha:0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
@@ -215,7 +215,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? Colors.white.withOpacity(0.25) : Colors.transparent,
+          color: selected ? Colors.white.withValues(alpha:0.25) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -274,7 +274,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                 padding: const EdgeInsets.only(left: 8),
                 child: Text(
                   'MCap: --',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
+                  style: TextStyle(color: Colors.white.withValues(alpha:0.5), fontSize: 10),
                 ),
               ),
           ],
@@ -289,7 +289,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
       children: [
         Text(
           '$label: ',
-          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
+          style: TextStyle(color: Colors.white.withValues(alpha:0.6), fontSize: 10),
         ),
         Text(value, style: const TextStyle(color: Colors.white, fontSize: 10)),
       ],
@@ -388,8 +388,8 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  lineColor.withOpacity(0.25),
-                  lineColor.withOpacity(0.02),
+                  lineColor.withValues(alpha:0.25),
+                  lineColor.withValues(alpha:0.02),
                 ],
               ),
             ),

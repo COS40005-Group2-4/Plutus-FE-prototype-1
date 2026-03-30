@@ -169,9 +169,8 @@ void main() {
       final periodStart = DateTime(2024, 3, 1);
       final periodEnd = DateTime(2024, 3, 31);
 
-      final startTs =
-          (periodStart.millisecondsSinceEpoch ~/ 1000).toString();
-      final endTs = (periodEnd.millisecondsSinceEpoch ~/ 1000).toString();
+      final startTs = periodStart.toIso8601String();
+      final endTs = periodEnd.toIso8601String();
 
       when(mockDb.getBudgetCategoriesByBudgetId(5))
           .thenAnswer((_) async => [cat1, cat2]);
@@ -199,9 +198,8 @@ void main() {
       final periodStart = DateTime(2024, 3, 1);
       final periodEnd = DateTime(2024, 3, 31);
 
-      final startTs =
-          (periodStart.millisecondsSinceEpoch ~/ 1000).toString();
-      final endTs = (periodEnd.millisecondsSinceEpoch ~/ 1000).toString();
+      final startTs = periodStart.toIso8601String();
+      final endTs = periodEnd.toIso8601String();
 
       when(mockDb.getBudgetCategoriesByBudgetId(5))
           .thenAnswer((_) async => [cat1]);

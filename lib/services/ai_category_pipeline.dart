@@ -37,7 +37,7 @@ class AICategoryPipeline implements IAICategoryPipeline {
         return _expandToTopN(suggestion);
       }
     } catch (e) {
-      if (kDebugMode) print('AICategoryPipeline: cloud failed: $e');
+      if (kDebugMode) debugPrint('AICategoryPipeline: cloud failed: $e');
     }
 
     // 3. Cloud also failed — return the keyword 'Other' result
@@ -96,7 +96,7 @@ class AICategoryPipeline implements IAICategoryPipeline {
           }
         }
       } catch (e) {
-        if (kDebugMode) print('AICategoryPipeline: batch AI failed: $e');
+        if (kDebugMode) debugPrint('AICategoryPipeline: batch AI failed: $e');
       }
     }
 

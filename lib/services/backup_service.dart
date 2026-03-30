@@ -38,6 +38,7 @@ class BackupService implements IBackupService {
       );
 
   /// Get the local database file path (same pattern as DatabaseService).
+  @override
   Future<String> getDatabasePath() async {
     if (kIsWeb) return 'plutus_local.db';
 
@@ -56,6 +57,7 @@ class BackupService implements IBackupService {
 
   /// Upload local DB file to S3 as a new version.
   /// Returns the S3 object key on success.
+  @override
   Future<String> uploadBackup(int userId) async {
     _validateCredentials();
 
@@ -98,7 +100,7 @@ class BackupService implements IBackupService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (kDebugMode) {
-          print('BackupService: Uploaded backup $s3Key (checksum: $checksum)');
+          debugPrint('BackupService: Uploaded backup $s3Key (checksum: $checksum)');
         }
         return s3Key;
       } else {
@@ -116,6 +118,7 @@ class BackupService implements IBackupService {
 
   /// Download a specific backup version and overwrite local DB.
   /// Uses a temp file for rollback on failure.
+  @override
   Future<void> restoreBackup(int userId, String s3ObjectKey) async {
     _validateCredentials();
 
@@ -155,7 +158,7 @@ class BackupService implements IBackupService {
           await tempFile.delete();
         }
         if (kDebugMode) {
-          print('BackupService: Restored backup from $s3ObjectKey');
+          debugPrint('BackupService: Restored backup from $s3ObjectKey');
         }
       } else {
         throw BackupException(
@@ -178,6 +181,7 @@ class BackupService implements IBackupService {
   }
 
   /// List all backup versions for a user, sorted by timestamp descending.
+  @override
   Future<List<VersionEntry>> listBackups(int userId) async {
     _validateCredentials();
 
@@ -259,6 +263,7 @@ class BackupService implements IBackupService {
   }
 
   /// Delete a specific backup from S3.
+  @override
   Future<void> deleteBackup(String s3ObjectKey) async {
     _validateCredentials();
 
@@ -289,7 +294,7 @@ class BackupService implements IBackupService {
       }
 
       if (kDebugMode) {
-        print('BackupService: Deleted backup $s3ObjectKey');
+        debugPrint('BackupService: Deleted backup $s3ObjectKey');
       }
     } on SocketException catch (e) {
       throw BackupException('Network error during delete: $e', code: 'network_error');
@@ -300,6 +305,7 @@ class BackupService implements IBackupService {
 
   /// Get the MD5 checksum (ETag) of the latest backup on S3.
   /// Returns null if no backups exist.
+  @override
   Future<String?> getLatestBackupChecksum(int userId) async {
     final backups = await listBackups(userId);
     if (backups.isEmpty) return null;
@@ -343,6 +349,7 @@ class BackupService implements IBackupService {
   }
 
   /// Compute MD5 checksum of the local database file.
+  @override
   Future<String> computeLocalChecksum() async {
     final dbPath = await getDatabasePath();
     final dbFile = File(dbPath);
@@ -354,6 +361,7 @@ class BackupService implements IBackupService {
   }
 
   /// Enforce the 10-version limit by deleting oldest backups.
+  @override
   Future<void> enforceVersionLimit(int userId) async {
     final backups = await listBackups(userId);
     // backups sorted descending — delete from the end (oldest)
@@ -361,7 +369,7 @@ class BackupService implements IBackupService {
       final oldest = backups.removeLast();
       await deleteBackup(oldest.s3ObjectKey);
       if (kDebugMode) {
-        print('BackupService: Deleted oldest backup ${oldest.s3ObjectKey} (enforcing limit)');
+        debugPrint('BackupService: Deleted oldest backup ${oldest.s3ObjectKey} (enforcing limit)');
       }
     }
   }

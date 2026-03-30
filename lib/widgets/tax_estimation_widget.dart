@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
 import '../services/tax_calculation_service.dart';
@@ -74,6 +73,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
     
     try {
       final transactions = await _transactionService.getTransactions();
+      if (!mounted) return;
       final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
       final userCurrency = settingsProvider.currency.code;
       
@@ -143,8 +143,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
       }
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        print('Error calculating tax: $e');
-        print('Stack trace: $stackTrace');
+        debugPrint('Error calculating tax: $e');
+        debugPrint('Stack trace: $stackTrace');
       }
       if (mounted) {
         setState(() {
@@ -231,8 +231,6 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   void _showTaxDetails() {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     final userCurrency = settingsProvider.currency.code;
-    final currencySymbol = settingsProvider.currency.symbol;
-    
     final taxResult = TaxCalculationService.calculateAnnualTax(
       annualIncome: CurrencyService.toVND(_annualIncome, userCurrency),
       numberOfDependents: 0,
@@ -393,9 +391,9 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    border: Border.all(color: Colors.blue.withValues(alpha:0.3)),
                   ),
                   child: Row(
                     children: [
@@ -652,12 +650,12 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                             children: [
                               Expanded(
                                 flex: ((_annualIncome - _estimatedTax) * 100 / _annualIncome).round().clamp(1, 99),
-                                child: Container(color: AppColors.positive(Theme.of(context).brightness).withOpacity(0.7)),
+                                child: Container(color: AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.7)),
                               ),
                               if (_estimatedTax > 0)
                                 Expanded(
                                   flex: (_estimatedTax * 100 / _annualIncome).round().clamp(1, 99),
-                                  child: Container(color: AppColors.negative(Theme.of(context).brightness).withOpacity(0.7)),
+                                  child: Container(color: AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.7)),
                                 ),
                             ],
                           ),
@@ -670,7 +668,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.positive(Theme.of(context).brightness).withOpacity(0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: 4),
                               const Text('Net', style: TextStyle(color: Colors.white54, fontSize: 9)),
                             ],
@@ -678,7 +676,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.negative(Theme.of(context).brightness).withOpacity(0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: 4),
                               const Text('Tax', style: TextStyle(color: Colors.white54, fontSize: 9)),
                             ],

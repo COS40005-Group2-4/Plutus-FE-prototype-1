@@ -14,22 +14,25 @@ class BillService implements IBillService {
   final StreamController<List<Bill>> _billStreamController =
       StreamController<List<Bill>>.broadcast();
 
+  @override
   Stream<List<Bill>> get billStream => _billStreamController.stream;
 
+  @override
   void setCurrentUser(int userId) {
     _currentUserId = userId;
   }
 
+  @override
   Future<void> notifyBillUpdate() async {
     if (_currentUserId != null) {
       if (kDebugMode) {
-        print('Notifying bill update for user $_currentUserId');
+        debugPrint('Notifying bill update for user $_currentUserId');
       }
       
       final bills = await getBills();
       
       if (kDebugMode) {
-        print('Sending ${bills.length} bills to stream');
+        debugPrint('Sending ${bills.length} bills to stream');
       }
       
       if (!_billStreamController.isClosed) {
@@ -38,10 +41,11 @@ class BillService implements IBillService {
     }
   }
 
+  @override
   Future<List<Bill>> getBills() async {
     if (_currentUserId == null) {
       if (kDebugMode) {
-        print('No user logged in, returning empty bills');
+        debugPrint('No user logged in, returning empty bills');
       }
       return [];
     }
@@ -50,36 +54,38 @@ class BillService implements IBillService {
       final billMaps = await _db.getBillsByUserId(_currentUserId!);
       
       if (kDebugMode) {
-        print('Retrieved ${billMaps.length} bills from database for user $_currentUserId');
+        debugPrint('Retrieved ${billMaps.length} bills from database for user $_currentUserId');
       }
       
       return billMaps.map((map) => Bill.fromJson(map)).toList();
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading bills: $e');
+        debugPrint('Error loading bills: $e');
       }
       return [];
     }
   }
 
+  @override
   Future<void> addBill(Bill bill) async {
     if (_currentUserId == null) {
       throw Exception('No user logged in');
     }
 
     if (kDebugMode) {
-      print('Adding bill: ${bill.name} for user $_currentUserId');
+      debugPrint('Adding bill: ${bill.name} for user $_currentUserId');
     }
 
     await _db.insertBill(_currentUserId!, bill.toJson());
     
     if (kDebugMode) {
-      print('Bill added successfully, notifying listeners');
+      debugPrint('Bill added successfully, notifying listeners');
     }
     
     await notifyBillUpdate();
   }
 
+  @override
   Future<void> updateBill(Bill bill) async {
     if (_currentUserId == null || bill.id == null) {
       throw Exception('Invalid bill or user');
@@ -89,11 +95,13 @@ class BillService implements IBillService {
     await notifyBillUpdate();
   }
 
+  @override
   Future<void> deleteBill(int billId) async {
     await _db.deleteBill(billId);
     await notifyBillUpdate();
   }
 
+  @override
   Future<void> markBillAsPaid(int billId) async {
     if (_currentUserId == null) {
       throw Exception('No user logged in');
@@ -125,7 +133,7 @@ class BillService implements IBillService {
       await addBill(nextBill);
       
       if (kDebugMode) {
-        print('Created next occurrence of recurring bill: ${bill.name} for ${nextDueDate}');
+        debugPrint('Created next occurrence of recurring bill: ${bill.name} for $nextDueDate');
       }
     }
   }
@@ -160,6 +168,7 @@ class BillService implements IBillService {
     return DateTime(year, month, day);
   }
 
+  @override
   Future<double> getTotalDueAmount({
     required String currency,
     int days = 30,
@@ -177,6 +186,7 @@ class BillService implements IBillService {
         .fold<double>(0.0, (sum, bill) => sum + bill.amount);
   }
 
+  @override
   void dispose() {
     // Don't close - this is a singleton
   }

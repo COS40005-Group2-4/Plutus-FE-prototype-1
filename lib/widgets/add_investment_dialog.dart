@@ -107,7 +107,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   
                   // Asset Type Dropdown
                   DropdownButtonFormField<AssetType>(
-                    value: _assetType,
+                    initialValue: _assetType,
                     decoration: InputDecoration(
                       labelText: localizations.investmentType,
                       border: OutlineInputBorder(
@@ -224,7 +224,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                   
                   // Currency Dropdown
                   DropdownButtonFormField<Currency>(
-                    value: _currency,
+                    initialValue: _currency,
                     decoration: InputDecoration(
                       labelText: localizations.investmentCurrencyLabel,
                       border: OutlineInputBorder(

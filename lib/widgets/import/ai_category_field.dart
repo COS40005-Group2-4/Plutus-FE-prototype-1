@@ -31,7 +31,7 @@ class AiCategoryField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<String>(
-          value: categories.contains(selectedCategory) ? selectedCategory : null,
+          initialValue: categories.contains(selectedCategory) ? selectedCategory : null,
           decoration: InputDecoration(
             labelText: 'Category',
             border: OutlineInputBorder(

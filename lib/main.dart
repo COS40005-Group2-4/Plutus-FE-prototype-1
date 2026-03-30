@@ -12,17 +12,21 @@ import 'providers/auth_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/budget_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/insights_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'services/interfaces/i_budget_service.dart';
+import 'services/interfaces/i_insights_service.dart';
+import 'services/interfaces/i_transaction_service.dart';
+import 'services/database_service.dart';
 import 'services/budget_notification_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_selection_screen.dart';
 import 'screens/investment_list_screen.dart';
 import 'screens/backup_history_screen.dart';
+import 'screens/insights_screen.dart';
 import 'screens/main_navigation_page.dart';
 import 'services/sync_manager.dart';
-import 'transaction_service.dart';
 import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -113,6 +117,14 @@ class _MyAppState extends State<MyApp> {
           create: (_) => BudgetProvider(
             budgetService: sl<IBudgetService>(),
             notificationService: sl<BudgetNotificationService>(),
+            transactionService: sl<ITransactionService>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => InsightsProvider(
+            insightsService: sl<IInsightsService>(),
+            databaseService: DatabaseService(),
+            settingsProvider: Provider.of<SettingsProvider>(context, listen: false),
           ),
         ),
       ],
@@ -149,6 +161,7 @@ class _MyAppState extends State<MyApp> {
               "/settings": (c) => const SettingsScreen(),
               "/investments": (c) => const InvestmentListScreen(),
               "/backup-history": (c) => const BackupHistoryScreen(),
+              "/insights": (c) => const InsightsScreen(),
             },
             locale: settingsProvider.locale,
             localizationsDelegates: const [
@@ -170,7 +183,7 @@ class _MyAppState extends State<MyApp> {
                 elevation: 0,
                 foregroundColor: AppColors.textOnLight,
               ),
-              dialogBackgroundColor: Colors.transparent,
+              dialogTheme: const DialogThemeData(backgroundColor: Colors.transparent),
               textTheme: const TextTheme(
                 displayLarge: TextStyle(color: AppColors.textOnLight),
                 displayMedium: TextStyle(color: AppColors.textOnLight),
@@ -201,7 +214,7 @@ class _MyAppState extends State<MyApp> {
                 elevation: 0,
                 foregroundColor: AppColors.textOnDark,
               ),
-              dialogBackgroundColor: Colors.transparent,
+              dialogTheme: const DialogThemeData(backgroundColor: Colors.transparent),
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.borderDark,
                 brightness: Brightness.dark,
@@ -255,8 +268,15 @@ class _MainPageState extends State<MainPage> {
 
     _backupInitialized = true;
 
+    if (!context.mounted) return;
     final backupProvider =
         Provider.of<BackupProvider>(context, listen: false);
+
+    // Register InsightsProvider reload after backup restore
+    final insightsProvider =
+        Provider.of<InsightsProvider>(context, listen: false);
+    backupProvider.addPostRestoreCallback(insightsProvider.reloadFromCache);
+
     await backupProvider.initialize(userId);
 
     if (!mounted) return;
@@ -264,6 +284,7 @@ class _MainPageState extends State<MainPage> {
     if (backupProvider.hasConflict) {
       if (!backupProvider.isBackupEnabled && backupProvider.hasRemoteBackup) {
         // New device: backup not enabled but remote data exists
+        if (!context.mounted) return;
         final restore = await showBackupFoundDialog(context);
         if (restore == true) {
           await backupProvider.resolveConflict(ConflictChoice.overrideLocal);
@@ -271,6 +292,7 @@ class _MainPageState extends State<MainPage> {
         }
       } else {
         // Existing device: backup enabled, data differs
+        if (!context.mounted) return;
         final choice = await showConflictDialog(context);
         if (choice != null) {
           await backupProvider.resolveConflict(choice);
@@ -278,7 +300,7 @@ class _MainPageState extends State<MainPage> {
       }
     }
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     Navigator.pushReplacementNamed(context, "/dashboard");
   }
 
@@ -291,8 +313,7 @@ class _MainPageState extends State<MainPage> {
             if (mounted) {
               if (authProvider.currentUser != null) {
                 // User is logged in, set up transaction service and go to dashboard
-                final transactionService = TransactionService();
-                transactionService.setCurrentUser(authProvider.currentUserId!);
+                sl<ITransactionService>().setCurrentUser(authProvider.currentUserId!);
                 // Set user on budget service so budget widgets work
                 final budgetProvider = context.read<BudgetProvider>();
                 budgetProvider.setCurrentUser(authProvider.currentUserId!);

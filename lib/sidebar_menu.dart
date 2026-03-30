@@ -549,7 +549,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
             }
           }
         },
-        activeColor: meta.color,
+        activeTrackColor: meta.color,
       ),
     );
   }
@@ -766,6 +766,8 @@ class _SidebarMenuState extends State<SidebarMenu> {
         return AppColors.accent;
       case WidgetCategory.tools:
         return AppColors.savingsAccent;
+      case WidgetCategory.insights:
+        return AppColors.accent;
     }
   }
 }

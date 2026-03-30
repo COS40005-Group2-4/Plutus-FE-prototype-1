@@ -95,4 +95,5 @@ abstract class IDatabaseService {
   Future<void> clearAllData();
   Future<void> clearUserData(int userId);
   Future<void> close();
+  Future<void> resetConnection();
 }

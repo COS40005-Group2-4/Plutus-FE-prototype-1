@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/google_auth_service.dart';
 import '../services/user_service.dart';
-import '../services/settings_service.dart';
 import '../services/interfaces/i_consent_service.dart';
 import '../di/service_locator.dart';
 import '../models/user_model.dart';
@@ -13,7 +12,6 @@ import '../widgets/consent_dialog.dart';
 class AuthProvider extends ChangeNotifier {
   final GoogleAuthService _authService = GoogleAuthService();
   final UserService _userService = UserService();
-  final SettingsService _settingsService = SettingsService();
   final IConsentService _consentService = sl<IConsentService>();
   
   bool _isAuthenticated = false;
@@ -264,7 +262,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {
-        print('Error unlinking OAuth: $e');
+        debugPrint('Error unlinking OAuth: $e');
       }
     }
   }
@@ -365,7 +363,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       // DynamoDB unreachable - fall back to local
       if (kDebugMode) {
-        print('ConsentService: DynamoDB check failed, using local: $e');
+        debugPrint('ConsentService: DynamoDB check failed, using local: $e');
       }
       if (_currentUser!.dataConsent) return true;
     }
@@ -374,6 +372,7 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser!.dataConsent) return true;
 
     // 3. Neither remote nor local consent - show dialog
+    if (!context.mounted) return false;
     final agreed = await showDataConsentDialog(context);
 
     if (agreed) {
@@ -382,7 +381,7 @@ class AuthProvider extends ChangeNotifier {
         await _consentService.recordAcceptance(email);
       } catch (e) {
         if (kDebugMode) {
-          print('ConsentService: DynamoDB write failed, saved locally: $e');
+          debugPrint('ConsentService: DynamoDB write failed, saved locally: $e');
         }
       }
       await _userService.setDataConsent(_currentUser!.id, true);

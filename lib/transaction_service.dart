@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
-import 'services/backend_ffi_service.dart';
 import 'services/interfaces/i_backend_ffi_service.dart';
 import 'services/interfaces/i_database_service.dart';
 import 'services/interfaces/i_transaction_service.dart';
@@ -43,39 +42,43 @@ class TransactionService implements ITransactionService {
     _transactionStreamController = StreamController<List<Transaction>>.broadcast();
   }
   
+  @override
   void setCurrentUser(int userId) {
     _currentUserId = userId;
   }
   
+  @override
   void dispose() {
     // Don't dispose - this is a singleton
     // _transactionStreamController.close();
   }
   
+  @override
   void notifyTransactionUpdate() async {
     if (_currentUserId != null) {
       if (kDebugMode) {
-        print('TransactionService: Notifying transaction update for user $_currentUserId');
+        debugPrint('TransactionService: Notifying transaction update for user $_currentUserId');
       }
       final transactions = await getTransactions();
       _lastTransactions = transactions;
       if (kDebugMode) {
-        print('TransactionService: Loaded ${transactions.length} transactions');
+        debugPrint('TransactionService: Loaded ${transactions.length} transactions');
       }
       if (!_transactionStreamController.isClosed) {
         _transactionStreamController.add(transactions);
         if (kDebugMode) {
-          print('TransactionService: Sent ${transactions.length} transactions to stream');
+          debugPrint('TransactionService: Sent ${transactions.length} transactions to stream');
         }
       }
     } else {
       if (kDebugMode) {
-        print('TransactionService: Cannot notify - no current user set');
+        debugPrint('TransactionService: Cannot notify - no current user set');
       }
     }
   }
   
   /// Get the last cached transactions without waiting for async
+  @override
   List<Transaction> getLastCachedTransactions() => _lastTransactions;
   
   // Helper to flatten transaction with postings into flat structure for database
@@ -137,10 +140,11 @@ class TransactionService implements ITransactionService {
     };
   }
 
+  @override
   Future<List<Transaction>> getTransactions() async {
     if (_currentUserId == null) {
       if (kDebugMode) {
-        print('No user logged in, returning empty transactions');
+        debugPrint('No user logged in, returning empty transactions');
       }
       return [];
     }
@@ -158,7 +162,7 @@ class TransactionService implements ITransactionService {
     try {
       final txMaps = await _db.getTransactionsByUserId(userId);
       if (kDebugMode) {
-        print('Retrieved ${txMaps.length} transactions from database for user $userId');
+        debugPrint('Retrieved ${txMaps.length} transactions from database for user $userId');
       }
       
       return txMaps.map((map) {
@@ -224,7 +228,7 @@ class TransactionService implements ITransactionService {
       }).toList();
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading local transactions: $e');
+        debugPrint('Error loading local transactions: $e');
       }
       return [];
     }
@@ -237,7 +241,7 @@ class TransactionService implements ITransactionService {
         final data = await _ffiService.getTransactions();
         
         if (kDebugMode) {
-          print('Fetched ${data.length} transactions from FFI backend');
+          debugPrint('Fetched ${data.length} transactions from FFI backend');
         }
         
         // Store FFI transactions in local database
@@ -248,7 +252,7 @@ class TransactionService implements ITransactionService {
             await _db.insertTransaction(userId, flatTx);
           } catch (e) {
             if (kDebugMode) {
-              print('Error inserting transaction: $e');
+              debugPrint('Error inserting transaction: $e');
             }
           }
         }
@@ -258,11 +262,11 @@ class TransactionService implements ITransactionService {
         await prefs.setString(_transactionsKey, json.encode(data));
         
         if (kDebugMode) {
-          print('Synced ${data.length} transactions from FFI backend to database');
+          debugPrint('Synced ${data.length} transactions from FFI backend to database');
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Backend FFI sync error: $e');
+          debugPrint('Backend FFI sync error: $e');
         }
       }
     }
@@ -274,7 +278,7 @@ class TransactionService implements ITransactionService {
           Uri.base.scheme == 'https' && 
           _baseUrl.startsWith('http:')) {
         if (kDebugMode) {
-          print('⚠️ Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
+          debugPrint('⚠️ Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
         }
         return;
       }
@@ -296,17 +300,18 @@ class TransactionService implements ITransactionService {
         await prefs.setString(_transactionsKey, json.encode(data));
         
         if (kDebugMode) {
-          print('Synced ${data.length} transactions from HTTP backend');
+          debugPrint('Synced ${data.length} transactions from HTTP backend');
         }
       }
     } catch (e) {
       // Silently fail - we're offline-first, so local data is fine
       if (kDebugMode) {
-        print('Backend unavailable, using local data: $e');
+        debugPrint('Backend unavailable, using local data: $e');
       }
     }
   }
 
+  @override
   Future<void> importTransactionFile(String filePath) async {
     if (_currentUserId == null) {
       throw Exception('No user logged in');
@@ -319,8 +324,8 @@ class TransactionService implements ITransactionService {
     final extension = filePath.split('.').last.toLowerCase();
     
     if (kDebugMode) {
-      print('Importing file: $filePath (extension: $extension)');
-      print('FFI Service Available: ${_ffiService.isAvailable}');
+      debugPrint('Importing file: $filePath (extension: $extension)');
+      debugPrint('FFI Service Available: ${_ffiService.isAvailable}');
     }
     
     // Only use FFI for ledger/txt files (journal format)
@@ -328,13 +333,13 @@ class TransactionService implements ITransactionService {
     if (_ffiService.isAvailable && (extension == 'ledger' || extension == 'txt')) {
       try {
         if (kDebugMode) {
-          print('Attempting to import ledger file via FFI: $filePath');
+          debugPrint('Attempting to import ledger file via FFI: $filePath');
         }
         await _ffiService.importFile(filePath);
         
         // After FFI import, sync the transactions to local database
         if (kDebugMode) {
-          print('Syncing transactions to local database for user $_currentUserId');
+          debugPrint('Syncing transactions to local database for user $_currentUserId');
         }
         await _syncWithBackend(_currentUserId!);
         
@@ -342,13 +347,13 @@ class TransactionService implements ITransactionService {
         notifyTransactionUpdate();
         
         if (kDebugMode) {
-          print('Transaction file imported successfully via FFI');
+          debugPrint('Transaction file imported successfully via FFI');
         }
         return;
       } catch (e) {
         if (kDebugMode) {
-          print('Backend FFI import error: $e');
-          print('Falling back to manual ledger parsing');
+          debugPrint('Backend FFI import error: $e');
+          debugPrint('Falling back to manual ledger parsing');
         }
         // Fall through to manual parsing
       }
@@ -356,7 +361,7 @@ class TransactionService implements ITransactionService {
     
     // Manual parsing for CSV, JSON, XML or when FFI is not available
     if (kDebugMode) {
-      print('Using manual file parsing for $extension file');
+      debugPrint('Using manual file parsing for $extension file');
     }
     
     try {
@@ -387,18 +392,19 @@ class TransactionService implements ITransactionService {
       notifyTransactionUpdate();
       
       if (kDebugMode) {
-        print('Imported ${transactions.length} transactions from $extension file');
+        debugPrint('Imported ${transactions.length} transactions from $extension file');
       }
       
       return;
     } catch (e) {
       if (kDebugMode) {
-        print('Manual file import error: $e');
+        debugPrint('Manual file import error: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<Map<String, dynamic>> parseJsonFile(String jsonContent) async {
     final Map<String, dynamic> data = json.decode(jsonContent);
     
@@ -541,6 +547,7 @@ class TransactionService implements ITransactionService {
     };
   }
 
+  @override
   Future<List<Map<String, dynamic>>> parseCsvFile(String csvContent) async {
     try {
       // Simple CSV parser assuming headers: Date, Payee, Amount, Currency, Category, Description
@@ -621,7 +628,7 @@ class TransactionService implements ITransactionService {
               date = parsedDate.toIso8601String();
             } catch (e) {
               if (kDebugMode) {
-                print('Date parsing error for "$dateStr": $e, using current date');
+                debugPrint('Date parsing error for "$dateStr": $e, using current date');
               }
               date = DateTime.now().toIso8601String();
             }
@@ -638,7 +645,7 @@ class TransactionService implements ITransactionService {
             amount = double.parse(amountStr);
           } catch (e) {
             if (kDebugMode) {
-              print('Amount parsing error for "$amountStr": $e, using 0.0');
+              debugPrint('Amount parsing error for "$amountStr": $e, using 0.0');
             }
             amount = 0.0;
           }
@@ -700,7 +707,7 @@ class TransactionService implements ITransactionService {
           });
         } catch (e) {
           if (kDebugMode) {
-            print('Error parsing CSV row $i: $e');
+            debugPrint('Error parsing CSV row $i: $e');
           }
           // Skip this row and continue with next
           continue;
@@ -710,12 +717,13 @@ class TransactionService implements ITransactionService {
       return transactions;
     } catch (e) {
       if (kDebugMode) {
-        print('CSV parsing error: $e');
+        debugPrint('CSV parsing error: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<List<Map<String, dynamic>>> parseXmlFile(String xmlContent) async {
     final document = XmlDocument.parse(xmlContent);
     final transactions = <Map<String, dynamic>>[];
@@ -756,6 +764,7 @@ class TransactionService implements ITransactionService {
     return transactions;
   }
 
+  @override
   Future<List<Map<String, dynamic>>> parseLedgerFile(String ledgerContent) async {
     try {
       final transactions = <Map<String, dynamic>>[];
@@ -865,7 +874,7 @@ class TransactionService implements ITransactionService {
             }
           } catch (e) {
             if (kDebugMode) {
-              print('Error parsing ledger transaction at line $i: $e');
+              debugPrint('Error parsing ledger transaction at line $i: $e');
             }
             i++;
           }
@@ -877,12 +886,13 @@ class TransactionService implements ITransactionService {
       return transactions;
     } catch (e) {
       if (kDebugMode) {
-        print('Ledger parsing error: $e');
+        debugPrint('Ledger parsing error: $e');
       }
       rethrow;
     }
   }
 
+  @override
   Future<void> importTransaction(Map<String, dynamic> transaction) async {
     if (_currentUserId == null) {
       throw Exception('No user logged in');
@@ -900,7 +910,7 @@ class TransactionService implements ITransactionService {
       await prefs.setString(_transactionsKey, json.encode(transactions));
       
       if (kDebugMode) {
-        print('Transaction imported successfully: $transaction');
+        debugPrint('Transaction imported successfully: $transaction');
       }
       
       // Notify listeners of transaction update
@@ -910,7 +920,7 @@ class TransactionService implements ITransactionService {
       _syncTransactionToBackend(transaction);
     } catch (e) {
       if (kDebugMode) {
-        print('Error importing transaction: $e');
+        debugPrint('Error importing transaction: $e');
       }
       rethrow;
     }
@@ -922,16 +932,17 @@ class TransactionService implements ITransactionService {
       try {
         await _ffiService.saveTransaction(transaction);
         if (kDebugMode) {
-          print('Transaction synced to FFI backend');
+          debugPrint('Transaction synced to FFI backend');
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Failed to sync transaction to FFI backend: $e');
+          debugPrint('Failed to sync transaction to FFI backend: $e');
         }
       }
     }
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getUnsyncedTransactions() async {
     if (_currentUserId == null) return [];
     
@@ -939,12 +950,13 @@ class TransactionService implements ITransactionService {
       return await _db.getUnsyncedTransactions(_currentUserId!);
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting unsynced transactions: $e');
+        debugPrint('Error getting unsynced transactions: $e');
       }
       return [];
     }
   }
   
+  @override
   Future<void> syncPendingTransactions() async {
     if (_currentUserId == null) return;
     
@@ -956,12 +968,12 @@ class TransactionService implements ITransactionService {
           await _ffiService.saveTransaction(tx);
           await _db.markTransactionAsSynced(tx['id'] as int);
           if (kDebugMode) {
-            print('Synced transaction ${tx['id']}');
+            debugPrint('Synced transaction ${tx['id']}');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Failed to sync transaction ${tx['id']}: $e');
+          debugPrint('Failed to sync transaction ${tx['id']}: $e');
         }
       }
     }

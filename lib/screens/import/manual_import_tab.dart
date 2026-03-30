@@ -6,10 +6,11 @@ import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
-import '../../transaction_service.dart';
+import '../../services/interfaces/i_transaction_service.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/ai_category_field.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/insights_provider.dart';
 import '../../l10n/app_localizations.dart';
 
 class ManualImportTab extends StatefulWidget {
@@ -24,7 +25,7 @@ class ManualImportTab extends StatefulWidget {
 
 class _ManualImportTabState extends State<ManualImportTab> {
   final _formKey = GlobalKey<FormState>();
-  late TransactionService _service;
+  late ITransactionService _service;
 
   late TextEditingController _payeeController;
   late TextEditingController _amountController;
@@ -81,7 +82,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
   @override
   void initState() {
     super.initState();
-    _service = TransactionService();
+    _service = GetIt.instance<ITransactionService>();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.currentUserId != null) {
       _service.setCurrentUser(authProvider.currentUserId!);
@@ -340,6 +341,10 @@ class _ManualImportTabState extends State<ManualImportTab> {
           ),
         );
 
+        if (context.mounted) {
+          context.read<InsightsProvider>().onTransactionsImported();
+        }
+
         if (widget.onSuccess != null) {
           widget.onSuccess!();
         } else {
@@ -420,7 +425,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _currency,
+                    initialValue: _currency,
                     decoration: const InputDecoration(
                       labelText: 'Currency',
                       border: OutlineInputBorder(),
@@ -439,7 +444,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
 
             // Type Dropdown
             DropdownButtonFormField<String>(
-              value: _type,
+              initialValue: _type,
               decoration: const InputDecoration(
                 labelText: 'Type',
                 border: OutlineInputBorder(),

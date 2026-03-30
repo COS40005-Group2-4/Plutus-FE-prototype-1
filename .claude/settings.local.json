@@ -5,7 +5,8 @@
       "Bash(flutter pub:*)",
       "mcp__claude_ai_Context7__resolve-library-id",
       "Bash(bash package.sh)",
-      "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1/lib/widgets/import -type f -name *.dart)"
+      "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1/lib/widgets/import -type f -name *.dart)",
+      "Bash(grep:*)"
     ]
   }
 }

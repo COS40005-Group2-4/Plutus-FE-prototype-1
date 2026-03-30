@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/investment_model.dart';
 import 'interfaces/i_backend_ffi_service.dart';
 import 'interfaces/i_price_api_service.dart';
@@ -37,6 +38,7 @@ class InvestmentService implements IInvestmentService {
   static const Duration _cacheExpiration = Duration(minutes: 5);
 
   /// Set the current user ID for database operations
+  @override
   void setUserId(int userId) {
     _currentUserId = userId;
   }
@@ -48,6 +50,7 @@ class InvestmentService implements IInvestmentService {
   /// Persists investments to SQLite for backup purposes.
   ///
   /// Throws [Exception] if backend is unavailable or returns an error.
+  @override
   Future<List<InvestmentModel>> getInvestmentList({bool forceRefresh = false}) async {
     // Return cached data if valid and not forcing refresh
     if (!forceRefresh &&
@@ -121,7 +124,7 @@ class InvestmentService implements IInvestmentService {
         }
       }
     } catch (e) {
-      print('InvestmentService: Failed to persist investments to DB: $e');
+      debugPrint('InvestmentService: Failed to persist investments to DB: $e');
       // Don't throw - this is a backup operation and shouldn't break the main flow
     }
   }
@@ -132,6 +135,7 @@ class InvestmentService implements IInvestmentService {
   /// and value history for the specified [commodity].
   /// 
   /// Throws [Exception] if backend is unavailable or returns an error.
+  @override
   Future<InvestmentModel> getInvestmentDetail(String commodity) async {
     if (commodity.isEmpty) {
       throw ArgumentError('Commodity cannot be empty');
@@ -153,6 +157,7 @@ class InvestmentService implements IInvestmentService {
   /// 
   /// Call this method after modifying investment data (add, update, delete)
   /// to ensure the next fetch retrieves fresh data from the backend.
+  @override
   void clearCache() {
     _cachedInvestments = null;
     _lastFetchTime = null;
@@ -162,12 +167,13 @@ class InvestmentService implements IInvestmentService {
   ///
   /// Removes the investment from the backend, SQLite, and clears the cache.
   /// Throws [Exception] if backend is unavailable or returns an error.
+  @override
   Future<void> deleteInvestment(String investmentId) async {
     if (investmentId.isEmpty) {
       throw ArgumentError('Investment ID cannot be empty');
     }
 
-    print('InvestmentService: Deleting investment $investmentId');
+    debugPrint('InvestmentService: Deleting investment $investmentId');
 
     try {
       // Delete from backend via FFI
@@ -176,12 +182,12 @@ class InvestmentService implements IInvestmentService {
       // Delete from SQLite
       await _dbService.deleteInvestment(investmentId);
 
-      print('InvestmentService: Delete successful, clearing cache');
+      debugPrint('InvestmentService: Delete successful, clearing cache');
 
       // Clear cache to force refresh on next fetch
       clearCache();
     } catch (e) {
-      print('InvestmentService: Delete failed - $e');
+      debugPrint('InvestmentService: Delete failed - $e');
       // Re-throw with descriptive error message
       throw Exception('Failed to delete investment: $e');
     }
@@ -193,8 +199,9 @@ class InvestmentService implements IInvestmentService {
   /// Fetches current price and historical data for crypto/stock assets.
   /// Returns the ID of the newly created investment.
   /// Throws [Exception] if backend is unavailable or returns an error.
+  @override
   Future<String> saveInvestment(InvestmentModel investment) async {
-    print('InvestmentService: Saving investment ${investment.assetName}');
+    debugPrint('InvestmentService: Saving investment ${investment.assetName}');
 
     try {
       // Fetch current price and historical data for crypto/stock
@@ -203,11 +210,11 @@ class InvestmentService implements IInvestmentService {
 
       if (investment.assetType == AssetType.crypto ||
           investment.assetType == AssetType.stock) {
-        print('InvestmentService: Fetching price data for ${investment.assetName}');
+        debugPrint('InvestmentService: Fetching price data for ${investment.assetName}');
 
         // Get current price
         currentPrice = await _priceService.getCurrentPrice(investment.assetName);
-        print('InvestmentService: Current price: $currentPrice');
+        debugPrint('InvestmentService: Current price: $currentPrice');
 
         // Get 30 days of historical data
         final historicalData = await _priceService.getHistoricalPrices(
@@ -222,7 +229,7 @@ class InvestmentService implements IInvestmentService {
               price: point['price'] as double,
             );
           }).toList();
-          print('InvestmentService: Fetched ${priceHistory.length} historical price points');
+          debugPrint('InvestmentService: Fetched ${priceHistory.length} historical price points');
         }
       }
 
@@ -260,14 +267,14 @@ class InvestmentService implements IInvestmentService {
         });
       }
 
-      print('InvestmentService: Save successful with ID: $newId, clearing cache');
+      debugPrint('InvestmentService: Save successful with ID: $newId, clearing cache');
 
       // Clear cache to force refresh on next fetch
       clearCache();
 
       return newId;
     } catch (e) {
-      print('InvestmentService: Save failed - $e');
+      debugPrint('InvestmentService: Save failed - $e');
       // Re-throw with descriptive error message
       throw Exception('Failed to save investment: $e');
     }
@@ -276,6 +283,7 @@ class InvestmentService implements IInvestmentService {
   /// Calculates the total portfolio value across all investments
   /// 
   /// Returns the sum of current values for all provided [investments].
+  @override
   double getTotalPortfolioValue(List<InvestmentModel> investments) {
     if (investments.isEmpty) {
       return 0.0;
@@ -290,6 +298,7 @@ class InvestmentService implements IInvestmentService {
   /// ((totalValue - totalCost) / totalCost) * 100
   /// 
   /// Returns 0.0 if total cost basis is 0 or negative.
+  @override
   double getTotalGainLoss(List<InvestmentModel> investments) {
     if (investments.isEmpty) {
       return 0.0;
@@ -310,8 +319,9 @@ class InvestmentService implements IInvestmentService {
   /// 
   /// Fetches current price and updates historical data.
   /// Returns updated investment model.
+  @override
   Future<InvestmentModel> refreshPriceData(InvestmentModel investment) async {
-    print('InvestmentService: Refreshing price data for ${investment.assetName}');
+    debugPrint('InvestmentService: Refreshing price data for ${investment.assetName}');
 
     try {
       double? currentPrice;
@@ -321,7 +331,7 @@ class InvestmentService implements IInvestmentService {
           investment.assetType == AssetType.stock) {
         // Get current price
         currentPrice = await _priceService.getCurrentPrice(investment.assetName);
-        print('InvestmentService: Current price: $currentPrice');
+        debugPrint('InvestmentService: Current price: $currentPrice');
         
         // Get 30 days of historical data
         final historicalData = await _priceService.getHistoricalPrices(
@@ -336,7 +346,7 @@ class InvestmentService implements IInvestmentService {
               price: point['price'] as double,
             );
           }).toList();
-          print('InvestmentService: Fetched ${priceHistory.length} historical price points');
+          debugPrint('InvestmentService: Fetched ${priceHistory.length} historical price points');
         }
       }
       
@@ -353,7 +363,7 @@ class InvestmentService implements IInvestmentService {
         priceHistory: priceHistory ?? investment.priceHistory,
       );
     } catch (e) {
-      print('InvestmentService: Price refresh failed - $e');
+      debugPrint('InvestmentService: Price refresh failed - $e');
       // Return original investment if refresh fails
       return investment;
     }
@@ -362,6 +372,7 @@ class InvestmentService implements IInvestmentService {
   /// Gets ROI and IRR data from backend
   ///
   /// Returns map with 'roi' and 'irr' keys as formatted percentage strings
+  @override
   Future<Map<String, String>?> getRoiIrrData() async {
     try {
       final data = await _ffiService.getRoiData();
@@ -383,22 +394,22 @@ class InvestmentService implements IInvestmentService {
         'irr': '${irr.toStringAsFixed(2)}%',
       };
     } catch (e) {
-      print('InvestmentService: Failed to get ROI/IRR data - $e');
+      debugPrint('InvestmentService: Failed to get ROI/IRR data - $e');
       return null;
     }
   }
 
   /// Gets unsynced investments from SQLite for backup sync
   /// Used by SyncManager to sync investments to S3
+  @override
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId) async {
-    if (_currentUserId == null) {
-      _currentUserId = userId;
-    }
+    _currentUserId ??= userId;
     return await _dbService.getUnsyncedInvestments(userId);
   }
 
   /// Marks an investment as synced in SQLite
   /// Used by SyncManager after successfully syncing to S3
+  @override
   Future<void> markInvestmentAsSynced(String investmentId) async {
     await _dbService.markInvestmentAsSynced(investmentId);
   }

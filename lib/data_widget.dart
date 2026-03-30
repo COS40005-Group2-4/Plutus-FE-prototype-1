@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'storage.dart';
 import 'theme/app_colors.dart';
-import 'widgets/profile_widget.dart';
 import 'widgets/roi_widget.dart';
 import 'widgets/irr_widget.dart';
 import 'widgets/cashflow_widget.dart';
@@ -21,6 +20,10 @@ import 'widgets/spending_heatmap_widget.dart';
 import 'widgets/income_trend_widget.dart';
 import 'widgets/savings_rate_widget.dart';
 import 'widgets/market_trending_widget.dart';
+import 'widgets/insights/insights_feed_widget.dart';
+import 'widgets/insights/health_score_widget.dart';
+import 'widgets/insights/cash_flow_forecast_widget.dart';
+import 'widgets/insights/coaching_tips_widget.dart';
 
 const Color blue = AppColors.primary;
 const Color red = AppColors.error;
@@ -52,6 +55,10 @@ class DataWidget extends StatelessWidget {
     "incomeTrend": (l) => const IncomeTrendWidget(),
     "savingsRate": (l) => const SavingsRateWidget(),
     "marketTrending": (l) => const MarketTrendingWidget(),
+    "insightsFeed": (l) => const InsightsFeedWidget(),
+    "healthScore": (l) => const HealthScoreWidget(),
+    "cashFlowForecast": (l) => const CashFlowForecastWidget(),
+    "coachingTips": (l) => const CoachingTipsWidget(),
   };
 
   @override

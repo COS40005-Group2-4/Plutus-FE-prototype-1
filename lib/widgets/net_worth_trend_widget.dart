@@ -96,7 +96,7 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: _viewMode == mode ? Colors.white.withOpacity(0.3) : Colors.transparent,
+          color: _viewMode == mode ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -345,8 +345,8 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        lineColor.withOpacity(0.3),
-                        lineColor.withOpacity(0.02),
+                        lineColor.withValues(alpha:0.3),
+                        lineColor.withValues(alpha:0.02),
                       ],
                     ),
                   ),

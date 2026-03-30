@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:path/path.dart';
@@ -15,21 +14,34 @@ class DatabaseService implements IDatabaseService {
   static Database? _database;
   
   DatabaseService._internal();
-  
+
+  @override
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     // Safety net: ensure tables exist even if migration was skipped
     await _ensureBudgetTables(_database!);
     await _ensureAICorrectionsTables(_database!);
+    await _ensureInsightsTables(_database!);
     return _database!;
+  }
+
+  /// Close the current connection and clear the cache so the next
+  /// [database] access re-opens from the file on disk.
+  /// Call after backup restore to pick up the newly written DB file.
+  @override
+  Future<void> resetConnection() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 
   Future<void> _ensureBudgetTables(Database db) async {
     final tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='budgets'");
     if (tables.isEmpty) {
-      if (kDebugMode) print('Budget tables missing — creating now');
+      if (kDebugMode) debugPrint('Budget tables missing — creating now');
       await db.execute('CREATE TABLE IF NOT EXISTS budgets (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, name TEXT NOT NULL, mode TEXT NOT NULL, period_type TEXT NOT NULL, period_start TEXT, currency_code TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE)');
       await db.execute('CREATE TABLE IF NOT EXISTS budget_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, budget_id INTEGER NOT NULL, name TEXT NOT NULL, account_patterns TEXT NOT NULL, budgeted_amount REAL NOT NULL, rollover_enabled INTEGER DEFAULT 0, rollover_behavior TEXT DEFAULT \'carry\', sort_order INTEGER DEFAULT 0, icon TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY (budget_id) REFERENCES budgets (id) ON DELETE CASCADE)');
       await db.execute('CREATE TABLE IF NOT EXISTS budget_periods (id INTEGER PRIMARY KEY AUTOINCREMENT, budget_category_id INTEGER NOT NULL, period_start TEXT NOT NULL, period_end TEXT NOT NULL, budgeted_amount REAL NOT NULL, rollover_amount REAL DEFAULT 0, created_at INTEGER NOT NULL, FOREIGN KEY (budget_category_id) REFERENCES budget_categories (id) ON DELETE CASCADE)');
@@ -45,7 +57,7 @@ class DatabaseService implements IDatabaseService {
     final tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='ai_corrections'");
     if (tables.isEmpty) {
-      if (kDebugMode) print('AI corrections table missing — creating now');
+      if (kDebugMode) debugPrint('AI corrections table missing — creating now');
       await db.execute('''
         CREATE TABLE IF NOT EXISTS ai_corrections (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,6 +70,30 @@ class DatabaseService implements IDatabaseService {
         )
       ''');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
+    }
+  }
+
+  Future<void> _ensureInsightsTables(Database db) async {
+    final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='insights'");
+    if (tables.isEmpty) {
+      if (kDebugMode) debugPrint('Insights table missing — creating now');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS insights (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          body TEXT NOT NULL,
+          metadata TEXT,
+          severity TEXT,
+          is_read INTEGER DEFAULT 0,
+          is_saved INTEGER DEFAULT 0,
+          generated_at INTEGER NOT NULL,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_type ON insights(type)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_generated ON insights(generated_at)');
     }
   }
 
@@ -75,12 +111,12 @@ class DatabaseService implements IDatabaseService {
     final String dbPath = await _getDatabasePath();
     
     if (kDebugMode) {
-      print('Database path: $dbPath');
+      debugPrint('Database path: $dbPath');
     }
     
     return await openDatabase(
       dbPath,
-      version: 7,
+      version: 8,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -309,14 +345,32 @@ class DatabaseService implements IDatabaseService {
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
 
+    // Insights table for AI-generated financial insights
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS insights (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        metadata TEXT,
+        severity TEXT,
+        is_read INTEGER DEFAULT 0,
+        is_saved INTEGER DEFAULT 0,
+        generated_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_type ON insights(type)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_generated ON insights(generated_at)');
+
     if (kDebugMode) {
-      print('Database tables created successfully');
+      debugPrint('Database tables created successfully');
     }
   }
   
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (kDebugMode) {
-      print('Database upgraded from version $oldVersion to $newVersion');
+      debugPrint('Database upgraded from version $oldVersion to $newVersion');
     }
     
     // Upgrade from version 1 to 2: Add profiles table
@@ -352,12 +406,12 @@ class DatabaseService implements IDatabaseService {
           await db.execute('CREATE INDEX idx_profiles_user_id ON profiles(user_id)');
           
           if (kDebugMode) {
-            print('Profiles table created successfully during upgrade');
+            debugPrint('Profiles table created successfully during upgrade');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Error creating profiles table during upgrade: $e');
+          debugPrint('Error creating profiles table during upgrade: $e');
         }
         rethrow;
       }
@@ -388,12 +442,12 @@ class DatabaseService implements IDatabaseService {
           await db.execute('CREATE INDEX idx_postings_transaction_id ON postings(transaction_id)');
           
           if (kDebugMode) {
-            print('Postings table created successfully during upgrade');
+            debugPrint('Postings table created successfully during upgrade');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Error creating postings table during upgrade: $e');
+          debugPrint('Error creating postings table during upgrade: $e');
         }
         rethrow;
       }
@@ -432,12 +486,12 @@ class DatabaseService implements IDatabaseService {
           await db.execute('CREATE INDEX idx_bills_due_date ON bills(due_date)');
           
           if (kDebugMode) {
-            print('Bills table created successfully during upgrade');
+            debugPrint('Bills table created successfully during upgrade');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Error creating bills table during upgrade: $e');
+          debugPrint('Error creating bills table during upgrade: $e');
         }
         rethrow;
       }
@@ -455,12 +509,12 @@ class DatabaseService implements IDatabaseService {
         if (!hasDataConsent) {
           await db.execute('ALTER TABLE users ADD COLUMN data_consent INTEGER DEFAULT 0');
           if (kDebugMode) {
-            print('data_consent column added successfully during upgrade');
+            debugPrint('data_consent column added successfully during upgrade');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Error adding data_consent column during upgrade: $e');
+          debugPrint('Error adding data_consent column during upgrade: $e');
         }
         rethrow;
       }
@@ -546,9 +600,31 @@ class DatabaseService implements IDatabaseService {
 
       await db.execute('CREATE INDEX IF NOT EXISTS idx_ai_corrections_feature ON ai_corrections(feature)');
     }
+
+    // Upgrade from version 7 to 8: Add insights table
+    if (oldVersion < 8) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS insights (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          body TEXT NOT NULL,
+          metadata TEXT,
+          severity TEXT,
+          is_read INTEGER DEFAULT 0,
+          is_saved INTEGER DEFAULT 0,
+          generated_at INTEGER NOT NULL,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_type ON insights(type)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_generated ON insights(generated_at)');
+    }
   }
 
   // User operations
+  @override
   Future<int> createUser({
     required String username,
     required String displayName,
@@ -573,6 +649,7 @@ class DatabaseService implements IDatabaseService {
     });
   }
   
+  @override
   Future<Map<String, dynamic>?> getUserById(int userId) async {
     final db = await database;
     final results = await db.query(
@@ -585,6 +662,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
   
+  @override
   Future<Map<String, dynamic>?> getUserByUsername(String username) async {
     final db = await database;
     final results = await db.query(
@@ -597,6 +675,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
   
+  @override
   Future<Map<String, dynamic>?> getUserByOAuth(String provider, String oauthId) async {
     final db = await database;
     final results = await db.query(
@@ -609,6 +688,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
   
+  @override
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     final db = await database;
     return await db.query(
@@ -618,6 +698,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> updateUserLastLogin(int userId) async {
     final db = await database;
     await db.update(
@@ -628,6 +709,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> linkOAuthToUser(int userId, String provider, String oauthId, String email) async {
     final db = await database;
     await db.update(
@@ -642,6 +724,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> unlinkOAuthFromUser(int userId) async {
     final db = await database;
     await db.update(
@@ -656,6 +739,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> setUserDataConsent(int userId, bool consent) async {
     final db = await database;
     await db.update(
@@ -667,6 +751,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Transaction operations
+  @override
   Future<int> insertTransaction(int userId, Map<String, dynamic> transaction) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -703,6 +788,7 @@ class DatabaseService implements IDatabaseService {
     return txId;
   }
   
+  @override
   Future<List<Map<String, dynamic>>> getPostingsByTransactionId(int transactionId) async {
     final db = await database;
     return await db.query(
@@ -712,6 +798,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<List<Map<String, dynamic>>> getTransactionsByUserId(int userId) async {
     final db = await database;
     final transactions = await db.query(
@@ -733,6 +820,7 @@ class DatabaseService implements IDatabaseService {
     return result;
   }
   
+  @override
   Future<void> deleteTransaction(int transactionId) async {
     final db = await database;
     // Delete postings first (will be handled by CASCADE, but being explicit)
@@ -748,6 +836,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> markTransactionAsSynced(int transactionId) async {
     final db = await database;
     await db.update(
@@ -758,6 +847,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<List<Map<String, dynamic>>> getUnsyncedTransactions(int userId) async {
     final db = await database;
     return await db.query(
@@ -768,6 +858,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Settings operations
+  @override
   Future<void> setSetting(int userId, String key, String value) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -785,6 +876,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<String?> getSetting(int userId, String key) async {
     final db = await database;
     final results = await db.query(
@@ -797,6 +889,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first['value'] as String? : null;
   }
   
+  @override
   Future<Map<String, String>> getAllSettings(int userId) async {
     final db = await database;
     final results = await db.query(
@@ -810,6 +903,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> deleteSetting(int userId, String key) async {
     final db = await database;
     await db.delete(
@@ -820,6 +914,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Profile operations
+  @override
   Future<void> createProfile(Profile profile) async {
     final db = await database;
     await db.insert(
@@ -842,6 +937,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<Map<String, dynamic>?> getProfileByUserId(int userId) async {
     final db = await database;
     final results = await db.query(
@@ -853,6 +949,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  @override
   Future<void> updateProfile(Profile profile) async {
     final db = await database;
     await db.update(
@@ -874,6 +971,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteProfile(int userId) async {
     final db = await database;
     await db.delete(
@@ -884,6 +982,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Utility operations
+  @override
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete('transactions');
@@ -893,6 +992,7 @@ class DatabaseService implements IDatabaseService {
     await db.delete('users');
   }
   
+  @override
   Future<void> clearUserData(int userId) async {
     final db = await database;
     await db.delete('transactions', where: 'user_id = ?', whereArgs: [userId]);
@@ -902,6 +1002,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Bill operations
+  @override
   Future<int> insertBill(int userId, Map<String, dynamic> bill) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -921,6 +1022,7 @@ class DatabaseService implements IDatabaseService {
     });
   }
   
+  @override
   Future<List<Map<String, dynamic>>> getBillsByUserId(int userId) async {
     final db = await database;
     return await db.query(
@@ -931,6 +1033,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> updateBill(int billId, Map<String, dynamic> bill) async {
     final db = await database;
     await db.update(
@@ -951,6 +1054,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
   
+  @override
   Future<void> deleteBill(int billId) async {
     final db = await database;
     await db.delete(
@@ -961,6 +1065,7 @@ class DatabaseService implements IDatabaseService {
   }
   
   // Investment operations
+  @override
   Future<int> insertInvestment(int userId, Map<String, dynamic> investment) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -971,6 +1076,7 @@ class DatabaseService implements IDatabaseService {
     return await db.insert('investments', investment);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getInvestmentsByUserId(int userId) async {
     final db = await database;
     return await db.query(
@@ -980,6 +1086,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<Map<String, dynamic>?> getInvestmentById(String investmentId) async {
     final db = await database;
     final results = await db.query(
@@ -991,6 +1098,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  @override
   Future<void> updateInvestment(String investmentId, Map<String, dynamic> investment) async {
     final db = await database;
     investment['updated_at'] = DateTime.now().millisecondsSinceEpoch;
@@ -1002,6 +1110,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteInvestment(String investmentId) async {
     final db = await database;
     await db.delete(
@@ -1011,6 +1120,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> markInvestmentAsSynced(String investmentId) async {
     final db = await database;
     await db.update(
@@ -1021,6 +1131,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId) async {
     final db = await database;
     return await db.query(
@@ -1031,11 +1142,13 @@ class DatabaseService implements IDatabaseService {
   }
 
   // Budget CRUD
+  @override
   Future<int> insertBudget(Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert('budgets', data);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getBudgetsByUserId(int userId) async {
     final db = await database;
     return await db.query(
@@ -1046,6 +1159,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<Map<String, dynamic>?> getActiveBudgetByUserId(int userId) async {
     final db = await database;
     final results = await db.query(
@@ -1057,6 +1171,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  @override
   Future<void> updateBudget(int id, Map<String, dynamic> data) async {
     final db = await database;
     final updated = Map<String, dynamic>.from(data);
@@ -1069,6 +1184,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteBudget(int id) async {
     final db = await database;
     await db.delete(
@@ -1079,11 +1195,13 @@ class DatabaseService implements IDatabaseService {
   }
 
   // Budget Category CRUD
+  @override
   Future<int> insertBudgetCategory(Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert('budget_categories', data);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getBudgetCategoriesByBudgetId(int budgetId) async {
     final db = await database;
     return await db.query(
@@ -1094,6 +1212,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> updateBudgetCategory(int id, Map<String, dynamic> data) async {
     final db = await database;
     final updated = Map<String, dynamic>.from(data);
@@ -1106,6 +1225,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteBudgetCategory(int id) async {
     final db = await database;
     await db.delete(
@@ -1115,6 +1235,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteBudgetCategoriesByBudgetId(int budgetId) async {
     final db = await database;
     await db.delete(
@@ -1125,11 +1246,13 @@ class DatabaseService implements IDatabaseService {
   }
 
   // Budget Period CRUD
+  @override
   Future<int> insertBudgetPeriod(Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert('budget_periods', data);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getBudgetPeriodsByCategoryId(int categoryId) async {
     final db = await database;
     return await db.query(
@@ -1140,6 +1263,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<Map<String, dynamic>?> getBudgetPeriodForDate(int categoryId, String date) async {
     final db = await database;
     final results = await db.query(
@@ -1152,6 +1276,7 @@ class DatabaseService implements IDatabaseService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  @override
   Future<void> deleteBudgetPeriodsByCategoryId(int categoryId) async {
     final db = await database;
     await db.delete(
@@ -1162,11 +1287,13 @@ class DatabaseService implements IDatabaseService {
   }
 
   // Notification Rule CRUD
+  @override
   Future<int> insertNotificationRule(Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert('notification_rules', data);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getNotificationRulesByCategoryId(int categoryId) async {
     final db = await database;
     return await db.query(
@@ -1176,6 +1303,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> updateNotificationRule(int id, Map<String, dynamic> data) async {
     final db = await database;
     await db.update(
@@ -1186,6 +1314,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> deleteNotificationRulesByCategoryId(int categoryId) async {
     final db = await database;
     await db.delete(
@@ -1196,6 +1325,7 @@ class DatabaseService implements IDatabaseService {
   }
 
   // Budget spending queries
+  @override
   Future<List<Map<String, dynamic>>> getExpensePostingsForPeriod(
     int userId,
     String startDate,
@@ -1235,6 +1365,7 @@ class DatabaseService implements IDatabaseService {
     );
   }
 
+  @override
   Future<void> close() async {
     final db = await database;
     await db.close();

@@ -55,12 +55,12 @@ class AIService implements IAIService {
       }
 
       if (kDebugMode) {
-        print('AI categorize failed: ${response.statusCode} ${response.body}');
+        debugPrint('AI categorize failed: ${response.statusCode} ${response.body}');
       }
       return null;
     } catch (e) {
       if (kDebugMode) {
-        print('AI categorize error: $e');
+        debugPrint('AI categorize error: $e');
       }
       return null;
     }
@@ -103,12 +103,12 @@ class AIService implements IAIService {
       }
 
       if (kDebugMode) {
-        print('AI batch categorize failed: ${response.statusCode}');
+        debugPrint('AI batch categorize failed: ${response.statusCode}');
       }
       return _fallbackIndividualCategorize(transactions, accounts, corrections);
     } catch (e) {
       if (kDebugMode) {
-        print('AI batch categorize error: $e');
+        debugPrint('AI batch categorize error: $e');
       }
       return _fallbackIndividualCategorize(transactions, accounts, corrections);
     }

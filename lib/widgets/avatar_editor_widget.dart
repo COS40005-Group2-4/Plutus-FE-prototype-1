@@ -13,11 +13,11 @@ class AvatarEditorWidget extends StatefulWidget {
   final AvatarCallback onConfirm;
 
   const AvatarEditorWidget({
-    Key? key,
+    super.key,
     required this.imageFile,
     required this.onCancel,
     required this.onConfirm,
-  }) : super(key: key);
+  });
 
   @override
   State<AvatarEditorWidget> createState() => _AvatarEditorWidgetState();
@@ -26,7 +26,6 @@ class AvatarEditorWidget extends StatefulWidget {
 class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
   late TransformationController _controller;
   double _rotation = 0.0;
-  double _scale = 1.0;
 
   @override
   void initState() {
@@ -49,7 +48,6 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
   void _resetTransform() {
     setState(() {
       _rotation = 0.0;
-      _scale = 1.0;
       _controller.value = Matrix4.identity();
     });
   }
@@ -120,14 +118,14 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   icon: Icons.zoom_in,
                   label: l10n.avatarZoomIn,
                   onPressed: () {
-                    _controller.value.scale(1.2);
+                    _controller.value.scaleByDouble(1.2, 1.2, 1.2, 1.0);
                   },
                 ),
                 _buildControlButton(
                   icon: Icons.zoom_out,
                   label: l10n.avatarZoomOut,
                   onPressed: () {
-                    _controller.value.scale(0.8);
+                    _controller.value.scaleByDouble(0.8, 0.8, 0.8, 1.0);
                   },
                 ),
                 _buildControlButton(
@@ -215,11 +213,11 @@ class AvatarPickerDialog extends StatefulWidget {
   final AvatarCallback onAvatarSelected;
 
   const AvatarPickerDialog({
-    Key? key,
+    super.key,
     this.currentAvatarPath,
     required this.defaultAvatarAsset,
     required this.onAvatarSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<AvatarPickerDialog> createState() => _AvatarPickerDialogState();

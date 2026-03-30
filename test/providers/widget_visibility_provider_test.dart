@@ -12,8 +12,8 @@ void main() {
       final provider = WidgetVisibilityProvider();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      expect(provider.visibleWidgetsCount, 19);
-      expect(provider.getVisibleWidgets().length, 19);
+      expect(provider.visibleWidgetsCount, 23);
+      expect(provider.getVisibleWidgets().length, 23);
       expect(provider.hiddenWidgetIds, isEmpty);
     });
 
@@ -43,7 +43,7 @@ void main() {
       await provider.hideWidget('profile');
 
       expect(provider.isWidgetVisible('profile'), false);
-      expect(provider.visibleWidgetsCount, 18);
+      expect(provider.visibleWidgetsCount, 22);
       expect(provider.hiddenWidgetIds, contains('profile'));
       expect(notified, true);
     });
@@ -75,7 +75,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       await provider.hideWidget('nonexistent');
-      expect(provider.visibleWidgetsCount, 19);
+      expect(provider.visibleWidgetsCount, 23);
     });
 
     test('reset makes all widgets visible', () async {
@@ -85,10 +85,10 @@ void main() {
       await provider.hideWidget('profile');
       await provider.hideWidget('budget');
       await provider.hideWidget('history');
-      expect(provider.visibleWidgetsCount, 16);
+      expect(provider.visibleWidgetsCount, 20);
 
       provider.reset();
-      expect(provider.visibleWidgetsCount, 19);
+      expect(provider.visibleWidgetsCount, 23);
     });
 
     test('getVisibleWidgets returns only visible ones', () async {
@@ -101,7 +101,7 @@ void main() {
       final visible = provider.getVisibleWidgets();
       expect(visible, isNot(contains('roi')));
       expect(visible, isNot(contains('irr')));
-      expect(visible.length, 17);
+      expect(visible.length, 21);
     });
 
     test('persistence: saves and loads visibility', () async {

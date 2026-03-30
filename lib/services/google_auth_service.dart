@@ -32,7 +32,7 @@ class GoogleAuthService implements IGoogleAuthService {
     // Validate configuration first
     final configError = GoogleOAuthConfig.validateConfiguration(isWeb: kIsWeb);
     if (configError != null && kDebugMode) {
-      print('⚠️ OAuth Configuration Warning: $configError');
+      debugPrint('⚠️ OAuth Configuration Warning: $configError');
     }
 
     // Determine the correct Client ID and Secret based on platform.
@@ -43,7 +43,7 @@ class GoogleAuthService implements IGoogleAuthService {
       clientId = GoogleOAuthConfig.webClientId;
       clientSecret = GoogleOAuthConfig.clientSecret;
       if (kDebugMode) {
-        print('🌐 Web Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+        debugPrint('🌐 Web Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
       }
     } else if (defaultTargetPlatform == TargetPlatform.windows ||
                defaultTargetPlatform == TargetPlatform.linux ||
@@ -51,14 +51,14 @@ class GoogleAuthService implements IGoogleAuthService {
       clientId = GoogleOAuthConfig.desktopClientId;
       clientSecret = GoogleOAuthConfig.desktopClientSecret;
       if (kDebugMode) {
-        print('🖥️  Desktop Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+        debugPrint('🖥️  Desktop Platform - Client ID: ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
       }
     } else {
       // Android/iOS - google_sign_in v7 needs the Web Client ID as serverClientId
       clientId = GoogleOAuthConfig.webClientId;
       clientSecret = GoogleOAuthConfig.clientSecret;
       if (kDebugMode) {
-        print('📱 Mobile Platform - Server Client ID (Web): ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
+        debugPrint('📱 Mobile Platform - Server Client ID (Web): ${clientId.isNotEmpty ? "✓ Set" : "✗ Missing"}');
       }
     }
 
@@ -74,7 +74,7 @@ class GoogleAuthService implements IGoogleAuthService {
     _googleSignIn.authenticationState.listen(_authStateController.add);
 
     if (kDebugMode) {
-      print('✓ GoogleAuthService initialized');
+      debugPrint('✓ GoogleAuthService initialized');
     }
 
     // Handle OAuth callback on web
@@ -84,9 +84,11 @@ class GoogleAuthService implements IGoogleAuthService {
   }
 
   /// Get the authentication state stream
+  @override
   Stream<gsi.GoogleSignInCredentials?> get authenticationState => _authStateController.stream;
 
   /// Check if user is currently authenticated
+  @override
   Future<bool> isAuthenticated() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -185,7 +187,7 @@ class GoogleAuthService implements IGoogleAuthService {
     } catch (e) {
       // Verification failed (likely offline) - this is OK, session is still valid
       if (kDebugMode) {
-        print('Token verification skipped (offline or error): $e');
+        debugPrint('Token verification skipped (offline or error): $e');
       }
     }
   }
@@ -207,6 +209,7 @@ class GoogleAuthService implements IGoogleAuthService {
   }
 
   /// Sign in with Google
+  @override
   Future<bool> signIn() async {
     try {
       // On web, sign-in must be triggered via the sign-in button widget for redirect flow
@@ -217,42 +220,44 @@ class GoogleAuthService implements IGoogleAuthService {
       }
 
       if (kDebugMode) {
-        print('Starting Google Sign-in with client ID: ${GoogleOAuthConfig.androidClientId}');
+        debugPrint('Starting Google Sign-in with client ID: ${GoogleOAuthConfig.androidClientId}');
       }
 
       final credentials = await _googleSignIn.signIn();
       if (credentials != null) {
         if (kDebugMode) {
-          print('Sign-in successful, fetching user info...');
+          debugPrint('Sign-in successful, fetching user info...');
         }
         await _fetchAndStoreUserInfo(credentials.accessToken);
         return true;
       } else {
         if (kDebugMode) {
-          print('Sign-in cancelled by user or failed silently');
+          debugPrint('Sign-in cancelled by user or failed silently');
         }
       }
       return false;
     } catch (e) {
       if (kDebugMode) {
-        print('Sign-in Error: $e');
-        print('Stack trace: ${StackTrace.current}');
+        debugPrint('Sign-in Error: $e');
+        debugPrint('Stack trace: ${StackTrace.current}');
       }
       return false;
     }
   }
 
   /// Sign out
+  @override
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
     } catch (e) {
-      print('Sign-out Error: $e');
+      debugPrint('Sign-out Error: $e');
     }
     await _clearSession();
   }
 
   /// Get user info from storage
+  @override
   Future<Map<String, String>> getUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString(_userInfoKey);
@@ -261,13 +266,14 @@ class GoogleAuthService implements IGoogleAuthService {
         final Map<String, dynamic> user = json.decode(data);
         return user.map((key, value) => MapEntry(key, value.toString()));
       } catch (e) {
-        print('Error decoding user info: $e');
+        debugPrint('Error decoding user info: $e');
       }
     }
     return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
   }
   
   /// Get session info for display
+  @override
   Future<Map<String, dynamic>> getSessionInfo() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -288,9 +294,7 @@ class GoogleAuthService implements IGoogleAuthService {
       return {
         'sessionExpiry': sessionExpiry,
         'lastVerified': lastVerified,
-        'daysUntilExpiry': sessionExpiry != null 
-            ? sessionExpiry.difference(DateTime.now()).inDays 
-            : null,
+        'daysUntilExpiry': sessionExpiry?.difference(DateTime.now()).inDays,
         'isVerificationDue': lastVerified == null || 
             DateTime.now().difference(lastVerified) > _verificationInterval,
       };
@@ -300,6 +304,7 @@ class GoogleAuthService implements IGoogleAuthService {
   }
 
   /// Get the sign-in button widget (required for web platform)
+  @override
   Widget? getSignInButton() {
     if (kIsWeb) {
       // For web with COOP/COEP, we use a manual redirect flow to avoid popup blocking
@@ -346,7 +351,7 @@ class GoogleAuthService implements IGoogleAuthService {
 
       if (error != null) {
         if (kDebugMode) {
-          print('OAuth error: $error');
+          debugPrint('OAuth error: $error');
         }
         WebHelper.replaceState(WebHelper.currentPath);
         return;
@@ -366,14 +371,14 @@ class GoogleAuthService implements IGoogleAuthService {
             ));
 
             if (kDebugMode) {
-              print('OAuth login successful');
+              debugPrint('OAuth login successful');
             }
           } else {
             WebHelper.replaceState(WebHelper.currentPath);
           }
         }).catchError((e) {
           if (kDebugMode) {
-            print('Error exchanging code: $e');
+            debugPrint('Error exchanging code: $e');
           }
           WebHelper.replaceState(WebHelper.currentPath);
         });
@@ -414,13 +419,13 @@ class GoogleAuthService implements IGoogleAuthService {
         return data;
       } else {
         if (kDebugMode) {
-          print('Token exchange failed: ${response.statusCode} - ${response.body}');
+          debugPrint('Token exchange failed: ${response.statusCode} - ${response.body}');
         }
         return null;
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error exchanging code: $e');
+        debugPrint('Error exchanging code: $e');
       }
       return null;
     }
@@ -452,7 +457,7 @@ class GoogleAuthService implements IGoogleAuthService {
         'prompt=select_account';
 
     if (kDebugMode) {
-      print('🌐 Redirecting to Google Auth: $authUrl');
+      debugPrint('🌐 Redirecting to Google Auth: $authUrl');
     }
     
     WebHelper.assign(authUrl);
@@ -484,7 +489,7 @@ class GoogleAuthService implements IGoogleAuthService {
         return userInfo;
       }
     } catch (e) {
-      print('User Info Fetch Error: $e');
+      debugPrint('User Info Fetch Error: $e');
     }
     return {'email': '', 'name': '', 'id': '', 'photoUrl': ''};
   }

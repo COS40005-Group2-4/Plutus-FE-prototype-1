@@ -22,6 +22,7 @@ pip3 install \
 echo "Copying source code..."
 cp -r "$SCRIPT_DIR/shared" "$BUILD_DIR/"
 cp -r "$SCRIPT_DIR/categorize" "$BUILD_DIR/"
+cp -r "$SCRIPT_DIR/insights" "$BUILD_DIR/"
 
 echo "Creating deployment package..."
 cd "$BUILD_DIR"

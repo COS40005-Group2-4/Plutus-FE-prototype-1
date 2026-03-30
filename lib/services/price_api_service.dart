@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -29,6 +30,7 @@ class PriceApiService implements IPriceApiService {
   /// For stocks: Use symbols like 'AAPL', 'GOOGL', 'TSLA'
   /// 
   /// Returns price in USD, or null if fetch fails
+  @override
   Future<double?> getCurrentPrice(String symbol) async {
     try {
       // Try crypto first (common symbols)
@@ -40,7 +42,7 @@ class PriceApiService implements IPriceApiService {
       // Try stock API
       return await _getStockPrice(symbol);
     } catch (e) {
-      print('Error fetching price for $symbol: $e');
+      debugPrint('Error fetching price for $symbol: $e');
       return null;
     }
   }
@@ -80,7 +82,7 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      print('CoinGecko API error: $e');
+      debugPrint('CoinGecko API error: $e');
       return null;
     }
   }
@@ -89,7 +91,7 @@ class PriceApiService implements IPriceApiService {
   Future<double?> _getStockPrice(String symbol) async {
     try {
       if (_alphaVantageApiKey == null) {
-        print('Alpha Vantage API key not configured');
+        debugPrint('Alpha Vantage API key not configured');
         return null;
       }
 
@@ -112,7 +114,7 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      print('Alpha Vantage API error: $e');
+      debugPrint('Alpha Vantage API error: $e');
       return null;
     }
   }
@@ -155,6 +157,7 @@ class PriceApiService implements IPriceApiService {
   /// 
   /// Returns list of price points with timestamp and price
   /// [days] specifies how many days of history to fetch (max 365)
+  @override
   Future<List<Map<String, dynamic>>?> getHistoricalPrices(
     String symbol,
     int days,
@@ -169,7 +172,7 @@ class PriceApiService implements IPriceApiService {
       // Try stock API
       return await _getStockHistoricalPrices(symbol, days);
     } catch (e) {
-      print('Error fetching historical prices for $symbol: $e');
+      debugPrint('Error fetching historical prices for $symbol: $e');
       return null;
     }
   }
@@ -209,12 +212,13 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      print('CoinGecko historical API error: $e');
+      debugPrint('CoinGecko historical API error: $e');
       return null;
     }
   }
 
   /// Fetches market data (price, 24h change, high/low, volume, market cap)
+  @override
   Future<MarketData?> getMarketData(String symbol) async {
     try {
       if (_isCryptoSymbol(symbol)) {
@@ -223,7 +227,7 @@ class PriceApiService implements IPriceApiService {
       }
       return await _getStockMarketData(symbol);
     } catch (e) {
-      print('Error fetching market data for $symbol: $e');
+      debugPrint('Error fetching market data for $symbol: $e');
       return null;
     }
   }
@@ -260,15 +264,15 @@ class PriceApiService implements IPriceApiService {
         return MarketData(
           currentPrice: (currentPrice as num).toDouble(),
           priceChangePercent24h: changePercent != null ? (changePercent as num).toDouble() : 0.0,
-          high24h: high != null ? (high as num).toDouble() : (currentPrice as num).toDouble(),
-          low24h: low != null ? (low as num).toDouble() : (currentPrice as num).toDouble(),
+          high24h: high != null ? (high as num).toDouble() : currentPrice.toDouble(),
+          low24h: low != null ? (low as num).toDouble() : currentPrice.toDouble(),
           marketCap: marketCap != null ? (marketCap as num).toDouble() : null,
           volume: volume != null ? (volume as num).toDouble() : null,
         );
       }
       return null;
     } catch (e) {
-      print('CoinGecko market data API error: $e');
+      debugPrint('CoinGecko market data API error: $e');
       return null;
     }
   }
@@ -310,7 +314,7 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      print('Alpha Vantage market data API error: $e');
+      debugPrint('Alpha Vantage market data API error: $e');
       return null;
     }
   }
@@ -322,7 +326,7 @@ class PriceApiService implements IPriceApiService {
   ) async {
     try {
       if (_alphaVantageApiKey == null) {
-        print('Alpha Vantage API key not configured');
+        debugPrint('Alpha Vantage API key not configured');
         return null;
       }
 
@@ -365,7 +369,7 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      print('Alpha Vantage historical API error: $e');
+      debugPrint('Alpha Vantage historical API error: $e');
       return null;
     }
   }

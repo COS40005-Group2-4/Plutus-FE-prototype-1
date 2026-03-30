@@ -53,7 +53,7 @@ class ExportService {
       _boldFont = await PdfGoogleFonts.notoSansBold();
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading Noto Sans fonts: $e. Trying Roboto fallback...');
+        debugPrint('Error loading Noto Sans fonts: $e. Trying Roboto fallback...');
       }
       try {
         // Fallback to Roboto which also supports Vietnamese
@@ -61,7 +61,7 @@ class ExportService {
         _boldFont = await PdfGoogleFonts.robotoBold();
       } catch (e2) {
         if (kDebugMode) {
-          print('Error loading fallback fonts: $e2. Using default fonts.');
+          debugPrint('Error loading fallback fonts: $e2. Using default fonts.');
         }
         // Will use default fonts if loading fails
       }
@@ -340,7 +340,7 @@ class ExportService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'Transactions (${startIndex} - ${startIndex + transactions.length - 1} of $totalCount)',
+                'Transactions ($startIndex - ${startIndex + transactions.length - 1} of $totalCount)',
                 style: _getTextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 15),
@@ -522,11 +522,7 @@ class ExportService {
 
       // Format: Date | Description | Amount | Currency | Type
       buffer.writeln(
-        _padRight('Date', 20) +
-        _padRight('Description', 30) +
-        _padRight('Amount', 15) +
-        _padRight('Currency', 10) +
-        'Type',
+        '${_padRight('Date', 20)}${_padRight('Description', 30)}${_padRight('Amount', 15)}${_padRight('Currency', 10)}Type',
       );
       buffer.writeln('-' * 80);
 

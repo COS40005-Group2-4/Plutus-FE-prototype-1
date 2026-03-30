@@ -2,9 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'package:get_it/get_it.dart';
 import '../transaction_history_page.dart';
 import '../import_transaction_page.dart';
-import '../transaction_service.dart';
+import '../services/interfaces/i_transaction_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -149,7 +150,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         );
         if (result == true) {
           _historyKey.currentState?.refresh();
-          TransactionService().notifyTransactionUpdate();
+          GetIt.instance<ITransactionService>().notifyTransactionUpdate();
         }
       },
       child: Container(

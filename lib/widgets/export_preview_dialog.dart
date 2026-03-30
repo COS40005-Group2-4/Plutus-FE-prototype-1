@@ -159,7 +159,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
     }
 
     return Container(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha:0.05),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: SelectableText(

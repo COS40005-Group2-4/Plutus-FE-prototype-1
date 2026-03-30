@@ -114,7 +114,9 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
               const SizedBox(height: 12),
               RadioListTile<bool>(
                 value: true,
+                // ignore: deprecated_member_use
                 groupValue: _useDefaults,
+                // ignore: deprecated_member_use
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startWithDefaults,
                     style: TextStyle(color: textColor, fontSize: 14)),
@@ -124,7 +126,9 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
               ),
               RadioListTile<bool>(
                 value: false,
+                // ignore: deprecated_member_use
                 groupValue: _useDefaults,
+                // ignore: deprecated_member_use
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startEmpty,
                     style: TextStyle(color: textColor, fontSize: 14)),

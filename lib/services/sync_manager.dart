@@ -38,6 +38,7 @@ class SyncManager implements ISyncManager {
 
   /// Check for conflict between local DB and latest S3 backup.
   /// Returns ConflictResult indicating match, mismatch, no-remote, or offline.
+  @override
   Future<ConflictResult> checkConflictOnLaunch(int userId) async {
     // Check connectivity first
     try {
@@ -47,7 +48,7 @@ class SyncManager implements ISyncManager {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('SyncManager: Connectivity check failed: $e');
+        debugPrint('SyncManager: Connectivity check failed: $e');
       }
       return ConflictResult.offline;
     }
@@ -71,7 +72,7 @@ class SyncManager implements ISyncManager {
       }
     } on BackupException catch (e) {
       if (kDebugMode) {
-        print('SyncManager: Conflict check error: ${e.message}');
+        debugPrint('SyncManager: Conflict check error: ${e.message}');
       }
       return ConflictResult.error;
     }
@@ -80,6 +81,7 @@ class SyncManager implements ISyncManager {
   /// Start the debounced auto-sync polling loop.
   /// Polls local DB file modification time every 30 seconds.
   /// Triggers upload 2 minutes after last detected change.
+  @override
   void startAutoSync(int userId) {
     stopAutoSync();
     _userId = userId;
@@ -89,6 +91,7 @@ class SyncManager implements ISyncManager {
 
   /// Stop auto-sync: cancel polling timer and debounce timer.
   /// Does NOT trigger an upload (per Requirement 5.5).
+  @override
   void stopAutoSync() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
@@ -99,6 +102,7 @@ class SyncManager implements ISyncManager {
   }
 
   /// Handle connectivity changes. Retries queued uploads on reconnect.
+  @override
   void onConnectivityChanged(bool isConnected) {
     _isConnected = isConnected;
 
@@ -138,7 +142,7 @@ class SyncManager implements ISyncManager {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('SyncManager: Error polling for changes: $e');
+        debugPrint('SyncManager: Error polling for changes: $e');
       }
     }
   }
@@ -168,7 +172,7 @@ class SyncManager implements ISyncManager {
     try {
       await _backupService.uploadBackup(userId);
       if (kDebugMode) {
-        print('SyncManager: Auto-sync upload completed for user $userId');
+        debugPrint('SyncManager: Auto-sync upload completed for user $userId');
       }
     } on BackupException catch (e) {
       if (e.code == 'network_error') {
@@ -178,14 +182,16 @@ class SyncManager implements ISyncManager {
         }
       }
       if (kDebugMode) {
-        print('SyncManager: Upload failed: ${e.message}');
+        debugPrint('SyncManager: Upload failed: ${e.message}');
       }
     }
   }
 
   /// Whether auto-sync is currently active.
+  @override
   bool get isAutoSyncActive => _pollingTimer != null;
 
   /// Whether there are pending uploads queued.
+  @override
   bool get hasPendingUploads => _pendingUploads.isNotEmpty;
 }

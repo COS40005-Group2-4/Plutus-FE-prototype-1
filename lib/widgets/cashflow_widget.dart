@@ -71,7 +71,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                     final transactions = _filterTransactions(snapshot.data!);
 
                     return _CashflowContent(
-                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_viewMode}_${_showBarChart}'),
+                      key: ValueKey('cashflow_${settings.currency.code}_${_selectedDate}_${_viewMode}_$_showBarChart'),
                       transactions: transactions,
                       allTransactions: snapshot.data!,
                       settings: settings,
@@ -110,7 +110,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 0 ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      color: _viewMode == 0 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -129,7 +129,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 1 ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      color: _viewMode == 1 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -148,7 +148,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 2 ? Colors.white.withOpacity(0.3) : Colors.transparent,
+                      color: _viewMode == 2 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -468,7 +468,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.7),
+            color: color.withValues(alpha:0.7),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -650,7 +650,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           horizontalInterval: maxValue > 0 ? maxValue / 4 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha:0.1),
               strokeWidth: 1,
             );
           },
@@ -674,7 +674,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           barRods: [
             BarChartRodData(
               toY: _incomeData[key] ?? 0,
-              color: AppColors.positive(brightness).withOpacity(0.7),
+              color: AppColors.positive(brightness).withValues(alpha:0.7),
               width: widget.viewMode == 0 ? 8 : 16,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
@@ -683,7 +683,7 @@ class _CashflowContentState extends State<_CashflowContent> {
             ),
             BarChartRodData(
               toY: _expenseData[key] ?? 0,
-              color: AppColors.negative(brightness).withOpacity(0.7),
+              color: AppColors.negative(brightness).withValues(alpha:0.7),
               width: widget.viewMode == 0 ? 8 : 16,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
@@ -804,7 +804,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           horizontalInterval: maxValue > 0 ? maxValue / 4 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha:0.1),
               strokeWidth: 1,
             );
           },
@@ -812,8 +812,8 @@ class _CashflowContentState extends State<_CashflowContent> {
         borderData: FlBorderData(
           show: true,
           border: Border(
-            bottom: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
-            left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+            bottom: BorderSide(color: Colors.white.withValues(alpha:0.2), width: 1),
+            left: BorderSide(color: Colors.white.withValues(alpha:0.2), width: 1),
           ),
         ),
         lineBarsData: [
@@ -830,8 +830,8 @@ class _CashflowContentState extends State<_CashflowContent> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.positive(Theme.of(context).brightness).withOpacity(0.3),
-                  AppColors.positive(Theme.of(context).brightness).withOpacity(0.05),
+                  AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.3),
+                  AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.05),
                 ],
               ),
             ),
@@ -849,8 +849,8 @@ class _CashflowContentState extends State<_CashflowContent> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.negative(Theme.of(context).brightness).withOpacity(0.3),
-                  AppColors.negative(Theme.of(context).brightness).withOpacity(0.05),
+                  AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.3),
+                  AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.05),
                 ],
               ),
             ),

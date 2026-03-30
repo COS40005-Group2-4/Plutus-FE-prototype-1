@@ -7,10 +7,11 @@ import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
+import '../../services/interfaces/i_transaction_service.dart';
 import '../../services/ocr_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/insights_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../transaction_service.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/ai_category_field.dart';
 import '../../widgets/import/zoomable_image_viewer.dart';
@@ -26,7 +27,7 @@ class ScanImportTab extends StatefulWidget {
 class _ScanImportTabState extends State<ScanImportTab> {
   final OCRService _ocrService = OCRService();
   final ImagePicker _picker = ImagePicker();
-  late TransactionService _service;
+  late ITransactionService _service;
   late IAICategoryPipeline _aiPipeline;
 
   XFile? _imageFile;
@@ -60,7 +61,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
     _amountController = TextEditingController();
     _descController = TextEditingController();
 
-    _service = TransactionService();
+    _service = GetIt.instance<ITransactionService>();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.currentUserId != null) {
       _service.setCurrentUser(authProvider.currentUserId!);
@@ -213,6 +214,9 @@ class _ScanImportTabState extends State<ScanImportTab> {
             backgroundColor: Colors.green,
           ),
         );
+        if (context.mounted) {
+          context.read<InsightsProvider>().onTransactionsImported();
+        }
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.of(context).pop(true);
         });

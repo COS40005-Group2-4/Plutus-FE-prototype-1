@@ -41,7 +41,7 @@ class CurrencyService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('CurrencyService: API fetch failed: $e');
+        debugPrint('CurrencyService: API fetch failed: $e');
       }
     }
     return null;

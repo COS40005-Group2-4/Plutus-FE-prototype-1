@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/ai/insight.dart';
 import '../services/ocr_service.dart';
 
 enum AppLanguage {
@@ -79,6 +80,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _dateFormatKey = 'date_format';
   static const String _timeFormatKey = 'time_format';
   static const String _ocrModeKey = 'ocr_mode';
+  static const String _privacyLevelKey = 'ai_privacy_level';
 
   ThemeMode _themeMode = ThemeMode.system;
   AppLanguage _language = AppLanguage.english;
@@ -86,6 +88,7 @@ class SettingsProvider extends ChangeNotifier {
   DateFormatType _dateFormat = DateFormatType.ddMMyyyy;
   TimeFormatType _timeFormat = TimeFormatType.format24h;
   OCRMode _ocrMode = OCRMode.auto;
+  PrivacyLevel _privacyLevel = PrivacyLevel.standard;
 
   bool _isInitialized = false;
 
@@ -100,6 +103,7 @@ class SettingsProvider extends ChangeNotifier {
   DateFormatType get dateFormat => _dateFormat;
   TimeFormatType get timeFormat => _timeFormat;
   OCRMode get ocrMode => _ocrMode;
+  PrivacyLevel get privacyLevel => _privacyLevel;
   bool get isInitialized => _isInitialized;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   Locale get locale => Locale(_language.code);
@@ -150,6 +154,15 @@ class SettingsProvider extends ChangeNotifier {
       );
     }
 
+    // Load AI privacy level
+    final storedPrivacyLevel = prefs.getString(_privacyLevelKey);
+    if (storedPrivacyLevel != null) {
+      _privacyLevel = PrivacyLevel.values.firstWhere(
+        (level) => level.name == storedPrivacyLevel,
+        orElse: () => PrivacyLevel.standard,
+      );
+    }
+
     _isInitialized = true;
     notifyListeners();
   }
@@ -197,6 +210,13 @@ class SettingsProvider extends ChangeNotifier {
     _ocrMode = mode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_ocrModeKey, mode.name);
+    notifyListeners();
+  }
+
+  Future<void> setPrivacyLevel(PrivacyLevel level) async {
+    _privacyLevel = level;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_privacyLevelKey, level.name);
     notifyListeners();
   }
 }

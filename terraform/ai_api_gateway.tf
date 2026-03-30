@@ -90,6 +90,87 @@ resource "aws_lambda_permission" "ai_categorize_apigw" {
   source_arn    = "${aws_api_gateway_rest_api.ai.execution_arn}/*/*"
 }
 
+# ── /insights resource ──
+
+resource "aws_api_gateway_resource" "insights" {
+  rest_api_id = aws_api_gateway_rest_api.ai.id
+  parent_id   = aws_api_gateway_rest_api.ai.root_resource_id
+  path_part   = "insights"
+}
+
+# POST /insights method
+resource "aws_api_gateway_method" "insights_post" {
+  rest_api_id      = aws_api_gateway_rest_api.ai.id
+  resource_id      = aws_api_gateway_resource.insights.id
+  http_method      = "POST"
+  authorization    = "NONE"
+  api_key_required = false
+}
+
+# OPTIONS /insights for CORS
+resource "aws_api_gateway_method" "insights_options" {
+  rest_api_id   = aws_api_gateway_rest_api.ai.id
+  resource_id   = aws_api_gateway_resource.insights.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "insights_options" {
+  rest_api_id = aws_api_gateway_rest_api.ai.id
+  resource_id = aws_api_gateway_resource.insights.id
+  http_method = aws_api_gateway_method.insights_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "insights_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.ai.id
+  resource_id = aws_api_gateway_resource.insights.id
+  http_method = aws_api_gateway_method.insights_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "insights_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.ai.id
+  resource_id = aws_api_gateway_resource.insights.id
+  http_method = aws_api_gateway_method.insights_options.http_method
+  status_code = aws_api_gateway_method_response.insights_options_200.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Api-Key'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Lambda integration for POST /insights
+resource "aws_api_gateway_integration" "insights_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.ai.id
+  resource_id             = aws_api_gateway_resource.insights.id
+  http_method             = aws_api_gateway_method.insights_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.ai_insights.invoke_arn
+}
+
+# Lambda permission for insights endpoint
+resource "aws_lambda_permission" "ai_insights_apigw" {
+  statement_id  = "AllowAPIGatewayInvokeInsights"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.ai_insights.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.ai.execution_arn}/*/*"
+}
+
 # Deployment
 resource "aws_api_gateway_deployment" "ai" {
   rest_api_id = aws_api_gateway_rest_api.ai.id
@@ -100,12 +181,18 @@ resource "aws_api_gateway_deployment" "ai" {
       aws_api_gateway_method.categorize_options,
       aws_api_gateway_integration.categorize_lambda,
       aws_api_gateway_integration.categorize_options,
+      aws_api_gateway_method.insights_post,
+      aws_api_gateway_method.insights_options,
+      aws_api_gateway_integration.insights_lambda,
+      aws_api_gateway_integration.insights_options,
     ]))
   }
 
   depends_on = [
     aws_api_gateway_integration.categorize_lambda,
     aws_api_gateway_integration.categorize_options,
+    aws_api_gateway_integration.insights_lambda,
+    aws_api_gateway_integration.insights_options,
   ]
 
   lifecycle {
