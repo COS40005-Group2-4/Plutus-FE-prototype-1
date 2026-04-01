@@ -16,3 +16,4 @@ export 'i_ai_service.dart';
 export 'i_ai_category_pipeline.dart';
 export 'i_insights_service.dart';
 export 'i_report_pdf_service.dart';
+export 'i_report_ai_service.dart';
