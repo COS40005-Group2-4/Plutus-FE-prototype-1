@@ -21,6 +21,8 @@ import '../services/ai_service.dart';
 import '../services/ai_category_pipeline.dart';
 import '../services/ocr_service.dart';
 import '../services/insights_service.dart';
+import '../services/report_ai_service.dart';
+import '../services/report_pdf_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -73,6 +75,8 @@ Future<void> setupServiceLocator() async {
     ),
   );
   sl.registerLazySingleton<IInsightsService>(() => InsightsService());
+  sl.registerLazySingleton<IReportAiService>(() => ReportAiService());
+  sl.registerLazySingleton<IReportPdfService>(() => ReportPdfService());
 
   // Tier 2: Top-tier services
   sl.registerLazySingleton<ISyncManager>(

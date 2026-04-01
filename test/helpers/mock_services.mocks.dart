@@ -5,6 +5,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i7;
 import 'dart:io' as _i19;
+import 'dart:typed_data' as _i35;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i9;
@@ -17,6 +18,8 @@ import 'package:plutus_fe_prototype/models/budget_model.dart' as _i5;
 import 'package:plutus_fe_prototype/models/investment_model.dart' as _i2;
 import 'package:plutus_fe_prototype/models/market_data_model.dart' as _i23;
 import 'package:plutus_fe_prototype/models/profile_model.dart' as _i4;
+import 'package:plutus_fe_prototype/models/report_config.dart' as _i32;
+import 'package:plutus_fe_prototype/models/report_data.dart' as _i33;
 import 'package:plutus_fe_prototype/models/transaction_model.dart' as _i11;
 import 'package:plutus_fe_prototype/models/user_model.dart' as _i3;
 import 'package:plutus_fe_prototype/services/interfaces/i_ai_category_pipeline.dart'
@@ -41,6 +44,10 @@ import 'package:plutus_fe_prototype/services/interfaces/i_price_api_service.dart
     as _i22;
 import 'package:plutus_fe_prototype/services/interfaces/i_profile_service.dart'
     as _i18;
+import 'package:plutus_fe_prototype/services/interfaces/i_report_ai_service.dart'
+    as _i31;
+import 'package:plutus_fe_prototype/services/interfaces/i_report_pdf_service.dart'
+    as _i34;
 import 'package:plutus_fe_prototype/services/interfaces/i_settings_service.dart'
     as _i20;
 import 'package:plutus_fe_prototype/services/interfaces/i_sync_manager.dart'
@@ -686,6 +693,15 @@ class MockIDatabaseService extends _i1.Mock implements _i6.IDatabaseService {
   _i7.Future<void> close() =>
       (super.noSuchMethod(
             Invocation.method(#close, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> resetConnection() =>
+      (super.noSuchMethod(
+            Invocation.method(#resetConnection, []),
             returnValue: _i7.Future<void>.value(),
             returnValueForMissingStub: _i7.Future<void>.value(),
           )
@@ -2314,4 +2330,71 @@ class MockIAICategoryPipeline extends _i1.Mock
             ),
           )
           as _i7.Future<List<List<_i27.CategorySuggestion>>>);
+}
+
+/// A class which mocks [IReportAiService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIReportAiService extends _i1.Mock implements _i31.IReportAiService {
+  MockIReportAiService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<Map<_i32.ReportSection, _i33.SectionRecommendation>>
+  getRecommendations({
+    required List<_i32.ReportSection>? sections,
+    required _i32.DateRange? dateRange,
+    required _i32.AudienceMode? audienceMode,
+    required String? locale,
+    required String? privacyLevel,
+    required Map<String, dynamic>? sectionData,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getRecommendations, [], {
+              #sections: sections,
+              #dateRange: dateRange,
+              #audienceMode: audienceMode,
+              #locale: locale,
+              #privacyLevel: privacyLevel,
+              #sectionData: sectionData,
+            }),
+            returnValue:
+                _i7.Future<
+                  Map<_i32.ReportSection, _i33.SectionRecommendation>
+                >.value(<_i32.ReportSection, _i33.SectionRecommendation>{}),
+          )
+          as _i7.Future<Map<_i32.ReportSection, _i33.SectionRecommendation>>);
+}
+
+/// A class which mocks [IReportPdfService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIReportPdfService extends _i1.Mock implements _i34.IReportPdfService {
+  MockIReportPdfService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<String> generatePdf({required _i33.ReportDataModel? data}) =>
+      (super.noSuchMethod(
+            Invocation.method(#generatePdf, [], {#data: data}),
+            returnValue: _i7.Future<String>.value(
+              _i9.dummyValue<String>(
+                this,
+                Invocation.method(#generatePdf, [], {#data: data}),
+              ),
+            ),
+          )
+          as _i7.Future<String>);
+
+  @override
+  _i7.Future<_i35.Uint8List> generatePdfBytes({
+    required _i33.ReportDataModel? data,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#generatePdfBytes, [], {#data: data}),
+            returnValue: _i7.Future<_i35.Uint8List>.value(_i35.Uint8List(0)),
+          )
+          as _i7.Future<_i35.Uint8List>);
 }
