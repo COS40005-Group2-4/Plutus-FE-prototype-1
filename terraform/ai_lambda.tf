@@ -116,7 +116,7 @@ resource "aws_iam_role_policy" "ai_insights_bedrock" {
         Action = ["bedrock:InvokeModel"]
         Resource = [
           "arn:aws:bedrock:${var.aws_region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.insights_bedrock_model_id}",
-          "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0"
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0"
         ]
       }
     ]

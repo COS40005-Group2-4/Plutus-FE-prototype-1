@@ -6,7 +6,10 @@
       "mcp__claude_ai_Context7__resolve-library-id",
       "Bash(bash package.sh)",
       "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1/lib/widgets/import -type f -name *.dart)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1 -type f \\\\\\(-name *export* -o -name *report* -o -name *pdf* -o -name *insight* -o -name *recommendation* \\\\\\))",
+      "Bash(/Users/anh.dinh/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh --project-dir /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1)"
     ]
   }
 }

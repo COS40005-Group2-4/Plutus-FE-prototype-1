@@ -53,7 +53,7 @@ variable "bedrock_model_id" {
 }
 
 variable "insights_bedrock_model_id" {
-  description = "Bedrock inference profile ID for AI insights (Sonnet 4.5)"
+  description = "Bedrock inference profile ID for AI insights (Sonnet 4)"
   type        = string
-  default     = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+  default     = "apac.anthropic.claude-sonnet-4-20250514-v1:0"
 }
