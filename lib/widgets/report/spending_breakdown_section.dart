@@ -67,7 +67,7 @@ class SpendingBreakdownSection extends StatelessWidget {
               .map((MapEntry<int, SpendingCategoryData> entry) {
             return Column(
               children: <Widget>[
-                _buildCategoryRow(entry.value, entry.key),
+                _buildCategoryRow(entry.value, entry.key, data),
                 if (entry.key < categories.length - 1)
                   Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
               ],
@@ -142,7 +142,7 @@ class SpendingBreakdownSection extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryRow(SpendingCategoryData cat, int index) {
+  Widget _buildCategoryRow(SpendingCategoryData cat, int index, ReportDataModel data) {
     final double changePercent = cat.changePercent;
     final bool isUp = changePercent > 0;
     final Color changeColor =
@@ -188,7 +188,7 @@ class SpendingBreakdownSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              cat.amount.toStringAsFixed(0),
+              data.formatAmount(cat.amount),
               textAlign: TextAlign.end,
               style: const TextStyle(
                 fontSize: 13,

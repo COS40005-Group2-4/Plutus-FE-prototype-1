@@ -48,43 +48,57 @@ class ExecutiveSummarySection extends StatelessWidget {
           title: 'Executive Summary',
           icon: Icons.bar_chart_rounded,
         ),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
-          childAspectRatio: 1.6,
-          children: <Widget>[
-            ReportMetricCard(
-              label: 'NET SAVINGS',
-              value: '${data.currency}${_fmt(netSavings)}',
-              changeText: netChangePct.isNotEmpty ? netChangePct : null,
-              changeColor: netUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-              accentColor: AppColors.savingsAccent,
-            ),
-            ReportMetricCard(
-              label: 'SAVINGS RATE',
-              value: '${savingsRate.toStringAsFixed(1)}%',
-              changeText: rateChange,
-              changeColor: rateUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-              accentColor: AppColors.primary,
-            ),
-            ReportMetricCard(
-              label: 'TRANSACTIONS',
-              value: txCount.toString(),
-              changeText: txChange,
-              changeColor: Colors.white54,
-              accentColor: Colors.white70,
-            ),
-            ReportMetricCard(
-              label: 'HEALTH SCORE',
-              value: score != null ? '$score/100' : 'N/A',
-              changeText: scoreChange.isNotEmpty ? scoreChange : null,
-              changeColor: scoreUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-              accentColor: AppColors.primary,
-            ),
-          ],
+        const Text(
+          'Here\'s a snapshot of your financial health this period. '
+          'Each metric is compared against the previous period to help you track progress.',
+          style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.6),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _buildMetricWithDescription(
+          card: ReportMetricCard(
+            label: 'NET SAVINGS',
+            value: data.formatAmount(netSavings, compact: true),
+            changeText: netChangePct.isNotEmpty ? netChangePct : null,
+            changeColor: netUp ? AppColors.incomeAccent : AppColors.expenseAccent,
+            accentColor: AppColors.savingsAccent,
+          ),
+          description:
+              'The difference between your total income and expenses. A positive number means you saved money.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildMetricWithDescription(
+          card: ReportMetricCard(
+            label: 'SAVINGS RATE',
+            value: '${savingsRate.toStringAsFixed(1)}%',
+            changeText: rateChange,
+            changeColor: rateUp ? AppColors.incomeAccent : AppColors.expenseAccent,
+            accentColor: AppColors.primary,
+          ),
+          description:
+              'The percentage of income you kept as savings. Financial advisors recommend at least 20%.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildMetricWithDescription(
+          card: ReportMetricCard(
+            label: 'TRANSACTIONS',
+            value: txCount.toString(),
+            changeText: txChange,
+            changeColor: Colors.white54,
+            accentColor: Colors.white70,
+          ),
+          description: 'Total number of recorded transactions this period.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildMetricWithDescription(
+          card: ReportMetricCard(
+            label: 'HEALTH SCORE',
+            value: score != null ? '$score/100' : 'N/A',
+            changeText: scoreChange.isNotEmpty ? scoreChange : null,
+            changeColor: scoreUp ? AppColors.incomeAccent : AppColors.expenseAccent,
+            accentColor: AppColors.primary,
+          ),
+          description:
+              'An overall measure of your financial health from 0 to 100, based on savings, consistency, and spending patterns.',
         ),
         if (rec != null)
           ReportAiRecommendation(
@@ -95,11 +109,27 @@ class ExecutiveSummarySection extends StatelessWidget {
     );
   }
 
-  String _fmt(double value) {
-    final bool negative = value < 0;
-    final String abs = value.abs() >= 1000
-        ? '${(value.abs() / 1000).toStringAsFixed(1)}k'
-        : value.abs().toStringAsFixed(0);
-    return negative ? '-$abs' : abs;
+  Widget _buildMetricWithDescription({
+    required ReportMetricCard card,
+    required String description,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        card,
+        const SizedBox(height: AppSpacing.xs),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white38,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

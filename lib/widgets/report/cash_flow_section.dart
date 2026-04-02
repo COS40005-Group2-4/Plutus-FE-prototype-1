@@ -33,7 +33,7 @@ class CashFlowSection extends StatelessWidget {
               child: _buildFlowCard(
                 label: 'INFLOW',
                 value: data.totalIncome,
-                currency: data.currency,
+                data: data,
                 color: AppColors.incomeAccent,
                 icon: Icons.arrow_downward_rounded,
               ),
@@ -43,7 +43,7 @@ class CashFlowSection extends StatelessWidget {
               child: _buildFlowCard(
                 label: 'OUTFLOW',
                 value: data.totalExpenses,
-                currency: data.currency,
+                data: data,
                 color: AppColors.expenseAccent,
                 icon: Icons.arrow_upward_rounded,
               ),
@@ -53,7 +53,7 @@ class CashFlowSection extends StatelessWidget {
               child: _buildFlowCard(
                 label: 'NET',
                 value: net,
-                currency: data.currency,
+                data: data,
                 color: positive ? AppColors.incomeAccent : AppColors.expenseAccent,
                 icon: positive
                     ? Icons.trending_up_rounded
@@ -103,7 +103,7 @@ class CashFlowSection extends StatelessWidget {
   Widget _buildFlowCard({
     required String label,
     required double value,
-    required String currency,
+    required ReportDataModel data,
     required Color color,
     required IconData icon,
   }) {
@@ -134,7 +134,7 @@ class CashFlowSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '$currency${value.abs().toStringAsFixed(0)}',
+            data.formatAmount(value),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,

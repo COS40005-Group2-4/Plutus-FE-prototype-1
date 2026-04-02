@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:intl/intl.dart';
 import 'report_config.dart';
 import 'ai/insight.dart';
 import 'transaction_model.dart';
@@ -230,4 +231,22 @@ class ReportDataModel {
   int get activeBillCount => bills?.length ?? 0;
   double get totalRecurring =>
       bills?.fold<double>(0, (double sum, BillData b) => sum + b.amount) ?? 0;
+
+  /// Format amount with currency, respecting suffix currencies (VND, ₫)
+  /// and prefix currencies ($, €, £).
+  String formatAmount(double amount, {bool compact = false}) {
+    final NumberFormat nf = compact
+        ? NumberFormat.compact()
+        : NumberFormat('#,##0', 'en_US');
+    final String formatted = nf.format(amount.abs());
+    final String sign = amount < 0 ? '-' : '';
+
+    // VND and dong symbol go after the number
+    final String cur = currency.trim();
+    if (cur == 'VND' || cur == '₫' || cur == 'đ') {
+      return '$sign$formatted $cur';
+    }
+    // Most other currencies (USD $, EUR €, etc.) go before
+    return '$sign$cur$formatted';
+  }
 }

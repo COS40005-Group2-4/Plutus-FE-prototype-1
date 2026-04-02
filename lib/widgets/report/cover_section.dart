@@ -94,7 +94,7 @@ class CoverSection extends StatelessWidget {
               Expanded(
                 child: ReportMetricCard(
                   label: 'TOTAL INCOME',
-                  value: '${data.currency}${_fmt(data.totalIncome)}',
+                  value: data.formatAmount(data.totalIncome),
                   accentColor: AppColors.incomeAccent,
                 ),
               ),
@@ -102,7 +102,7 @@ class CoverSection extends StatelessWidget {
               Expanded(
                 child: ReportMetricCard(
                   label: 'TOTAL EXPENSES',
-                  value: '${data.currency}${_fmt(data.totalExpenses)}',
+                  value: data.formatAmount(data.totalExpenses),
                   accentColor: AppColors.expenseAccent,
                 ),
               ),
@@ -131,10 +131,4 @@ class CoverSection extends StatelessWidget {
     );
   }
 
-  String _fmt(double value) {
-    if (value >= 1000) {
-      return NumberFormat('#,##0.00').format(value);
-    }
-    return value.toStringAsFixed(2);
-  }
 }

@@ -58,7 +58,7 @@ class IncomeAnalysisSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${data.currency}${data.totalIncome.toStringAsFixed(2)}',
+                      data.formatAmount(data.totalIncome),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -102,7 +102,7 @@ class IncomeAnalysisSection extends StatelessWidget {
           )
         else ...<Widget>[
           const SizedBox(height: AppSpacing.lg),
-          ...sources.map((IncomeSourceData src) => _buildSourceRow(src)),
+          ...sources.map((IncomeSourceData src) => _buildSourceRow(src, data)),
         ],
         if (rec != null)
           ReportAiRecommendation(
@@ -113,7 +113,7 @@ class IncomeAnalysisSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSourceRow(IncomeSourceData src) {
+  Widget _buildSourceRow(IncomeSourceData src, ReportDataModel data) {
     final bool varUp = src.variance >= 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -129,7 +129,7 @@ class IncomeAnalysisSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              src.amount.toStringAsFixed(2),
+              data.formatAmount(src.amount),
               textAlign: TextAlign.end,
               style: const TextStyle(
                 fontSize: 13,
