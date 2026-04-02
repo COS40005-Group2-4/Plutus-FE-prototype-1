@@ -23,6 +23,7 @@ echo "Copying source code..."
 cp -r "$SCRIPT_DIR/shared" "$BUILD_DIR/"
 cp -r "$SCRIPT_DIR/categorize" "$BUILD_DIR/"
 cp -r "$SCRIPT_DIR/insights" "$BUILD_DIR/"
+cp -r "$SCRIPT_DIR/report_insights" "$BUILD_DIR/report_insights/"
 
 echo "Creating deployment package..."
 cd "$BUILD_DIR"
