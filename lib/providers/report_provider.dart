@@ -224,8 +224,16 @@ class ReportProvider extends ChangeNotifier {
     if (_reportData == null) return null;
 
     try {
-      return await _reportPdfService.generatePdf(data: _reportData!);
-    } catch (e) {
+      final String path = await _reportPdfService.generatePdf(data: _reportData!);
+      if (kDebugMode) {
+        debugPrint('ReportProvider: PDF exported to $path');
+      }
+      return path;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('ReportProvider: PDF export failed: $e');
+        debugPrint('Stack trace: $stackTrace');
+      }
       _error = 'PDF export failed: $e';
       notifyListeners();
       return null;

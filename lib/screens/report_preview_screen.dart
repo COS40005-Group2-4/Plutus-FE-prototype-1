@@ -219,11 +219,13 @@ class ReportPreviewScreen extends StatelessWidget {
         ),
       );
     } else {
+      final String errorMsg = provider.error ?? 'Unknown error';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PDF export failed or not supported on this platform.'),
+        SnackBar(
+          content: Text('PDF export failed: $errorMsg'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 8),
         ),
       );
     }
