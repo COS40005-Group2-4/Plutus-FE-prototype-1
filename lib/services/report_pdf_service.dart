@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -78,7 +79,12 @@ class ReportPdfService implements IReportPdfService {
 
   @override
   Future<Uint8List> generatePdfBytes({required ReportDataModel data}) async {
+    if (kDebugMode) {
+      debugPrint('ReportPdfService: Starting PDF generation...');
+      debugPrint('  Sections: ${data.config.enabledSections.map((s) => s.name).join(', ')}');
+    }
     await _loadFonts();
+    if (kDebugMode) debugPrint('ReportPdfService: Fonts loaded.');
 
     final pw.Document doc = pw.Document(
       theme: pw.ThemeData.withFont(
@@ -110,12 +116,14 @@ class ReportPdfService implements IReportPdfService {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 36),
+          maxPages: 100,
           header: (pw.Context ctx) => _buildPageHeader(data, dateFmt),
           footer: (pw.Context ctx) => _buildPageFooter(ctx),
           build: (pw.Context ctx) {
             final List<pw.Widget> content = <pw.Widget>[];
             for (final ReportSection section in bodySections) {
-              content.add(_buildSection(section, data, nf, pctFmt, dateFmt));
+              // Each section returns a list of widgets that MultiPage can paginate individually
+              content.addAll(_buildSectionWidgets(section, data, nf, pctFmt, dateFmt));
               content.add(pw.SizedBox(height: 24));
             }
             return content;
@@ -124,7 +132,10 @@ class ReportPdfService implements IReportPdfService {
       );
     }
 
-    return doc.save();
+    if (kDebugMode) debugPrint('ReportPdfService: Saving PDF document...');
+    final Uint8List result = await doc.save();
+    if (kDebugMode) debugPrint('ReportPdfService: PDF generated (${result.length} bytes)');
+    return result;
   }
 
   // ── Page-level builders ───────────────────────────────────────────────────
@@ -162,7 +173,7 @@ class ReportPdfService implements IReportPdfService {
                 '${dateFmt.format(data.config.dateRange.start)} – ${dateFmt.format(data.config.dateRange.end)}',
                 style: _style(size: 13, color: _colorTextSecondary),
               ),
-              pw.Spacer(),
+              pw.SizedBox(height: 120),
               // 3 metric boxes
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.start,
@@ -283,7 +294,93 @@ class ReportPdfService implements IReportPdfService {
 
   // ── Section dispatcher ────────────────────────────────────────────────────
 
-  pw.Widget _buildSection(
+  /// Returns a flat list of widgets for MultiPage — avoids wrapping in a single
+  /// Column which prevents page-break splitting.
+  List<pw.Widget> _buildSectionWidgets(
+    ReportSection section,
+    ReportDataModel data,
+    NumberFormat nf,
+    NumberFormat pctFmt,
+    DateFormat dateFmt,
+  ) {
+    if (section == ReportSection.coverPage) return <pw.Widget>[];
+
+    final String title = _sectionTitle(section);
+    final SectionRecommendation? rec = data.recommendations[section];
+
+    // Section title header
+    final pw.Widget header = pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: pw.BoxDecoration(
+        color: _colorSurface,
+        border: pw.Border(
+            left: const pw.BorderSide(color: _colorAccentBlue, width: 3)),
+      ),
+      child: pw.Text(
+        title,
+        style: _style(size: 13, bold: true, color: _colorTextPrimary),
+      ),
+    );
+
+    // Section body content
+    final pw.Widget body = _buildSectionBody(section, data, nf, pctFmt, dateFmt);
+
+    // AI recommendation (if any)
+    pw.Widget? aiBox;
+    if (rec != null) {
+      aiBox = pw.Container(
+        margin: const pw.EdgeInsets.only(top: 8),
+        padding: const pw.EdgeInsets.all(10),
+        decoration: pw.BoxDecoration(
+          color: PdfColor.fromInt(0xFF0F1D2E),
+          border: pw.Border(
+              left: const pw.BorderSide(color: _colorAccentBlue, width: 3)),
+          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: <pw.Widget>[
+            pw.Text('AI Insight',
+                style: _style(size: 8, bold: true, color: _colorAccentBlue)),
+            pw.SizedBox(height: 4),
+            pw.Text(rec.oneLiner,
+                style: _style(size: 10, bold: true, color: _colorTextPrimary)),
+            pw.SizedBox(height: 4),
+            pw.Text(rec.detailed,
+                style: _style(size: 9, color: _colorTextSecondary)),
+          ],
+        ),
+      );
+    }
+
+    return <pw.Widget>[
+      header,
+      pw.SizedBox(height: 10),
+      body,
+      if (aiBox != null) aiBox,
+    ];
+  }
+
+  String _sectionTitle(ReportSection section) {
+    switch (section) {
+      case ReportSection.coverPage: return 'Cover';
+      case ReportSection.executiveSummary: return 'Executive Summary';
+      case ReportSection.spendingBreakdown: return 'Spending Breakdown';
+      case ReportSection.incomeAnalysis: return 'Income Analysis';
+      case ReportSection.cashFlow: return 'Cash Flow';
+      case ReportSection.budgetActual: return 'Budget vs Actual';
+      case ReportSection.topMerchants: return 'Top Merchants';
+      case ReportSection.investmentPortfolio: return 'Investment Portfolio';
+      case ReportSection.forecast: return 'Forecast';
+      case ReportSection.alerts: return 'Alerts & Warnings';
+      case ReportSection.coaching: return 'Coaching Tips';
+      case ReportSection.billsRecurring: return 'Bills & Recurring';
+      case ReportSection.transactionLog: return 'Transaction Log';
+    }
+  }
+
+  pw.Widget _buildSectionBody(
     ReportSection section,
     ReportDataModel data,
     NumberFormat nf,
@@ -292,38 +389,37 @@ class ReportPdfService implements IReportPdfService {
   ) {
     switch (section) {
       case ReportSection.coverPage:
-        // Handled as a standalone page above; should not appear in body.
         return pw.SizedBox();
       case ReportSection.executiveSummary:
-        return _buildExecutiveSummary(data, nf, pctFmt);
+        return _buildExecutiveSummaryBody(data, nf, pctFmt);
       case ReportSection.spendingBreakdown:
-        return _buildSpendingBreakdown(data, nf, pctFmt);
+        return _buildSpendingBreakdownBody(data, nf, pctFmt);
       case ReportSection.incomeAnalysis:
-        return _buildIncomeAnalysis(data, nf);
+        return _buildIncomeAnalysisBody(data, nf);
       case ReportSection.cashFlow:
-        return _buildCashFlow(data, nf);
+        return _buildCashFlowBody(data, nf);
       case ReportSection.budgetActual:
-        return _buildBudgetActual(data, nf, pctFmt);
+        return _buildBudgetActualBody(data, nf, pctFmt);
       case ReportSection.topMerchants:
-        return _buildTopMerchants(data, nf);
+        return _buildTopMerchantsBody(data, nf);
       case ReportSection.investmentPortfolio:
-        return _buildInvestmentPortfolio(data, nf, pctFmt);
+        return _buildInvestmentPortfolioBody(data, nf, pctFmt);
       case ReportSection.forecast:
-        return _buildForecast(data);
+        return _buildForecastBody(data);
       case ReportSection.alerts:
-        return _buildAlerts(data);
+        return _buildAlertsBody(data);
       case ReportSection.coaching:
-        return _buildCoaching(data, nf);
+        return _buildCoachingBody(data, nf);
       case ReportSection.billsRecurring:
-        return _buildBills(data, nf, dateFmt);
+        return _buildBillsBody(data, nf, dateFmt);
       case ReportSection.transactionLog:
-        return _buildTransactionLog(data, nf, dateFmt);
+        return _buildTransactionLogBody(data, nf, dateFmt);
     }
   }
 
   // ── Individual section builders ───────────────────────────────────────────
 
-  pw.Widget _buildExecutiveSummary(
+  pw.Widget _buildExecutiveSummaryBody(
       ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
     final double incomeChange = data.comparisonIncome > 0
         ? ((data.totalIncome - data.comparisonIncome) / data.comparisonIncome) *
@@ -335,63 +431,58 @@ class ReportPdfService implements IReportPdfService {
             100
         : 0;
 
-    return _section(
-      title: 'Executive Summary',
-      section: ReportSection.executiveSummary,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          // 2×2 metric grid
-          pw.Row(
-            children: <pw.Widget>[
-              pw.Expanded(
-                child: _summaryCard(
-                  label: 'Total Income',
-                  value: data.formatAmount(data.totalIncome),
-                  subLabel: _momLabel(incomeChange),
-                  valueColor: _colorAccentGreen,
-                ),
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        // 2×2 metric grid
+        pw.Row(
+          children: <pw.Widget>[
+            pw.Expanded(
+              child: _summaryCard(
+                label: 'Total Income',
+                value: data.formatAmount(data.totalIncome),
+                subLabel: _momLabel(incomeChange),
+                valueColor: _colorAccentGreen,
               ),
-              pw.SizedBox(width: 12),
-              pw.Expanded(
-                child: _summaryCard(
-                  label: 'Total Expenses',
-                  value: data.formatAmount(data.totalExpenses),
-                  subLabel: _momLabel(expenseChange),
-                  valueColor: _colorAccentRed,
-                ),
+            ),
+            pw.SizedBox(width: 12),
+            pw.Expanded(
+              child: _summaryCard(
+                label: 'Total Expenses',
+                value: data.formatAmount(data.totalExpenses),
+                subLabel: _momLabel(expenseChange),
+                valueColor: _colorAccentRed,
               ),
-            ],
-          ),
-          pw.SizedBox(height: 10),
-          pw.Row(
-            children: <pw.Widget>[
-              pw.Expanded(
-                child: _summaryCard(
-                  label: 'Net Savings',
-                  value: data.formatAmount(data.netSavings),
-                  subLabel: 'Savings rate: ${pctFmt.format(data.savingsRate)}%',
-                  valueColor: data.netSavings >= 0
-                      ? _colorAccentGreen
-                      : _colorAccentRed,
-                ),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 10),
+        pw.Row(
+          children: <pw.Widget>[
+            pw.Expanded(
+              child: _summaryCard(
+                label: 'Net Savings',
+                value: data.formatAmount(data.netSavings),
+                subLabel: 'Savings rate: ${pctFmt.format(data.savingsRate)}%',
+                valueColor: data.netSavings >= 0
+                    ? _colorAccentGreen
+                    : _colorAccentRed,
               ),
-              pw.SizedBox(width: 12),
-              pw.Expanded(
-                child: _summaryCard(
-                  label: 'Health Score',
-                  value: data.healthScore != null
-                      ? '${data.healthScore!.score}/100'
-                      : '—',
-                  subLabel: data.healthScore?.summary ?? '',
-                  valueColor: _colorAccentBlue,
-                ),
+            ),
+            pw.SizedBox(width: 12),
+            pw.Expanded(
+              child: _summaryCard(
+                label: 'Health Score',
+                value: data.healthScore != null
+                    ? '${data.healthScore!.score}/100'
+                    : '—',
+                subLabel: data.healthScore?.summary ?? '',
+                valueColor: _colorAccentBlue,
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -421,593 +512,465 @@ class ReportPdfService implements IReportPdfService {
     );
   }
 
-  pw.Widget _buildSpendingBreakdown(
+  pw.Widget _buildSpendingBreakdownBody(
       ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
     final List<SpendingCategoryData>? cats = data.spendingCategories;
-
-    return _section(
-      title: 'Spending Breakdown',
-      section: ReportSection.spendingBreakdown,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (cats == null || cats.isEmpty)
-            pw.Text('No spending data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(3),
-                1: pw.FlexColumnWidth(2),
-                2: pw.FlexColumnWidth(1.2),
-                3: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Category', 'Amount', '%', 'MoM']),
-                ...cats.map((SpendingCategoryData cat) {
-                  final String momText = cat.changePercent == 0
-                      ? '—'
-                      : '${cat.changePercent > 0 ? '+' : ''}${pctFmt.format(cat.changePercent)}%';
-                  final PdfColor momColor = cat.changePercent > 0
-                      ? _colorAccentRed
-                      : cat.changePercent < 0
-                          ? _colorAccentGreen
-                          : _colorTextSecondary;
-                  return pw.TableRow(
-                    children: <pw.Widget>[
-                      _tableCell(cat.category),
-                      _tableCell(data.formatAmount(cat.amount)),
-                      _tableCell(
-                          '${pctFmt.format(cat.percentage)}%'),
-                      _tableCellColored(momText, momColor),
-                    ],
-                  );
-                }),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildIncomeAnalysis(ReportDataModel data, NumberFormat nf) {
-    final List<IncomeSourceData>? sources = data.incomeSources;
-
-    return _section(
-      title: 'Income Analysis',
-      section: ReportSection.incomeAnalysis,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          pw.Text(
-            'Total income: ${data.formatAmount(data.totalIncome)}',
-            style: _style(size: 11, bold: true, color: _colorTextPrimary),
-          ),
-          pw.SizedBox(height: 8),
-          if (sources == null || sources.isEmpty)
-            pw.Text('No income source data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(3),
-                1: pw.FlexColumnWidth(2),
-                2: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(<String>['Source', 'Amount', 'Variance']),
-                ...sources.map((IncomeSourceData src) {
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(src.source),
-                    _tableCell(data.formatAmount(src.amount)),
-                    _tableCellColored(
-                      '${src.variance >= 0 ? '+' : ''}${data.formatAmount(src.variance)}',
-                      src.variance >= 0 ? _colorAccentGreen : _colorAccentRed,
-                    ),
-                  ]);
-                }),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildCashFlow(ReportDataModel data, NumberFormat nf) {
-    return _section(
-      title: 'Cash Flow',
-      section: ReportSection.cashFlow,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          _infoRow('Total Income', data.formatAmount(data.totalIncome)),
-          _infoRow('Total Expenses', data.formatAmount(data.totalExpenses)),
-          _infoRow('Net Cash Flow', data.formatAmount(data.netSavings),
-              valueColor: data.netSavings >= 0
-                  ? _colorAccentGreen
-                  : _colorAccentRed),
-          pw.SizedBox(height: 8),
-          pw.Text(
-            'See in-app for full cash flow chart.',
-            style: _style(size: 9, color: _colorTextSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildBudgetActual(
-      ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
-    final List<BudgetCategoryData>? budgets = data.budgetCategories;
-
-    return _section(
-      title: 'Budget vs. Actual',
-      section: ReportSection.budgetActual,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (budgets == null || budgets.isEmpty)
-            pw.Text('No budget data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(3),
-                1: pw.FlexColumnWidth(2),
-                2: pw.FlexColumnWidth(2),
-                3: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Category', 'Budget', 'Actual', 'Used']),
-                ...budgets.map((BudgetCategoryData b) {
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(b.category),
-                    _tableCell(data.formatAmount(b.budget)),
-                    _tableCell(data.formatAmount(b.actual)),
-                    _tableCellColored(
-                      '${pctFmt.format(b.percentage)}%',
-                      b.isOverBudget ? _colorAccentRed : _colorAccentGreen,
-                    ),
-                  ]);
-                }),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildTopMerchants(ReportDataModel data, NumberFormat nf) {
-    final List<MerchantData>? merchants = data.topMerchants;
-
-    return _section(
-      title: 'Top Merchants',
-      section: ReportSection.topMerchants,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (merchants == null || merchants.isEmpty)
-            pw.Text('No merchant data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(3),
-                1: pw.FlexColumnWidth(2),
-                2: pw.FlexColumnWidth(1.5),
-                3: pw.FlexColumnWidth(1),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Merchant', 'Amount', 'Category', 'Txns']),
-                ...merchants.map((MerchantData m) {
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(m.name),
-                    _tableCell(data.formatAmount(m.amount)),
-                    _tableCell(m.category),
-                    _tableCell(m.transactionCount.toString()),
-                  ]);
-                }),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildInvestmentPortfolio(
-      ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
-    final List<InvestmentHoldingData>? holdings = data.holdings;
-
-    return _section(
-      title: 'Investment Portfolio',
-      section: ReportSection.investmentPortfolio,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (data.portfolioTotalValue != null)
-            _infoRow('Portfolio Value',
-                data.formatAmount(data.portfolioTotalValue!)),
-          if (data.portfolioReturnPercent != null)
-            _infoRow(
-              'Total Return',
-              '${data.portfolioReturnPercent! >= 0 ? '+' : ''}${pctFmt.format(data.portfolioReturnPercent!)}%',
-              valueColor: data.portfolioReturnPercent! >= 0
-                  ? _colorAccentGreen
-                  : _colorAccentRed,
-            ),
-          pw.SizedBox(height: 8),
-          if (holdings == null || holdings.isEmpty)
-            pw.Text('No holdings data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(1.2),
-                1: pw.FlexColumnWidth(3),
-                2: pw.FlexColumnWidth(2),
-                3: pw.FlexColumnWidth(1.2),
-                4: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Ticker', 'Name', 'Value', 'Alloc%', 'Return%']),
-                ...holdings.map((InvestmentHoldingData h) {
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(h.ticker),
-                    _tableCell(h.name),
-                    _tableCell(data.formatAmount(h.value)),
-                    _tableCell('${pctFmt.format(h.allocation)}%'),
-                    _tableCellColored(
-                      '${h.returnPercent >= 0 ? '+' : ''}${pctFmt.format(h.returnPercent)}%',
-                      h.returnPercent >= 0 ? _colorAccentGreen : _colorAccentRed,
-                    ),
-                  ]);
-                }),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildForecast(ReportDataModel data) {
-    final Forecast? forecast = data.forecast;
-
-    return _section(
-      title: 'Forecast',
-      section: ReportSection.forecast,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (forecast == null)
-            pw.Text('No forecast data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else ...<pw.Widget>[
-            pw.Text(forecast.summary,
-                style: _style(size: 10, color: _colorTextPrimary)),
-            pw.SizedBox(height: 8),
-            ...forecast.projectedBalance.entries.map(
-              (MapEntry<String, double> e) =>
-                  _infoRow(e.key, data.formatAmount(e.value)),
-            ),
-          ],
-          pw.SizedBox(height: 8),
-          pw.Text(
-            'See in-app for interactive forecast chart.',
-            style: _style(size: 9, color: _colorTextSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildAlerts(ReportDataModel data) {
-    final List<Alert>? alerts = data.alerts;
-
-    return _section(
-      title: 'Alerts',
-      section: ReportSection.alerts,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (alerts == null || alerts.isEmpty)
-            pw.Text('No alerts.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            ...alerts.map((Alert a) {
-              final PdfColor severityColor = a.severity == Severity.positive
-                  ? _colorAccentGreen
-                  : a.severity == Severity.warning
-                      ? PdfColors.amber
-                      : _colorAccentRed;
-              return pw.Container(
-                margin: const pw.EdgeInsets.only(bottom: 8),
-                padding: const pw.EdgeInsets.all(10),
-                decoration: pw.BoxDecoration(
-                  color: _colorSurface,
-                  border:
-                      pw.Border(left: pw.BorderSide(color: severityColor, width: 3)),
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(4)),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: <pw.Widget>[
-                    pw.Text(a.title,
-                        style: _style(
-                            size: 10, bold: true, color: _colorTextPrimary)),
-                    pw.SizedBox(height: 3),
-                    pw.Text(a.body,
-                        style: _style(size: 9, color: _colorTextSecondary)),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildCoaching(ReportDataModel data, NumberFormat nf) {
-    final List<CoachingTip>? tips = data.coachingTips;
-
-    return _section(
-      title: 'Coaching Tips',
-      section: ReportSection.coaching,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (tips == null || tips.isEmpty)
-            pw.Text('No coaching tips available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else
-            ...tips.map((CoachingTip tip) {
-              return pw.Container(
-                margin: const pw.EdgeInsets.only(bottom: 8),
-                padding: const pw.EdgeInsets.all(10),
-                decoration: pw.BoxDecoration(
-                  color: _colorSurface,
-                  border: pw.Border.all(color: _colorBorder),
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(4)),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: <pw.Widget>[
-                    pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: <pw.Widget>[
-                        pw.Text(tip.title,
-                            style: _style(
-                                size: 10, bold: true, color: _colorTextPrimary)),
-                        pw.Text(tip.difficulty.name,
-                            style: _style(
-                                size: 8, color: _colorTextSecondary)),
-                      ],
-                    ),
-                    pw.SizedBox(height: 3),
-                    pw.Text(tip.body,
-                        style: _style(size: 9, color: _colorTextSecondary)),
-                    if (tip.savingsEstimate != null) ...<pw.Widget>[
-                      pw.SizedBox(height: 3),
-                      pw.Text(
-                        'Est. savings: ${data.formatAmount(tip.savingsEstimate!)}',
-                        style: _style(
-                            size: 8, color: _colorAccentGreen),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildBills(
-      ReportDataModel data, NumberFormat nf, DateFormat dateFmt) {
-    final List<BillData>? bills = data.bills;
-
-    return _section(
-      title: 'Bills & Recurring',
-      section: ReportSection.billsRecurring,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (bills == null || bills.isEmpty)
-            pw.Text('No bills data available.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else ...<pw.Widget>[
-            _infoRow(
-              'Total Monthly Recurring',
-              data.formatAmount(data.totalRecurring),
-            ),
-            pw.SizedBox(height: 8),
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(3),
-                1: pw.FlexColumnWidth(1.5),
-                2: pw.FlexColumnWidth(2),
-                3: pw.FlexColumnWidth(1.5),
-                4: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Name', 'Amount', 'Frequency', 'Next Due', 'Status']),
-                ...bills.map((BillData b) {
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(b.name),
-                    _tableCell(data.formatAmount(b.amount)),
-                    _tableCell(b.frequency),
-                    _tableCell(b.nextDue != null
-                        ? dateFmt.format(b.nextDue!)
-                        : '—'),
-                    _tableCell(b.status),
-                  ]);
-                }),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildTransactionLog(
-      ReportDataModel data, NumberFormat nf, DateFormat dateFmt) {
-    final List<dynamic>? txns = data.transactions;
-
-    return _section(
-      title: 'Transaction Log',
-      section: ReportSection.transactionLog,
-      data: data,
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          if (txns == null || txns.isEmpty)
-            pw.Text('No transactions in this period.',
-                style: _style(size: 10, color: _colorTextSecondary))
-          else ...<pw.Widget>[
-            pw.Text(
-              '${txns.length} transactions',
-              style: _style(size: 9, color: _colorTextSecondary),
-            ),
-            pw.SizedBox(height: 8),
-            pw.Table(
-              border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
-              columnWidths: const <int, pw.TableColumnWidth>{
-                0: pw.FlexColumnWidth(2),
-                1: pw.FlexColumnWidth(4),
-                2: pw.FlexColumnWidth(2),
-                3: pw.FlexColumnWidth(1.5),
-              },
-              children: <pw.TableRow>[
-                _tableHeaderRow(
-                    <String>['Date', 'Description', 'Amount', 'Type']),
-                ...txns.map((dynamic tx) {
-                  // Transaction is the model type; access known fields.
-                  final String dateStr =
-                      dateFmt.format(tx.dateTime as DateTime);
-                  final String label = tx.label as String;
-                  final double amount = tx.totalAmount as double;
-                  final bool isExpense = tx.isExpense as bool;
-                  final String currency = tx.currency as String;
-
-                  return pw.TableRow(children: <pw.Widget>[
-                    _tableCell(dateStr),
-                    _tableCell(label),
-                    _tableCell(
-                      '${isExpense ? '-' : '+'}${nf.format(amount)} $currency',
-                    ),
-                    _tableCell(isExpense ? 'Expense' : 'Income'),
-                  ]);
-                }),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ── Reusable layout helpers ───────────────────────────────────────────────
-
-  /// Wraps content in a titled section card with optional AI recommendation.
-  pw.Widget _section({
-    required String title,
-    required ReportSection section,
-    required ReportDataModel data,
-    required pw.Widget child,
-  }) {
-    final SectionRecommendation? rec = data.recommendations[section];
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: <pw.Widget>[
-        // Section title bar
-        pw.Container(
-          width: double.infinity,
-          padding:
-              const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: pw.BoxDecoration(
-            color: _colorSurface,
-            border: pw.Border(
-                left: const pw.BorderSide(color: _colorAccentBlue, width: 3)),
+        if (cats == null || cats.isEmpty)
+          pw.Text('No spending data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(1.2),
+              3: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Category', 'Amount', '%', 'MoM']),
+              ...cats.map((SpendingCategoryData cat) {
+                final String momText = cat.changePercent == 0
+                    ? '—'
+                    : '${cat.changePercent > 0 ? '+' : ''}${pctFmt.format(cat.changePercent)}%';
+                final PdfColor momColor = cat.changePercent > 0
+                    ? _colorAccentRed
+                    : cat.changePercent < 0
+                        ? _colorAccentGreen
+                        : _colorTextSecondary;
+                return pw.TableRow(
+                  children: <pw.Widget>[
+                    _tableCell(cat.category),
+                    _tableCell(data.formatAmount(cat.amount)),
+                    _tableCell(
+                        '${pctFmt.format(cat.percentage)}%'),
+                    _tableCellColored(momText, momColor),
+                  ],
+                );
+              }),
+            ],
           ),
-          child: pw.Text(
-            title,
-            style: _style(size: 13, bold: true, color: _colorTextPrimary),
-          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildIncomeAnalysisBody(ReportDataModel data, NumberFormat nf) {
+    final List<IncomeSourceData>? sources = data.incomeSources;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        pw.Text(
+          'Total income: ${data.formatAmount(data.totalIncome)}',
+          style: _style(size: 11, bold: true, color: _colorTextPrimary),
         ),
-        pw.SizedBox(height: 10),
-        child,
-        if (rec != null) ...<pw.Widget>[
-          pw.SizedBox(height: 10),
-          _aiRecommendationBox(rec),
+        pw.SizedBox(height: 8),
+        if (sources == null || sources.isEmpty)
+          pw.Text('No income source data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(<String>['Source', 'Amount', 'Variance']),
+              ...sources.map((IncomeSourceData src) {
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(src.source),
+                  _tableCell(data.formatAmount(src.amount)),
+                  _tableCellColored(
+                    '${src.variance >= 0 ? '+' : ''}${data.formatAmount(src.variance)}',
+                    src.variance >= 0 ? _colorAccentGreen : _colorAccentRed,
+                  ),
+                ]);
+              }),
+            ],
+          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildCashFlowBody(ReportDataModel data, NumberFormat nf) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        _infoRow('Total Income', data.formatAmount(data.totalIncome)),
+        _infoRow('Total Expenses', data.formatAmount(data.totalExpenses)),
+        _infoRow('Net Cash Flow', data.formatAmount(data.netSavings),
+            valueColor: data.netSavings >= 0
+                ? _colorAccentGreen
+                : _colorAccentRed),
+        pw.SizedBox(height: 8),
+        pw.Text(
+          'See in-app for full cash flow chart.',
+          style: _style(size: 9, color: _colorTextSecondary),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildBudgetActualBody(
+      ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
+    final List<BudgetCategoryData>? budgets = data.budgetCategories;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (budgets == null || budgets.isEmpty)
+          pw.Text('No budget data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(2),
+              3: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Category', 'Budget', 'Actual', 'Used']),
+              ...budgets.map((BudgetCategoryData b) {
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(b.category),
+                  _tableCell(data.formatAmount(b.budget)),
+                  _tableCell(data.formatAmount(b.actual)),
+                  _tableCellColored(
+                    '${pctFmt.format(b.percentage)}%',
+                    b.isOverBudget ? _colorAccentRed : _colorAccentGreen,
+                  ),
+                ]);
+              }),
+            ],
+          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildTopMerchantsBody(ReportDataModel data, NumberFormat nf) {
+    final List<MerchantData>? merchants = data.topMerchants;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (merchants == null || merchants.isEmpty)
+          pw.Text('No merchant data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(1.5),
+              3: pw.FlexColumnWidth(1),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Merchant', 'Amount', 'Category', 'Txns']),
+              ...merchants.map((MerchantData m) {
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(m.name),
+                  _tableCell(data.formatAmount(m.amount)),
+                  _tableCell(m.category),
+                  _tableCell(m.transactionCount.toString()),
+                ]);
+              }),
+            ],
+          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildInvestmentPortfolioBody(
+      ReportDataModel data, NumberFormat nf, NumberFormat pctFmt) {
+    final List<InvestmentHoldingData>? holdings = data.holdings;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (data.portfolioTotalValue != null)
+          _infoRow('Portfolio Value',
+              data.formatAmount(data.portfolioTotalValue!)),
+        if (data.portfolioReturnPercent != null)
+          _infoRow(
+            'Total Return',
+            '${data.portfolioReturnPercent! >= 0 ? '+' : ''}${pctFmt.format(data.portfolioReturnPercent!)}%',
+            valueColor: data.portfolioReturnPercent! >= 0
+                ? _colorAccentGreen
+                : _colorAccentRed,
+          ),
+        pw.SizedBox(height: 8),
+        if (holdings == null || holdings.isEmpty)
+          pw.Text('No holdings data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(1.2),
+              1: pw.FlexColumnWidth(3),
+              2: pw.FlexColumnWidth(2),
+              3: pw.FlexColumnWidth(1.2),
+              4: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Ticker', 'Name', 'Value', 'Alloc%', 'Return%']),
+              ...holdings.map((InvestmentHoldingData h) {
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(h.ticker),
+                  _tableCell(h.name),
+                  _tableCell(data.formatAmount(h.value)),
+                  _tableCell('${pctFmt.format(h.allocation)}%'),
+                  _tableCellColored(
+                    '${h.returnPercent >= 0 ? '+' : ''}${pctFmt.format(h.returnPercent)}%',
+                    h.returnPercent >= 0 ? _colorAccentGreen : _colorAccentRed,
+                  ),
+                ]);
+              }),
+            ],
+          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildForecastBody(ReportDataModel data) {
+    final Forecast? forecast = data.forecast;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (forecast == null)
+          pw.Text('No forecast data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else ...<pw.Widget>[
+          pw.Text(forecast.summary,
+              style: _style(size: 10, color: _colorTextPrimary)),
+          pw.SizedBox(height: 8),
+          ...forecast.projectedBalance.entries.map(
+            (MapEntry<String, double> e) =>
+                _infoRow(e.key, data.formatAmount(e.value)),
+          ),
+        ],
+        pw.SizedBox(height: 8),
+        pw.Text(
+          'See in-app for interactive forecast chart.',
+          style: _style(size: 9, color: _colorTextSecondary),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildAlertsBody(ReportDataModel data) {
+    final List<Alert>? alerts = data.alerts;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (alerts == null || alerts.isEmpty)
+          pw.Text('No alerts.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          ...alerts.map((Alert a) {
+            final PdfColor severityColor = a.severity == Severity.positive
+                ? _colorAccentGreen
+                : a.severity == Severity.warning
+                    ? PdfColors.amber
+                    : _colorAccentRed;
+            return pw.Container(
+              margin: const pw.EdgeInsets.only(bottom: 8),
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: _colorSurface,
+                border:
+                    pw.Border(left: pw.BorderSide(color: severityColor, width: 3)),
+                borderRadius:
+                    const pw.BorderRadius.all(pw.Radius.circular(4)),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: <pw.Widget>[
+                  pw.Text(a.title,
+                      style: _style(
+                          size: 10, bold: true, color: _colorTextPrimary)),
+                  pw.SizedBox(height: 3),
+                  pw.Text(a.body,
+                      style: _style(size: 9, color: _colorTextSecondary)),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  pw.Widget _buildCoachingBody(ReportDataModel data, NumberFormat nf) {
+    final List<CoachingTip>? tips = data.coachingTips;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (tips == null || tips.isEmpty)
+          pw.Text('No coaching tips available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else
+          ...tips.map((CoachingTip tip) {
+            return pw.Container(
+              margin: const pw.EdgeInsets.only(bottom: 8),
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: _colorSurface,
+                border: pw.Border.all(color: _colorBorder),
+                borderRadius:
+                    const pw.BorderRadius.all(pw.Radius.circular(4)),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: <pw.Widget>[
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: <pw.Widget>[
+                      pw.Text(tip.title,
+                          style: _style(
+                              size: 10, bold: true, color: _colorTextPrimary)),
+                      pw.Text(tip.difficulty.name,
+                          style: _style(
+                              size: 8, color: _colorTextSecondary)),
+                    ],
+                  ),
+                  pw.SizedBox(height: 3),
+                  pw.Text(tip.body,
+                      style: _style(size: 9, color: _colorTextSecondary)),
+                  if (tip.savingsEstimate != null) ...<pw.Widget>[
+                    pw.SizedBox(height: 3),
+                    pw.Text(
+                      'Est. savings: ${data.formatAmount(tip.savingsEstimate!)}',
+                      style: _style(
+                          size: 8, color: _colorAccentGreen),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  pw.Widget _buildBillsBody(
+      ReportDataModel data, NumberFormat nf, DateFormat dateFmt) {
+    final List<BillData>? bills = data.bills;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (bills == null || bills.isEmpty)
+          pw.Text('No bills data available.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else ...<pw.Widget>[
+          _infoRow(
+            'Total Monthly Recurring',
+            data.formatAmount(data.totalRecurring),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(1.5),
+              2: pw.FlexColumnWidth(2),
+              3: pw.FlexColumnWidth(1.5),
+              4: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Name', 'Amount', 'Frequency', 'Next Due', 'Status']),
+              ...bills.map((BillData b) {
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(b.name),
+                  _tableCell(data.formatAmount(b.amount)),
+                  _tableCell(b.frequency),
+                  _tableCell(b.nextDue != null
+                      ? dateFmt.format(b.nextDue!)
+                      : '—'),
+                  _tableCell(b.status),
+                ]);
+              }),
+            ],
+          ),
         ],
       ],
     );
   }
 
-  pw.Widget _aiRecommendationBox(SectionRecommendation rec) {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.all(12),
-      decoration: pw.BoxDecoration(
-        color: _colorSurface,
-        border: pw.Border.all(color: _colorAccentBlue, width: 0.8),
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          pw.Row(
-            children: <pw.Widget>[
-              pw.Container(
-                padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 2),
-                decoration: pw.BoxDecoration(
-                  color: _colorAccentBlue,
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(3)),
-                ),
-                child: pw.Text('AI Insight',
-                    style: _style(
-                        size: 7, bold: true, color: PdfColors.white)),
-              ),
+  pw.Widget _buildTransactionLogBody(
+      ReportDataModel data, NumberFormat nf, DateFormat dateFmt) {
+    final List<dynamic>? txns = data.transactions;
+
+    const int maxRows = 50;
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: <pw.Widget>[
+        if (txns == null || txns.isEmpty)
+          pw.Text('No transactions in this period.',
+              style: _style(size: 10, color: _colorTextSecondary))
+        else ...<pw.Widget>[
+          pw.Text(
+            txns.length > maxRows
+                ? 'Showing first $maxRows of ${txns.length} transactions. See in-app for full list.'
+                : '${txns.length} transactions',
+            style: _style(size: 9, color: _colorTextSecondary),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: _colorBorder, width: 0.5),
+            columnWidths: const <int, pw.TableColumnWidth>{
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(4),
+              2: pw.FlexColumnWidth(2),
+              3: pw.FlexColumnWidth(1.5),
+            },
+            children: <pw.TableRow>[
+              _tableHeaderRow(
+                  <String>['Date', 'Description', 'Amount', 'Type']),
+              ...txns.take(maxRows).map((dynamic tx) {
+                // Transaction is the model type; access known fields.
+                final String dateStr =
+                    dateFmt.format(tx.dateTime as DateTime);
+                final String label = tx.label as String;
+                final double amount = tx.totalAmount as double;
+                final bool isExpense = tx.isExpense as bool;
+                final String currency = tx.currency as String;
+
+                return pw.TableRow(children: <pw.Widget>[
+                  _tableCell(dateStr),
+                  _tableCell(label),
+                  _tableCell(
+                    '${isExpense ? '-' : '+'}${nf.format(amount)} $currency',
+                  ),
+                  _tableCell(isExpense ? 'Expense' : 'Income'),
+                ]);
+              }),
             ],
           ),
-          pw.SizedBox(height: 6),
-          pw.Text(rec.oneLiner,
-              style: _style(
-                  size: 10, bold: true, color: _colorTextPrimary)),
-          pw.SizedBox(height: 4),
-          pw.Text(rec.detailed,
-              style: _style(size: 9, color: _colorTextSecondary)),
         ],
-      ),
+      ],
     );
   }
+
+  // ── Reusable layout helpers ───────────────────────────────────────────────
 
   pw.Widget _infoRow(String label, String value,
       {PdfColor? valueColor}) {
