@@ -14,9 +14,8 @@ import 'providers/budget_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/insights_provider.dart';
 import 'providers/dashboard_provider.dart';
-import 'services/interfaces/i_budget_service.dart';
-import 'services/interfaces/i_insights_service.dart';
-import 'services/interfaces/i_transaction_service.dart';
+import 'providers/report_provider.dart';
+import 'services/interfaces/interfaces.dart';
 import 'services/database_service.dart';
 import 'services/budget_notification_service.dart';
 import 'screens/login_screen.dart';
@@ -26,6 +25,8 @@ import 'screens/investment_list_screen.dart';
 import 'screens/backup_history_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/main_navigation_page.dart';
+import 'screens/report_config_screen.dart';
+import 'screens/report_preview_screen.dart';
 import 'services/sync_manager.dart';
 import 'l10n/app_localizations.dart';
 
@@ -127,6 +128,17 @@ class _MyAppState extends State<MyApp> {
             settingsProvider: Provider.of<SettingsProvider>(context, listen: false),
           ),
         ),
+        ChangeNotifierProvider<ReportProvider>(
+          create: (_) => ReportProvider(
+            transactionService: sl<ITransactionService>(),
+            investmentService: sl<IInvestmentService>(),
+            billService: sl<IBillService>(),
+            budgetService: sl<IBudgetService>(),
+            reportAiService: sl<IReportAiService>(),
+            reportPdfService: sl<IReportPdfService>(),
+            userService: sl<IUserService>(),
+          ),
+        ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, _) {
@@ -162,6 +174,8 @@ class _MyAppState extends State<MyApp> {
               "/investments": (c) => const InvestmentListScreen(),
               "/backup-history": (c) => const BackupHistoryScreen(),
               "/insights": (c) => const InsightsScreen(),
+              "/report-config": (c) => const ReportConfigScreen(),
+              "/report-preview": (c) => const ReportPreviewScreen(),
             },
             locale: settingsProvider.locale,
             localizationsDelegates: const [
