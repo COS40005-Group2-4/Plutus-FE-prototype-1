@@ -61,52 +61,74 @@ class ReportPdfService implements IReportPdfService {
     final DateFormat dateFmt = DateFormat('MMM d, yyyy');
     final NumberFormat pctFmt = NumberFormat('0.0');
 
-    for (final ReportSection section in data.config.enabledSections) {
-      if (kDebugMode) debugPrint('ReportPdfService: adding ${section.name}');
-      _addSection(doc, section, data, dateFmt, pctFmt);
+    final List<ReportSection> sections = data.config.enabledSections;
+    final bool hasCover = sections.contains(ReportSection.coverPage);
+    final List<ReportSection> bodySections =
+        sections.where((ReportSection s) => s != ReportSection.coverPage).toList();
+
+    // Cover page — standalone dark page
+    if (hasCover) {
+      doc.addPage(_buildCoverPage(data, dateFmt));
+    }
+
+    // ALL other sections flow continuously in a single MultiPage.
+    // Each section returns List<pw.Widget> — flat, individually pageable widgets.
+    // RULES: no pw.Expanded, no pw.Spacer, no pw.Column wrapping large content.
+    if (bodySections.isNotEmpty) {
+      final List<pw.Widget> allContent = <pw.Widget>[];
+      for (final ReportSection section in bodySections) {
+        allContent.addAll(_sectionWidgets(section, data, dateFmt, pctFmt));
+        allContent.add(pw.SizedBox(height: 16));
+      }
+
+      doc.addPage(pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        maxPages: 200,
+        header: (pw.Context ctx) => pw.Container(
+          margin: const pw.EdgeInsets.only(bottom: 12),
+          padding: const pw.EdgeInsets.only(bottom: 6),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: <pw.Widget>[
+              pw.Text('Plutus Financial Report', style: _s(size: 8, color: PdfColors.grey500)),
+              pw.Text(
+                '${dateFmt.format(data.config.dateRange.start)} – ${dateFmt.format(data.config.dateRange.end)}',
+                style: _s(size: 8, color: PdfColors.grey500),
+              ),
+            ],
+          ),
+        ),
+        footer: (pw.Context ctx) => pw.Container(
+          margin: const pw.EdgeInsets.only(top: 8),
+          padding: const pw.EdgeInsets.only(top: 6),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: <pw.Widget>[
+              pw.Text('Generated ${dateFmt.format(data.generatedAt)}',
+                  style: _s(size: 7, color: PdfColors.grey500)),
+              pw.Text('Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+                  style: _s(size: 7, color: PdfColors.grey500)),
+            ],
+          ),
+        ),
+        build: (pw.Context ctx) => allContent,
+      ));
     }
 
     return doc.save();
   }
 
-  // ── Section dispatcher ──────────────────────────────────────────────────
+  // ── Cover page (standalone) ─────────────────────────────────────────────
 
-  void _addSection(pw.Document doc, ReportSection section, ReportDataModel data,
-      DateFormat dateFmt, NumberFormat pctFmt) {
-    switch (section) {
-      case ReportSection.coverPage:
-        _addCoverPage(doc, data, dateFmt);
-      case ReportSection.executiveSummary:
-        _addExecutiveSummary(doc, data, pctFmt);
-      case ReportSection.spendingBreakdown:
-        _addSpendingBreakdown(doc, data, pctFmt);
-      case ReportSection.incomeAnalysis:
-        _addIncomeAnalysis(doc, data);
-      case ReportSection.cashFlow:
-        _addCashFlow(doc, data);
-      case ReportSection.budgetActual:
-        _addBudgetActual(doc, data, pctFmt);
-      case ReportSection.topMerchants:
-        _addTopMerchants(doc, data);
-      case ReportSection.investmentPortfolio:
-        _addInvestmentPortfolio(doc, data, pctFmt);
-      case ReportSection.forecast:
-        _addForecast(doc, data);
-      case ReportSection.alerts:
-        _addAlerts(doc, data);
-      case ReportSection.coaching:
-        _addCoaching(doc, data);
-      case ReportSection.billsRecurring:
-        _addBills(doc, data, dateFmt);
-      case ReportSection.transactionLog:
-        _addTransactionLog(doc, data, dateFmt);
-    }
-  }
-
-  // ── Cover page ──────────────────────────────────────────────────────────
-
-  void _addCoverPage(pw.Document doc, ReportDataModel data, DateFormat dateFmt) {
-    doc.addPage(pw.Page(
+  pw.Page _buildCoverPage(ReportDataModel data, DateFormat dateFmt) {
+    return pw.Page(
       pageFormat: PdfPageFormat.a4,
       theme: _theme,
       build: (pw.Context ctx) => pw.Container(
@@ -126,37 +148,34 @@ class ReportPdfService implements IReportPdfService {
               style: _s(size: 12, color: PdfColors.grey500),
             ),
             pw.SizedBox(height: 80),
-            // Key metrics
             _coverMetric('Total Income', data.formatAmount(data.totalIncome), PdfColors.green),
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 10),
             _coverMetric('Total Expenses', data.formatAmount(data.totalExpenses), PdfColors.red),
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 10),
             _coverMetric('Net Savings', data.formatAmount(data.netSavings),
                 data.netSavings >= 0 ? PdfColors.green : PdfColors.red),
             if (data.healthScore != null) ...<pw.Widget>[
-              pw.SizedBox(height: 12),
+              pw.SizedBox(height: 10),
               _coverMetric('Health Score', '${data.healthScore!.score}/100', PdfColors.blue),
             ],
             pw.SizedBox(height: 60),
             pw.Text('Prepared for', style: _s(size: 9, color: PdfColors.grey500)),
             pw.Text(data.userName, style: _s(size: 14, bold: true, color: PdfColors.white)),
             pw.SizedBox(height: 8),
-            pw.Text(
-              'Generated ${dateFmt.format(data.generatedAt)}',
-              style: _s(size: 9, color: PdfColors.grey600),
-            ),
+            pw.Text('Generated ${dateFmt.format(data.generatedAt)}',
+                style: _s(size: 9, color: PdfColors.grey600)),
           ],
         ),
       ),
-    ));
+    );
   }
 
   pw.Widget _coverMetric(String label, String value, PdfColor color) {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: pw.BoxDecoration(
-        color: const PdfColor.fromInt(0xFF132337),
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+      decoration: const pw.BoxDecoration(
+        color: PdfColor.fromInt(0xFF132337),
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
@@ -169,220 +188,233 @@ class ReportPdfService implements IReportPdfService {
     );
   }
 
-  // ── Executive Summary ───────────────────────────────────────────────────
+  // ── Section widget builder (returns flat List<pw.Widget>) ───────────────
 
-  void _addExecutiveSummary(pw.Document doc, ReportDataModel data, NumberFormat pctFmt) {
-    _addSectionPage(doc, 'Executive Summary', data, ReportSection.executiveSummary, <pw.Widget>[
-      _infoRow('Total Income', data.formatAmount(data.totalIncome)),
-      _infoRow('Total Expenses', data.formatAmount(data.totalExpenses)),
-      _infoRow('Net Savings', data.formatAmount(data.netSavings)),
-      _infoRow('Savings Rate', '${pctFmt.format(data.savingsRate)}%'),
-      _infoRow('Transactions', '${data.transactionCount}'),
-      if (data.healthScore != null)
-        _infoRow('Health Score', '${data.healthScore!.score}/100'),
-      pw.SizedBox(height: 8),
-      pw.Text(
-        'This summary compares the selected period against the previous equivalent period.',
-        style: _s(size: 9, color: PdfColors.grey600),
+  List<pw.Widget> _sectionWidgets(
+      ReportSection section, ReportDataModel data, DateFormat dateFmt, NumberFormat pctFmt) {
+    final List<pw.Widget> widgets = <pw.Widget>[];
+
+    // Section header
+    widgets.add(pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey100,
+        border: pw.Border(left: const pw.BorderSide(color: PdfColors.blue, width: 3)),
       ),
-    ]);
-  }
+      child: pw.Text(_sectionTitle(section), style: _s(size: 13, bold: true)),
+    ));
+    widgets.add(pw.SizedBox(height: 8));
 
-  // ── Spending Breakdown ──────────────────────────────────────────────────
-
-  void _addSpendingBreakdown(pw.Document doc, ReportDataModel data, NumberFormat pctFmt) {
-    final List<SpendingCategoryData>? cats = data.spendingCategories;
-    if (cats == null || cats.isEmpty) {
-      _addSectionPage(doc, 'Spending Breakdown', data, ReportSection.spendingBreakdown, <pw.Widget>[
-        pw.Text('No spending data available.', style: _s(color: PdfColors.grey500)),
-      ]);
-      return;
+    // Section body — each adds flat widgets
+    switch (section) {
+      case ReportSection.coverPage:
+        break; // handled separately
+      case ReportSection.executiveSummary:
+        _addExecutiveSummaryWidgets(widgets, data, pctFmt);
+      case ReportSection.spendingBreakdown:
+        _addSpendingWidgets(widgets, data, pctFmt);
+      case ReportSection.incomeAnalysis:
+        _addIncomeWidgets(widgets, data);
+      case ReportSection.cashFlow:
+        _addCashFlowWidgets(widgets, data);
+      case ReportSection.budgetActual:
+        _addBudgetWidgets(widgets, data, pctFmt);
+      case ReportSection.topMerchants:
+        _addMerchantWidgets(widgets, data);
+      case ReportSection.investmentPortfolio:
+        _addInvestmentWidgets(widgets, data, pctFmt);
+      case ReportSection.forecast:
+        _addForecastWidgets(widgets, data);
+      case ReportSection.alerts:
+        _addAlertWidgets(widgets, data);
+      case ReportSection.coaching:
+        _addCoachingWidgets(widgets, data);
+      case ReportSection.billsRecurring:
+        _addBillWidgets(widgets, data, dateFmt);
+      case ReportSection.transactionLog:
+        _addTransactionWidgets(widgets, data, dateFmt);
     }
 
-    final List<List<String>> tableData = cats.map((SpendingCategoryData c) {
-      final String mom = c.changePercent == 0
-          ? '—'
-          : '${c.changePercent > 0 ? '+' : ''}${pctFmt.format(c.changePercent)}%';
-      return <String>[
+    // AI recommendation
+    final SectionRecommendation? rec = data.recommendations[section];
+    if (rec != null) {
+      widgets.add(pw.SizedBox(height: 8));
+      widgets.add(pw.Container(
+        padding: const pw.EdgeInsets.all(10),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.blue50,
+          border: pw.Border(left: const pw.BorderSide(color: PdfColors.blue, width: 3)),
+          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: <pw.Widget>[
+            pw.Text('AI Insight', style: _s(size: 8, bold: true, color: PdfColors.blue800)),
+            pw.SizedBox(height: 3),
+            pw.Text(rec.oneLiner, style: _s(size: 10, bold: true)),
+            pw.SizedBox(height: 3),
+            pw.Text(rec.detailed, style: _s(size: 9, color: PdfColors.grey700)),
+          ],
+        ),
+      ));
+    }
+
+    return widgets;
+  }
+
+  // ── Individual section widget builders ──────────────────────────────────
+  // Each method adds FLAT widgets to the list. No pw.Column, no pw.Expanded.
+
+  void _addExecutiveSummaryWidgets(List<pw.Widget> w, ReportDataModel data, NumberFormat pctFmt) {
+    w.add(_infoRow('Total Income', data.formatAmount(data.totalIncome)));
+    w.add(_infoRow('Total Expenses', data.formatAmount(data.totalExpenses)));
+    w.add(_infoRow('Net Savings', data.formatAmount(data.netSavings)));
+    w.add(_infoRow('Savings Rate', '${pctFmt.format(data.savingsRate)}%'));
+    w.add(_infoRow('Transactions', '${data.transactionCount}'));
+    if (data.healthScore != null) {
+      w.add(_infoRow('Health Score', '${data.healthScore!.score}/100'));
+    }
+    w.add(pw.SizedBox(height: 4));
+    w.add(pw.Text(
+      'Compared against the previous equivalent period.',
+      style: _s(size: 9, color: PdfColors.grey600),
+    ));
+  }
+
+  void _addSpendingWidgets(List<pw.Widget> w, ReportDataModel data, NumberFormat pctFmt) {
+    final List<SpendingCategoryData>? cats = data.spendingCategories;
+    if (cats == null || cats.isEmpty) {
+      w.add(pw.Text('No spending data available.', style: _s(color: PdfColors.grey500)));
+      return;
+    }
+    w.add(pw.TableHelper.fromTextArray(
+      headers: <String>['Category', 'Amount', '% of Total', 'MoM Change'],
+      data: cats.map((SpendingCategoryData c) => <String>[
         c.category,
         data.formatAmount(c.amount),
         '${pctFmt.format(c.percentage)}%',
-        mom,
-      ];
-    }).toList();
-
-    _addSectionPage(doc, 'Spending Breakdown', data, ReportSection.spendingBreakdown, <pw.Widget>[
-      pw.TableHelper.fromTextArray(
-        headers: <String>['Category', 'Amount', '% of Total', 'MoM Change'],
-        data: tableData,
-        headerStyle: _s(size: 9, bold: true),
-        cellStyle: _s(size: 9),
-        cellAlignment: pw.Alignment.centerLeft,
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-    ]);
+        c.changePercent == 0 ? '—' : '${c.changePercent > 0 ? '+' : ''}${pctFmt.format(c.changePercent)}%',
+      ]).toList(),
+      headerStyle: _s(size: 9, bold: true),
+      cellStyle: _s(size: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ));
   }
 
-  // ── Income Analysis ─────────────────────────────────────────────────────
-
-  void _addIncomeAnalysis(pw.Document doc, ReportDataModel data) {
+  void _addIncomeWidgets(List<pw.Widget> w, ReportDataModel data) {
     final double change = data.comparisonIncome > 0
         ? ((data.totalIncome - data.comparisonIncome) / data.comparisonIncome) * 100
         : 0;
-
-    _addSectionPage(doc, 'Income Analysis', data, ReportSection.incomeAnalysis, <pw.Widget>[
-      _infoRow('Total Income', data.formatAmount(data.totalIncome)),
-      _infoRow('Previous Period', data.formatAmount(data.comparisonIncome)),
-      _infoRow('Change', '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}%'),
-      if (data.incomeSources != null) ...<pw.Widget>[
-        pw.SizedBox(height: 8),
-        pw.Text('Income Sources', style: _s(size: 10, bold: true)),
-        pw.SizedBox(height: 4),
-        ...data.incomeSources!.map((IncomeSourceData s) =>
-            _infoRow(s.source, data.formatAmount(s.amount))),
-      ],
-    ]);
+    w.add(_infoRow('Total Income', data.formatAmount(data.totalIncome)));
+    w.add(_infoRow('Previous Period', data.formatAmount(data.comparisonIncome)));
+    w.add(_infoRow('Change', '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}%'));
+    if (data.incomeSources != null && data.incomeSources!.isNotEmpty) {
+      w.add(pw.SizedBox(height: 6));
+      w.add(pw.Text('Income Sources', style: _s(size: 10, bold: true)));
+      for (final IncomeSourceData s in data.incomeSources!) {
+        w.add(_infoRow(s.source, data.formatAmount(s.amount)));
+      }
+    }
   }
 
-  // ── Cash Flow ───────────────────────────────────────────────────────────
-
-  void _addCashFlow(pw.Document doc, ReportDataModel data) {
-    _addSectionPage(doc, 'Cash Flow', data, ReportSection.cashFlow, <pw.Widget>[
-      _infoRow('Total Inflows', data.formatAmount(data.totalIncome)),
-      _infoRow('Total Outflows', data.formatAmount(data.totalExpenses)),
-      _infoRow('Net Cash Flow', data.formatAmount(data.netSavings)),
-      pw.SizedBox(height: 8),
-      pw.Text(
-        data.netSavings >= 0
-            ? 'Positive cash flow — you saved more than you spent this period.'
-            : 'Negative cash flow — expenses exceeded income this period.',
-        style: _s(size: 9, color: PdfColors.grey600),
-      ),
-    ]);
+  void _addCashFlowWidgets(List<pw.Widget> w, ReportDataModel data) {
+    w.add(_infoRow('Total Inflows', data.formatAmount(data.totalIncome)));
+    w.add(_infoRow('Total Outflows', data.formatAmount(data.totalExpenses)));
+    w.add(_infoRow('Net Cash Flow', data.formatAmount(data.netSavings)));
+    w.add(pw.SizedBox(height: 4));
+    w.add(pw.Text(
+      data.netSavings >= 0
+          ? 'Positive cash flow — you saved more than you spent.'
+          : 'Negative cash flow — expenses exceeded income.',
+      style: _s(size: 9, color: PdfColors.grey600),
+    ));
   }
 
-  // ── Budget vs Actual ────────────────────────────────────────────────────
-
-  void _addBudgetActual(pw.Document doc, ReportDataModel data, NumberFormat pctFmt) {
+  void _addBudgetWidgets(List<pw.Widget> w, ReportDataModel data, NumberFormat pctFmt) {
     final List<BudgetCategoryData>? budgets = data.budgetCategories;
     if (budgets == null || budgets.isEmpty) {
-      _addSectionPage(doc, 'Budget vs Actual', data, ReportSection.budgetActual, <pw.Widget>[
-        pw.Text('No budget data available.', style: _s(color: PdfColors.grey500)),
-      ]);
+      w.add(pw.Text('No budget data available.', style: _s(color: PdfColors.grey500)));
       return;
     }
-
-    final List<List<String>> tableData = budgets.map((BudgetCategoryData b) =>
-      <String>[b.category, data.formatAmount(b.budget), data.formatAmount(b.actual),
-        '${pctFmt.format(b.percentage)}%', b.isOverBudget ? 'OVER' : 'OK']
-    ).toList();
-
-    _addSectionPage(doc, 'Budget vs Actual', data, ReportSection.budgetActual, <pw.Widget>[
-      pw.TableHelper.fromTextArray(
-        headers: <String>['Category', 'Budget', 'Actual', 'Used', 'Status'],
-        data: tableData,
-        headerStyle: _s(size: 9, bold: true),
-        cellStyle: _s(size: 9),
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-    ]);
+    w.add(pw.TableHelper.fromTextArray(
+      headers: <String>['Category', 'Budget', 'Actual', 'Used', 'Status'],
+      data: budgets.map((BudgetCategoryData b) => <String>[
+        b.category, data.formatAmount(b.budget), data.formatAmount(b.actual),
+        '${pctFmt.format(b.percentage)}%', b.isOverBudget ? 'OVER' : 'OK',
+      ]).toList(),
+      headerStyle: _s(size: 9, bold: true),
+      cellStyle: _s(size: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ));
   }
 
-  // ── Top Merchants ───────────────────────────────────────────────────────
-
-  void _addTopMerchants(pw.Document doc, ReportDataModel data) {
+  void _addMerchantWidgets(List<pw.Widget> w, ReportDataModel data) {
     final List<MerchantData>? merchants = data.topMerchants;
     if (merchants == null || merchants.isEmpty) {
-      _addSectionPage(doc, 'Top Merchants', data, ReportSection.topMerchants, <pw.Widget>[
-        pw.Text('No merchant data available.', style: _s(color: PdfColors.grey500)),
-      ]);
+      w.add(pw.Text('No merchant data available.', style: _s(color: PdfColors.grey500)));
       return;
     }
-
-    final List<List<String>> tableData = merchants.map((MerchantData m) =>
-      <String>[m.name, m.category, data.formatAmount(m.amount),
-        '${m.transactionCount}', '${m.changePercent >= 0 ? '+' : ''}${m.changePercent.toStringAsFixed(1)}%']
-    ).toList();
-
-    _addSectionPage(doc, 'Top Merchants', data, ReportSection.topMerchants, <pw.Widget>[
-      pw.TableHelper.fromTextArray(
-        headers: <String>['Merchant', 'Category', 'Amount', 'Txns', 'MoM'],
-        data: tableData,
-        headerStyle: _s(size: 9, bold: true),
-        cellStyle: _s(size: 9),
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-    ]);
+    w.add(pw.TableHelper.fromTextArray(
+      headers: <String>['Merchant', 'Category', 'Amount', 'Txns', 'MoM'],
+      data: merchants.map((MerchantData m) => <String>[
+        m.name, m.category, data.formatAmount(m.amount),
+        '${m.transactionCount}', '${m.changePercent >= 0 ? '+' : ''}${m.changePercent.toStringAsFixed(1)}%',
+      ]).toList(),
+      headerStyle: _s(size: 9, bold: true),
+      cellStyle: _s(size: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ));
   }
 
-  // ── Investment Portfolio ────────────────────────────────────────────────
-
-  void _addInvestmentPortfolio(pw.Document doc, ReportDataModel data, NumberFormat pctFmt) {
-    final List<InvestmentHoldingData>? holdings = data.holdings;
-
-    final List<pw.Widget> content = <pw.Widget>[];
+  void _addInvestmentWidgets(List<pw.Widget> w, ReportDataModel data, NumberFormat pctFmt) {
     if (data.portfolioTotalValue != null) {
-      content.add(_infoRow('Portfolio Value', data.formatAmount(data.portfolioTotalValue!)));
+      w.add(_infoRow('Portfolio Value', data.formatAmount(data.portfolioTotalValue!)));
     }
     if (data.portfolioReturnPercent != null) {
-      content.add(_infoRow('Period Return', '${pctFmt.format(data.portfolioReturnPercent!)}%'));
+      w.add(_infoRow('Period Return', '${pctFmt.format(data.portfolioReturnPercent!)}%'));
     }
-
+    final List<InvestmentHoldingData>? holdings = data.holdings;
     if (holdings != null && holdings.isNotEmpty) {
-      final List<List<String>> tableData = holdings.map((InvestmentHoldingData h) =>
-        <String>[h.ticker, h.name, data.formatAmount(h.value),
-          '${pctFmt.format(h.allocation)}%', '${h.returnPercent >= 0 ? '+' : ''}${pctFmt.format(h.returnPercent)}%']
-      ).toList();
-
-      content.add(pw.SizedBox(height: 8));
-      content.add(pw.TableHelper.fromTextArray(
+      w.add(pw.SizedBox(height: 6));
+      w.add(pw.TableHelper.fromTextArray(
         headers: <String>['Ticker', 'Name', 'Value', 'Alloc%', 'Return%'],
-        data: tableData,
+        data: holdings.map((InvestmentHoldingData h) => <String>[
+          h.ticker, h.name, data.formatAmount(h.value),
+          '${pctFmt.format(h.allocation)}%', '${h.returnPercent >= 0 ? '+' : ''}${pctFmt.format(h.returnPercent)}%',
+        ]).toList(),
         headerStyle: _s(size: 9, bold: true),
         cellStyle: _s(size: 9),
         headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ));
     } else {
-      content.add(pw.Text('No investment data available.', style: _s(color: PdfColors.grey500)));
+      w.add(pw.Text('No investment data available.', style: _s(color: PdfColors.grey500)));
     }
-
-    _addSectionPage(doc, 'Investment Portfolio', data, ReportSection.investmentPortfolio, content);
   }
 
-  // ── Forecast ────────────────────────────────────────────────────────────
-
-  void _addForecast(pw.Document doc, ReportDataModel data) {
+  void _addForecastWidgets(List<pw.Widget> w, ReportDataModel data) {
     final Forecast? forecast = data.forecast;
-    final List<pw.Widget> content = <pw.Widget>[];
-
     if (forecast != null) {
-      content.add(pw.Text(forecast.summary, style: _s(size: 10)));
-      content.add(pw.SizedBox(height: 8));
+      w.add(pw.Text(forecast.summary, style: _s(size: 10)));
+      w.add(pw.SizedBox(height: 6));
       for (final MapEntry<String, double> e in forecast.projectedBalance.entries) {
-        content.add(_infoRow(e.key, data.formatAmount(e.value)));
+        w.add(_infoRow(e.key, data.formatAmount(e.value)));
       }
     } else {
-      content.add(pw.Text('No forecast data available.', style: _s(color: PdfColors.grey500)));
+      w.add(pw.Text('No forecast data available.', style: _s(color: PdfColors.grey500)));
     }
-
-    _addSectionPage(doc, 'Forecast', data, ReportSection.forecast, content);
   }
 
-  // ── Alerts ──────────────────────────────────────────────────────────────
-
-  void _addAlerts(pw.Document doc, ReportDataModel data) {
+  void _addAlertWidgets(List<pw.Widget> w, ReportDataModel data) {
     final List<Alert>? alerts = data.alerts;
-    final List<pw.Widget> content = <pw.Widget>[];
-
     if (alerts != null && alerts.isNotEmpty) {
       for (final Alert alert in alerts) {
-        final String severity = alert.severity.name.toUpperCase();
-        content.add(pw.Container(
-          margin: const pw.EdgeInsets.only(bottom: 6),
+        w.add(pw.Container(
+          margin: const pw.EdgeInsets.only(bottom: 5),
           padding: const pw.EdgeInsets.all(8),
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: PdfColors.grey300),
@@ -391,7 +423,8 @@ class ReportPdfService implements IReportPdfService {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: <pw.Widget>[
-              pw.Text('[$severity] ${alert.title}', style: _s(size: 10, bold: true)),
+              pw.Text('[${alert.severity.name.toUpperCase()}] ${alert.title}',
+                  style: _s(size: 10, bold: true)),
               pw.SizedBox(height: 2),
               pw.Text(alert.body, style: _s(size: 9, color: PdfColors.grey700)),
             ],
@@ -399,22 +432,16 @@ class ReportPdfService implements IReportPdfService {
         ));
       }
     } else {
-      content.add(pw.Text('No alerts.', style: _s(color: PdfColors.grey500)));
+      w.add(pw.Text('No alerts.', style: _s(color: PdfColors.grey500)));
     }
-
-    _addSectionPage(doc, 'Alerts & Warnings', data, ReportSection.alerts, content);
   }
 
-  // ── Coaching ────────────────────────────────────────────────────────────
-
-  void _addCoaching(pw.Document doc, ReportDataModel data) {
+  void _addCoachingWidgets(List<pw.Widget> w, ReportDataModel data) {
     final List<CoachingTip>? tips = data.coachingTips;
-    final List<pw.Widget> content = <pw.Widget>[];
-
     if (tips != null && tips.isNotEmpty) {
       for (final CoachingTip tip in tips) {
-        content.add(pw.Container(
-          margin: const pw.EdgeInsets.only(bottom: 6),
+        w.add(pw.Container(
+          margin: const pw.EdgeInsets.only(bottom: 5),
           padding: const pw.EdgeInsets.all(8),
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: PdfColors.grey300),
@@ -423,7 +450,8 @@ class ReportPdfService implements IReportPdfService {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: <pw.Widget>[
-              pw.Text('[${tip.difficulty.name.toUpperCase()}] ${tip.title}', style: _s(size: 10, bold: true)),
+              pw.Text('[${tip.difficulty.name.toUpperCase()}] ${tip.title}',
+                  style: _s(size: 10, bold: true)),
               pw.SizedBox(height: 2),
               pw.Text(tip.body, style: _s(size: 9, color: PdfColors.grey700)),
               if (tip.savingsEstimate != null)
@@ -434,145 +462,82 @@ class ReportPdfService implements IReportPdfService {
         ));
       }
     } else {
-      content.add(pw.Text('No coaching tips available.', style: _s(color: PdfColors.grey500)));
+      w.add(pw.Text('No coaching tips available.', style: _s(color: PdfColors.grey500)));
     }
-
-    _addSectionPage(doc, 'Coaching Tips', data, ReportSection.coaching, content);
   }
 
-  // ── Bills & Recurring ───────────────────────────────────────────────────
-
-  void _addBills(pw.Document doc, ReportDataModel data, DateFormat dateFmt) {
+  void _addBillWidgets(List<pw.Widget> w, ReportDataModel data, DateFormat dateFmt) {
     final List<BillData>? bills = data.bills;
     if (bills == null || bills.isEmpty) {
-      _addSectionPage(doc, 'Bills & Recurring', data, ReportSection.billsRecurring, <pw.Widget>[
-        pw.Text('No recurring bills data.', style: _s(color: PdfColors.grey500)),
-      ]);
+      w.add(pw.Text('No recurring bills data.', style: _s(color: PdfColors.grey500)));
       return;
     }
-
-    final List<List<String>> tableData = bills.map((BillData b) =>
-      <String>[b.name, data.formatAmount(b.amount), b.frequency,
-        b.nextDue != null ? dateFmt.format(b.nextDue!) : '—', b.status]
-    ).toList();
-
-    _addSectionPage(doc, 'Bills & Recurring', data, ReportSection.billsRecurring, <pw.Widget>[
-      _infoRow('Total Recurring', data.formatAmount(data.totalRecurring)),
-      _infoRow('Active Bills', '${data.activeBillCount}'),
-      pw.SizedBox(height: 8),
-      pw.TableHelper.fromTextArray(
-        headers: <String>['Name', 'Amount', 'Frequency', 'Next Due', 'Status'],
-        data: tableData,
-        headerStyle: _s(size: 9, bold: true),
-        cellStyle: _s(size: 9),
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-    ]);
+    w.add(_infoRow('Total Recurring', data.formatAmount(data.totalRecurring)));
+    w.add(_infoRow('Active Bills', '${data.activeBillCount}'));
+    w.add(pw.SizedBox(height: 6));
+    w.add(pw.TableHelper.fromTextArray(
+      headers: <String>['Name', 'Amount', 'Frequency', 'Next Due', 'Status'],
+      data: bills.map((BillData b) => <String>[
+        b.name, data.formatAmount(b.amount), b.frequency,
+        b.nextDue != null ? dateFmt.format(b.nextDue!) : '—', b.status,
+      ]).toList(),
+      headerStyle: _s(size: 9, bold: true),
+      cellStyle: _s(size: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ));
   }
 
-  // ── Transaction Log ─────────────────────────────────────────────────────
-
-  void _addTransactionLog(pw.Document doc, ReportDataModel data, DateFormat dateFmt) {
+  void _addTransactionWidgets(List<pw.Widget> w, ReportDataModel data, DateFormat dateFmt) {
     final List<Transaction>? txns = data.transactions;
     if (txns == null || txns.isEmpty) {
-      _addSectionPage(doc, 'Transaction Log', data, ReportSection.transactionLog, <pw.Widget>[
-        pw.Text('No transactions in this period.', style: _s(color: PdfColors.grey500)),
-      ]);
+      w.add(pw.Text('No transactions in this period.', style: _s(color: PdfColors.grey500)));
       return;
     }
-
-    // Limit to 50 rows for PDF; full list in app preview
     final int maxRows = 50;
     final List<Transaction> limited = txns.length > maxRows ? txns.sublist(0, maxRows) : txns;
-
-    final List<List<String>> tableData = limited.map((Transaction tx) =>
-      <String>[
+    w.add(pw.Text(
+      '${txns.length} transactions${txns.length > maxRows ? ' (showing first $maxRows)' : ''}',
+      style: _s(size: 9, color: PdfColors.grey600),
+    ));
+    w.add(pw.SizedBox(height: 6));
+    w.add(pw.TableHelper.fromTextArray(
+      headers: <String>['Date', 'Description', 'Amount'],
+      data: limited.map((Transaction tx) => <String>[
         dateFmt.format(tx.dateTime),
         tx.label,
         '${tx.isExpense ? '-' : '+'}${tx.totalAmount.toStringAsFixed(2)} ${tx.currency}',
-      ]
-    ).toList();
-
-    _addSectionPage(doc, 'Transaction Log', data, ReportSection.transactionLog, <pw.Widget>[
-      pw.Text('${txns.length} transactions total${txns.length > maxRows ? ' (showing first $maxRows)' : ''}',
-          style: _s(size: 9, color: PdfColors.grey600)),
-      pw.SizedBox(height: 8),
-      pw.TableHelper.fromTextArray(
-        headers: <String>['Date', 'Description', 'Amount'],
-        data: tableData,
-        headerStyle: _s(size: 9, bold: true),
-        cellStyle: _s(size: 9),
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-    ]);
+      ]).toList(),
+      headerStyle: _s(size: 9, bold: true),
+      cellStyle: _s(size: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    ));
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  /// Adds a section as a single pw.Page with title, content, and optional AI recommendation.
-  void _addSectionPage(pw.Document doc, String title, ReportDataModel data,
-      ReportSection section, List<pw.Widget> content) {
-    final SectionRecommendation? rec = data.recommendations[section];
-
-    doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      theme: _theme,
-      build: (pw.Context ctx) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: <pw.Widget>[
-          // Header
-          pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.grey100,
-              border: pw.Border(left: const pw.BorderSide(color: PdfColors.blue, width: 3)),
-            ),
-            child: pw.Text(title, style: _s(size: 14, bold: true)),
-          ),
-          pw.SizedBox(height: 12),
-          // Content
-          ...content,
-          // AI Recommendation
-          if (rec != null) ...<pw.Widget>[
-            pw.SizedBox(height: 12),
-            pw.Container(
-              padding: const pw.EdgeInsets.all(10),
-              decoration: pw.BoxDecoration(
-                color: PdfColors.blue50,
-                border: pw.Border(left: const pw.BorderSide(color: PdfColors.blue, width: 3)),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
-              ),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: <pw.Widget>[
-                  pw.Text('AI Insight', style: _s(size: 8, bold: true, color: PdfColors.blue800)),
-                  pw.SizedBox(height: 4),
-                  pw.Text(rec.oneLiner, style: _s(size: 10, bold: true)),
-                  pw.SizedBox(height: 4),
-                  pw.Text(rec.detailed, style: _s(size: 9, color: PdfColors.grey700)),
-                ],
-              ),
-            ),
-          ],
-          // Footer
-          pw.SizedBox(height: 20),
-          pw.Divider(color: PdfColors.grey300),
-          pw.SizedBox(height: 4),
-          pw.Text(
-            'Plutus Financial Report • ${DateFormat('MMM d, yyyy').format(data.generatedAt)}',
-            style: _s(size: 7, color: PdfColors.grey500),
-          ),
-        ],
-      ),
-    ));
+  String _sectionTitle(ReportSection section) {
+    switch (section) {
+      case ReportSection.coverPage: return 'Cover';
+      case ReportSection.executiveSummary: return 'Executive Summary';
+      case ReportSection.spendingBreakdown: return 'Spending Breakdown';
+      case ReportSection.incomeAnalysis: return 'Income Analysis';
+      case ReportSection.cashFlow: return 'Cash Flow';
+      case ReportSection.budgetActual: return 'Budget vs Actual';
+      case ReportSection.topMerchants: return 'Top Merchants';
+      case ReportSection.investmentPortfolio: return 'Investment Portfolio';
+      case ReportSection.forecast: return 'Forecast';
+      case ReportSection.alerts: return 'Alerts & Warnings';
+      case ReportSection.coaching: return 'Coaching Tips';
+      case ReportSection.billsRecurring: return 'Bills & Recurring';
+      case ReportSection.transactionLog: return 'Transaction Log';
+    }
   }
 
   pw.Widget _infoRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
       child: pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
         children: <pw.Widget>[
