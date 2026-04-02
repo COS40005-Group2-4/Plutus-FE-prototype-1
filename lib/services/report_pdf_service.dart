@@ -128,61 +128,78 @@ class ReportPdfService implements IReportPdfService {
   // ── Cover page (standalone) ─────────────────────────────────────────────
 
   pw.Page _buildCoverPage(ReportDataModel data, DateFormat dateFmt) {
+    final String audienceLabel = data.config.audienceMode == AudienceMode.professional
+        ? 'Professional Report'
+        : 'Personal Report';
+
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
       theme: _theme,
-      build: (pw.Context ctx) => pw.Container(
-        color: const PdfColor.fromInt(0xFF0A1828),
-        padding: const pw.EdgeInsets.all(48),
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: <pw.Widget>[
-            pw.Container(width: 48, height: 4, color: PdfColors.blue),
-            pw.SizedBox(height: 24),
-            pw.Text('Plutus', style: _s(size: 36, bold: true, color: PdfColors.white)),
-            pw.SizedBox(height: 8),
-            pw.Text('Financial Report', style: _s(size: 20, color: PdfColors.grey400)),
-            pw.SizedBox(height: 4),
-            pw.Text(
-              '${dateFmt.format(data.config.dateRange.start)} – ${dateFmt.format(data.config.dateRange.end)}',
-              style: _s(size: 12, color: PdfColors.grey500),
-            ),
-            pw.SizedBox(height: 80),
-            _coverMetric('Total Income', data.formatAmount(data.totalIncome), PdfColors.green),
-            pw.SizedBox(height: 10),
-            _coverMetric('Total Expenses', data.formatAmount(data.totalExpenses), PdfColors.red),
-            pw.SizedBox(height: 10),
-            _coverMetric('Net Savings', data.formatAmount(data.netSavings),
-                data.netSavings >= 0 ? PdfColors.green : PdfColors.red),
-            if (data.healthScore != null) ...<pw.Widget>[
-              pw.SizedBox(height: 10),
-              _coverMetric('Health Score', '${data.healthScore!.score}/100', PdfColors.blue),
-            ],
-            pw.SizedBox(height: 60),
-            pw.Text('Prepared for', style: _s(size: 9, color: PdfColors.grey500)),
-            pw.Text(data.userName, style: _s(size: 14, bold: true, color: PdfColors.white)),
-            pw.SizedBox(height: 8),
-            pw.Text('Generated ${dateFmt.format(data.generatedAt)}',
-                style: _s(size: 9, color: PdfColors.grey600)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  pw.Widget _coverMetric(String label, String value, PdfColor color) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const pw.BoxDecoration(
-        color: PdfColor.fromInt(0xFF132337),
-        borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
-      ),
-      child: pw.Row(
-        mainAxisSize: pw.MainAxisSize.min,
+      margin: const pw.EdgeInsets.all(48),
+      build: (pw.Context ctx) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: <pw.Widget>[
-          pw.Text(label, style: _s(size: 10, color: PdfColors.grey400)),
-          pw.SizedBox(width: 16),
-          pw.Text(value, style: _s(size: 14, bold: true, color: color)),
+          // Top accent line
+          pw.Container(width: 60, height: 3, color: PdfColors.blue800),
+          pw.SizedBox(height: 40),
+
+          // Title block
+          pw.Text('PLUTUS', style: _s(size: 14, bold: true, color: PdfColors.grey500)),
+          pw.SizedBox(height: 8),
+          pw.Text('Financial Report', style: _s(size: 32, bold: true, color: PdfColors.grey900)),
+          pw.SizedBox(height: 6),
+          pw.Text(audienceLabel, style: _s(size: 12, color: PdfColors.blue800)),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            '${dateFmt.format(data.config.dateRange.start)} – ${dateFmt.format(data.config.dateRange.end)}',
+            style: _s(size: 11, color: PdfColors.grey600),
+          ),
+
+          pw.SizedBox(height: 40),
+          pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+          pw.SizedBox(height: 24),
+
+          // Key metrics table
+          pw.Text('KEY METRICS', style: _s(size: 9, bold: true, color: PdfColors.grey500)),
+          pw.SizedBox(height: 12),
+          pw.TableHelper.fromTextArray(
+            headers: <String>['Metric', 'Value'],
+            data: <List<String>>[
+              <String>['Total Income', data.formatAmount(data.totalIncome)],
+              <String>['Total Expenses', data.formatAmount(data.totalExpenses)],
+              <String>['Net Savings', data.formatAmount(data.netSavings)],
+              <String>['Savings Rate', '${data.savingsRate.toStringAsFixed(1)}%'],
+              <String>['Transactions', '${data.transactionCount}'],
+              if (data.healthScore != null)
+                <String>['Health Score', '${data.healthScore!.score} / 100'],
+            ],
+            headerStyle: _s(size: 10, bold: true, color: PdfColors.grey800),
+            cellStyle: _s(size: 10),
+            headerDecoration: const pw.BoxDecoration(
+              color: PdfColors.grey100,
+              border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey400, width: 0.5)),
+            ),
+            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            columnWidths: <int, pw.TableColumnWidth>{
+              0: const pw.FlexColumnWidth(2),
+              1: const pw.FlexColumnWidth(3),
+            },
+          ),
+
+          pw.SizedBox(height: 40),
+          pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+          pw.SizedBox(height: 16),
+
+          // Prepared for
+          pw.Text('PREPARED FOR', style: _s(size: 9, bold: true, color: PdfColors.grey500)),
+          pw.SizedBox(height: 6),
+          pw.Text(data.userName, style: _s(size: 16, bold: true, color: PdfColors.grey900)),
+
+          pw.SizedBox(height: 24),
+          pw.Text(
+            'Generated on ${DateFormat('MMMM d, yyyy \'at\' h:mm a').format(data.generatedAt)}',
+            style: _s(size: 9, color: PdfColors.grey500),
+          ),
         ],
       ),
     );
