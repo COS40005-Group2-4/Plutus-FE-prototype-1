@@ -8,7 +8,7 @@ class BedrockClient:
     """Wrapper for Amazon Bedrock model invocation."""
 
     DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
-    DEFAULT_MAX_TOKENS = 1024
+    DEFAULT_MAX_TOKENS = 4096
 
     def __init__(
         self,
