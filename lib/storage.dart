@@ -45,8 +45,11 @@ class ColoredDashboardItem extends DashboardItem {
 
 class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   final String dashboardId;
+  final int userId;
 
-  MyItemStorage({this.dashboardId = 'default'});
+  MyItemStorage({this.dashboardId = 'default', this.userId = 0});
+
+  String _userKey(String key) => 'user_${userId}_$key';
 
   late SharedPreferences _preferences;
 
@@ -197,7 +200,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         _preferences = await SharedPreferences.getInstance();
 
         // v3: bump whenever _default changes to force re-initialization.
-        var init = _preferences.getBool("init_${dashboardId}_v4") ?? false;
+        var init = _preferences.getBool(_userKey("init_${dashboardId}_v4")) ?? false;
 
         if (!init) {
           _localItems = {
@@ -209,7 +212,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
 
           for (var s in _slotCounts) {
             await _preferences.setString(
-              "layout_data_${dashboardId}_$s",
+              _userKey("layout_data_${dashboardId}_$s"),
               json.encode(
                 _default[s]!.asMap().map(
                   (key, value) => MapEntry(value.identifier, value.toMap()),
@@ -218,12 +221,12 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
             );
           }
 
-          await _preferences.setBool("init_${dashboardId}_v4", true);
+          await _preferences.setBool(_userKey("init_${dashboardId}_v4"), true);
         } else {
           // Load existing layout data or use defaults
           _localItems = {};
           for (var s in _slotCounts) {
-            var layoutDataStr = _preferences.getString("layout_data_${dashboardId}_$s");
+            var layoutDataStr = _preferences.getString(_userKey("layout_data_${dashboardId}_$s"));
             if (layoutDataStr != null) {
               var js = json.decode(layoutDataStr) as Map<String, dynamic>;
               var loadedItems = js.map<String, ColoredDashboardItem>(
@@ -337,7 +340,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
         ),
       );
 
-      await _preferences.setString("layout_data_${dashboardId}_$slotCount", js);
+      await _preferences.setString(_userKey("layout_data_${dashboardId}_$slotCount"), js);
     }
   }
 
@@ -353,7 +356,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       }
 
       await _preferences.setString(
-        "layout_data_${dashboardId}_$s",
+        _userKey("layout_data_${dashboardId}_$s"),
         json.encode(
           _localItems![s]!.map((key, value) => MapEntry(key, value.toMap())),
         ),
@@ -375,7 +378,7 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
       final slotItems = _localItems?[s];
       if (slotItems != null) {
         await _preferences.setString(
-          "layout_data_${dashboardId}_$s",
+          _userKey("layout_data_${dashboardId}_$s"),
           json.encode(
             slotItems.map((key, value) => MapEntry(key, value.toMap())),
           ),
@@ -387,10 +390,10 @@ class MyItemStorage extends DashboardItemStorageDelegate<ColoredDashboardItem> {
   Future<void> clear() async {
     for (var s in _slotCounts) {
       _localItems?[s]?.clear();
-      await _preferences.remove("layout_data_${dashboardId}_$s");
+      await _preferences.remove(_userKey("layout_data_${dashboardId}_$s"));
     }
     _localItems = null;
-    await _preferences.setBool("init_${dashboardId}_v4", false);
+    await _preferences.setBool(_userKey("init_${dashboardId}_v4"), false);
   }
 
   ColoredDashboardItem createDefaultItem(String instanceId, String widgetType, int slotCount) {

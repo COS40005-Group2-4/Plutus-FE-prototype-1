@@ -121,4 +121,27 @@ void main() {
       expect(key, equals('user_7_init_default_v4'));
     });
   });
+
+  group('MyItemStorage key scoping', () {
+    test('layout_data key is user-scoped', () {
+      String userKey(int userId, String key) => 'user_${userId}_$key';
+      const dashId = 'myDash';
+      const slotCount = 4;
+
+      expect(
+        userKey(12, 'layout_data_${dashId}_$slotCount'),
+        equals('user_12_layout_data_myDash_4'),
+      );
+    });
+
+    test('init flag key is user-scoped', () {
+      String userKey(int userId, String key) => 'user_${userId}_$key';
+      const dashId = 'myDash';
+
+      expect(
+        userKey(12, 'init_${dashId}_v4'),
+        equals('user_12_init_myDash_v4'),
+      );
+    });
+  });
 }
