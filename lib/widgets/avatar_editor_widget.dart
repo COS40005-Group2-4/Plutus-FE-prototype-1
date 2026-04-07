@@ -118,14 +118,18 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   icon: Icons.zoom_in,
                   label: l10n.avatarZoomIn,
                   onPressed: () {
-                    _controller.value.scaleByDouble(1.2, 1.2, 1.2, 1.0);
+                    final Matrix4 m = _controller.value.clone()
+                      ..scaleByDouble(1.2, 1.2, 1.2, 1.0);
+                    _controller.value = m;
                   },
                 ),
                 _buildControlButton(
                   icon: Icons.zoom_out,
                   label: l10n.avatarZoomOut,
                   onPressed: () {
-                    _controller.value.scaleByDouble(0.8, 0.8, 0.8, 1.0);
+                    final Matrix4 m = _controller.value.clone()
+                      ..scaleByDouble(1 / 1.2, 1 / 1.2, 1 / 1.2, 1.0);
+                    _controller.value = m;
                   },
                 ),
                 _buildControlButton(
