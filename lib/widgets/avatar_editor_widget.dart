@@ -70,7 +70,10 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
     if (byteData == null) {
       throw StateError('Failed to encode avatar preview to PNG');
     }
-    final List<int> pngBytes = byteData.buffer.asUint8List();
+    final List<int> pngBytes = byteData.buffer.asUint8List(
+      byteData.offsetInBytes,
+      byteData.lengthInBytes,
+    );
     final Directory dir = await getTemporaryDirectory();
     final File file = File(
       '${dir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.png',
@@ -162,8 +165,9 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   icon: Icons.zoom_in,
                   label: l10n.avatarZoomIn,
                   onPressed: () {
-                    final Matrix4 m = _controller.value.clone()
-                      ..scaleByDouble(1.2, 1.2, 1.2, 1.0);
+                    final Matrix4 m = _controller.value.clone();
+                    // ignore: deprecated_member_use
+                    m.scale(1.2);
                     _controller.value = m;
                   },
                 ),
@@ -171,8 +175,9 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   icon: Icons.zoom_out,
                   label: l10n.avatarZoomOut,
                   onPressed: () {
-                    final Matrix4 m = _controller.value.clone()
-                      ..scaleByDouble(1 / 1.2, 1 / 1.2, 1 / 1.2, 1.0);
+                    final Matrix4 m = _controller.value.clone();
+                    // ignore: deprecated_member_use
+                    m.scale(1 / 1.2);
                     _controller.value = m;
                   },
                 ),
@@ -301,7 +306,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _selectedImage;
 
-  void _pickImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source) async {
     // Capture navigator before the async gap so we can close the picker
     // after confirming inside the editor dialog (two distinct routes to pop).
     final NavigatorState navigator = Navigator.of(context);
