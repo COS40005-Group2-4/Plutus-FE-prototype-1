@@ -20,7 +20,9 @@ class AuthProvider extends ChangeNotifier {
   String _userEmail = '';
   String _userName = '';
   User? _currentUser;
-  
+  ValueChanged<int>? onUserChanged;
+  void _notifyUserChanged(int userId) => onUserChanged?.call(userId);
+
   bool get isAuthenticated => _isAuthenticated;
   bool get isGuest => _isGuest;
   bool get isLoading => _isLoading;
@@ -58,9 +60,10 @@ class AuthProvider extends ChangeNotifier {
         _isAuthenticated = !user.isGuest || user.hasOAuth;
         
         await _userService.updateLastLogin(user.id);
+        _notifyUserChanged(user.id);
       }
     }
-    
+
     // On web, listen to OAuth authentication state changes
     if (kIsWeb) {
       _authService.authenticationState.listen((credentials) async {
@@ -110,10 +113,11 @@ class AuthProvider extends ChangeNotifier {
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_user_id', user.id);
-    
+    _notifyUserChanged(user.id);
+
     notifyListeners();
   }
-  
+
   // Sign in with OAuth
   Future<bool> signIn() async {
     _isLoading = true;
@@ -155,10 +159,11 @@ class AuthProvider extends ChangeNotifier {
       
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('last_user_id', user.id);
-      
+      _notifyUserChanged(user.id);
+
       _isLoading = false;
       notifyListeners();
-      
+
       return true;
     } catch (e) {
       _isLoading = false;
@@ -166,7 +171,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
-  
+
   // Create new local user
   Future<bool> createLocalUser(String username, String displayName, {bool isGuest = false}) async {
     _isLoading = true;
@@ -187,10 +192,11 @@ class AuthProvider extends ChangeNotifier {
       
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('last_user_id', user.id);
-      
+      _notifyUserChanged(user.id);
+
       _isLoading = false;
       notifyListeners();
-      
+
       return true;
     } catch (e) {
       _isLoading = false;
@@ -198,7 +204,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
-  
+
   // Link OAuth account to current local user
   Future<bool> linkOAuthAccount() async {
     if (_currentUser == null || _currentUser!.hasOAuth) {
@@ -281,10 +287,11 @@ class AuthProvider extends ChangeNotifier {
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('last_user_id');
-    
+    _notifyUserChanged(0);
+
     notifyListeners();
   }
-  
+
   // Get all available local users
   Future<List<User>> getAllUsers() async {
     return await _userService.getAllUsers();
