@@ -91,9 +91,22 @@ class SettingsProvider extends ChangeNotifier {
   PrivacyLevel _privacyLevel = PrivacyLevel.standard;
 
   bool _isInitialized = false;
+  int _userId = 0;
+  String _userKey(String key) => 'user_${_userId}_$key';
 
-  SettingsProvider() {
-    _loadSettings();
+  SettingsProvider();
+
+  Future<void> reinitialize(int userId) async {
+    _userId = userId;
+    _isInitialized = false;
+    _themeMode = ThemeMode.system;
+    _language = AppLanguage.english;
+    _currency = AppCurrency.vnd;
+    _dateFormat = DateFormatType.ddMMyyyy;
+    _timeFormat = TimeFormatType.format24h;
+    _ocrMode = OCRMode.auto;
+    _privacyLevel = PrivacyLevel.standard;
+    await _loadSettings();
   }
 
   // Getters
@@ -111,8 +124,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load theme mode
-    final storedTheme = prefs.getString(_themeModeKey);
+    final storedTheme = prefs.getString(_userKey(_themeModeKey));
     if (storedTheme == ThemeMode.dark.name) {
       _themeMode = ThemeMode.dark;
     } else if (storedTheme == ThemeMode.light.name) {
@@ -121,32 +133,27 @@ class SettingsProvider extends ChangeNotifier {
       _themeMode = ThemeMode.system;
     }
 
-    // Load language
-    final storedLanguage = prefs.getString(_languageKey);
+    final storedLanguage = prefs.getString(_userKey(_languageKey));
     if (storedLanguage != null) {
       _language = AppLanguage.fromCode(storedLanguage);
     }
 
-    // Load currency
-    final storedCurrency = prefs.getString(_currencyKey);
+    final storedCurrency = prefs.getString(_userKey(_currencyKey));
     if (storedCurrency != null) {
       _currency = AppCurrency.fromCode(storedCurrency);
     }
 
-    // Load date format
-    final storedDateFormat = prefs.getString(_dateFormatKey);
+    final storedDateFormat = prefs.getString(_userKey(_dateFormatKey));
     if (storedDateFormat != null) {
       _dateFormat = DateFormatType.fromString(storedDateFormat);
     }
 
-    // Load time format
-    final storedTimeFormat = prefs.getString(_timeFormatKey);
+    final storedTimeFormat = prefs.getString(_userKey(_timeFormatKey));
     if (storedTimeFormat != null) {
       _timeFormat = TimeFormatType.fromString(storedTimeFormat);
     }
 
-    // Load OCR mode
-    final storedOcrMode = prefs.getString(_ocrModeKey);
+    final storedOcrMode = prefs.getString(_userKey(_ocrModeKey));
     if (storedOcrMode != null) {
       _ocrMode = OCRMode.values.firstWhere(
         (mode) => mode.name == storedOcrMode,
@@ -154,8 +161,7 @@ class SettingsProvider extends ChangeNotifier {
       );
     }
 
-    // Load AI privacy level
-    final storedPrivacyLevel = prefs.getString(_privacyLevelKey);
+    final storedPrivacyLevel = prefs.getString(_userKey(_privacyLevelKey));
     if (storedPrivacyLevel != null) {
       _privacyLevel = PrivacyLevel.values.firstWhere(
         (level) => level.name == storedPrivacyLevel,
@@ -170,7 +176,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeModeKey, mode.name);
+    await prefs.setString(_userKey(_themeModeKey), mode.name);
     notifyListeners();
   }
 
@@ -181,42 +187,42 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setLanguage(AppLanguage language) async {
     _language = language;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_languageKey, language.code);
+    await prefs.setString(_userKey(_languageKey), language.code);
     notifyListeners();
   }
 
   Future<void> setCurrency(AppCurrency currency) async {
     _currency = currency;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_currencyKey, currency.code);
+    await prefs.setString(_userKey(_currencyKey), currency.code);
     notifyListeners();
   }
 
   Future<void> setDateFormat(DateFormatType format) async {
     _dateFormat = format;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dateFormatKey, format.name);
+    await prefs.setString(_userKey(_dateFormatKey), format.name);
     notifyListeners();
   }
 
   Future<void> setTimeFormat(TimeFormatType format) async {
     _timeFormat = format;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_timeFormatKey, format.name);
+    await prefs.setString(_userKey(_timeFormatKey), format.name);
     notifyListeners();
   }
 
   Future<void> setOcrMode(OCRMode mode) async {
     _ocrMode = mode;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_ocrModeKey, mode.name);
+    await prefs.setString(_userKey(_ocrModeKey), mode.name);
     notifyListeners();
   }
 
   Future<void> setPrivacyLevel(PrivacyLevel level) async {
     _privacyLevel = level;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_privacyLevelKey, level.name);
+    await prefs.setString(_userKey(_privacyLevelKey), level.name);
     notifyListeners();
   }
 }

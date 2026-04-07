@@ -30,6 +30,7 @@ void main() {
 
     test('setThemeMode persists and notifies', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
       bool notified = false;
       provider.addListener(() => notified = true);
 
@@ -39,13 +40,14 @@ void main() {
       expect(provider.isDarkMode, true);
       expect(notified, true);
 
-      // Verify persisted
+      // Verify persisted with user-scoped key
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('theme_mode'), 'dark');
+      expect(prefs.getString('user_1_theme_mode'), 'dark');
     });
 
     test('toggleTheme flips between dark and light', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
 
       await provider.setThemeMode(ThemeMode.light);
       expect(provider.isDarkMode, false);
@@ -59,6 +61,7 @@ void main() {
 
     test('setLanguage persists and updates locale', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
 
       await provider.setLanguage(AppLanguage.vietnamese);
 
@@ -66,55 +69,57 @@ void main() {
       expect(provider.locale, const Locale('vi'));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('language'), 'vi');
+      expect(prefs.getString('user_1_language'), 'vi');
     });
 
     test('setCurrency persists', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
 
       await provider.setCurrency(AppCurrency.usd);
 
       expect(provider.currency, AppCurrency.usd);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('currency'), 'USD');
+      expect(prefs.getString('user_1_currency'), 'USD');
     });
 
     test('setDateFormat persists', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
 
       await provider.setDateFormat(DateFormatType.yyyyMMdd);
 
       expect(provider.dateFormat, DateFormatType.yyyyMMdd);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('date_format'), 'yyyyMMdd');
+      expect(prefs.getString('user_1_date_format'), 'yyyyMMdd');
     });
 
     test('setTimeFormat persists', () async {
       final provider = SettingsProvider();
+      await provider.reinitialize(1);
 
       await provider.setTimeFormat(TimeFormatType.format12h);
 
       expect(provider.timeFormat, TimeFormatType.format12h);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('time_format'), 'format12h');
+      expect(prefs.getString('user_1_time_format'), 'format12h');
     });
 
-    test('loads saved settings on construction', () async {
-      // Pre-populate SharedPreferences
+    test('loads saved settings after reinitialize', () async {
+      // Pre-populate SharedPreferences with user-scoped keys
       SharedPreferences.setMockInitialValues({
-        'theme_mode': 'dark',
-        'language': 'vi',
-        'currency': 'USD',
-        'date_format': 'yyyyMMdd',
-        'time_format': 'format12h',
+        'user_1_theme_mode': 'dark',
+        'user_1_language': 'vi',
+        'user_1_currency': 'USD',
+        'user_1_date_format': 'yyyyMMdd',
+        'user_1_time_format': 'format12h',
       });
 
       final provider = SettingsProvider();
-      // Wait for async _loadSettings to complete
-      await Future.delayed(const Duration(milliseconds: 50));
+      await provider.reinitialize(1);
 
       expect(provider.themeMode, ThemeMode.dark);
       expect(provider.language, AppLanguage.vietnamese);
