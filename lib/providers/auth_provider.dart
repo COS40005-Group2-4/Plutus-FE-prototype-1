@@ -402,4 +402,38 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  /// Returns true if the local T&C dialog has already been shown to this user.
+  Future<bool> isLocalTcShown() async {
+    final userId = _currentUser?.id;
+    if (userId == null) return true;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('user_${userId}_tc_shown') ?? false;
+  }
+
+  /// Marks the local T&C dialog as shown for the current user.
+  Future<void> setLocalTcShown() async {
+    final userId = _currentUser?.id;
+    if (userId == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('user_${userId}_tc_shown', true);
+  }
+
+  /// Called after the local T&C dialog is dismissed.
+  /// If [agreed] is true, persists data consent to SQLite.
+  /// Always marks the dialog as shown so it does not appear again.
+  Future<void> handleLocalTcResult(bool agreed) async {
+    if (agreed && _currentUser != null) {
+      try {
+        await _userService.setDataConsent(_currentUser!.id, true);
+        _currentUser = await _userService.getUserById(_currentUser!.id);
+        notifyListeners();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error persisting local T&C consent: $e');
+        }
+      }
+    }
+    await setLocalTcShown();
+  }
 }
