@@ -63,13 +63,18 @@ class _DashboardWidgetState extends State<DashboardWidget>
   List<String> _lastVisibilityKey = [];
   String? _lastDashboardId;
   int _controllerVersion = 0;
+  int? _lastUserId;
 
   @override
   void initState() {
     super.initState();
     final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
     _lastDashboardId = dashProvider.activeDashboardId;
-    storage = MyItemStorage(dashboardId: dashProvider.activeDashboardId);
+    _lastUserId = dashProvider.currentUserId;
+    storage = MyItemStorage(
+      dashboardId: dashProvider.activeDashboardId,
+      userId: dashProvider.currentUserId,
+    );
     _itemController = DashboardItemController<ColoredDashboardItem>.withDelegate(
       itemStorageDelegate: storage,
     );
@@ -87,7 +92,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
   }
 
   void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) {
-    storage = MyItemStorage(dashboardId: dashboardId);
+    storage = MyItemStorage(
+      dashboardId: dashboardId,
+      userId: Provider.of<DashboardProvider>(context, listen: false).currentUserId,
+    );
     storage.setVisibilityFilter(visibleWidgets);
 
     _itemController = DashboardItemController.withDelegate(
@@ -287,6 +295,20 @@ class _DashboardWidgetState extends State<DashboardWidget>
                   dashProvider.activeDashboardId,
                   dashProvider.getVisibleWidgets(),
                 );
+              });
+            }
+
+            // Detect user switch (safety net for in-session switches)
+            if (_lastUserId != dashProvider.currentUserId) {
+              _lastUserId = dashProvider.currentUserId;
+              _lastVisibilityKey = [];
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _recreateStorageAndController(
+                    dashProvider.activeDashboardId,
+                    dashProvider.getVisibleWidgets(),
+                  );
+                }
               });
             }
 
