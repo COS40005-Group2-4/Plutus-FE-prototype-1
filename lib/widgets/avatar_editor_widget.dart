@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../l10n/app_localizations.dart';
@@ -76,31 +77,45 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
               ),
             ),
             const SizedBox(height: 16),
-            // Image preview area
-            Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[700]!, width: 2),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Transform.rotate(
-                  angle: _rotation * (3.14159265 / 180),
-                  child: InteractiveViewer(
-                    transformationController: _controller,
-                    boundaryMargin: const EdgeInsets.all(100),
-                    minScale: 0.5,
-                    maxScale: 4,
-                    child: Image.file(
-                      widget.imageFile,
-                      fit: BoxFit.cover,
+            // Image preview area with circle guide
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[700]!, width: 2),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Transform.rotate(
+                      angle: _rotation * (math.pi / 180),
+                      child: InteractiveViewer(
+                        transformationController: _controller,
+                        boundaryMargin: const EdgeInsets.all(100),
+                        minScale: 0.5,
+                        maxScale: 4,
+                        child: Image.file(
+                          widget.imageFile,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                IgnorePointer(
+                  child: SizedBox(
+                    width: 300,
+                    height: 300,
+                    child: CustomPaint(
+                      painter: _CircleGuidePainter(),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             // Controls
@@ -327,4 +342,50 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
       ),
     );
   }
+}
+
+class _CircleGuidePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    final double radius = math.min(size.width, size.height) / 2 - 4;
+
+    // Dark overlay outside the circle
+    final Paint overlayPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.55);
+    final Path overlayPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..addOval(Rect.fromCircle(center: center, radius: radius))
+      ..fillType = PathFillType.evenOdd;
+    canvas.drawPath(overlayPath, overlayPaint);
+
+    // Dashed circle ring
+    const double dashLength = 10.0;
+    const double gapLength = 6.0;
+    final double circumference = 2 * math.pi * radius;
+    final int totalDashes =
+        (circumference / (dashLength + gapLength)).floor();
+    final double dashAngle =
+        (dashLength / circumference) * 2 * math.pi;
+    final double gapAngle =
+        (gapLength / circumference) * 2 * math.pi;
+    final Paint dashPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    double angle = -math.pi / 2;
+    for (int i = 0; i < totalDashes; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        angle,
+        dashAngle,
+        false,
+        dashPaint,
+      );
+      angle += dashAngle + gapAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
