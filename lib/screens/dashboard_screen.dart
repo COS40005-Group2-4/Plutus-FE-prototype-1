@@ -480,12 +480,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
               ),
             ),
             IconButton(
-              onPressed: () {
+              onPressed: () async {
                 // Both calls are needed: delete() removes the item from the in-memory grid,
                 // removeWidgetInstance() removes it from the persisted widgetVisibility map.
                 final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
                 _itemController.delete(item.identifier);
-                dashProvider.removeWidgetInstance(item.identifier);
+                await dashProvider.removeWidgetInstance(item.identifier);
               },
               icon: const Icon(
                 Icons.close,
