@@ -321,6 +321,7 @@ class AppLocalizations {
       'start_empty': 'Start with a blank dashboard',
       'save_layout': 'Save Layout',
       'layout_saved': 'Layout saved',
+      'drag_to_move': 'drag to move',
       'reset_dashboard': 'Undo Changes',
       'hard_reset_dashboard': 'Reset to Default',
       'hard_reset_warning': 'This will restore the default layout and show all cards. This cannot be undone.',
@@ -864,6 +865,7 @@ class AppLocalizations {
       'start_empty': 'Bắt đầu với bảng điều khiển trống',
       'save_layout': 'Lưu bố cục',
       'layout_saved': 'Đã lưu bố cục',
+      'drag_to_move': 'kéo để di chuyển',
       'reset_dashboard': 'Hoàn tác thay đổi',
       'hard_reset_dashboard': 'Khôi phục mặc định',
       'hard_reset_warning': 'Bố cục mặc định sẽ được khôi phục và tất cả thẻ sẽ hiển thị. Không thể hoàn tác.',
@@ -1405,6 +1407,7 @@ class AppLocalizations {
   String get startEmpty => translate('start_empty');
   String get saveLayout => translate('save_layout');
   String get layoutSaved => translate('layout_saved');
+  String get dragToMove => translate('drag_to_move');
   String get resetDashboard => translate('reset_dashboard');
   String get hardResetDashboard => translate('hard_reset_dashboard');
   String get hardResetWarning => translate('hard_reset_warning');
