@@ -70,7 +70,11 @@ class AppLocalizations {
       'data_consent_decline': 'If you decline, you will continue to use the app in offline (guest) mode.',
       'data_consent_agree_btn': 'Agree',
       'data_consent_decline_btn': 'Decline',
-      
+      'tc_title': 'Terms of Use',
+      'tc_message': 'By using Plutus, you acknowledge that your financial data is stored locally on this device. You accept responsibility for keeping your device secure. You may export or delete your data at any time.',
+      'tc_agree_btn': 'I Agree',
+      'tc_decline_btn': 'Decline',
+
       // Navigation
       'dashboard': 'Dashboard',
       'history': 'History',
@@ -614,7 +618,11 @@ class AppLocalizations {
       'data_consent_decline': 'Nếu bạn từ chối, bạn sẽ tiếp tục sử dụng ứng dụng ở chế độ ngoại tuyến (khách).',
       'data_consent_agree_btn': 'Đồng ý',
       'data_consent_decline_btn': 'Từ chối',
-      
+      'tc_title': 'Điều khoản sử dụng',
+      'tc_message': 'Bằng cách sử dụng Plutus, bạn xác nhận rằng dữ liệu tài chính của bạn được lưu trữ cục bộ trên thiết bị này. Bạn chấp nhận trách nhiệm bảo mật thiết bị của mình. Bạn có thể xuất hoặc xóa dữ liệu của mình bất kỳ lúc nào.',
+      'tc_agree_btn': 'Tôi đồng ý',
+      'tc_decline_btn': 'Từ chối',
+
       // Navigation
       'dashboard': 'Bảng điều khiển',
       'history': 'Lịch sử',
@@ -1156,6 +1164,10 @@ class AppLocalizations {
   String get dataConsentDecline => translate('data_consent_decline');
   String get dataConsentAgreeBtn => translate('data_consent_agree_btn');
   String get dataConsentDeclineBtn => translate('data_consent_decline_btn');
+  String get tcTitle => translate('tc_title');
+  String get tcMessage => translate('tc_message');
+  String get tcAgreeBtn => translate('tc_agree_btn');
+  String get tcDeclineBtn => translate('tc_decline_btn');
 
   // Navigation
   String get dashboard => translate('dashboard');
