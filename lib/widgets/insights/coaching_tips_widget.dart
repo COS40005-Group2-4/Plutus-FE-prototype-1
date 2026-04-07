@@ -113,7 +113,10 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
       children: [
         Text(
           tip.title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: (provider.insightsFontSize - 1).clamp(11.0, 18.0),
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -122,7 +125,7 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
           child: Text(
             tip.body,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             maxLines: 3,

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//h/Backup/Work/Uni/COS40005/Plutus/Plutus-FE-prototype-1/lambda/**)",
+      "Bash(bash package.sh)",
+      "Bash(AWS_PROFILE=AWS aws sts get-caller-identity:*)",
+      "Bash(AWS_PROFILE=AWS aws apigatewayv2 get-apis:*)",
+      "Bash(AWS_PROFILE=AWS aws apigatewayv2 get-authorizers:*)",
+      "Bash(export MSYS_NO_PATHCONV=1)",
+      "Bash(export AWS_PROFILE=AWS)",
+      "Bash(export TF_VAR_google_client_id=\"611876522758-pt7ggvthaiabs9r9qcg14dprcfjick7e.apps.googleusercontent.com\")",
+      "Bash(terraform import:*)"
+    ]
+  }
+}

@@ -59,7 +59,10 @@ class CashFlowForecastWidget extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 '${l10n.insightsForecastProjected}: ${PlutusChartStyle.formatCompactCurrency(forecast.projectedBalance['likely'] ?? 0)}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ],

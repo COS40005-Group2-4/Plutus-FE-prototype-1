@@ -538,6 +538,16 @@ class AppLocalizations {
       'insights_privacy_standard': 'Standard',
       'insights_privacy_full': 'Full',
 
+      // Insights period selector
+      'insights_period_label': 'Analysis Period',
+      'insights_period_1m': '1M',
+      'insights_period_3m': '3M',
+      'insights_period_6m': '6M',
+      'insights_period_1y': '1Y',
+      'insights_period_custom': 'Custom',
+      'insights_period_custom_active': 'Custom Range',
+      'insights_font_size_label': 'Text Size',
+
       // Report Export
       'report_config_title': 'Generate Report',
       'report_choose_template': 'Choose a Template',
@@ -1086,6 +1096,16 @@ class AppLocalizations {
       'insights_privacy_standard': 'Tiêu chuẩn',
       'insights_privacy_full': 'Đầy đủ',
 
+      // Insights period selector
+      'insights_period_label': 'Kỳ phân tích',
+      'insights_period_1m': '1T',
+      'insights_period_3m': '3T',
+      'insights_period_6m': '6T',
+      'insights_period_1y': '1N',
+      'insights_period_custom': 'Tùy chỉnh',
+      'insights_period_custom_active': 'Khoảng tùy chỉnh',
+      'insights_font_size_label': 'Cỡ chữ',
+
       // Report Export
       'report_config_title': 'Tạo Báo Cáo',
       'report_choose_template': 'Chọn Mẫu Báo Cáo',
@@ -1586,6 +1606,14 @@ class AppLocalizations {
   String get insightsCoachingDismiss => translate('insights_coaching_dismiss');
   String get insightsCoachingSaved => translate('insights_coaching_saved');
   String get insightsCoachingPotentialSavings => translate('insights_coaching_potential_savings');
+  String get insightsPeriodLabel => translate('insights_period_label');
+  String get insightsPeriod1m => translate('insights_period_1m');
+  String get insightsPeriod3m => translate('insights_period_3m');
+  String get insightsPeriod6m => translate('insights_period_6m');
+  String get insightsPeriod1y => translate('insights_period_1y');
+  String get insightsPeriodCustom => translate('insights_period_custom');
+  String get insightsPeriodCustomActive => translate('insights_period_custom_active');
+  String get insightsFontSizeLabel => translate('insights_font_size_label');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

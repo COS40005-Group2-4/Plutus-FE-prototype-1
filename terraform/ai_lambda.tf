@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "ai_lambda_bedrock" {
 resource "aws_lambda_layer_version" "ai_shared" {
   filename            = "${var.ai_lambda_zip_path}"
   layer_name          = "plutus-ai-shared"
-  compatible_runtimes = ["python3.12"]
+  compatible_runtimes = ["python3.13"]
   description         = "Shared code for Plutus AI Lambda functions"
 
   source_code_hash = filebase64sha256(var.ai_lambda_zip_path)
@@ -55,7 +55,7 @@ resource "aws_lambda_function" "ai_categorize" {
   function_name = "plutus-ai-categorize"
   role          = aws_iam_role.ai_lambda_exec.arn
   handler       = "categorize.handler.handler"
-  runtime       = "python3.12"
+  runtime       = "python3.13"
   timeout       = 30
   memory_size   = 256
 
@@ -127,7 +127,7 @@ resource "aws_lambda_function" "ai_insights" {
   function_name = "plutus-ai-insights"
   role          = aws_iam_role.ai_insights_role.arn
   handler       = "insights.handler.handler"
-  runtime       = "python3.12"
+  runtime       = "python3.13"
   memory_size   = 512
   timeout       = 60
 
@@ -191,7 +191,7 @@ resource "aws_lambda_function" "ai_report_insights" {
   function_name = "plutus-report-insights"
   role          = aws_iam_role.ai_report_insights_role.arn
   handler       = "report_insights.handler.handler"
-  runtime       = "python3.12"
+  runtime       = "python3.13"
   memory_size   = 512
   timeout       = 60
 

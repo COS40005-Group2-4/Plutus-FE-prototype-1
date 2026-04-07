@@ -15,7 +15,7 @@ pip3 install \
   -t "$BUILD_DIR" \
   --platform manylinux2014_x86_64 \
   --implementation cp \
-  --python-version 3.12 \
+  --python-version 3.13 \
   --only-binary=:all: \
   --quiet
 

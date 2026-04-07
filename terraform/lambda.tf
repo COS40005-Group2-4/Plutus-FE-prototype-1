@@ -73,7 +73,7 @@ resource "aws_lambda_function" "plutus_api" {
       DATA_TABLE_NAME = aws_dynamodb_table.plutus_data.name
       TC_TABLE_NAME   = aws_dynamodb_table.tc_acceptance.name
       S3_BUCKET_NAME  = data.aws_s3_bucket.backups.id
-      GOOGLE_CLIENT_ID = var.google_client_id
+      GOOGLE_CLIENT_ID = var.google_client_ids[0]
     }
   }
 

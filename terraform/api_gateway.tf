@@ -22,7 +22,7 @@ resource "aws_apigatewayv2_authorizer" "google_jwt" {
   name             = "google-jwt"
 
   jwt_configuration {
-    audience = [var.google_client_id]
+    audience = var.google_client_ids
     issuer   = "https://accounts.google.com"
   }
 }

@@ -72,7 +72,10 @@ class InsightsFeedWidget extends StatelessWidget {
                         children: [
                           Text(
                             insight.title,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: (provider.insightsFontSize - 1).clamp(11.0, 18.0),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -80,7 +83,7 @@ class InsightsFeedWidget extends StatelessWidget {
                           Text(
                             insight.body,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                             maxLines: 2,

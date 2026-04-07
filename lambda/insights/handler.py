@@ -18,28 +18,42 @@ def _response(status_code: int, body: dict) -> dict:
 
 
 INSIGHTS_SYSTEM = """\
-You are **Plutus Coach** — a certified personal-finance advisor embedded in a Vietnamese budgeting app.
+You are **Plutus Bestie** — a Gen-Z personal finance coach who's genuinely hyped about \
+helping people save money and build wealth. You're like that one friend who studied finance \
+but explains it in a way that doesn't make your brain hurt. You use light humor, relatable \
+analogies, and actual encouragement — no boring corporate speak.
 
 ## RESPONSE FORMAT
 - Return **ONLY** a single, valid JSON object. No markdown fences, no prose outside the JSON.
 - Every `title`, `body`, and `summary` field MUST be written in the **locale language** \
 (locale=vi → Vietnamese; locale=en → English).
 
-## FINANCIAL WRITING RULES
-1. **Precision**: Quote exact figures from the data provided. Use the user's `currency` symbol. \
-Format large numbers with thousand separators (e.g., "1,250,000 VND", "$1,250").
-2. **Month-over-Month (MoM) comparisons**: Express changes as signed percentages \
-("+12.5%", "−8.3%"). Always state the direction ("increased", "decreased", "unchanged").
-3. **Actionable language**: Every insight body MUST include a concrete next step. \
-Replace vague advice ("spend less") with specific actions \
-("Switch to a no-fee debit card for daily purchases under 200,000 VND").
-4. **Severity mapping**: \
+## WRITING RULES
+1. **Tone**: Warm, friendly, a little cheeky, always encouraging. Think "financially savvy \
+bestie texting you". For English: light Gen-Z phrasing is welcome (e.g., "no cap", "lowkey", \
+"that's giving broke energy"). For Vietnamese: casual "bạn" form with relatable humor.
+2. **Explain the jargon**: The first time you use a financial term (e.g., "savings rate", \
+"cash flow", "expense ratio"), explain it in plain language in parentheses — \
+e.g., "your savings rate (that's the % of your income you actually keep, not spend) is 18%".
+3. **Precision**: Quote exact figures from the data. Use the user's `currency` symbol. \
+Format large numbers with thousand separators (e.g., "1,250,000 VND", "$1,250"). \
+For percentage changes, use signed format: "+12.5%", "−8.3%".
+4. **Depth**: Bodies must be 4–6 sentences. Include: what the number is, why it matters, \
+how it compares to a benchmark or prior period, a relatable analogy, and a concrete next step. \
+Summaries must be 2–4 sentences.
+5. **Actionable**: Every insight body MUST include a specific, doable next step — not \
+"spend less on food" but "try meal prepping on Sundays — users who do this typically cut \
+food costs by 20–30%".
+6. **Severity mapping**: \
 "warning" = overspending, budget breach, negative cash-flow trend. \
 "info" = neutral observation, seasonal pattern, benchmark comparison. \
 "positive" = savings goal met, spending decreased, surplus detected.
-5. **Tone**: Professional yet approachable. For Vietnamese locale, use polite "bạn" form. \
-Incorporate Vietnam-specific context (Tết spending, gold price references, local bank rates) where relevant.
-6. **Brevity**: Titles ≤ 60 characters. Bodies ≤ 3 sentences. Summaries ≤ 2 sentences."""
+7. **Titles**: ≤ 60 characters. Make them punchy and fun, not bland.
+8. **Vietnam context**: For Vietnamese locale, reference local context where relevant \
+(Tết spending surge, vàng SJC gold prices, tiết kiệm bank accounts at local banks like \
+Vietcombank/MB/Techcombank, chứng chỉ quỹ mutual funds).
+9. **No financial advice disclaimer needed** — this is a personal finance tool, not a \
+regulated advisory service."""
 
 
 # ── Numerical helpers ─────────────────────────────────────────────────────────
@@ -130,31 +144,33 @@ def _build_prompt(
 ) -> str:
     currency = data.get("currency", "VND")
     current_date = data.get("currentDate", datetime.now().date().isoformat())
+    period_months = int(data.get("periodMonths", 3))
+    period_label = f"{period_months}-month"
     categories = sorted(
         data.get("categories", []),
         key=lambda c: (c.get("amounts") or [0])[0],
         reverse=True,
-    )[:8]
-    top_merchants = data.get("topMerchants", [])[:8]
+    )[:10]
+    top_merchants = data.get("topMerchants", [])[:10]
 
     lang = "Vietnamese" if locale == "vi" else "English"
     net_monthly = avg_income - avg_expense
 
-    # ── Section 1: Financial snapshot ────────────────────────────────────
     lines = [
-        f"## USER FINANCIAL SNAPSHOT (as of {current_date})",
+        f"## USER FINANCIAL SNAPSHOT (as of {current_date}, {period_label} analysis period)",
         f"- **Locale**: {locale} — write ALL text fields in **{lang}**.",
         f"- **Currency**: {currency}.",
-        f"- **Monthly gross income**: {_fmt(avg_income, currency)} (3-month average).",
-        f"- **Monthly total expenses**: {_fmt(avg_expense, currency)} (3-month average).",
+        f"- **Monthly gross income**: {_fmt(avg_income, currency)} ({period_label} average).",
+        f"- **Monthly total expenses**: {_fmt(avg_expense, currency)} ({period_label} average).",
         f"- **Net monthly cash flow**: {_fmt(net_monthly, currency)} "
-        f"({'surplus' if net_monthly >= 0 else 'deficit'}).",
-        f"- **Savings rate**: {savings_rate:.1%} of gross income.",
+        + ("(surplus — nice!)." if net_monthly >= 0 else "(deficit — let's fix this)."),
+        f"- **Savings rate**: {savings_rate:.1%} of gross income "
+        f"({'above' if savings_rate >= 0.2 else 'below'} the recommended 20% benchmark).",
+        f"- **Analysis period**: {period_months} month(s).",
     ]
 
-    # Category breakdown
     if categories:
-        lines.append("\n### EXPENSE BREAKDOWN BY CATEGORY (3-month totals)")
+        lines.append(f"\n### EXPENSE BREAKDOWN BY CATEGORY ({period_label} totals)")
         for i, c in enumerate(categories, 1):
             amt = (c.get("amounts") or [0])[0]
             cnt = (c.get("txCount") or [0])[0]
@@ -164,7 +180,6 @@ def _build_prompt(
                 f"{_fmt(amt, currency)} ({pct:.1f}% of expenses, {cnt} transactions)."
             )
 
-    # Top merchants
     if top_merchants:
         lines.append("\n### TOP MERCHANTS BY SPEND")
         for m in top_merchants:
@@ -173,31 +188,29 @@ def _build_prompt(
                 f"{_fmt(m.get('total', 0), currency)} across {m.get('count', 0)} transactions."
             )
 
-    # Health score context
     if health_score:
         comp = health_score["components"]
         lines.append(f"\n### FINANCIAL HEALTH SCORE: **{health_score['score']}/100**")
+        lines.append("  (Score guide: 0–49 = needs work, 50–74 = decent, 75–100 = slay)")
         lines.append(
             f"  - Savings sub-score: {comp['savings']['score']}/100 "
             f"(rate: {comp['savings']['value']:.1%})."
         )
         lines.append(
             f"  - Consistency sub-score: {comp['consistency']['score']}/100 "
-            f"(spending volatility: {'low' if comp['consistency']['score'] >= 70 else 'high'})."
+            f"(spending volatility: {'low — very stable' if comp['consistency']['score'] >= 70 else 'high — quite erratic'})."
         )
         lines.append(
             f"  - Income-to-expense ratio sub-score: {comp['balance']['score']}/100 "
-            f"(ratio: {comp['balance']['value']:.2f}x)."
+            f"(ratio: {comp['balance']['value']:.2f}x — ideally you want >1.2x)."
         )
 
-    # Cash-flow projection context
     if projected_balance:
         lines.append("\n### 30-DAY PROJECTED NET CASH FLOW")
-        lines.append(f"  - **Optimistic** (−15% spending): {_fmt(projected_balance['optimistic'], currency)}.")
-        lines.append(f"  - **Likely** (baseline): {_fmt(projected_balance['likely'], currency)}.")
-        lines.append(f"  - **Pessimistic** (+20% spending): {_fmt(projected_balance['pessimistic'], currency)}.")
+        lines.append(f"  - **Best case** (if you cut spending 15%): {_fmt(projected_balance['optimistic'], currency)}.")
+        lines.append(f"  - **Most likely** (baseline spending continues): {_fmt(projected_balance['likely'], currency)}.")
+        lines.append(f"  - **Worst case** (if spending jumps 20%): {_fmt(projected_balance['pessimistic'], currency)}.")
 
-    # ── Section 2: Task instructions ─────────────────────────────────────
     want_spending = "spending" in requested_types
     want_forecast = "forecast" in requested_types
     want_alerts = "alerts" in requested_types
@@ -207,47 +220,63 @@ def _build_prompt(
     lines.append("## YOUR TASK")
     lines.append(
         "Produce a JSON object matching the **exact schema** below. "
-        "Replace every `\"<FILL>\"` placeholder with real content derived from the data above."
+        "Replace every `\"<FILL>\"` placeholder with real content derived from the data above. "
+        "Write in the Gen-Z bestie tone described in the system prompt. "
+        "Explain financial terms in parentheses on first use within each text field."
     )
 
     schema: dict = {"generatedAt": f"{current_date}T00:00:00.000Z"}
 
-    # ── healthScore: AI writes ONLY the summary ─────────────────────────
     if want_spending and health_score:
         lines.append(
-            "\n**healthScore.summary**: Write 1 sentence interpreting the score. "
-            "Reference the weakest sub-score by name and suggest one improvement."
+            "\n**healthScore.summary**: Write 2–3 sentences interpreting the score with Gen-Z energy. "
+            "Explain what the score means (e.g., 'think of it like a credit score but for your whole financial vibe'). "
+            "Reference the weakest sub-score and give one fun, specific improvement tip."
         )
         schema["healthScore"] = {
             **health_score,
-            "summary": "<FILL: 1-sentence health score interpretation>",
+            "summary": "<FILL: 2-3 sentence score interpretation with financial term explanation>",
         }
     else:
         schema["healthScore"] = None
 
-    # ── spending: 3 AI-generated insights ────────────────────────────────
     if want_spending:
         lines.append(
-            "\n**spending[]**: Generate exactly **3** spending insights:"
+            "\n**spending[]**: Generate exactly **5** spending insights (4–6 sentences each):"
         )
         lines.append(
-            "  1. `si_1` — **Largest expense category**: Cite the category name, exact amount, "
-            "and % of total expenses. Compare MoM if data allows. severity=`warning` if >30% of expenses, "
-            "else `info`. metric.label must be a % change string (e.g., \"+18.2% MoM\")."
+            "  1. `si_1` — **Biggest money drain**: Your top expense category. Cite the exact amount "
+            "and % of total expenses. Explain why this category matters, compare to a realistic benchmark, "
+            "add a relatable analogy (e.g., 'that's basically 3 months of Netflix per day'), "
+            "and give one specific action. severity=`warning` if >35% of expenses, else `info`."
         )
         lines.append(
-            "  2. `si_2` — **Notable spending pattern**: Identify a merchant concentration, "
-            "recurring charge, or unusual spike. severity=`warning` or `info`."
+            "  2. `si_2` — **Sneaky spending pattern**: A merchant concentration, recurring charge, "
+            "or unusual spike that the user might not have noticed. Explain why this is worth watching. "
+            "severity=`warning` or `info`."
         )
         lines.append(
-            "  3. `si_3` — **Positive observation**: Highlight a category where spending is "
-            "well-controlled, a good savings habit, or an improving trend. severity=`positive`."
+            "  3. `si_3` — **Green flag moment**: A category where spending is well-controlled or "
+            "improving. Celebrate it! Reference the specific numbers and explain why this habit compounds "
+            "positively over time. severity=`positive`."
+        )
+        lines.append(
+            "  4. `si_4` — **Savings rate check**: Analyse the savings rate (% of income kept, not spent). "
+            "Compare to the 20% rule and 50/30/20 budgeting framework "
+            "(explain: '50% needs, 30% wants, 20% savings'). "
+            "If below 10%, call it out with empathy. severity=`warning` if <10%, `info` if 10–20%, `positive` if >20%."
+        )
+        lines.append(
+            "  5. `si_5` — **Income-to-expense ratio**: Explain the income-to-expense ratio "
+            "(income divided by expenses — you want this above 1.0 ideally above 1.2). "
+            "State the current ratio. Suggest one concrete lever to improve it. "
+            "severity=`warning` if ratio<1.0, `info` if 1.0–1.2, `positive` if >1.2."
         )
         schema["spending"] = [
             {
                 "id": "si_1",
-                "title": "<FILL: ≤60 chars>",
-                "body": "<FILL: 2–3 sentences with exact figures>",
+                "title": "<FILL: ≤60 chars, punchy>",
+                "body": "<FILL: 4–6 sentences with exact figures, analogy, next step>",
                 "category": "<FILL: top category name>",
                 "metric": {
                     "label": "<FILL: e.g. +18.2% MoM>",
@@ -258,62 +287,88 @@ def _build_prompt(
             {
                 "id": "si_2",
                 "title": "<FILL>",
-                "body": "<FILL>",
+                "body": "<FILL: 4–6 sentences>",
                 "category": None,
                 "metric": None,
             },
             {
                 "id": "si_3",
                 "title": "<FILL>",
-                "body": "<FILL>",
+                "body": "<FILL: 4–6 sentences with celebration energy>",
                 "category": None,
                 "metric": None,
+            },
+            {
+                "id": "si_4",
+                "title": "<FILL>",
+                "body": "<FILL: 4–6 sentences explaining savings rate with 50/30/20 reference>",
+                "category": None,
+                "metric": {
+                    "label": "<FILL: savings rate %>",
+                    "direction": "<FILL: up|down|flat>",
+                    "severity": "<FILL: warning|info|positive>",
+                },
+            },
+            {
+                "id": "si_5",
+                "title": "<FILL>",
+                "body": "<FILL: 4–6 sentences explaining income-to-expense ratio>",
+                "category": None,
+                "metric": {
+                    "label": "<FILL: ratio value>",
+                    "direction": "<FILL: up|down|flat>",
+                    "severity": "<FILL: warning|info|positive>",
+                },
             },
         ]
     else:
         schema["spending"] = []
 
-    # ── forecast: AI writes ONLY the summary ─────────────────────────────
     if want_forecast:
         lines.append(
-            "\n**forecast.summary**: Write 1–2 sentences interpreting the 3-scenario projection. "
-            "State the likely outcome in currency terms, and flag risk if pessimistic is negative."
+            "\n**forecast.summary**: Write 2–4 sentences interpreting the 3-scenario projection. "
+            "Explain what 'cash flow forecast' means in plain language first "
+            "('basically a prediction of how much money you'll have left at the end of the month'). "
+            "State the likely outcome in currency terms. "
+            "Flag risk if pessimistic is negative with a practical mitigation tip."
         )
         schema["forecast"] = {
             "projectedBalance": projected_balance,
             "dailyProjection": [],
-            "summary": "<FILL: 1–2 sentence cash-flow outlook>",
+            "summary": "<FILL: 2–4 sentence cash-flow outlook with term explanation>",
         }
     else:
         schema["forecast"] = None
 
-    # ── alerts: AI-generated smart alerts ────────────────────────────────
     if want_alerts:
-        alert_instructions = [
-            "\n**alerts[]**: Generate smart alerts based on the data:",
-            "  - At least 1 **warning** alert if: savings rate <10%, any category >40% of expenses, "
-            "or net cash flow is negative.",
-            "  - At least 1 **positive** alert if: savings rate ≥20%, expenses trending down, "
-            "or a budget category is well under control.",
+        lines.extend([
+            "\n**alerts[]**: Generate 2–4 smart alerts based on the data.",
+            "  - At least 1 **warning** if: savings rate <10%, any category >40% expenses, or net flow negative.",
+            "  - At least 1 **positive** if: savings rate ≥20%, expenses trending down, or healthy surplus.",
+            "  - Alert bodies: 2–3 sentences. Explain the metric that triggered it in plain language.",
             "  - severity must be one of: `warning`, `info`, `positive`.",
-            "  - Each alert body must cite the specific metric that triggered it.",
-        ]
-        lines.extend(alert_instructions)
-
+        ])
         alerts_schema = [
             {
                 "id": "alert_1",
                 "title": "<FILL>",
-                "body": "<FILL: cite the triggering metric>",
+                "body": "<FILL: 2–3 sentences citing triggering metric with plain-language explanation>",
+                "severity": "<FILL: warning|info|positive>",
+                "isRead": False,
+            },
+            {
+                "id": "alert_2",
+                "title": "<FILL>",
+                "body": "<FILL: 2–3 sentences>",
                 "severity": "<FILL: warning|info|positive>",
                 "isRead": False,
             },
         ]
         if savings_rate >= 0.15:
             alerts_schema.append({
-                "id": "alert_2",
+                "id": "alert_3",
                 "title": "<FILL: positive reinforcement>",
-                "body": "<FILL: cite savings rate or surplus figure>",
+                "body": "<FILL: cite savings rate with celebration>",
                 "severity": "positive",
                 "isRead": False,
             })
@@ -321,35 +376,43 @@ def _build_prompt(
     else:
         schema["alerts"] = []
 
-    # ── coaching: 3 AI-generated actionable tips ─────────────────────────
     if want_coaching:
         lines.append(
-            "\n**coaching[]**: Generate exactly **3** personalized coaching tips:"
+            "\n**coaching[]**: Generate exactly **5** personalized coaching tips (bodies: 4–6 sentences each):"
         )
         lines.append(
-            "  1. `tip_1` (difficulty=`easy`): A **quick-win** the user can implement today. "
-            "No estimated savings needed."
+            "  1. `tip_1` (difficulty=`easy`): A **today-win** — something the user can do right now. "
+            "Explain why this small action has outsized impact. No savingsEstimate needed."
         )
         lines.append(
-            "  2. `tip_2` (difficulty=`medium`): A **savings optimization** with a concrete "
-            f"`savingsEstimate` in {currency} (monthly potential). "
-            "Base the estimate on the actual spending data provided."
+            "  2. `tip_2` (difficulty=`easy`): Another **quick-win** focused on reducing a specific "
+            "identified spending category. Include a fun analogy."
         )
         lines.append(
-            "  3. `tip_3` (difficulty=`hard`): A **long-term financial strategy** "
-            "(e.g., investment diversification, emergency fund target, debt payoff plan). "
-            "No estimated savings needed."
+            "  3. `tip_3` (difficulty=`medium`): A **savings optimization** with a concrete "
+            f"`savingsEstimate` in {currency} per month. "
+            "Base the estimate on actual spending data. Explain the math."
+        )
+        lines.append(
+            "  4. `tip_4` (difficulty=`medium`): An **income-boosting or cost-cutting** strategy "
+            f"with another `savingsEstimate` in {currency} per month."
+        )
+        lines.append(
+            "  5. `tip_5` (difficulty=`hard`): A **long-term wealth move** "
+            "(e.g., emergency fund target explained, investment account, debt payoff). "
+            "Explain the compound effect over 1–5 years with rough numbers."
         )
         if locale == "vi":
             lines.append(
-                "  For Vietnamese locale: Reference local financial products "
-                "(tiết kiệm ngân hàng, vàng SJC, chứng chỉ quỹ) where appropriate."
+                "  For Vietnamese locale: Reference local financial products where relevant "
+                "(tiết kiệm ngân hàng lãi suất ~5–7%/năm, vàng SJC, chứng chỉ quỹ như VFMVF1). "
+                "Mention specific local banks (Vietcombank, MB Bank, Techcombank) by name."
             )
         schema["coaching"] = [
             {
                 "id": "tip_1",
-                "title": "<FILL>",
-                "body": "<FILL: concrete action step>",
+                "title": "<FILL: ≤60 chars, energetic>",
+                "body": "<FILL: 4–6 sentences with why this matters>",
                 "savingsEstimate": None,
                 "difficulty": "easy",
                 "isSaved": False,
@@ -357,15 +420,31 @@ def _build_prompt(
             {
                 "id": "tip_2",
                 "title": "<FILL>",
-                "body": "<FILL: include estimated monthly savings>",
-                "savingsEstimate": "<FILL: number in currency units>",
-                "difficulty": "medium",
+                "body": "<FILL: 4–6 sentences with analogy>",
+                "savingsEstimate": None,
+                "difficulty": "easy",
                 "isSaved": False,
             },
             {
                 "id": "tip_3",
                 "title": "<FILL>",
-                "body": "<FILL: long-term strategy>",
+                "body": "<FILL: 4–6 sentences with savings math explained>",
+                "savingsEstimate": "<FILL: number>",
+                "difficulty": "medium",
+                "isSaved": False,
+            },
+            {
+                "id": "tip_4",
+                "title": "<FILL>",
+                "body": "<FILL: 4–6 sentences>",
+                "savingsEstimate": "<FILL: number>",
+                "difficulty": "medium",
+                "isSaved": False,
+            },
+            {
+                "id": "tip_5",
+                "title": "<FILL>",
+                "body": "<FILL: 4–6 sentences with compound effect numbers>",
                 "savingsEstimate": None,
                 "difficulty": "hard",
                 "isSaved": False,
@@ -374,7 +453,6 @@ def _build_prompt(
     else:
         schema["coaching"] = []
 
-    # ── Final instruction ────────────────────────────────────────────────
     lines.append("\n---")
     lines.append("## OUTPUT SCHEMA")
     lines.append(
@@ -422,7 +500,7 @@ def handler(event: dict, context: Any) -> dict:
         client = BedrockClient(
             model_id=os.environ.get("BEDROCK_MODEL_ID", BedrockClient.DEFAULT_MODEL_ID),
             region=os.environ.get("AWS_REGION", "ap-southeast-1"),
-            max_tokens=4096,
+            max_tokens=8192,
         )
         prompt = _build_prompt(
             locale=locale,

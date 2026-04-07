@@ -80,11 +80,37 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
           indicatorColor: AppColors.primary,
         ),
       ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          FloatingActionButton.small(
+            heroTag: 'font_increase',
+            onPressed: provider.canIncreaseFontSize ? provider.increaseFontSize : null,
+            backgroundColor: provider.canIncreaseFontSize
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.3),
+            tooltip: 'Increase text size',
+            child: const Text('A+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton.small(
+            heroTag: 'font_decrease',
+            onPressed: provider.canDecreaseFontSize ? provider.decreaseFontSize : null,
+            backgroundColor: provider.canDecreaseFontSize
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.3),
+            tooltip: 'Decrease text size',
+            child: const Text('A−', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // Import banner
           if (provider.showImportBanner)
             _buildImportBanner(context, provider, l10n),
+          // Period selector
+          _buildPeriodBar(context, provider, l10n),
           // Tab content
           Expanded(
             child: TabBarView(
@@ -132,6 +158,99 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
         ],
       ),
     );
+  }
+
+  Widget _buildPeriodBar(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+    final List<({int months, String label})> presets = <({int months, String label})>[
+      (months: 1, label: l10n.insightsPeriod1m),
+      (months: 3, label: l10n.insightsPeriod3m),
+      (months: 6, label: l10n.insightsPeriod6m),
+      (months: 12, label: l10n.insightsPeriod1y),
+    ];
+
+    return Container(
+      height: 44,
+      color: Colors.transparent,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        children: <Widget>[
+          ...presets.map((preset) {
+            final bool selected = !provider.hasCustomDateRange &&
+                provider.selectedPeriodMonths == preset.months;
+            return Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xs),
+              child: ChoiceChip(
+                label: Text(preset.label),
+                selected: selected,
+                onSelected: (_) => provider.setPeriodPreset(preset.months),
+                selectedColor: AppColors.primary,
+                labelStyle: TextStyle(
+                  color: selected ? Colors.white : null,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            );
+          }),
+          // Custom date range chip
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
+            child: ChoiceChip(
+              avatar: const Icon(Icons.date_range, size: 14),
+              label: Text(
+                provider.hasCustomDateRange
+                    ? _formatCustomRange(provider.customStartDate!, provider.customEndDate!)
+                    : l10n.insightsPeriodCustom,
+              ),
+              selected: provider.hasCustomDateRange,
+              onSelected: (_) => _pickCustomRange(context, provider),
+              selectedColor: AppColors.primary,
+              labelStyle: TextStyle(
+                color: provider.hasCustomDateRange ? Colors.white : null,
+                fontSize: 12,
+                fontWeight: provider.hasCustomDateRange ? FontWeight.w600 : FontWeight.normal,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCustomRange(DateTime start, DateTime end) {
+    final String s = '${start.day}/${start.month}';
+    final String e = '${end.day}/${end.month}';
+    return '$s–$e';
+  }
+
+  Future<void> _pickCustomRange(BuildContext context, InsightsProvider provider) async {
+    final DateTimeRange? range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: provider.hasCustomDateRange
+          ? DateTimeRange(start: provider.customStartDate!, end: provider.customEndDate!)
+          : DateTimeRange(
+              start: DateTime.now().subtract(const Duration(days: 90)),
+              end: DateTime.now(),
+            ),
+      builder: (BuildContext ctx, Widget? child) {
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: Theme.of(ctx).colorScheme.copyWith(primary: AppColors.primary),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (range != null) {
+      provider.setCustomDateRange(range.start, range.end);
+    }
   }
 
   Widget _buildGenerateButton(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
@@ -257,7 +376,10 @@ class _ForecastTab extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(forecast.summary, style: const TextStyle(fontSize: 14)),
+                Builder(builder: (BuildContext ctx) {
+                  final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
+                  return Text(forecast.summary, style: TextStyle(fontSize: fs));
+                }),
                 const SizedBox(height: AppSpacing.md),
                 // Projected balance breakdown
                 _ForecastRow(
@@ -415,21 +537,29 @@ class _AlertCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      alert.title,
-                      style: TextStyle(
-                        fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      alert.body,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
+                    Builder(builder: (BuildContext ctx) {
+                      final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            alert.title,
+                            style: TextStyle(
+                              fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
+                              fontSize: fs + 1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            alert.body,
+                            style: TextStyle(
+                              fontSize: fs,
+                              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -508,16 +638,22 @@ class _CoachingCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    tip.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
+                  child: Builder(builder: (BuildContext ctx) {
+                    final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
+                    return Text(
+                      tip.title,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: fs + 1),
+                    );
+                  }),
                 ),
                 _DifficultyBadge(difficulty: tip.difficulty, l10n: l10n),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(tip.body, style: const TextStyle(fontSize: 13)),
+            Builder(builder: (BuildContext ctx) {
+              final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
+              return Text(tip.body, style: TextStyle(fontSize: fs));
+            }),
             if (tip.savingsEstimate != null && tip.savingsEstimate! > 0) ...[
               const SizedBox(height: AppSpacing.sm),
               Row(
@@ -644,15 +780,23 @@ class _InsightCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 4),
-            Text(
-              body,
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
+            Builder(builder: (BuildContext ctx) {
+              final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: fs + 1)),
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      fontSize: fs,
+                      color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              );
+            }),
           ],
         ),
       ),

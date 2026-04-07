@@ -18,6 +18,18 @@ class InsightsProvider extends ChangeNotifier {
   bool _showImportBanner = false;
   bool _cacheLoaded = false;
 
+  // Period selection (presets or custom date range)
+  static const List<int> kPeriodPresets = <int>[1, 3, 6, 12];
+  static const double kFontSizeMin = 12.0;
+  static const double kFontSizeMax = 20.0;
+  static const double kFontSizeStep = 2.0;
+  static const double kFontSizeDefault = 14.0;
+
+  int _selectedPeriodMonths = 3;
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
+  double _insightsFontSize = kFontSizeDefault;
+
   InsightsProvider({
     required IInsightsService insightsService,
     required DatabaseService databaseService,
@@ -44,6 +56,14 @@ class InsightsProvider extends ChangeNotifier {
   List<CoachingTip> get coachingTips => _latestInsights?.coaching ?? <CoachingTip>[];
 
   int get unreadAlertCount => alerts.where((a) => !a.isRead).length;
+
+  int get selectedPeriodMonths => _selectedPeriodMonths;
+  DateTime? get customStartDate => _customStartDate;
+  DateTime? get customEndDate => _customEndDate;
+  bool get hasCustomDateRange => _customStartDate != null && _customEndDate != null;
+  double get insightsFontSize => _insightsFontSize;
+  bool get canIncreaseFontSize => _insightsFontSize < kFontSizeMax;
+  bool get canDecreaseFontSize => _insightsFontSize > kFontSizeMin;
 
   /// Main action: generate insights from cloud AI
   Future<void> generateInsights({
@@ -132,6 +152,48 @@ class InsightsProvider extends ChangeNotifier {
   void dismissImportBanner() {
     _showImportBanner = false;
     notifyListeners();
+  }
+
+  /// Set a preset period (1, 3, 6, or 12 months). Clears any custom range.
+  void setPeriodPreset(int months) {
+    _selectedPeriodMonths = months;
+    _customStartDate = null;
+    _customEndDate = null;
+    notifyListeners();
+  }
+
+  /// Set a custom date range for insights analysis.
+  void setCustomDateRange(DateTime start, DateTime end) {
+    _customStartDate = start;
+    _customEndDate = end;
+    // Approximate months for payload
+    _selectedPeriodMonths = end.difference(start).inDays ~/ 30;
+    if (_selectedPeriodMonths < 1) _selectedPeriodMonths = 1;
+    notifyListeners();
+  }
+
+  /// Clear custom date range and revert to 3-month default.
+  void clearCustomDateRange() {
+    _customStartDate = null;
+    _customEndDate = null;
+    _selectedPeriodMonths = 3;
+    notifyListeners();
+  }
+
+  /// Increase insight text font size by one step (max 20.0).
+  void increaseFontSize() {
+    if (_insightsFontSize < kFontSizeMax) {
+      _insightsFontSize = (_insightsFontSize + kFontSizeStep).clamp(kFontSizeMin, kFontSizeMax);
+      notifyListeners();
+    }
+  }
+
+  /// Decrease insight text font size by one step (min 12.0).
+  void decreaseFontSize() {
+    if (_insightsFontSize > kFontSizeMin) {
+      _insightsFontSize = (_insightsFontSize - kFontSizeStep).clamp(kFontSizeMin, kFontSizeMax);
+      notifyListeners();
+    }
   }
 
   /// Mark a single alert as read
@@ -241,17 +303,26 @@ class InsightsProvider extends ChangeNotifier {
   // ── Private: Data payload builders ──
 
   Future<Map<String, dynamic>> _buildDataPayload(PrivacyLevel privacyLevel) async {
-    // Collect transaction data from local DB based on privacy level
     final db = await _databaseService.database;
     final String currency = _settingsProvider.currency.code;
     final DateTime now = DateTime.now();
-    final DateTime threeMonthsAgo = now.subtract(const Duration(days: 90));
-    final DateTime sixMonthsAgo = now.subtract(const Duration(days: 180));
+
+    final DateTime periodStart = hasCustomDateRange
+        ? _customStartDate!
+        : now.subtract(Duration(days: _selectedPeriodMonths * 30));
+    final DateTime periodEnd = hasCustomDateRange ? _customEndDate! : now;
+    final int activePeriodMonths = hasCustomDateRange
+        ? (periodEnd.difference(periodStart).inDays ~/ 30).clamp(1, 24)
+        : _selectedPeriodMonths;
+    final String periodStartStr = periodStart.toIso8601String().split('T').first;
+    final String extendedStartStr = periodStart.isBefore(now.subtract(const Duration(days: 180)))
+        ? periodStartStr
+        : now.subtract(const Duration(days: 180)).toIso8601String().split('T').first;
 
     final Map<String, dynamic> data = <String, dynamic>{
       'currency': currency == 'ORIGINAL' ? 'VND' : currency,
       'currentDate': now.toIso8601String().split('T').first,
-      'periodMonths': 3,
+      'periodMonths': activePeriodMonths,
     };
 
     // Always include daily spending (no PII)
@@ -261,7 +332,7 @@ class InsightsProvider extends ChangeNotifier {
       WHERE type = 'expense' AND date >= ?
       GROUP BY date
       ORDER BY date ASC
-    ''', <Object>[threeMonthsAgo.toIso8601String().split('T').first]);
+    ''', <Object>[periodStartStr]);
 
     data['dailySpending'] = dailyRows
         .map((Map<String, Object?> r) => (r['total'] as num?)?.toDouble() ?? 0.0)
@@ -275,11 +346,7 @@ class InsightsProvider extends ChangeNotifier {
       FROM transactions
       WHERE type = 'expense' AND date >= ?
       GROUP BY category
-    ''', <Object>[
-      threeMonthsAgo.toIso8601String().split('T').first,
-      threeMonthsAgo.toIso8601String().split('T').first,
-      threeMonthsAgo.toIso8601String().split('T').first,
-    ]);
+    ''', <Object>[periodStartStr, periodStartStr, periodStartStr]);
 
     data['categories'] = categoryRows.map((Map<String, Object?> r) => <String, dynamic>{
       'name': r['category'] ?? 'Other',
@@ -293,7 +360,7 @@ class InsightsProvider extends ChangeNotifier {
       FROM transactions
       WHERE date >= ?
       GROUP BY type
-    ''', <Object>[threeMonthsAgo.toIso8601String().split('T').first]);
+    ''', <Object>[periodStartStr]);
 
     double totalIncome = 0;
     double totalExpense = 0;
@@ -316,7 +383,7 @@ class InsightsProvider extends ChangeNotifier {
         GROUP BY payee, category
         ORDER BY total DESC
         LIMIT 20
-      ''', <Object>[threeMonthsAgo.toIso8601String().split('T').first]);
+      ''', <Object>[periodStartStr]);
 
       data['topMerchants'] = merchantRows.map((Map<String, Object?> r) => <String, dynamic>{
         'name': r['payee'] ?? '',
@@ -334,7 +401,7 @@ class InsightsProvider extends ChangeNotifier {
         WHERE date >= ?
         ORDER BY date DESC
         LIMIT 500
-      ''', <Object>[sixMonthsAgo.toIso8601String().split('T').first]);
+      ''', <Object>[extendedStartStr]);
 
       data['transactions'] = txnRows.map((Map<String, Object?> r) => <String, dynamic>{
         'payee': r['payee'] ?? '',

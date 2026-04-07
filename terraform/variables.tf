@@ -19,12 +19,12 @@ variable "data_table_name" {
 variable "lambda_zip_path" {
   description = "Path to the Lambda deployment package (zip file)"
   type        = string
-  default     = "../Plutus-backend-prototype-2/function.zip"
+  default     = "../../Plutus-backend-prototype-2/function.zip"
 }
 
-variable "google_client_id" {
-  description = "Google OAuth client ID for JWT validation"
-  type        = string
+variable "google_client_ids" {
+  description = "Google OAuth client IDs for JWT validation (web, desktop, etc.)"
+  type        = list(string)
 }
 
 variable "s3_bucket_name" {

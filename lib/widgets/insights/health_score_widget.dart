@@ -125,7 +125,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
                                           Text(
                                             '$animatedScore',
                                             style: TextStyle(
-                                              fontSize: 28,
+                                              fontSize: (provider.insightsFontSize + 14).clamp(20.0, 38.0),
                                               fontWeight: FontWeight.bold,
                                               color: _scoreColor(animatedScore),
                                             ),
@@ -164,9 +164,11 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               score.summary,
-                              style: const TextStyle(fontSize: 12),
+                              style: TextStyle(
+                                fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
+                              ),
                               textAlign: TextAlign.center,
-                              maxLines: 2,
+                              maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
