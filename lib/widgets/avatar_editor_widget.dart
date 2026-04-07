@@ -1,7 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../l10n/app_localizations.dart';
 
 /// Callback for avatar selection
@@ -27,6 +31,8 @@ class AvatarEditorWidget extends StatefulWidget {
 class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
   late TransformationController _controller;
   double _rotation = 0.0;
+  final GlobalKey _previewKey = GlobalKey();
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -51,6 +57,26 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
       _rotation = 0.0;
       _controller.value = Matrix4.identity();
     });
+  }
+
+  Future<File> _captureAndSave() async {
+    final RenderRepaintBoundary boundary =
+        _previewKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+    final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+    final ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (byteData == null) {
+      throw StateError('Failed to encode avatar preview to PNG');
+    }
+    final List<int> pngBytes = byteData.buffer.asUint8List();
+    final Directory dir = await getTemporaryDirectory();
+    final File file = File(
+      '${dir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+    await file.writeAsBytes(pngBytes);
+    return file;
   }
 
   @override
@@ -81,26 +107,29 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
             Stack(
               alignment: Alignment.center,
               children: [
-                Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[700]!, width: 2),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Transform.rotate(
-                      angle: _rotation * (math.pi / 180),
-                      child: InteractiveViewer(
-                        transformationController: _controller,
-                        boundaryMargin: const EdgeInsets.all(100),
-                        minScale: 0.5,
-                        maxScale: 4,
-                        child: Image.file(
-                          widget.imageFile,
-                          fit: BoxFit.cover,
+                RepaintBoundary(
+                  key: _previewKey,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[700]!, width: 2),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Transform.rotate(
+                        angle: _rotation * (math.pi / 180),
+                        child: InteractiveViewer(
+                          transformationController: _controller,
+                          boundaryMargin: const EdgeInsets.all(100),
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Image.file(
+                            widget.imageFile,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
@@ -175,8 +204,37 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => widget.onConfirm(widget.imageFile),
-                  icon: const Icon(Icons.check),
+                  onPressed: _isProcessing
+                      ? null
+                      : () async {
+                          setState(() => _isProcessing = true);
+                          final ScaffoldMessengerState messenger =
+                              ScaffoldMessenger.of(context);
+                          try {
+                            final File captured = await _captureAndSave();
+                            widget.onConfirm(captured);
+                          } catch (e) {
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(content: Text('Failed to save avatar: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isProcessing = false);
+                            }
+                          }
+                        },
+                  icon: _isProcessing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check),
                   label: Text(l10n.confirm),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
