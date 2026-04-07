@@ -8,6 +8,9 @@ import '../data_widget.dart';
 import '../sidebar_menu.dart';
 import '../storage.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/budget_provider.dart';
+import '../providers/settings_provider.dart';
+import '../services/budget_notification_service.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
@@ -64,6 +67,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
   String? _lastDashboardId;
   int _controllerVersion = 0;
   int? _lastUserId;
+  bool _alertsDismissed = false;
 
   @override
   void initState() {
@@ -106,6 +110,50 @@ class _DashboardWidgetState extends State<DashboardWidget>
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Widget _buildAlertsBanner(List<BudgetAlert> alerts) {
+    final currency = context.read<SettingsProvider>().currency;
+    return Container(
+      width: double.infinity,
+      color: Colors.amber.withValues(alpha: 0.15),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.warning_amber_outlined, color: Colors.amber, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: alerts.map((alert) {
+                final pct = (alert.spent / alert.budgeted * 100).round();
+                final sym = currency.symbol;
+                return Text(
+                  '${alert.category.name}: $pct% '
+                  '($sym${alert.spent.toStringAsFixed(0)} / '
+                  '$sym${alert.budgeted.toStringAsFixed(0)})',
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontSize: 12,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _alertsDismissed = true),
+            child: const Icon(Icons.close, color: Colors.amber, size: 16),
+          ),
+        ],
+      ),
+    );
   }
 
   void _updateHiddenItems(List<String> visibleWidgets) {
@@ -284,8 +332,16 @@ class _DashboardWidgetState extends State<DashboardWidget>
         ],
       ),
       body: SafeArea(
-        child: Consumer<DashboardProvider>(
-          builder: (context, dashProvider, _) {
+        child: Consumer<BudgetProvider>(
+          builder: (context, budgetProvider, _) {
+            final alerts = budgetProvider.alerts;
+            return Column(
+              children: [
+                if (alerts.isNotEmpty && !_alertsDismissed)
+                  _buildAlertsBanner(alerts),
+                Expanded(
+                  child: Consumer<DashboardProvider>(
+                    builder: (context, dashProvider, _) {
             // Detect dashboard switch
             if (_lastDashboardId != dashProvider.activeDashboardId) {
               _lastDashboardId = dashProvider.activeDashboardId;
@@ -302,6 +358,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
             if (_lastUserId != dashProvider.currentUserId) {
               _lastUserId = dashProvider.currentUserId;
               _lastVisibilityKey = [];
+              _alertsDismissed = false;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
                   _recreateStorageAndController(
@@ -455,6 +512,11 @@ class _DashboardWidgetState extends State<DashboardWidget>
                             );
                           },
                         );
+                    },
+                  ),
+                ),
+              ],
+            );
           },
         ),
       ),
