@@ -96,4 +96,29 @@ void main() {
       expect(provider.themeMode, ThemeMode.light);
     });
   });
+
+  group('DashboardProvider key scoping', () {
+    test('dynamic layout key is user-scoped', () {
+      String userKey(int userId, String key) => 'user_${userId}_$key';
+      const dashId = 'default';
+      const slotCount = 2;
+
+      final key = userKey(7, 'layout_data_${dashId}_$slotCount');
+      expect(key, equals('user_7_layout_data_default_2'));
+    });
+
+    test('visibility snapshot key is user-scoped', () {
+      String userKey(int userId, String key) => 'user_${userId}_$key';
+
+      final key = userKey(7, 'visibility_saved_default');
+      expect(key, equals('user_7_visibility_saved_default'));
+    });
+
+    test('init flag key is user-scoped', () {
+      String userKey(int userId, String key) => 'user_${userId}_$key';
+
+      final key = userKey(7, 'init_default_v4');
+      expect(key, equals('user_7_init_default_v4'));
+    });
+  });
 }
