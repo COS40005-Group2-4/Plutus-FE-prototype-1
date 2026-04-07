@@ -128,7 +128,7 @@ resource "aws_lambda_function" "ai_insights" {
   role          = aws_iam_role.ai_insights_role.arn
   handler       = "insights.handler.handler"
   runtime       = "python3.13"
-  memory_size   = 512
+  memory_size   = 1024
   timeout       = 60
 
   filename         = var.ai_lambda_zip_path
