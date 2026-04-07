@@ -382,15 +382,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
                             var layout = item.layoutData;
 
                             if (item.data != null) {
-                              return ListenableBuilder(
-                                listenable: _itemController,
-                                builder: (context, _) => Stack(
-                                  children: [
-                                    DataWidget(item: item),
-                                    if (_itemController.isEditing)
-                                      _buildEditModeBar(item),
-                                  ],
-                                ),
+                              return Stack(
+                                children: [
+                                  DataWidget(item: item),
+                                  if (_itemController.isEditing)
+                                    _buildEditModeBar(item),
+                                ],
                               );
                             }
 
