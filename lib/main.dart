@@ -32,6 +32,7 @@ import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'widgets/conflict_dialog.dart';
+import 'widgets/consent_dialog.dart';
 import 'widgets/backup_found_dialog.dart';
 import 'models/backup_models.dart';
 import 'widgets/glass_background.dart';
@@ -271,20 +272,23 @@ class _MainPageState extends State<MainPage> {
   Future<void> _initBackupAndNavigate(BuildContext context, int userId) async {
     if (_backupInitialized) return;
 
-    // Check data consent for OAuth users
+    // Check consent
     if (!_consentChecked) {
       _consentChecked = true;
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      // If user has OAuth but hasn't consented, show consent dialog
       if (authProvider.currentUser?.hasOAuth == true &&
           authProvider.currentUser?.dataConsent != true) {
-        // Store context before async call
-        final scaffoldContext = context;
-        final consented = await authProvider.checkDataConsent(scaffoldContext);
-        if (!consented) {
-          // User declined - they are now in guest mode, continue to dashboard
-          if (!mounted) return;
+        // OAuth path: cloud backup/sync consent (existing behaviour)
+        final consented = await authProvider.checkDataConsent(context);
+        if (!consented && !mounted) return;
+      } else if (authProvider.currentUser?.hasOAuth == false) {
+        // Local/guest path: general T&C on first login
+        final alreadyShown = await authProvider.isLocalTcShown();
+        if (!alreadyShown) {
+          if (!context.mounted) return;
+          final agreed = await showTermsDialog(context);
+          await authProvider.handleLocalTcResult(agreed);
         }
       }
     }
