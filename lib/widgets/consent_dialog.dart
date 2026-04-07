@@ -169,3 +169,78 @@ class _DataConsentDialogContent extends StatelessWidget {
     );
   }
 }
+
+/// Shows a general Terms of Use dialog for local/guest users.
+/// Returns true if user agrees, false if they decline.
+Future<bool> showTermsDialog(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const _TermsDialogContent(),
+  );
+  return result ?? false;
+}
+
+class _TermsDialogContent extends StatelessWidget {
+  const _TermsDialogContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AlertDialog(
+      backgroundColor: isDark
+          ? AppColors.surfaceDark.withValues(alpha: 0.95)
+          : Colors.white.withValues(alpha: 0.95),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDark
+              ? AppColors.borderDark.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.3),
+        ),
+      ),
+      title: Row(
+        children: [
+          Icon(
+            Icons.gavel_outlined,
+            color: isDark ? AppColors.accent : Colors.blue,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.tcTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        l10n.tcMessage,
+        style: TextStyle(
+          fontSize: 14,
+          color: isDark ? Colors.grey[300] : Colors.grey[700],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            l10n.tcDeclineBtn,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green[400],
+            foregroundColor: Colors.white,
+          ),
+          child: Text(l10n.tcAgreeBtn),
+        ),
+      ],
+    );
+  }
+}
