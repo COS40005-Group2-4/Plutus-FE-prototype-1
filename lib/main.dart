@@ -72,6 +72,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late AuthProvider _authProvider;
   late BackupProvider _backupProvider;
+  late SettingsProvider _settingsProvider;
+  late DashboardProvider _dashboardProvider;
   late SyncManager _syncManager;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
@@ -81,6 +83,13 @@ class _MyAppState extends State<MyApp> {
     _syncManager = SyncManager();
     _backupProvider = BackupProvider(syncManager: _syncManager);
     _authProvider = AuthProvider();
+    _settingsProvider = SettingsProvider();
+    _dashboardProvider = DashboardProvider();
+
+    _authProvider.onUserChanged = (int userId) async {
+      await _settingsProvider.reinitialize(userId);
+      await _dashboardProvider.reinitialize(userId);
+    };
     _initializeAuth();
     _setupConnectivity();
   }
@@ -112,8 +121,8 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _backupProvider),
-        ChangeNotifierProvider(create: (_) => DashboardProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider.value(value: _dashboardProvider),
+        ChangeNotifierProvider.value(value: _settingsProvider),
         ChangeNotifierProvider(
           create: (_) => BudgetProvider(
             budgetService: sl<IBudgetService>(),
