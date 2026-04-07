@@ -382,7 +382,15 @@ class _DashboardWidgetState extends State<DashboardWidget>
                             var layout = item.layoutData;
 
                             if (item.data != null) {
-                              return DataWidget(item: item);
+                              return Consumer<DashboardProvider>(
+                                builder: (context, dashProvider, _) => Stack(
+                                  children: [
+                                    DataWidget(item: item),
+                                    if (_itemController.isEditing)
+                                      _buildEditModeBar(item, dashProvider),
+                                  ],
+                                ),
+                              );
                             }
 
                             return LayoutBuilder(
@@ -595,6 +603,58 @@ class _DashboardWidgetState extends State<DashboardWidget>
         newName,
       );
     }
+  }
+
+  Widget _buildEditModeBar(
+    ColoredDashboardItem item,
+    DashboardProvider dashProvider,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0x26EF4444),
+          border: Border(
+            bottom: BorderSide(
+              color: Color(0x4DEF4444),
+              width: 1,
+            ),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 4,
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.drag_indicator, color: Colors.white38, size: 14),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                l10n.dragToMove,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                _itemController.delete(item.identifier);
+                dashProvider.removeWidgetInstance(item.identifier);
+              },
+              icon: const Icon(
+                Icons.close,
+                color: Color(0xFFEF4444),
+                size: 18,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildWidgetPreview(String widgetId) {
