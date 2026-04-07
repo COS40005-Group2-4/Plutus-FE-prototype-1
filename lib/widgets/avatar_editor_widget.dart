@@ -111,7 +111,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                     width: 300,
                     height: 300,
                     child: CustomPaint(
-                      painter: _CircleGuidePainter(),
+                      painter: const _CircleGuidePainter(),
                     ),
                   ),
                 ),
@@ -345,6 +345,8 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
 }
 
 class _CircleGuidePainter extends CustomPainter {
+  const _CircleGuidePainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final Offset center = Offset(size.width / 2, size.height / 2);
