@@ -160,10 +160,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    widget.onConfirm(widget.imageFile);
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => widget.onConfirm(widget.imageFile),
                   icon: const Icon(Icons.check),
                   label: Text(l10n.confirm),
                   style: ElevatedButton.styleFrom(
@@ -232,26 +229,26 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
   File? _selectedImage;
 
   void _pickImage(ImageSource source) async {
+    // Capture navigator before the async gap so we can close the picker
+    // after confirming inside the editor dialog (two distinct routes to pop).
+    final NavigatorState navigator = Navigator.of(context);
     try {
-      final pickedFile = await _imagePicker.pickImage(source: source);
+      final XFile? pickedFile = await _imagePicker.pickImage(source: source);
       if (pickedFile != null) {
         _selectedImage = File(pickedFile.path);
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AvatarEditorWidget(
-              imageFile: _selectedImage!,
-              onCancel: () {
-                Navigator.pop(context);
-              },
-              onConfirm: (file) {
-                widget.onAvatarSelected(file);
-                Navigator.pop(context); // Close editor
-                Navigator.pop(context); // Close picker dialog
-              },
-            ),
-          );
-        }
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (BuildContext dialogContext) => AvatarEditorWidget(
+            imageFile: _selectedImage!,
+            onCancel: () => Navigator.pop(dialogContext),
+            onConfirm: (File file) {
+              widget.onAvatarSelected(file);
+              Navigator.pop(dialogContext); // close editor
+              navigator.pop(); // close picker
+            },
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

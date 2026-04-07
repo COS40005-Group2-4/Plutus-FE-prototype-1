@@ -9,7 +9,16 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1 -type f \\\\\\(-name *export* -o -name *report* -o -name *pdf* -o -name *insight* -o -name *recommendation* \\\\\\))",
-      "Bash(/Users/anh.dinh/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh --project-dir /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1)"
+      "Bash(/Users/anh.dinh/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh --project-dir /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1)",
+      "Bash(find ~/.pub-cache/hosted/pub.dev -name matrix4.dart -path */vector_math*)"
     ]
+  },
+  "enabledPlugins": {
+    "aws-common@aws-skills": true,
+    "aws-cdk@aws-skills": true,
+    "aws-cost-ops@aws-skills": true,
+    "serverless-eda@aws-skills": true,
+    "aws-agentic-ai@aws-skills": true,
+    "debugging-code@debug-skill-marketplace": true
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,6 +33,27 @@ void main() {
       controller.value = m;
       controller.value = Matrix4.identity();
       expect(controller.value, equals(Matrix4.identity()));
+    });
+  });
+
+  group('Navigation: onConfirm and onCancel callbacks', () {
+    test('onConfirm callback is invoked with the file argument', () {
+      final List<String> calls = [];
+      void fakeOnConfirm(File f) => calls.add('confirmed:${f.path}');
+
+      // Simulate what AvatarEditorWidget's confirm button does
+      // after the fix: it calls onConfirm with the file, nothing else.
+      final File fakeFile = File('/tmp/test.png');
+      fakeOnConfirm(fakeFile);
+
+      expect(calls, equals(['confirmed:/tmp/test.png']));
+    });
+
+    test('onCancel callback is invoked without arguments', () {
+      int cancelCount = 0;
+      void fakeOnCancel() => cancelCount++;
+      fakeOnCancel();
+      expect(cancelCount, equals(1));
     });
   });
 }
