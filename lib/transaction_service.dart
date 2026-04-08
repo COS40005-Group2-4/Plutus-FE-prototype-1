@@ -9,6 +9,7 @@ import 'services/interfaces/i_backend_ffi_service.dart';
 import 'services/interfaces/i_database_service.dart';
 import 'services/interfaces/i_transaction_service.dart';
 import 'services/file_handler.dart';
+import 'utils/date_format_utils.dart';
 import 'models/transaction_model.dart';
 import 'di/service_locator.dart';
 
@@ -235,50 +236,16 @@ class TransactionService implements ITransactionService {
   }
   
   Future<void> _syncWithBackend(int userId) async {
-    // Try to fetch from backend FFI if available
-    if (_ffiService.isAvailable) {
-      try {
-        final data = await _ffiService.getTransactions();
-        
-        if (kDebugMode) {
-          debugPrint('Fetched ${data.length} transactions from FFI backend');
-        }
-        
-        // Store FFI transactions in local database
-        // FFI returns transactions with postings, need to flatten for database
-        for (final tx in data) {
-          final flatTx = _flattenTransaction(tx);
-          try {
-            await _db.insertTransaction(userId, flatTx);
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('Error inserting transaction: $e');
-            }
-          }
-        }
-        
-        // Also cache in SharedPreferences for backwards compatibility
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_transactionsKey, json.encode(data));
-        
-        if (kDebugMode) {
-          debugPrint('Synced ${data.length} transactions from FFI backend to database');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('Backend FFI sync error: $e');
-        }
-      }
-    }
+    // The Go backend is now stateless — transactions are fed to it
+    // via JournalInitializer on startup. No need to fetch from FFI.
 
-    // Try to fetch from HTTP backend if FFI is unavailable
+    // Try to fetch from HTTP backend if available (legacy support)
     try {
-      // Check if we're on HTTPS trying to hit HTTP (will fail due to mixed content)
-      if (kIsWeb && 
-          Uri.base.scheme == 'https' && 
+      if (kIsWeb &&
+          Uri.base.scheme == 'https' &&
           _baseUrl.startsWith('http:')) {
         if (kDebugMode) {
-          debugPrint('⚠️ Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
+          debugPrint('Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
         }
         return;
       }
@@ -286,25 +253,22 @@ class TransactionService implements ITransactionService {
       final response = await http
           .get(Uri.parse('$_baseUrl/api/transactions'))
           .timeout(_apiTimeout);
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        
-        // Store HTTP transactions in local database
+
         for (final tx in data) {
           await _db.insertTransaction(userId, tx as Map<String, dynamic>);
         }
-        
-        // Cache in SharedPreferences for backwards compatibility
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_transactionsKey, json.encode(data));
-        
+
         if (kDebugMode) {
           debugPrint('Synced ${data.length} transactions from HTTP backend');
         }
       }
     } catch (e) {
-      // Silently fail - we're offline-first, so local data is fine
       if (kDebugMode) {
         debugPrint('Backend unavailable, using local data: $e');
       }
@@ -927,17 +891,48 @@ class TransactionService implements ITransactionService {
   }
   
   Future<void> _syncTransactionToBackend(Map<String, dynamic> transaction) async {
-    // Try to sync with FFI backend
-    if (_ffiService.isAvailable) {
-      try {
-        await _ffiService.saveTransaction(transaction);
-        if (kDebugMode) {
-          debugPrint('Transaction synced to FFI backend');
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('Failed to sync transaction to FFI backend: $e');
-        }
+    if (!_ffiService.isAvailable) return;
+
+    try {
+      final postings = transaction['postings'] as List?;
+      if (postings == null || postings.isEmpty) return;
+
+      final goPostings = postings.map((p) {
+        final posting = p as Map<String, dynamic>;
+        return {
+          'account': posting['account'],
+          'amount': {
+            'value': posting['amount'],
+            'commodity': posting['commodity'] ?? 'VND',
+          },
+        };
+      }).toList();
+
+      DateTime txDate;
+      if (transaction['date'] is int) {
+        txDate = DateTime.fromMillisecondsSinceEpoch(
+          (transaction['date'] as int) * 1000,
+        );
+      } else if (transaction['date'] is String) {
+        txDate = DateTime.tryParse(transaction['date'] as String) ?? DateTime.now();
+      } else {
+        txDate = DateTime.now();
+      }
+
+      final goTxJson = jsonEncode({
+        'date': toCustomDate(txDate),
+        'payee': transaction['payee'] ?? '',
+        'desc': transaction['description'] ?? '',
+        'postings': goPostings,
+      });
+
+      final result = _ffiService.addTransaction(goTxJson);
+      if (kDebugMode) {
+        debugPrint('Transaction synced to Go backend: $result');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Failed to sync transaction to Go backend: $e');
       }
     }
   }

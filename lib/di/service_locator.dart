@@ -23,6 +23,7 @@ import '../services/ocr_service.dart';
 import '../services/insights_service.dart';
 import '../services/report_ai_service.dart';
 import '../services/report_pdf_service.dart';
+import '../services/journal_initializer.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -63,6 +64,14 @@ Future<void> setupServiceLocator() async {
   );
   sl.registerLazySingleton<IBudgetService>(
     () => BudgetService(db: sl<IDatabaseService>()),
+  );
+  sl.registerLazySingleton<JournalInitializer>(
+    () => JournalInitializer(
+      ffiService: sl<IBackendFfiService>(),
+      dbService: sl<IDatabaseService>(),
+      transactionService: sl<ITransactionService>(),
+      budgetService: sl<IBudgetService>(),
+    ),
   );
   sl.registerLazySingleton<IAIService>(
     () => AIService(),
