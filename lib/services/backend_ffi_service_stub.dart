@@ -1,136 +1,47 @@
-// Web implementation that calls the Go backend via HTTP API Gateway
-// instead of FFI (which is not available on web).
 import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../config/api_config.dart';
 import 'interfaces/i_backend_ffi_service.dart';
 
+/// Web stub — the Go FFI backend is not available on web.
+/// Returns error JSON for all methods.
 class BackendFfiService implements IBackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
-
-  factory BackendFfiService() {
-    return _instance;
-  }
-
+  factory BackendFfiService() => _instance;
   BackendFfiService._internal();
 
-  String get _baseUrl => ApiConfig.baseUrl;
+  static final String _unavailable = jsonEncode({
+    'code': 501,
+    'message': 'FFI backend not available on web',
+  });
 
   @override
-  bool get isAvailable => ApiConfig.isConfigured;
-
-  /// Gets the stored Google OAuth access token for API authorization.
-  Future<String?> _getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('google_access_token');
-  }
-
-  /// Builds authorized headers for API requests.
-  Future<Map<String, String>> _headers() async {
-    final token = await _getAccessToken();
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
-
-  /// Makes a GET request to the API.
-  Future<http.Response> _get(String path, {Map<String, String>? queryParams}) async {
-    final uri = Uri.parse('$_baseUrl$path').replace(queryParameters: queryParams);
-    final headers = await _headers();
-    final response = await http.get(uri, headers: headers);
-    if (response.statusCode >= 400) {
-      throw Exception('API error ${response.statusCode}: ${response.body}');
-    }
-    return response;
-  }
-
-  /// Makes a POST request to the API.
-  Future<http.Response> _post(String path, {Object? body}) async {
-    final uri = Uri.parse('$_baseUrl$path');
-    final headers = await _headers();
-    final response = await http.post(
-      uri,
-      headers: headers,
-      body: body != null ? jsonEncode(body) : null,
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('API error ${response.statusCode}: ${response.body}');
-    }
-    return response;
-  }
-
-  /// Makes a DELETE request to the API.
-  Future<http.Response> _delete(String path) async {
-    final uri = Uri.parse('$_baseUrl$path');
-    final headers = await _headers();
-    final response = await http.delete(uri, headers: headers);
-    if (response.statusCode >= 400) {
-      throw Exception('API error ${response.statusCode}: ${response.body}');
-    }
-    return response;
-  }
+  bool get isAvailable => false;
 
   @override
-  Future<List<Map<String, dynamic>>> getTransactions() async {
-    if (!isAvailable) return [];
-    final response = await _get('/transactions');
-    final List<dynamic> data = jsonDecode(response.body);
-    return data.cast<Map<String, dynamic>>();
-  }
-
+  String constructJournal(String journalJson) => _unavailable;
   @override
-  Future<void> saveTransaction(Map<String, dynamic> transaction) async {
-    await _post('/transactions', body: transaction);
-  }
-
+  String dumpJournal() => _unavailable;
   @override
-  Future<void> importFile(String filePath) async {
-    // For web, file import sends the file content as base64
-    // The actual file reading is handled by the caller
-    await _post('/import', body: {'file_content': filePath});
-  }
-
+  String addTransaction(String transactionJson) => _unavailable;
   @override
-  Future<Map<String, dynamic>> getRoiData({String? currency}) async {
-    if (!isAvailable) {
-      return {
-        'roi': '0.00',
-        'irr': '0.00',
-        'cashflowTotal': '0',
-        'currency': currency ?? 'VND',
-      };
-    }
-    final queryParams = <String, String>{};
-    if (currency != null) queryParams['currency'] = currency;
-    final response = await _get('/reports/roi', queryParams: queryParams);
-    return jsonDecode(response.body);
-  }
-
+  String addInvestment(String transactionJson) => _unavailable;
   @override
-  Future<Map<String, dynamic>> getInvestmentList() async {
-    final response = await _get('/investments');
-    return jsonDecode(response.body);
-  }
-
+  String addBudget(String budgetJson) => _unavailable;
   @override
-  Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
-    final response = await _get('/investments/$commodity');
-    return jsonDecode(response.body);
-  }
-
+  String deleteBudget(String accountName) => _unavailable;
   @override
-  Future<void> deleteInvestment(String investmentId) async {
-    await _delete('/investments/$investmentId');
-  }
-
+  String budgetReport(String requestJson) => _unavailable;
   @override
-  Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
-    final response = await _post('/investments', body: investmentData);
-    final result = jsonDecode(response.body);
-    return result['id'] ?? '';
-  }
+  String addRate(String rateJson) => _unavailable;
+  @override
+  String getRate(String requestJson) => _unavailable;
+  @override
+  String accountList() => _unavailable;
+  @override
+  String commodities() => _unavailable;
+  @override
+  String getInvestmentReport(String requestJson) => _unavailable;
+  @override
+  String getIncomeReport() => _unavailable;
+  @override
+  String getSavingsReport(String requestJson) => _unavailable;
 }

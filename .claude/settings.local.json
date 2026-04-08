@@ -10,7 +10,12 @@
       "Bash(ls:*)",
       "Bash(find /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1 -type f \\\\\\(-name *export* -o -name *report* -o -name *pdf* -o -name *insight* -o -name *recommendation* \\\\\\))",
       "Bash(/Users/anh.dinh/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh --project-dir /Users/anh.dinh/Desktop/PJs/Plutus-FE-prototype-1)",
-      "Bash(find ~/.pub-cache/hosted/pub.dev -name matrix4.dart -path */vector_math*)"
+      "Bash(find ~/.pub-cache/hosted/pub.dev -name matrix4.dart -path */vector_math*)",
+      "Bash(flutter analyze:*)",
+      "Bash(terraform apply:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go test:*)"
     ]
   },
   "enabledPlugins": {
@@ -19,6 +24,12 @@
     "aws-cost-ops@aws-skills": true,
     "serverless-eda@aws-skills": true,
     "aws-agentic-ai@aws-skills": true,
-    "debugging-code@debug-skill-marketplace": true
+    "debugging-code@debug-skill-marketplace": true,
+    "superpowers@superpowers-marketplace": true,
+    "terraform-code-generation@hashicorp": true,
+    "terraform-module-generation@hashicorp": true,
+    "terraform-provider-development@hashicorp": true,
+    "packer-builders@hashicorp": true,
+    "packer-hcp@hashicorp": true
   }
 }

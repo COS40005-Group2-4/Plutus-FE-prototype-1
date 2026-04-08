@@ -1,70 +1,46 @@
-// Native implementation for desktop/mobile platforms
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
 import 'interfaces/i_backend_ffi_service.dart';
 
-typedef BootstrapFunc = Pointer<Utf8> Function();
-typedef Bootstrap = Pointer<Utf8> Function();
+// FFI typedefs for functions that take a C string and return a C string
+typedef _StringToStringC = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef _StringToStringDart = Pointer<Utf8> Function(Pointer<Utf8>);
 
-typedef ImportFunc = Void Function(Pointer<Utf8>);
-typedef Import = void Function(Pointer<Utf8>);
+// FFI typedefs for functions that take nothing and return a C string
+typedef _VoidToStringC = Pointer<Utf8> Function();
+typedef _VoidToStringDart = Pointer<Utf8> Function();
 
-typedef IncomeReportFunc = Pointer<Utf8> Function(Bool);
-typedef IncomeReport = Pointer<Utf8> Function(bool);
-
-typedef TransactionHistoryFunc = Pointer<Utf8> Function(Int32, Int32);
-typedef TransactionHistory = Pointer<Utf8> Function(int, int);
-
-typedef SaveTransactionFunc = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef SaveTransaction = Pointer<Utf8> Function(Pointer<Utf8>);
-
-typedef FreeStringFunc = Void Function(Pointer<Utf8>);
-typedef FreeString = void Function(Pointer<Utf8>);
-
-typedef GetROIFunc = Pointer<Utf8> Function();
-typedef GetROI = Pointer<Utf8> Function();
-
-typedef GetROIWithCurrencyFunc = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef GetROIWithCurrency = Pointer<Utf8> Function(Pointer<Utf8>);
-
-typedef GetInvestmentListFunc = Pointer<Utf8> Function();
-typedef GetInvestmentList = Pointer<Utf8> Function();
-
-typedef GetInvestmentDetailFunc = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef GetInvestmentDetail = Pointer<Utf8> Function(Pointer<Utf8>);
-
-typedef DeleteInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef DeleteInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
-
-typedef SaveInvestmentFunc = Pointer<Utf8> Function(Pointer<Utf8>);
-typedef SaveInvestment = Pointer<Utf8> Function(Pointer<Utf8>);
+// FFI typedef for FreeString
+typedef _FreeStringC = Void Function(Pointer<Utf8>);
+typedef _FreeStringDart = void Function(Pointer<Utf8>);
 
 class BackendFfiService implements IBackendFfiService {
   static final BackendFfiService _instance = BackendFfiService._internal();
 
-  factory BackendFfiService() {
-    return _instance;
-  }
+  factory BackendFfiService() => _instance;
 
   late DynamicLibrary _lib;
-  late Bootstrap _bootstrap;
-  late Import _import;
-  late TransactionHistory _transactionHistory;
-  late SaveTransaction _saveTransaction;
-  late FreeString _freeString;
-  late GetROI _getROI;
-  GetROIWithCurrency? _getROIWithCurrency;
-  late GetInvestmentList _getInvestmentList;
-  late GetInvestmentDetail _getInvestmentDetail;
-  late DeleteInvestment _deleteInvestment;
-  late SaveInvestment _saveInvestment;
 
-  bool _isInitialized = false;
-  bool _hasError = false;
-  String _initError = '';
+  // FFI function pointers
+  late _StringToStringDart _constructJournal;
+  late _VoidToStringDart _dumpJournal;
+  late _StringToStringDart _addTransaction;
+  late _StringToStringDart _addInvestment;
+  late _StringToStringDart _addBudget;
+  late _StringToStringDart _deleteBudget;
+  late _StringToStringDart _budgetReport;
+  late _StringToStringDart _addRate;
+  late _StringToStringDart _getRate;
+  late _VoidToStringDart _accountList;
+  late _VoidToStringDart _commodities;
+  late _StringToStringDart _getInvestmentReport;
+  late _VoidToStringDart _getIncomeReport;
+  late _StringToStringDart _getSavingsReport;
+  late _FreeStringDart _freeString;
+
+  bool _isAvailable = false;
 
   BackendFfiService._internal() {
     _init();
@@ -72,356 +48,145 @@ class BackendFfiService implements IBackendFfiService {
 
   void _init() {
     try {
-      String libPath;
-      if (Platform.isWindows) {
-        // Try multiple locations for the DLL
-        final possiblePaths = [
-          'libplutus.dll', // Current directory
-          '../libplutus.dll', // Parent directory
-          '../../libplutus.dll', // Two levels up (from build/windows/x64/runner/Debug)
-          '../../../libplutus.dll', // Three levels up
-          '../../../../libplutus.dll', // Four levels up (project root from deep build)
-          Platform.resolvedExecutable.replaceAll('plutus_fe_prototype.exe', 'libplutus.dll'), // Same as exe
-        ];
-        
-        libPath = 'libplutus.dll';
-        for (final path in possiblePaths) {
-          try {
-            final file = File(path);
-            if (file.existsSync()) {
-              libPath = file.absolute.path;
-              debugPrint('Found DLL at: $libPath');
-              break;
-            }
-          } catch (e) {
-            // Continue to next path
-          }
-        }
-        
-        _lib = DynamicLibrary.open(libPath);
-      } else if (Platform.isMacOS) {
-        // On macOS, the working directory during flutter run is unpredictable.
-        // Resolve from the executable path or use known absolute locations.
-        final exePath = Platform.resolvedExecutable;
-        // exePath is like: .../build/macos/Build/Products/Debug/plutus_fe_prototype.app/Contents/MacOS/plutus_fe_prototype
-        // Walk up to find the project root (contains pubspec.yaml)
-        var dir = File(exePath).parent;
-        String? projectRoot;
-        for (var i = 0; i < 10; i++) {
-          if (File('${dir.path}/pubspec.yaml').existsSync()) {
-            projectRoot = dir.path;
-            break;
-          }
-          dir = dir.parent;
-        }
+      _lib = _loadLibrary();
 
-        final macPaths = [
-          if (projectRoot != null) '$projectRoot/libplutus.dylib',
-          if (projectRoot != null) '$projectRoot/Plutus-backend-prototype-2/libplutus.dylib',
-          'libplutus.dylib',
-          '${Directory.current.path}/libplutus.dylib',
-        ];
+      _constructJournal = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('ConstructJournal');
+      _dumpJournal = _lib.lookupFunction<_VoidToStringC, _VoidToStringDart>('DumpJournal');
+      _addTransaction = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('AddTransaction');
+      _addInvestment = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('AddInvestment');
+      _addBudget = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('AddBudget');
+      _deleteBudget = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('DeleteBudget');
+      _budgetReport = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('BudgetReport');
+      _addRate = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('AddRate');
+      _getRate = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('GetRate');
+      _accountList = _lib.lookupFunction<_VoidToStringC, _VoidToStringDart>('AccountList');
+      _commodities = _lib.lookupFunction<_VoidToStringC, _VoidToStringDart>('Commodities');
+      _getInvestmentReport = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('GetInvestmentReport');
+      _getIncomeReport = _lib.lookupFunction<_VoidToStringC, _VoidToStringDart>('GetIncomeReport');
+      _getSavingsReport = _lib.lookupFunction<_StringToStringC, _StringToStringDart>('GetSavingsReport');
+      _freeString = _lib.lookupFunction<_FreeStringC, _FreeStringDart>('FreeString');
 
-        String macLibPath = 'libplutus.dylib';
-        for (final path in macPaths) {
-          try {
-            if (File(path).existsSync()) {
-              macLibPath = path;
-              debugPrint('Found dylib at: $macLibPath');
-              break;
-            }
-          } catch (e) {
-            // Continue to next path
-          }
-        }
-
-        _lib = DynamicLibrary.open(macLibPath);
-      } else {
-        _lib = DynamicLibrary.open('libplutus.so');
-      }
-
-      _bootstrap = _lib.lookupFunction<BootstrapFunc, Bootstrap>('Bootstrap');
-      _import = _lib.lookupFunction<ImportFunc, Import>('Import');
-      _transactionHistory = _lib.lookupFunction<TransactionHistoryFunc, TransactionHistory>('TransactionHistory');
-      _saveTransaction = _lib.lookupFunction<SaveTransactionFunc, SaveTransaction>('SaveTransaction');
-      _freeString = _lib.lookupFunction<FreeStringFunc, FreeString>('FreeString');
-      _getROI = _lib.lookupFunction<GetROIFunc, GetROI>('GetROI');
-      
-      // Try to load the new function, but don't fail if it doesn't exist
-      try {
-        _getROIWithCurrency = _lib.lookupFunction<GetROIWithCurrencyFunc, GetROIWithCurrency>('GetROIWithCurrency');
-      } catch (e) {
-        debugPrint('GetROIWithCurrency not available in DLL, will use GetROI instead');
-      }
-      
-      _getInvestmentList = _lib.lookupFunction<GetInvestmentListFunc, GetInvestmentList>('GetInvestmentList');
-      _getInvestmentDetail = _lib.lookupFunction<GetInvestmentDetailFunc, GetInvestmentDetail>('GetInvestmentDetail');
-      _deleteInvestment = _lib.lookupFunction<DeleteInvestmentFunc, DeleteInvestment>('DeleteInvestment');
-      _saveInvestment = _lib.lookupFunction<SaveInvestmentFunc, SaveInvestment>('SaveInvestment');
-
-      // Bootstrap DB
-      final resultPtr = _bootstrap();
-      final result = resultPtr.toDartString();
-      _freeString(resultPtr);
-      
-      if (result.isNotEmpty) {
-        debugPrint('Backend Bootstrap Error: $result');
-        _hasError = true;
-        _initError = result;
-      } else {
-        _isInitialized = true;
-        debugPrint('Backend FFI Initialized');
-      }
+      _isAvailable = true;
+      debugPrint('Backend FFI initialized successfully');
     } catch (e) {
       debugPrint('Failed to load backend library: $e');
-      _hasError = true;
-      _initError = e.toString();
+      _isAvailable = false;
     }
   }
 
-  @override
-  bool get isAvailable => _isInitialized && !_hasError;
+  DynamicLibrary _loadLibrary() {
+    if (Platform.isWindows) {
+      final possiblePaths = [
+        'libplutus.dll',
+        '../libplutus.dll',
+        '../../libplutus.dll',
+        '../../../libplutus.dll',
+        '../../../../libplutus.dll',
+        Platform.resolvedExecutable.replaceAll('plutus_fe_prototype.exe', 'libplutus.dll'),
+      ];
 
-  @override
-  Future<List<Map<String, dynamic>>> getTransactions() async {
-    if (!isAvailable) return [];
-
-    // 2000-01-01 to 2100-01-01
-    final start = DateTime(2000).millisecondsSinceEpoch ~/ 1000;
-    final end = DateTime(2100).millisecondsSinceEpoch ~/ 1000;
-
-    final resultPtr = _transactionHistory(start, end);
-    final result = resultPtr.toDartString();
-    _freeString(resultPtr);
-
-    if (result.isEmpty) return [];
-
-    try {
-      final decoded = json.decode(result);
-      if (decoded is List) {
-        return List<Map<String, dynamic>>.from(decoded);
-      }
-      return [];
-    } catch (e) {
-      debugPrint('Error decoding transaction history: $e');
-      return [];
-    }
-  }
-
-  @override
-  Future<void> saveTransaction(Map<String, dynamic> transaction) async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
-
-    final jsonStr = json.encode(transaction);
-    final jsonPtr = jsonStr.toNativeUtf8();
-    
-    final resultPtr = _saveTransaction(jsonPtr);
-    final result = resultPtr.toDartString();
-    
-    malloc.free(jsonPtr);
-    _freeString(resultPtr);
-
-    if (result != "Success") {
-      throw Exception(result);
-    }
-  }
-
-  @override
-  Future<void> importFile(String filePath) async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
-
-    final filePathPtr = filePath.toNativeUtf8();
-    
-    try {
-      _import(filePathPtr);
-    } finally {
-      malloc.free(filePathPtr);
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> getRoiData({String? currency}) async {
-    if (!isAvailable) {
-      return {
-        'roi': '0.00',
-        'irr': '0.00',
-        'cashflowTotal': '0',
-        'currency': currency ?? 'VND',
-      };
-    }
-
-    try {
-      Pointer<Utf8> resultPtr;
-      
-      // Try to use the new function with currency if available
-      if (currency != null && currency.isNotEmpty && _getROIWithCurrency != null) {
+      for (final path in possiblePaths) {
         try {
-          final currencyPtr = currency.toNativeUtf8();
-          resultPtr = _getROIWithCurrency!(currencyPtr);
-          malloc.free(currencyPtr);
-        } catch (e) {
-          debugPrint('GetROIWithCurrency failed, using GetROI: $e');
-          resultPtr = _getROI();
+          if (File(path).existsSync()) {
+            debugPrint('Found DLL at: ${File(path).absolute.path}');
+            return DynamicLibrary.open(File(path).absolute.path);
+          }
+        } catch (_) {}
+      }
+      return DynamicLibrary.open('libplutus.dll');
+    } else if (Platform.isMacOS) {
+      final exePath = Platform.resolvedExecutable;
+      var dir = File(exePath).parent;
+      String? projectRoot;
+      for (var i = 0; i < 10; i++) {
+        if (File('${dir.path}/pubspec.yaml').existsSync()) {
+          projectRoot = dir.path;
+          break;
         }
-      } else {
-        resultPtr = _getROI();
-      }
-      
-      final result = resultPtr.toDartString();
-      _freeString(resultPtr);
-
-      if (result.isEmpty || result.startsWith('Error:')) {
-        debugPrint('ROI Error: $result');
-        return {
-          'roi': '0.00',
-          'irr': '0.00',
-          'cashflowTotal': '0',
-          'currency': currency ?? 'VND',
-        };
+        dir = dir.parent;
       }
 
-      final decoded = json.decode(result);
-      return Map<String, dynamic>.from(decoded);
-    } catch (e) {
-      debugPrint('Error getting ROI data: $e');
-      return {
-        'roi': '0.00',
-        'irr': '0.00',
-        'cashflowTotal': '0',
-        'currency': currency ?? 'VND',
-      };
+      final macPaths = [
+        if (projectRoot != null) '$projectRoot/libplutus.dylib',
+        if (projectRoot != null) '$projectRoot/Plutus-backend/libplutus.dylib',
+        'libplutus.dylib',
+        '${Directory.current.path}/libplutus.dylib',
+      ];
+
+      for (final path in macPaths) {
+        try {
+          if (File(path).existsSync()) {
+            debugPrint('Found dylib at: $path');
+            return DynamicLibrary.open(path);
+          }
+        } catch (_) {}
+      }
+      return DynamicLibrary.open('libplutus.dylib');
+    } else {
+      return DynamicLibrary.open('libplutus.so');
     }
+  }
+
+  /// Calls an FFI function that takes a string argument and returns a string.
+  String _callWithArg(_StringToStringDart fn, String arg) {
+    final argPtr = arg.toNativeUtf8();
+    final resultPtr = fn(argPtr);
+    final result = resultPtr.toDartString();
+    malloc.free(argPtr);
+    _freeString(resultPtr);
+    return result;
+  }
+
+  /// Calls an FFI function that takes no arguments and returns a string.
+  String _callNoArg(_VoidToStringDart fn) {
+    final resultPtr = fn();
+    final result = resultPtr.toDartString();
+    _freeString(resultPtr);
+    return result;
   }
 
   @override
-  Future<Map<String, dynamic>> getInvestmentList() async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
-
-    final resultPtr = _getInvestmentList();
-    final result = resultPtr.toDartString();
-    _freeString(resultPtr);
-
-    if (result.isEmpty) {
-      throw Exception("Empty response from backend");
-    }
-
-    try {
-      final decoded = json.decode(result);
-      if (decoded is Map<String, dynamic>) {
-        if (decoded.containsKey('error')) {
-          throw Exception(decoded['error']);
-        }
-        return decoded;
-      }
-      throw Exception("Invalid response format");
-    } catch (e) {
-      throw Exception('Error decoding investment list: $e');
-    }
-  }
+  bool get isAvailable => _isAvailable;
 
   @override
-  Future<Map<String, dynamic>> getInvestmentDetail(String commodity) async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
-
-    final commodityPtr = commodity.toNativeUtf8();
-    final resultPtr = _getInvestmentDetail(commodityPtr);
-    final result = resultPtr.toDartString();
-    
-    malloc.free(commodityPtr);
-    _freeString(resultPtr);
-
-    if (result.isEmpty) {
-      throw Exception("Empty response from backend");
-    }
-
-    try {
-      final decoded = json.decode(result);
-      if (decoded is Map<String, dynamic>) {
-        if (decoded.containsKey('error')) {
-          throw Exception(decoded['error']);
-        }
-        return decoded;
-      }
-      throw Exception("Invalid response format");
-    } catch (e) {
-      throw Exception('Error decoding investment detail: $e');
-    }
-  }
+  String constructJournal(String journalJson) => _callWithArg(_constructJournal, journalJson);
 
   @override
-  Future<void> deleteInvestment(String investmentId) async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
-
-    debugPrint('FFI: Deleting investment with ID: $investmentId');
-    
-    final idPtr = investmentId.toNativeUtf8();
-    final resultPtr = _deleteInvestment(idPtr);
-    final result = resultPtr.toDartString();
-    
-    malloc.free(idPtr);
-    _freeString(resultPtr);
-
-    debugPrint('FFI: Delete response: $result');
-
-    if (result.isEmpty) {
-      throw Exception("Empty response from backend");
-    }
-
-    try {
-      final decoded = json.decode(result);
-      if (decoded is Map<String, dynamic>) {
-        if (decoded.containsKey('error')) {
-          throw Exception(decoded['error']);
-        }
-        if (decoded['success'] != true) {
-          throw Exception(decoded['message'] ?? 'Delete failed');
-        }
-        debugPrint('FFI: Investment deleted successfully');
-      } else {
-        throw Exception("Invalid response format");
-      }
-    } catch (e) {
-      throw Exception('Error deleting investment: $e');
-    }
-  }
+  String dumpJournal() => _callNoArg(_dumpJournal);
 
   @override
-  Future<String> saveInvestment(Map<String, dynamic> investmentData) async {
-    if (!isAvailable) throw Exception("Backend FFI not available: $_initError");
+  String addTransaction(String transactionJson) => _callWithArg(_addTransaction, transactionJson);
 
-    debugPrint('FFI: Saving investment: $investmentData');
+  @override
+  String addInvestment(String transactionJson) => _callWithArg(_addInvestment, transactionJson);
 
-    final jsonStr = json.encode(investmentData);
-    final jsonPtr = jsonStr.toNativeUtf8();
-    
-    final resultPtr = _saveInvestment(jsonPtr);
-    final result = resultPtr.toDartString();
-    
-    malloc.free(jsonPtr);
-    _freeString(resultPtr);
+  @override
+  String addBudget(String budgetJson) => _callWithArg(_addBudget, budgetJson);
 
-    debugPrint('FFI: Save response: $result');
+  @override
+  String deleteBudget(String accountName) => _callWithArg(_deleteBudget, accountName);
 
-    if (result.isEmpty) {
-      throw Exception("Empty response from backend");
-    }
+  @override
+  String budgetReport(String requestJson) => _callWithArg(_budgetReport, requestJson);
 
-    try {
-      final decoded = json.decode(result);
-      if (decoded is Map<String, dynamic>) {
-        if (decoded.containsKey('error')) {
-          throw Exception(decoded['error']);
-        }
-        if (decoded['success'] != true) {
-          throw Exception(decoded['message'] ?? 'Save failed');
-        }
-        debugPrint('FFI: Investment saved successfully with ID: ${decoded['id']}');
-        return decoded['id'] as String;
-      } else {
-        throw Exception("Invalid response format");
-      }
-    } catch (e) {
-      throw Exception('Error saving investment: $e');
-    }
-  }
+  @override
+  String addRate(String rateJson) => _callWithArg(_addRate, rateJson);
+
+  @override
+  String getRate(String requestJson) => _callWithArg(_getRate, requestJson);
+
+  @override
+  String accountList() => _callNoArg(_accountList);
+
+  @override
+  String commodities() => _callNoArg(_commodities);
+
+  @override
+  String getInvestmentReport(String requestJson) => _callWithArg(_getInvestmentReport, requestJson);
+
+  @override
+  String getIncomeReport() => _callNoArg(_getIncomeReport);
+
+  @override
+  String getSavingsReport(String requestJson) => _callWithArg(_getSavingsReport, requestJson);
 }
