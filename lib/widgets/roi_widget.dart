@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
-import '../services/backend_ffi_service.dart';
+import '../services/interfaces/i_investment_service.dart';
 import '../services/settings_service.dart';
+import '../di/service_locator.dart';
 import '../l10n/app_localizations.dart';
 
 class RoiWidget extends StatefulWidget {
@@ -14,7 +15,6 @@ class RoiWidget extends StatefulWidget {
 }
 
 class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixin {
-  final BackendFfiService _ffiService = BackendFfiService();
   String _roiValue = '0.00';
   bool _isLoading = true;
 
@@ -35,24 +35,21 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
 
   Future<void> _loadRoiData() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      String currency = 'VND'; // Default
-      
+      String currency = 'VND';
       try {
         final settingsService = SettingsService();
         currency = await settingsService.getDefaultCurrency(1);
       } catch (e) {
         debugPrint('Could not load currency from settings, using default: $e');
       }
-      
-      final data = await _ffiService.getRoiData(currency: currency);
+
+      final investmentService = sl<IInvestmentService>();
+      final data = await investmentService.getInvestmentReport(currency: currency);
+
       if (mounted) {
-        String roiStr = data['roi'] ?? '0.00';
-        
-        roiStr = roiStr.replaceAll('%', '');
-        double roi = double.tryParse(roiStr) ?? 0.0;
-        
+        final roi = (data['roi'] as num?)?.toDouble() ?? 0.0;
         setState(() {
           _roiValue = roi.toStringAsFixed(2);
           _isLoading = false;
@@ -71,7 +68,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
 
   Widget _buildGauge(double value, bool isCompact) {
     final clampedValue = value.clamp(-100.0, 100.0);
-    final normalizedValue = (clampedValue + 100) / 200; // 0 to 1
+    final normalizedValue = (clampedValue + 100) / 200;
     final brightness = Theme.of(context).brightness;
     final gaugeColor = clampedValue >= 0 ? AppColors.positive(brightness) : AppColors.negative(brightness);
 
@@ -88,13 +85,13 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
               centerSpaceRadius: isCompact ? 22 : 28,
               sections: [
                 PieChartSectionData(
-                  color: gaugeColor.withValues(alpha:0.8),
+                  color: gaugeColor.withValues(alpha: 0.8),
                   value: normalizedValue * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,
                 ),
                 PieChartSectionData(
-                  color: Colors.white.withValues(alpha:0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   value: (1 - normalizedValue) * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,

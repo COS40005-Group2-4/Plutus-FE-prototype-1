@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
-import '../services/backend_ffi_service.dart';
+import '../services/interfaces/i_investment_service.dart';
 import '../services/settings_service.dart';
+import '../di/service_locator.dart';
 import '../l10n/app_localizations.dart';
 
 class IrrWidget extends StatefulWidget {
@@ -14,7 +15,6 @@ class IrrWidget extends StatefulWidget {
 }
 
 class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixin {
-  final BackendFfiService _ffiService = BackendFfiService();
   String _irrValue = '0.00';
   bool _isLoading = true;
 
@@ -35,24 +35,21 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
 
   Future<void> _loadIrrData() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      String currency = 'VND'; // Default
-      
+      String currency = 'VND';
       try {
         final settingsService = SettingsService();
         currency = await settingsService.getDefaultCurrency(1);
       } catch (e) {
         debugPrint('Could not load currency from settings, using default: $e');
       }
-      
-      final data = await _ffiService.getRoiData(currency: currency);
+
+      final investmentService = sl<IInvestmentService>();
+      final data = await investmentService.getInvestmentReport(currency: currency);
+
       if (mounted) {
-        String irrStr = data['irr'] ?? '0.00';
-        
-        irrStr = irrStr.replaceAll('%', '');
-        double irr = double.tryParse(irrStr) ?? 0.0;
-        
+        final irr = (data['irr'] as num?)?.toDouble() ?? 0.0;
         setState(() {
           _irrValue = irr.toStringAsFixed(2);
           _isLoading = false;
@@ -87,13 +84,13 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
               centerSpaceRadius: isCompact ? 22 : 28,
               sections: [
                 PieChartSectionData(
-                  color: gaugeColor.withValues(alpha:0.8),
+                  color: gaugeColor.withValues(alpha: 0.8),
                   value: normalizedValue * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,
                 ),
                 PieChartSectionData(
-                  color: Colors.white.withValues(alpha:0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   value: (1 - normalizedValue) * 180,
                   title: '',
                   radius: isCompact ? 10 : 14,
