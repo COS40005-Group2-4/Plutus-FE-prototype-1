@@ -116,7 +116,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -362,6 +362,26 @@ class DatabaseService implements IDatabaseService {
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_type ON insights(type)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_generated ON insights(generated_at)');
+
+    // Investments table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS investments (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        asset_type TEXT NOT NULL,
+        asset_name TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        purchase_value REAL NOT NULL,
+        currency TEXT NOT NULL,
+        purchase_date INTEGER NOT NULL,
+        current_price REAL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        is_synced INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id)');
 
     if (kDebugMode) {
       debugPrint('Database tables created successfully');
@@ -620,6 +640,29 @@ class DatabaseService implements IDatabaseService {
 
       await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_type ON insights(type)');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_insights_generated ON insights(generated_at)');
+    }
+
+    // Upgrade from version 8 to 9: Add investments table
+    if (oldVersion < 9) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS investments (
+          id TEXT PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          asset_type TEXT NOT NULL,
+          asset_name TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          purchase_value REAL NOT NULL,
+          currency TEXT NOT NULL,
+          purchase_date INTEGER NOT NULL,
+          current_price REAL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          is_synced INTEGER DEFAULT 0,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id)');
     }
   }
 

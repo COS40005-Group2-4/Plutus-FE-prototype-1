@@ -28,6 +28,7 @@ import 'screens/main_navigation_page.dart';
 import 'screens/report_config_screen.dart';
 import 'screens/report_preview_screen.dart';
 import 'services/sync_manager.dart';
+import 'services/journal_initializer.dart';
 import 'l10n/app_localizations.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -326,6 +327,9 @@ class _MainPageState extends State<MainPage> {
         }
       }
     }
+
+    // Initialize the Go journal before dashboard loads
+    await sl<JournalInitializer>().initialize();
 
     if (!context.mounted) return;
     Navigator.pushReplacementNamed(context, "/dashboard");

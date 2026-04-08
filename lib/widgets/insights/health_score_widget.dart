@@ -79,9 +79,12 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
               children: [
                 const Icon(Icons.health_and_safety, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  l10n.insightsHealthScore,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                Expanded(
+                  child: Text(
+                    l10n.insightsHealthScore,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
