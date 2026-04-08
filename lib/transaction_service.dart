@@ -292,36 +292,8 @@ class TransactionService implements ITransactionService {
       debugPrint('FFI Service Available: ${_ffiService.isAvailable}');
     }
     
-    // Only use FFI for ledger/txt files (journal format)
-    // CSV, JSON, XML should use manual parsing
-    if (_ffiService.isAvailable && (extension == 'ledger' || extension == 'txt')) {
-      try {
-        if (kDebugMode) {
-          debugPrint('Attempting to import ledger file via FFI: $filePath');
-        }
-        await _ffiService.importFile(filePath);
-        
-        // After FFI import, sync the transactions to local database
-        if (kDebugMode) {
-          debugPrint('Syncing transactions to local database for user $_currentUserId');
-        }
-        await _syncWithBackend(_currentUserId!);
-        
-        // Notify listeners of transaction update
-        notifyTransactionUpdate();
-        
-        if (kDebugMode) {
-          debugPrint('Transaction file imported successfully via FFI');
-        }
-        return;
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('Backend FFI import error: $e');
-          debugPrint('Falling back to manual ledger parsing');
-        }
-        // Fall through to manual parsing
-      }
-    }
+    // The new Go FFI backend does not have an importFile method.
+    // All file formats (ledger, CSV, JSON, XML) use manual parsing below.
     
     // Manual parsing for CSV, JSON, XML or when FFI is not available
     if (kDebugMode) {
@@ -960,7 +932,8 @@ class TransactionService implements ITransactionService {
     for (final tx in unsynced) {
       try {
         if (_ffiService.isAvailable) {
-          await _ffiService.saveTransaction(tx);
+          final txJson = json.encode(tx);
+          _ffiService.addTransaction(txJson);
           await _db.markTransactionAsSynced(tx['id'] as int);
           if (kDebugMode) {
             debugPrint('Synced transaction ${tx['id']}');

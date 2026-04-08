@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/models/investment_model.dart';
@@ -5,6 +7,9 @@ import 'package:plutus_fe_prototype/services/investment_service.dart';
 
 import '../helpers/mock_services.mocks.dart';
 import '../helpers/test_fixtures.dart';
+
+// Note: After changing IBackendFfiService or IInvestmentService interfaces,
+// regenerate mocks with: dart run build_runner build --delete-conflicting-outputs
 
 void main() {
   late MockIBackendFfiService mockFfi;
@@ -22,19 +27,6 @@ void main() {
       dbService: mockDb,
     );
   });
-
-  Map<String, dynamic> investmentToFfiJson(InvestmentModel inv) {
-    return {
-      'id': inv.id,
-      'asset_type': inv.assetType.name,
-      'asset_name': inv.assetName,
-      'quantity': inv.quantity,
-      'purchase_value': inv.purchaseValue,
-      'currency': inv.currency.name,
-      'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
-      if (inv.currentPrice != null) 'current_price': inv.currentPrice,
-    };
-  }
 
   group('getTotalPortfolioValue', () {
     test('returns 0.0 for empty list', () {
@@ -129,104 +121,116 @@ void main() {
   });
 
   group('getInvestmentList', () {
-    test('fetches from backend and caches result', () async {
+    test('fetches from database and caches result', () async {
+      service.setUserId(1);
       final inv = createTestInvestment();
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
+      final dbRow = {
+        'id': inv.id,
+        'asset_type': inv.assetType.name,
+        'asset_name': inv.assetName,
+        'quantity': inv.quantity,
+        'purchase_value': inv.purchaseValue,
+        'currency': inv.currency.name,
+        'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+        'current_price': inv.currentPrice,
       };
 
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
+      when(mockDb.getInvestmentsByUserId(1))
+          .thenAnswer((_) async => [dbRow]);
 
       final result = await service.getInvestmentList();
 
       expect(result.length, 1);
       expect(result[0].assetName, 'AAPL');
-      verify(mockFfi.getInvestmentList()).called(1);
+      verify(mockDb.getInvestmentsByUserId(1)).called(1);
     });
 
     test('returns cached data on second call within 5 minutes', () async {
+      service.setUserId(1);
       final inv = createTestInvestment();
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
+      final dbRow = {
+        'id': inv.id,
+        'asset_type': inv.assetType.name,
+        'asset_name': inv.assetName,
+        'quantity': inv.quantity,
+        'purchase_value': inv.purchaseValue,
+        'currency': inv.currency.name,
+        'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+        'current_price': inv.currentPrice,
       };
 
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
+      when(mockDb.getInvestmentsByUserId(1))
+          .thenAnswer((_) async => [dbRow]);
 
       await service.getInvestmentList();
       final result = await service.getInvestmentList();
 
       expect(result.length, 1);
-      // Should only call FFI once due to caching
-      verify(mockFfi.getInvestmentList()).called(1);
+      // Should only call DB once due to caching
+      verify(mockDb.getInvestmentsByUserId(1)).called(1);
     });
 
     test('bypasses cache when forceRefresh is true', () async {
+      service.setUserId(1);
       final inv = createTestInvestment();
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
+      final dbRow = {
+        'id': inv.id,
+        'asset_type': inv.assetType.name,
+        'asset_name': inv.assetName,
+        'quantity': inv.quantity,
+        'purchase_value': inv.purchaseValue,
+        'currency': inv.currency.name,
+        'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+        'current_price': inv.currentPrice,
       };
 
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
+      when(mockDb.getInvestmentsByUserId(1))
+          .thenAnswer((_) async => [dbRow]);
 
       await service.getInvestmentList();
       await service.getInvestmentList(forceRefresh: true);
 
-      verify(mockFfi.getInvestmentList()).called(2);
+      verify(mockDb.getInvestmentsByUserId(1)).called(2);
     });
 
-    test('throws when response is missing investments key', () async {
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => {'other': 'data'});
+    test('returns empty list when no userId is set', () async {
+      final result = await service.getInvestmentList();
 
-      expect(
-        () => service.getInvestmentList(),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('throws when backend fails', () async {
-      when(mockFfi.getInvestmentList())
-          .thenThrow(Exception('Backend unavailable'));
-
-      expect(
-        () => service.getInvestmentList(),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('persists investments to db when userId is set', () async {
-      service.setUserId(1);
-      final inv = createTestInvestment(id: 'inv_persist');
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
-      };
-
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
-      when(mockDb.getInvestmentById('inv_persist'))
-          .thenAnswer((_) async => null);
-      when(mockDb.insertInvestment(1, any))
-          .thenAnswer((_) async => 1);
-
-      await service.getInvestmentList();
-
-      verify(mockDb.insertInvestment(1, any)).called(1);
+      expect(result, isEmpty);
     });
   });
 
   group('deleteInvestment', () {
-    test('deletes from backend and database and clears cache', () async {
-      when(mockFfi.deleteInvestment('inv_del'))
-          .thenAnswer((_) async {});
+    test('deletes from database and clears cache', () async {
+      when(mockFfi.isAvailable).thenReturn(false);
+      when(mockDb.getInvestmentById('inv_del'))
+          .thenAnswer((_) async => null);
       when(mockDb.deleteInvestment('inv_del'))
           .thenAnswer((_) async {});
 
       await service.deleteInvestment('inv_del');
 
-      verify(mockFfi.deleteInvestment('inv_del')).called(1);
+      verify(mockDb.deleteInvestment('inv_del')).called(1);
+    });
+
+    test('creates reversal posting in FFI when available', () async {
+      when(mockFfi.isAvailable).thenReturn(true);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockFfi.addInvestment(argThat(isA<String>()))).thenReturn('{"code":200}');
+      when(mockDb.getInvestmentById('inv_del'))
+          .thenAnswer((_) async => {
+                'currency': 'VND',
+                'purchase_value': 1000.0,
+                'asset_name': 'AAPL',
+                'quantity': 10.0,
+              });
+      when(mockDb.deleteInvestment('inv_del'))
+          .thenAnswer((_) async {});
+
+      await service.deleteInvestment('inv_del');
+
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      verify(mockFfi.addInvestment(argThat(isA<String>()))).called(1);
       verify(mockDb.deleteInvestment('inv_del')).called(1);
     });
 
@@ -236,69 +240,55 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
-
-    test('throws when backend delete fails', () async {
-      when(mockFfi.deleteInvestment('inv_fail'))
-          .thenThrow(Exception('Backend error'));
-
-      expect(
-        () => service.deleteInvestment('inv_fail'),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('clears cache after deletion so next fetch hits backend', () async {
-      final inv = createTestInvestment();
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
-      };
-
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
-      when(mockFfi.deleteInvestment(any))
-          .thenAnswer((_) async {});
-      when(mockDb.deleteInvestment(any))
-          .thenAnswer((_) async {});
-
-      // Populate cache
-      await service.getInvestmentList();
-      // Delete clears cache
-      await service.deleteInvestment('inv_001');
-      // Next fetch should hit backend again
-      await service.getInvestmentList();
-
-      verify(mockFfi.getInvestmentList()).called(2);
-    });
   });
 
   group('clearCache', () {
-    test('forces next getInvestmentList to fetch from backend', () async {
+    test('forces next getInvestmentList to fetch from database', () async {
+      service.setUserId(1);
       final inv = createTestInvestment();
-      final ffiResponse = {
-        'investments': [investmentToFfiJson(inv)],
+      final dbRow = {
+        'id': inv.id,
+        'asset_type': inv.assetType.name,
+        'asset_name': inv.assetName,
+        'quantity': inv.quantity,
+        'purchase_value': inv.purchaseValue,
+        'currency': inv.currency.name,
+        'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+        'current_price': inv.currentPrice,
       };
 
-      when(mockFfi.getInvestmentList())
-          .thenAnswer((_) async => ffiResponse);
+      when(mockDb.getInvestmentsByUserId(1))
+          .thenAnswer((_) async => [dbRow]);
 
       await service.getInvestmentList();
       service.clearCache();
       await service.getInvestmentList();
 
-      verify(mockFfi.getInvestmentList()).called(2);
+      verify(mockDb.getInvestmentsByUserId(1)).called(2);
     });
   });
 
   group('getInvestmentDetail', () {
-    test('returns investment detail from backend', () async {
+    test('returns matching investment by commodity name', () async {
+      service.setUserId(1);
       final inv = createTestInvestment(id: 'detail_1', assetName: 'BTC');
-      when(mockFfi.getInvestmentDetail('BTC'))
-          .thenAnswer((_) async => investmentToFfiJson(inv));
+      final dbRow = {
+        'id': inv.id,
+        'asset_type': inv.assetType.name,
+        'asset_name': inv.assetName,
+        'quantity': inv.quantity,
+        'purchase_value': inv.purchaseValue,
+        'currency': inv.currency.name,
+        'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+        'current_price': inv.currentPrice,
+      };
+
+      when(mockDb.getInvestmentsByUserId(1))
+          .thenAnswer((_) async => [dbRow]);
 
       final result = await service.getInvestmentDetail('BTC');
 
       expect(result.assetName, 'BTC');
-      verify(mockFfi.getInvestmentDetail('BTC')).called(1);
     });
 
     test('throws on empty commodity', () {
@@ -311,6 +301,7 @@ void main() {
 
   group('saveInvestment', () {
     test('saves investment with price data for stock type', () async {
+      service.setUserId(1);
       final inv = createTestInvestment(
         id: '',
         assetType: AssetType.stock,
@@ -322,17 +313,25 @@ void main() {
           .thenAnswer((_) async => 250.0);
       when(mockPrice.getHistoricalPrices('TSLA', 30))
           .thenAnswer((_) async => null);
-      when(mockFfi.saveInvestment(any))
-          .thenAnswer((_) async => 'new_inv_id');
+      when(mockFfi.isAvailable).thenReturn(true);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockFfi.addInvestment(argThat(isA<String>()))).thenReturn('{"code":200}');
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>())))
+          .thenAnswer((_) async => 1);
 
       final newId = await service.saveInvestment(inv);
 
-      expect(newId, 'new_inv_id');
+      expect(newId, startsWith('inv_'));
       verify(mockPrice.getCurrentPrice('TSLA')).called(1);
-      verify(mockFfi.saveInvestment(any)).called(1);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      verify(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>()))).called(1);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      verify(mockFfi.addInvestment(argThat(isA<String>()))).called(1);
     });
 
     test('saves investment without price fetch for bond type', () async {
+      service.setUserId(1);
       final inv = createTestInvestment(
         id: '',
         assetType: AssetType.bond,
@@ -340,35 +339,53 @@ void main() {
         currentPrice: null,
       );
 
-      when(mockFfi.saveInvestment(any))
-          .thenAnswer((_) async => 'bond_id');
+      when(mockFfi.isAvailable).thenReturn(true);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockFfi.addInvestment(argThat(isA<String>()))).thenReturn('{"code":200}');
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>())))
+          .thenAnswer((_) async => 1);
 
       final newId = await service.saveInvestment(inv);
 
-      expect(newId, 'bond_id');
-      verifyNever(mockPrice.getCurrentPrice(any));
+      expect(newId, startsWith('inv_'));
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      verifyNever(mockPrice.getCurrentPrice(argThat(isA<String>())));
     });
   });
 
-  group('getRoiIrrData', () {
-    test('returns formatted ROI and IRR data', () async {
-      when(mockFfi.getRoiData())
-          .thenAnswer((_) async => {'roi': '12.5', 'irr': '8.3'});
+  group('getInvestmentReport', () {
+    test('returns report data from FFI', () async {
+      when(mockFfi.isAvailable).thenReturn(true);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockFfi.getInvestmentReport(argThat(isA<String>())))
+          .thenReturn(jsonEncode({'roi': 12.5, 'irr': 8.3}));
 
-      final result = await service.getRoiIrrData();
+      final result = await service.getInvestmentReport(currency: 'USD');
 
-      expect(result, isNotNull);
-      expect(result!['roi'], '12.50%');
-      expect(result['irr'], '8.30%');
+      expect(result['roi'], 12.5);
+      expect(result['irr'], 8.3);
     });
 
-    test('returns null on error', () async {
-      when(mockFfi.getRoiData())
-          .thenThrow(Exception('Backend error'));
+    test('returns zeros when FFI is unavailable', () async {
+      when(mockFfi.isAvailable).thenReturn(false);
 
-      final result = await service.getRoiIrrData();
+      final result = await service.getInvestmentReport();
 
-      expect(result, isNull);
+      expect(result['roi'], 0.0);
+      expect(result['irr'], 0.0);
+    });
+
+    test('returns zeros on FFI error', () async {
+      when(mockFfi.isAvailable).thenReturn(true);
+      // ignore: argument_type_not_assignable (resolved after mock regeneration)
+      when(mockFfi.getInvestmentReport(argThat(isA<String>())))
+          .thenReturn(jsonEncode({'code': 500, 'message': 'error'}));
+
+      final result = await service.getInvestmentReport();
+
+      expect(result['roi'], 0.0);
+      expect(result['irr'], 0.0);
     });
   });
 }

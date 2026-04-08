@@ -102,7 +102,6 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
         final formatted = _currencyService.formatCurrency(
           amount: displayAmount,
           currencyCode: settings.currency.code,
-          symbol: settings.currency.symbol,
         );
 
         return Column(
@@ -121,7 +120,6 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
                 '(Original: ${_currencyService.formatCurrency(
                   amount: widget.amount,
                   currencyCode: widget.sourceCurrency!,
-                  symbol: AppCurrency.fromCode(widget.sourceCurrency!).symbol,
                 )})',
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -164,7 +162,6 @@ class SimpleCurrencyDisplay extends StatelessWidget {
         final formatted = currencyService.formatCurrency(
           amount: amount,
           currencyCode: settings.currency.code,
-          symbol: settings.currency.symbol,
         );
         
         return Text(
