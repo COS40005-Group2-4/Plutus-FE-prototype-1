@@ -10,7 +10,7 @@ abstract class IInvestmentService {
   double getTotalPortfolioValue(List<InvestmentModel> investments);
   double getTotalGainLoss(List<InvestmentModel> investments);
   Future<InvestmentModel> refreshPriceData(InvestmentModel investment);
-  Future<Map<String, String>?> getRoiIrrData();
+  Future<Map<String, dynamic>> getInvestmentReport({String? currency});
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId);
   Future<void> markInvestmentAsSynced(String investmentId);
 }
