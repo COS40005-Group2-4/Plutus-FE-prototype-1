@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../services/settings_service.dart';
 import '../di/service_locator.dart';
@@ -15,8 +16,9 @@ class RoiWidget extends StatefulWidget {
 }
 
 class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixin {
-  String _roiValue = '0.00';
+  double _roiValue = 0.0;
   bool _isLoading = true;
+  StreamSubscription<void>? _changeSub;
 
   @override
   bool get wantKeepAlive => true;
@@ -25,15 +27,19 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
   void initState() {
     super.initState();
     _loadRoiData();
+    _changeSub = sl<IInvestmentService>().onChanged.listen((_) {
+      _loadRoiData();
+    });
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadRoiData();
+  void dispose() {
+    _changeSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadRoiData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
@@ -41,17 +47,14 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
       try {
         final settingsService = SettingsService();
         currency = await settingsService.getDefaultCurrency(1);
-      } catch (e) {
-        debugPrint('Could not load currency from settings, using default: $e');
-      }
+      } catch (_) {}
 
       final investmentService = sl<IInvestmentService>();
       final data = await investmentService.getInvestmentReport(currency: currency);
 
       if (mounted) {
-        final roi = (data['roi'] as num?)?.toDouble() ?? 0.0;
         setState(() {
-          _roiValue = roi.toStringAsFixed(2);
+          _roiValue = (data['roi'] as num?)?.toDouble() ?? 0.0;
           _isLoading = false;
         });
       }
@@ -59,124 +62,111 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
       debugPrint('Error loading ROI: $e');
       if (mounted) {
         setState(() {
-          _roiValue = '0.00';
+          _roiValue = 0.0;
           _isLoading = false;
         });
       }
     }
   }
 
-  Widget _buildGauge(double value, bool isCompact) {
-    final clampedValue = value.clamp(-100.0, 100.0);
-    final normalizedValue = (clampedValue + 100) / 200;
-    final brightness = Theme.of(context).brightness;
-    final gaugeColor = clampedValue >= 0 ? AppColors.positive(brightness) : AppColors.negative(brightness);
-
-    return SizedBox(
-      height: isCompact ? 70 : 90,
-      width: isCompact ? 70 : 90,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          PieChart(
-            PieChartData(
-              startDegreeOffset: 180,
-              sectionsSpace: 0,
-              centerSpaceRadius: isCompact ? 22 : 28,
-              sections: [
-                PieChartSectionData(
-                  color: gaugeColor.withValues(alpha: 0.8),
-                  value: normalizedValue * 180,
-                  title: '',
-                  radius: isCompact ? 10 : 14,
-                ),
-                PieChartSectionData(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  value: (1 - normalizedValue) * 180,
-                  title: '',
-                  radius: isCompact ? 10 : 14,
-                ),
-                PieChartSectionData(
-                  color: Colors.transparent,
-                  value: 180,
-                  title: '',
-                  radius: isCompact ? 10 : 14,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              '$_roiValue%',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isCompact ? 13 : 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context);
+    final brightness = Theme.of(context).brightness;
+    final isPositive = _roiValue >= 0;
+    final valueColor = _roiValue == 0
+        ? AppColors.textSecondary(brightness)
+        : isPositive
+            ? AppColors.positive(brightness)
+            : AppColors.negative(brightness);
+    final trendIcon = _roiValue == 0
+        ? Icons.trending_flat
+        : isPositive
+            ? Icons.trending_up
+            : Icons.trending_down;
+
     return GlassContainer(
-      color: AppColors.primaryDark,
-      opacity: 0.2,
       borderRadius: 16,
-      padding: const EdgeInsets.all(12),
+      opacity: 0.08,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxHeight < 180;
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  AppLocalizations.of(context).roi,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isCompact ? 14 : 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (!isCompact)
+          final isCompact = constraints.maxHeight < 150;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Header row: label + info tooltip
+              Row(
+                children: [
+                  Icon(Icons.show_chart, size: 16,
+                      color: AppColors.textSecondary(brightness)),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
-                    AppLocalizations.of(context).returnOnInvestment,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                    textAlign: TextAlign.center,
+                    l10n.roi,
+                    style: TextStyle(
+                      color: AppColors.textSecondary(brightness),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                SizedBox(height: isCompact ? 4 : 8),
-                _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                  const Spacer(),
+                  Tooltip(
+                    message: l10n.returnOnInvestment,
+                    child: Icon(Icons.info_outline, size: 14,
+                        color: AppColors.textTertiary(brightness)),
+                  ),
+                ],
+              ),
+              SizedBox(height: isCompact ? AppSpacing.xs : AppSpacing.sm),
+
+              // Big number + trend arrow
+              _isLoading
+                  ? SizedBox(
+                      height: isCompact ? 28 : 36,
+                      child: const Center(
+                        child: SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                      )
-                    : _buildGauge(double.tryParse(_roiValue) ?? 0, isCompact),
-                if (!isCompact)
-                  Text(
-                    AppLocalizations.of(context).currentRoi,
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
-                  ),
-                const SizedBox(height: 4),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: Colors.white70, size: 18),
-                  onPressed: _loadRoiData,
-                  tooltip: 'Refresh',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                      ),
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Icon(trendIcon, size: isCompact ? 22 : 28,
+                            color: valueColor),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            '${isPositive && _roiValue != 0 ? '+' : ''}${_roiValue.toStringAsFixed(2)}%',
+                            style: TextStyle(
+                              color: valueColor,
+                              fontSize: isCompact ? 22 : 28,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+              SizedBox(height: isCompact ? 2 : AppSpacing.xs),
+
+              // Subtitle
+              Text(
+                l10n.currentRoi,
+                style: TextStyle(
+                  color: AppColors.textTertiary(brightness),
+                  fontSize: 11,
                 ),
-              ],
-            ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           );
         },
       ),

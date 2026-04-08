@@ -880,6 +880,24 @@ class DatabaseService implements IDatabaseService {
   }
   
   @override
+  Future<void> deleteTransactionById(String transactionId) async {
+    final db = await database;
+    // Look up the row id first so we can clean up postings
+    final rows = await db.query(
+      'transactions',
+      columns: ['id'],
+      where: 'transaction_id = ?',
+      whereArgs: [transactionId],
+      limit: 1,
+    );
+    if (rows.isNotEmpty) {
+      final rowId = rows.first['id'] as int;
+      await db.delete('postings', where: 'transaction_id = ?', whereArgs: [rowId]);
+      await db.delete('transactions', where: 'id = ?', whereArgs: [rowId]);
+    }
+  }
+
+  @override
   Future<void> markTransactionAsSynced(int transactionId) async {
     final db = await database;
     await db.update(

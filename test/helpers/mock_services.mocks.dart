@@ -254,6 +254,15 @@ class MockIDatabaseService extends _i1.Mock implements _i6.IDatabaseService {
           as _i7.Future<void>);
 
   @override
+  _i7.Future<void> deleteTransactionById(String? transactionId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteTransactionById, [transactionId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
   _i7.Future<void> markTransactionAsSynced(int? transactionId) =>
       (super.noSuchMethod(
             Invocation.method(#markTransactionAsSynced, [transactionId]),
@@ -723,84 +732,158 @@ class MockIBackendFfiService extends _i1.Mock
           as bool);
 
   @override
-  _i7.Future<List<Map<String, dynamic>>> getTransactions() =>
+  String constructJournal(String? journalJson) =>
       (super.noSuchMethod(
-            Invocation.method(#getTransactions, []),
-            returnValue: _i7.Future<List<Map<String, dynamic>>>.value(
-              <Map<String, dynamic>>[],
+            Invocation.method(#constructJournal, [journalJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#constructJournal, [journalJson]),
             ),
           )
-          as _i7.Future<List<Map<String, dynamic>>>);
+          as String);
 
   @override
-  _i7.Future<void> saveTransaction(Map<String, dynamic>? transaction) =>
+  String dumpJournal() =>
       (super.noSuchMethod(
-            Invocation.method(#saveTransaction, [transaction]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> importFile(String? filePath) =>
-      (super.noSuchMethod(
-            Invocation.method(#importFile, [filePath]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<Map<String, dynamic>> getRoiData({String? currency}) =>
-      (super.noSuchMethod(
-            Invocation.method(#getRoiData, [], {#currency: currency}),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
+            Invocation.method(#dumpJournal, []),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#dumpJournal, []),
             ),
           )
-          as _i7.Future<Map<String, dynamic>>);
+          as String);
 
   @override
-  _i7.Future<Map<String, dynamic>> getInvestmentList() =>
+  String addTransaction(String? transactionJson) =>
       (super.noSuchMethod(
-            Invocation.method(#getInvestmentList, []),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
+            Invocation.method(#addTransaction, [transactionJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#addTransaction, [transactionJson]),
             ),
           )
-          as _i7.Future<Map<String, dynamic>>);
+          as String);
 
   @override
-  _i7.Future<Map<String, dynamic>> getInvestmentDetail(String? commodity) =>
+  String addInvestment(String? transactionJson) =>
       (super.noSuchMethod(
-            Invocation.method(#getInvestmentDetail, [commodity]),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
+            Invocation.method(#addInvestment, [transactionJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#addInvestment, [transactionJson]),
             ),
           )
-          as _i7.Future<Map<String, dynamic>>);
+          as String);
 
   @override
-  _i7.Future<void> deleteInvestment(String? investmentId) =>
+  String addBudget(String? budgetJson) =>
       (super.noSuchMethod(
-            Invocation.method(#deleteInvestment, [investmentId]),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<String> saveInvestment(Map<String, dynamic>? investmentData) =>
-      (super.noSuchMethod(
-            Invocation.method(#saveInvestment, [investmentData]),
-            returnValue: _i7.Future<String>.value(
-              _i9.dummyValue<String>(
-                this,
-                Invocation.method(#saveInvestment, [investmentData]),
-              ),
+            Invocation.method(#addBudget, [budgetJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#addBudget, [budgetJson]),
             ),
           )
-          as _i7.Future<String>);
+          as String);
+
+  @override
+  String deleteBudget(String? accountName) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteBudget, [accountName]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#deleteBudget, [accountName]),
+            ),
+          )
+          as String);
+
+  @override
+  String budgetReport(String? requestJson) =>
+      (super.noSuchMethod(
+            Invocation.method(#budgetReport, [requestJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#budgetReport, [requestJson]),
+            ),
+          )
+          as String);
+
+  @override
+  String addRate(String? rateJson) =>
+      (super.noSuchMethod(
+            Invocation.method(#addRate, [rateJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#addRate, [rateJson]),
+            ),
+          )
+          as String);
+
+  @override
+  String getRate(String? requestJson) =>
+      (super.noSuchMethod(
+            Invocation.method(#getRate, [requestJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#getRate, [requestJson]),
+            ),
+          )
+          as String);
+
+  @override
+  String accountList() =>
+      (super.noSuchMethod(
+            Invocation.method(#accountList, []),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#accountList, []),
+            ),
+          )
+          as String);
+
+  @override
+  String commodities() =>
+      (super.noSuchMethod(
+            Invocation.method(#commodities, []),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#commodities, []),
+            ),
+          )
+          as String);
+
+  @override
+  String getInvestmentReport(String? requestJson) =>
+      (super.noSuchMethod(
+            Invocation.method(#getInvestmentReport, [requestJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#getInvestmentReport, [requestJson]),
+            ),
+          )
+          as String);
+
+  @override
+  String getIncomeReport() =>
+      (super.noSuchMethod(
+            Invocation.method(#getIncomeReport, []),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#getIncomeReport, []),
+            ),
+          )
+          as String);
+
+  @override
+  String getSavingsReport(String? requestJson) =>
+      (super.noSuchMethod(
+            Invocation.method(#getSavingsReport, [requestJson]),
+            returnValue: _i9.dummyValue<String>(
+              this,
+              Invocation.method(#getSavingsReport, [requestJson]),
+            ),
+          )
+          as String);
 }
 
 /// A class which mocks [ITransactionService].
@@ -1135,6 +1218,14 @@ class MockIInvestmentService extends _i1.Mock
   }
 
   @override
+  _i7.Stream<void> get onChanged =>
+      (super.noSuchMethod(
+            Invocation.getter(#onChanged),
+            returnValue: _i7.Stream<void>.empty(),
+          )
+          as _i7.Stream<void>);
+
+  @override
   void setUserId(int? userId) => super.noSuchMethod(
     Invocation.method(#setUserId, [userId]),
     returnValueForMissingStub: null,
@@ -1227,12 +1318,14 @@ class MockIInvestmentService extends _i1.Mock
           as _i7.Future<_i2.InvestmentModel>);
 
   @override
-  _i7.Future<Map<String, String>?> getRoiIrrData() =>
+  _i7.Future<Map<String, dynamic>> getInvestmentReport({String? currency}) =>
       (super.noSuchMethod(
-            Invocation.method(#getRoiIrrData, []),
-            returnValue: _i7.Future<Map<String, String>?>.value(),
+            Invocation.method(#getInvestmentReport, [], {#currency: currency}),
+            returnValue: _i7.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
           )
-          as _i7.Future<Map<String, String>?>);
+          as _i7.Future<Map<String, dynamic>>);
 
   @override
   _i7.Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int? userId) =>

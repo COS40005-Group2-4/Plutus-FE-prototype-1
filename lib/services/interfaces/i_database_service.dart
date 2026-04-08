@@ -25,6 +25,7 @@ abstract class IDatabaseService {
   Future<List<Map<String, dynamic>>> getPostingsByTransactionId(int transactionId);
   Future<List<Map<String, dynamic>>> getTransactionsByUserId(int userId);
   Future<void> deleteTransaction(int transactionId);
+  Future<void> deleteTransactionById(String transactionId);
   Future<void> markTransactionAsSynced(int transactionId);
   Future<List<Map<String, dynamic>>> getUnsyncedTransactions(int userId);
 

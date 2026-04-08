@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../models/investment_model.dart';
 
 abstract class IInvestmentService {
@@ -13,4 +14,7 @@ abstract class IInvestmentService {
   Future<Map<String, dynamic>> getInvestmentReport({String? currency});
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId);
   Future<void> markInvestmentAsSynced(String investmentId);
+
+  /// Stream that fires whenever investment data changes (save/delete).
+  Stream<void> get onChanged;
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/investment_model.dart';
@@ -6,6 +7,7 @@ import 'interfaces/i_backend_ffi_service.dart';
 import 'interfaces/i_price_api_service.dart';
 import 'interfaces/i_database_service.dart';
 import 'interfaces/i_investment_service.dart';
+import 'journal_initializer.dart';
 import '../di/service_locator.dart';
 
 class InvestmentService implements IInvestmentService {
@@ -25,6 +27,12 @@ class InvestmentService implements IInvestmentService {
   DateTime? _lastFetchTime;
   int? _currentUserId;
   static const Duration _cacheExpiration = Duration(minutes: 5);
+
+  final StreamController<void> _changedController =
+      StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get onChanged => _changedController.stream;
 
   @override
   void setUserId(int userId) {
@@ -83,36 +91,18 @@ class InvestmentService implements IInvestmentService {
 
     debugPrint('InvestmentService: Deleting investment $investmentId');
 
-    // Get the investment before deleting so we can create a reversal posting
     try {
-      final existing = await _dbService.getInvestmentById(investmentId);
-      if (existing != null && _ffiService.isAvailable) {
-        // Create reversal transaction in the Go journal
-        final currency = existing['currency'] as String? ?? 'VND';
-        final amount = (existing['purchase_value'] as num?)?.toDouble() ?? 0.0;
-        final assetName = existing['asset_name'] as String? ?? '';
-        final quantity = (existing['quantity'] as num?)?.toDouble() ?? 0.0;
-
-        final reversalJson = jsonEncode({
-          'date': toCustomDate(DateTime.now()),
-          'payee': '',
-          'desc': 'Investment deletion reversal: $assetName',
-          'postings': [
-            {
-              'account': 'Assets:investment:$assetName',
-              'amount': {'value': -quantity, 'commodity': assetName},
-            },
-            {
-              'account': 'Assets:cash',
-              'amount': {'value': amount, 'commodity': currency},
-            },
-          ],
-        });
-        _ffiService.addInvestment(reversalJson);
-      }
+      // Delete the matching transaction from SQLite so journal stays in sync
+      final txId = 'inv_tx_$investmentId';
+      await _dbService.deleteTransactionById(txId);
 
       await _dbService.deleteInvestment(investmentId);
       clearCache();
+
+      // Rebuild Go journal from SQLite for consistency
+      await _rebuildJournal();
+
+      _changedController.add(null);
       debugPrint('InvestmentService: Delete successful');
     } catch (e) {
       debugPrint('InvestmentService: Delete failed - $e');
@@ -162,7 +152,7 @@ class InvestmentService implements IInvestmentService {
         priceHistory: priceHistory,
       );
 
-      // Persist to SQLite
+      // Persist investment metadata to SQLite
       if (_currentUserId != null) {
         await _dbService.insertInvestment(_currentUserId!, {
           'id': investmentWithPrices.id,
@@ -174,35 +164,38 @@ class InvestmentService implements IInvestmentService {
           'purchase_date': investmentWithPrices.purchaseDate.millisecondsSinceEpoch ~/ 1000,
           'current_price': investmentWithPrices.currentPrice,
         });
-      }
 
-      // Record the investment transaction in the Go journal
-      if (_ffiService.isAvailable) {
-        final txJson = jsonEncode({
-          'date': toCustomDate(investmentWithPrices.purchaseDate),
+        // Also persist the double-entry transaction so the Go journal
+        // can reconstruct it on app restart via JournalInitializer.
+        final currencyStr = investmentWithPrices.currency.name.toUpperCase();
+        await _dbService.insertTransaction(_currentUserId!, {
+          'transaction_id': 'inv_tx_${investmentWithPrices.id}',
+          'type': 'investment',
+          'amount': investmentWithPrices.purchaseValue,
+          'currency': currencyStr,
+          'description': 'Investment purchase: ${investmentWithPrices.assetName}',
           'payee': '',
-          'desc': 'Investment purchase: ${investmentWithPrices.assetName}',
+          'date': investmentWithPrices.purchaseDate.toIso8601String(),
           'postings': [
             {
               'account': 'Assets:investment:${investmentWithPrices.assetName}',
-              'amount': {
-                'value': investmentWithPrices.quantity,
-                'commodity': investmentWithPrices.assetName,
-              },
+              'amount': investmentWithPrices.quantity,
+              'commodity': investmentWithPrices.assetName,
             },
             {
               'account': 'Assets:cash',
-              'amount': {
-                'value': -investmentWithPrices.purchaseValue,
-                'commodity': investmentWithPrices.currency.name.toUpperCase(),
-              },
+              'amount': -investmentWithPrices.purchaseValue,
+              'commodity': currencyStr,
             },
           ],
         });
-        _ffiService.addInvestment(txJson);
       }
 
+      // Rebuild Go journal from full SQLite data so ROI/IRR picks up the change
+      await _rebuildJournal();
+
       clearCache();
+      _changedController.add(null);
       debugPrint('InvestmentService: Save successful with ID: ${investmentWithPrices.id}');
       return investmentWithPrices.id;
     } catch (e) {
@@ -276,9 +269,10 @@ class InvestmentService implements IInvestmentService {
 
     try {
       final now = DateTime.now();
-      final twoYearsAgo = DateTime(now.year - 2, now.month, now.day);
+      // Use a wide window (50 years) to capture all investments regardless of purchase date
+      final earliest = DateTime(now.year - 50, 1, 1);
       final requestJson = jsonEncode({
-        'start': toCustomDate(twoYearsAgo),
+        'start': toCustomDate(earliest),
         'end': toCustomDate(now),
         'currency': currency ?? 'VND',
       });
@@ -307,5 +301,15 @@ class InvestmentService implements IInvestmentService {
   @override
   Future<void> markInvestmentAsSynced(String investmentId) async {
     await _dbService.markInvestmentAsSynced(investmentId);
+  }
+
+  /// Rebuild the Go journal from the full SQLite dataset.
+  Future<void> _rebuildJournal() async {
+    try {
+      final journalInit = sl<JournalInitializer>();
+      await journalInit.initialize();
+    } catch (e) {
+      debugPrint('InvestmentService: Journal rebuild failed — $e');
+    }
   }
 }
