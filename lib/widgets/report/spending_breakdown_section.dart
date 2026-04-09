@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class SpendingBreakdownSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<SpendingCategoryData>? categories = data.spendingCategories;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.spendingBreakdown];
@@ -21,14 +23,14 @@ class SpendingBreakdownSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Spending Breakdown',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_spending'),
           icon: Icons.pie_chart_outline_rounded,
         ),
         if (categories == null || categories.isEmpty)
-          _buildEmpty()
+          _buildEmpty(l10n)
         else
-          _buildTable(categories),
+          _buildTable(categories, l10n),
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
@@ -38,19 +40,19 @@ class SpendingBreakdownSection extends StatelessWidget {
     );
   }
 
-  Widget _buildEmpty() {
-    return const Center(
+  Widget _buildEmpty(AppLocalizations l10n) {
+    return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
         child: Text(
-          'No spending data available',
-          style: TextStyle(color: Colors.white38, fontSize: 14),
+          l10n.translate('report_no_spending_data'),
+          style: const TextStyle(color: Colors.white38, fontSize: 14),
         ),
       ),
     );
   }
 
-  Widget _buildTable(List<SpendingCategoryData> categories) {
+  Widget _buildTable(List<SpendingCategoryData> categories, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
@@ -59,7 +61,7 @@ class SpendingBreakdownSection extends StatelessWidget {
       ),
       child: Column(
         children: <Widget>[
-          _buildHeaderRow(),
+          _buildHeaderRow(l10n),
           const Divider(height: 1, color: Colors.white12),
           ...categories
               .asMap()
@@ -78,9 +80,9 @@ class SpendingBreakdownSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderRow() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
+  Widget _buildHeaderRow(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
@@ -89,8 +91,8 @@ class SpendingBreakdownSection extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'CATEGORY',
-              style: TextStyle(
+              l10n.translate('report_col_category'),
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,
@@ -101,9 +103,9 @@ class SpendingBreakdownSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'AMOUNT',
+              l10n.translate('report_col_amount'),
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,
@@ -111,7 +113,7 @@ class SpendingBreakdownSection extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 1,
             child: Text(
               '%',
@@ -127,9 +129,9 @@ class SpendingBreakdownSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'MOM',
+              l10n.translate('report_col_mom'),
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,

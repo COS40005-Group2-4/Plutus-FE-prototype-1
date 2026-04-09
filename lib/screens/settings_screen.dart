@@ -169,7 +169,16 @@ class SettingsScreen extends StatelessWidget {
             if (snapshot.hasData && snapshot.data != null) {
               final sessionInfo = snapshot.data!;
               final daysUntilExpiry = sessionInfo['daysUntilExpiry'] as int?;
-              
+              final isVerificationDue = sessionInfo['isVerificationDue'] as bool? ?? false;
+
+              // Only show the offline banner when the session is unverified
+              // (i.e. the user hasn't been confirmed online recently).
+              // Right after a fresh sign-in, isVerificationDue is false,
+              // so we hide the banner.
+              if (daysUntilExpiry == null || !isVerificationDue) {
+                return const SizedBox.shrink();
+              }
+
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: GlassContainer(
@@ -185,9 +194,9 @@ class SettingsScreen extends StatelessWidget {
                           children: [
                             const Icon(Icons.offline_bolt, color: AppColors.primary),
                             const SizedBox(width: AppSpacing.sm),
-                            const Text(
-                              'Offline Access',
-                              style: TextStyle(
+                            Text(
+                              l10n.translate('settings_offline_access'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -197,13 +206,13 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(height: AppSpacing.md),
                         if (daysUntilExpiry != null)
                           Text(
-                            'You can use Plutus offline for $daysUntilExpiry more days',
+                            l10n.translate('settings_offline_days_remaining').replaceFirst('\$days', daysUntilExpiry.toString()),
                             style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
                           ),
                         const SizedBox(height: AppSpacing.sm),
-                        const Text(
-                          "You're using Plutus offline. We'll verify your account when you reconnect.",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        Text(
+                          l10n.translate('settings_offline_message'),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -251,9 +260,9 @@ class SettingsScreen extends StatelessWidget {
         // AI & OCR Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
-          child: const Text(
-            'AI & OCR',
-            style: TextStyle(
+          child: Text(
+            l10n.translate('settings_ai_ocr'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -278,15 +287,15 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.link, color: AppColors.primary),
             title: Text(l10n.linkGoogle),
-            subtitle: const Text('Back up your data and sync across devices'),
+            subtitle: Text(l10n.translate('settings_backup_subtitle')),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(l10n.linkGoogle),
-                  content: const Text(
-                    'Connect your Google account to back up your data and access it on any device.',
+                  content: Text(
+                    l10n.translate('settings_link_dialog'),
                   ),
                   actions: [
                     TextButton(
@@ -295,7 +304,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Link Account'),
+                      child: Text(l10n.translate('settings_link_account')),
                     ),
                   ],
                 ),
@@ -308,8 +317,8 @@ class SettingsScreen extends StatelessWidget {
                     SnackBar(
                       content: Text(
                         success
-                            ? 'Google account connected!'
-                            : "Couldn't connect your Google account",
+                            ? l10n.translate('settings_google_connected')
+                            : l10n.translate('settings_google_error'),
                       ),
                     ),
                   );
@@ -321,15 +330,15 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.link_off, color: Colors.orange),
             title: Text(l10n.unlinkGoogle),
-            subtitle: const Text('Store data on this device only'),
+            subtitle: Text(l10n.translate('settings_local_subtitle')),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(l10n.unlinkGoogle),
-                  content: const Text(
-                    'This will disconnect your Google account. Your data will remain on this device.',
+                  content: Text(
+                    l10n.translate('settings_unlink_dialog'),
                   ),
                   actions: [
                     TextButton(
@@ -339,7 +348,7 @@ class SettingsScreen extends StatelessWidget {
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: TextButton.styleFrom(foregroundColor: Colors.orange),
-                      child: const Text('Unlink'),
+                      child: Text(l10n.translate('settings_unlink')),
                     ),
                   ],
                 ),
@@ -349,8 +358,8 @@ class SettingsScreen extends StatelessWidget {
                 await authProvider.unlinkOAuthAccount();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Google account disconnected'),
+                    SnackBar(
+                      content: Text(l10n.translate('settings_google_disconnected')),
                     ),
                   );
                 }
@@ -427,12 +436,12 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 40),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            'Sign in to back up your data and access it from any device.',
+            l10n.translate('settings_guest_message'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               color: Colors.grey,
             ),
@@ -590,6 +599,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildOcrModeSelector(BuildContext context, SettingsProvider settingsProvider) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
       child: GlassContainer(
@@ -599,9 +609,9 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Scanning Mode',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            Text(
+              l10n.translate('settings_scanning_mode'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<OCRMode>(
@@ -610,10 +620,10 @@ class SettingsScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              items: const [
-                DropdownMenuItem(value: OCRMode.auto, child: Text('Auto (recommended)')),
-                DropdownMenuItem(value: OCRMode.online, child: Text('Online only')),
-                DropdownMenuItem(value: OCRMode.offline, child: Text('Offline only')),
+              items: [
+                DropdownMenuItem(value: OCRMode.auto, child: Text(l10n.translate('settings_ocr_auto'))),
+                DropdownMenuItem(value: OCRMode.online, child: Text(l10n.translate('settings_ocr_online'))),
+                DropdownMenuItem(value: OCRMode.offline, child: Text(l10n.translate('settings_ocr_offline'))),
               ],
               onChanged: (val) {
                 if (val != null) settingsProvider.setOcrMode(val);
@@ -622,10 +632,10 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               settingsProvider.ocrMode == OCRMode.auto
-                  ? 'Picks the best OCR engine automatically based on connectivity'
+                  ? l10n.translate('settings_ocr_auto_desc')
                   : settingsProvider.ocrMode == OCRMode.online
-                      ? 'Uses AWS Textract (requires internet)'
-                      : 'Uses Tesseract/ML Kit (no internet needed)',
+                      ? l10n.translate('settings_ocr_online_desc')
+                      : l10n.translate('settings_ocr_offline_desc'),
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
@@ -638,6 +648,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildAiPrivacySelector(BuildContext context, SettingsProvider settingsProvider) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
       child: GlassContainer(
@@ -647,9 +658,9 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'AI Data Privacy',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            Text(
+              l10n.translate('settings_ai_data_privacy'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<PrivacyLevel>(
@@ -658,10 +669,10 @@ class SettingsScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              items: const [
-                DropdownMenuItem(value: PrivacyLevel.minimal, child: Text('Minimal — category totals only')),
-                DropdownMenuItem(value: PrivacyLevel.standard, child: Text('Standard (recommended)')),
-                DropdownMenuItem(value: PrivacyLevel.full, child: Text('Full — individual transactions')),
+              items: [
+                DropdownMenuItem(value: PrivacyLevel.minimal, child: Text(l10n.translate('settings_privacy_minimal'))),
+                DropdownMenuItem(value: PrivacyLevel.standard, child: Text(l10n.translate('settings_privacy_standard'))),
+                DropdownMenuItem(value: PrivacyLevel.full, child: Text(l10n.translate('settings_privacy_full'))),
               ],
               onChanged: (val) {
                 if (val != null) settingsProvider.setPrivacyLevel(val);
@@ -670,10 +681,10 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               settingsProvider.privacyLevel == PrivacyLevel.minimal
-                  ? 'Only sends category totals to AI — most private, basic insights'
+                  ? l10n.translate('settings_privacy_minimal_desc')
                   : settingsProvider.privacyLevel == PrivacyLevel.standard
-                      ? 'Sends category totals and top merchants — good balance of privacy and insight quality'
-                      : 'Sends individual transactions — richest, most personalized insights',
+                      ? l10n.translate('settings_privacy_standard_desc')
+                      : l10n.translate('settings_privacy_full_desc'),
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),

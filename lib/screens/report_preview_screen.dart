@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/report_provider.dart';
 import '../models/report_config.dart';
 import '../models/report_data.dart';
@@ -24,6 +25,7 @@ class ReportPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final ReportProvider provider = context.watch<ReportProvider>();
     final ReportDataModel? data = provider.reportData;
 
@@ -32,9 +34,9 @@ class ReportPreviewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surfaceDark,
         elevation: 0,
-        title: const Text(
-          'Report Preview',
-          style: TextStyle(
+        title: Text(
+          l10n.translate('report_preview'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -47,13 +49,13 @@ class ReportPreviewScreen extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.share_outlined, color: Colors.white70),
-            tooltip: 'Share',
+            tooltip: l10n.translate('report_share'),
             onPressed: data == null
                 ? null
                 : () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Share feature coming soon'),
+                      SnackBar(
+                        content: Text(l10n.translate('report_share_soon')),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -63,7 +65,7 @@ class ReportPreviewScreen extends StatelessWidget {
         ],
       ),
       body: data == null
-          ? _buildEmpty(provider)
+          ? _buildEmpty(context, provider)
           : _buildContent(context, data),
       floatingActionButton: data == null
           ? null
@@ -71,15 +73,17 @@ class ReportPreviewScreen extends StatelessWidget {
               onPressed: () => _exportPdf(context, provider),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
-              label: const Text(
-                'Export PDF',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.translate('report_export_pdf'),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
             ),
     );
   }
 
-  Widget _buildEmpty(ReportProvider provider) {
+  Widget _buildEmpty(BuildContext context, ReportProvider provider) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     if (provider.isGenerating) {
       return Center(
         child: Column(
@@ -87,9 +91,9 @@ class ReportPreviewScreen extends StatelessWidget {
           children: <Widget>[
             const CircularProgressIndicator(color: AppColors.primary),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
-              'Generating report...',
-              style: TextStyle(color: Colors.white54, fontSize: 14),
+            Text(
+              l10n.translate('report_generating_loading'),
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
             if (provider.progress > 0) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
@@ -128,24 +132,24 @@ class ReportPreviewScreen extends StatelessWidget {
       );
     }
 
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.description_outlined, color: Colors.white24, size: 64),
-          SizedBox(height: AppSpacing.lg),
+          const Icon(Icons.description_outlined, color: Colors.white24, size: 64),
+          const SizedBox(height: AppSpacing.lg),
           Text(
-            'No report data',
-            style: TextStyle(
+            l10n.translate('report_no_data'),
+            style: const TextStyle(
               color: Colors.white38,
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Text(
-            'Configure and generate a report first.',
-            style: TextStyle(color: Colors.white24, fontSize: 13),
+            l10n.translate('report_no_data_subtitle'),
+            style: const TextStyle(color: Colors.white24, fontSize: 13),
           ),
         ],
       ),
@@ -205,14 +209,16 @@ class ReportPreviewScreen extends StatelessWidget {
     final String? path = await provider.exportPdf();
     if (!context.mounted) return;
 
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     if (path != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('PDF saved to $path'),
+          content: Text('${l10n.translate('report_pdf_saved')} $path'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.success,
           action: SnackBarAction(
-            label: 'OK',
+            label: l10n.translate('ok'),
             textColor: Colors.white,
             onPressed: () {},
           ),
@@ -222,7 +228,7 @@ class ReportPreviewScreen extends StatelessWidget {
       final String errorMsg = provider.error ?? 'Unknown error';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('PDF export failed: $errorMsg'),
+          content: Text('${l10n.translate('report_pdf_failed')}: $errorMsg'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 8),

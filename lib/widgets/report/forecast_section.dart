@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../models/ai/insight.dart';
@@ -15,6 +16,7 @@ class ForecastSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final Forecast? forecast = data.forecast;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.forecast];
@@ -22,17 +24,17 @@ class ForecastSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Forecast',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_forecast'),
           icon: Icons.auto_graph_rounded,
         ),
         if (forecast == null)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No forecast data available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_forecast_data'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )

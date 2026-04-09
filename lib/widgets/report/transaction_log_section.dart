@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
 import '../../models/transaction_model.dart';
 import '../../theme/app_colors.dart';
@@ -13,27 +14,28 @@ class TransactionLogSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<Transaction>? transactions = data.transactions;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Transaction Log',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_transactions'),
           icon: Icons.receipt_long_outlined,
         ),
         if (transactions == null || transactions.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No transactions available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_transactions'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )
         else ...<Widget>[
-          _buildHeaderRow(),
+          _buildHeaderRow(l10n),
           const Divider(height: 1, color: Colors.white12),
           ...transactions.map((Transaction t) => _buildTransactionRow(t)),
         ],
@@ -41,9 +43,9 @@ class TransactionLogSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderRow() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
+  Widget _buildHeaderRow(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.sm,
       ),
@@ -52,8 +54,8 @@ class TransactionLogSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'DATE',
-              style: TextStyle(
+              l10n.translate('report_col_date'),
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,
@@ -64,8 +66,8 @@ class TransactionLogSection extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'PAYEE',
-              style: TextStyle(
+              l10n.translate('report_col_payee'),
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,
@@ -76,8 +78,8 @@ class TransactionLogSection extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'ACCOUNT',
-              style: TextStyle(
+              l10n.translate('report_col_account'),
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,
@@ -88,9 +90,9 @@ class TransactionLogSection extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'AMOUNT',
+              l10n.translate('report_col_amount'),
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
                 color: Colors.white38,
                 letterSpacing: 1,

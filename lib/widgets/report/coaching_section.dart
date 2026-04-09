@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../models/ai/insight.dart';
@@ -15,6 +16,7 @@ class CoachingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<CoachingTip>? tips = data.coachingTips;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.coaching];
@@ -22,24 +24,24 @@ class CoachingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Financial Coaching',
+        ReportSectionHeader(
+          title: l10n.translate('report_financial_coaching'),
           icon: Icons.school_outlined,
         ),
         if (tips == null || tips.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No coaching tips available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_coaching'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )
         else
           Column(
             children: tips
-                .map((CoachingTip tip) => _buildTipCard(tip))
+                .map((CoachingTip tip) => _buildTipCard(tip, l10n))
                 .toList(),
           ),
         if (rec != null)
@@ -51,9 +53,9 @@ class CoachingSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTipCard(CoachingTip tip) {
+  Widget _buildTipCard(CoachingTip tip, AppLocalizations l10n) {
     final Color diffColor = _difficultyColor(tip.difficulty);
-    final String diffLabel = _difficultyLabel(tip.difficulty);
+    final String diffLabel = _difficultyLabel(tip.difficulty, l10n);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -118,7 +120,7 @@ class CoachingSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Potential savings: ${tip.savingsEstimate!.toStringAsFixed(0)}/mo',
+                  '${l10n.translate('report_potential_savings')}${tip.savingsEstimate!.toStringAsFixed(0)}${l10n.translate('report_per_month')}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.savingsAccent,
@@ -144,14 +146,14 @@ class CoachingSection extends StatelessWidget {
     }
   }
 
-  String _difficultyLabel(CoachingDifficulty difficulty) {
+  String _difficultyLabel(CoachingDifficulty difficulty, AppLocalizations l10n) {
     switch (difficulty) {
       case CoachingDifficulty.easy:
-        return 'EASY';
+        return l10n.translate('report_difficulty_easy');
       case CoachingDifficulty.medium:
-        return 'MEDIUM';
+        return l10n.translate('report_difficulty_medium');
       case CoachingDifficulty.hard:
-        return 'HARD';
+        return l10n.translate('report_difficulty_hard');
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<InvestmentHoldingData>? holdings = data.holdings;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.investmentPortfolio];
@@ -21,19 +23,19 @@ class InvestmentPortfolioSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Investment Portfolio',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_investments'),
           icon: Icons.candlestick_chart_outlined,
         ),
         if (data.portfolioTotalValue != null)
-          _buildPortfolioSummary(),
+          _buildPortfolioSummary(l10n),
         if (holdings == null || holdings.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No portfolio data available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_investment_data'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )
@@ -50,7 +52,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
     );
   }
 
-  Widget _buildPortfolioSummary() {
+  Widget _buildPortfolioSummary(AppLocalizations l10n) {
     final double? totalValue = data.portfolioTotalValue;
     final double? returnPct = data.portfolioReturnPercent;
     final double? totalGain = data.portfolioTotalGain;
@@ -69,9 +71,9 @@ class InvestmentPortfolioSection extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Text(
-                'TOTAL VALUE',
-                style: TextStyle(
+              Text(
+                l10n.translate('report_total_value'),
+                style: const TextStyle(
                   fontSize: 10,
                   color: Colors.white38,
                   letterSpacing: 1,

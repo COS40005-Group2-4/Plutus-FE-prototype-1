@@ -15,10 +15,17 @@ class InsightsService implements IInsightsService {
     required List<String> requestedTypes,
     required Map<String, dynamic> data,
   }) async {
+    final String functionUrl = AIConfig.insightsFunctionUrl;
     final String apiUrl = AIConfig.apiGatewayUrl;
     final String apiKey = AIConfig.apiKey;
 
-    if (apiUrl.isEmpty) {
+    // Prefer the direct Lambda Function URL (no 29s API Gateway timeout).
+    // Fall back to API Gateway /insights if function URL is not configured.
+    final String url = functionUrl.isNotEmpty
+        ? functionUrl
+        : '$apiUrl/insights';
+
+    if (url.isEmpty || (functionUrl.isEmpty && apiUrl.isEmpty)) {
       throw Exception('AI API Gateway URL not configured');
     }
 
@@ -31,13 +38,14 @@ class InsightsService implements IInsightsService {
 
     try {
       final http.Response response = await http.post(
-        Uri.parse('$apiUrl/insights'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          if (apiKey.isNotEmpty) 'x-api-key': apiKey,
+          // API key only needed for API Gateway, not Function URL
+          if (functionUrl.isEmpty && apiKey.isNotEmpty) 'x-api-key': apiKey,
         },
         body: jsonEncode(requestBody),
-      ).timeout(const Duration(seconds: 60));
+      ).timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json =

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class IncomeAnalysisSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<IncomeSourceData>? sources = data.incomeSources;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.incomeAnalysis];
@@ -28,8 +30,8 @@ class IncomeAnalysisSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Income Analysis',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_income'),
           icon: Icons.trending_up_rounded,
         ),
         Container(
@@ -47,9 +49,9 @@ class IncomeAnalysisSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text(
-                      'TOTAL INCOME',
-                      style: TextStyle(
+                    Text(
+                      l10n.translate('report_total_income'),
+                      style: const TextStyle(
                         fontSize: 10,
                         color: Colors.white38,
                         letterSpacing: 1,
@@ -81,9 +83,9 @@ class IncomeAnalysisSection extends StatelessWidget {
                           : AppColors.expenseAccent,
                     ),
                   ),
-                  const Text(
-                    'vs prev period',
-                    style: TextStyle(fontSize: 11, color: Colors.white38),
+                  Text(
+                    l10n.translate('report_vs_prev_period'),
+                    style: const TextStyle(fontSize: 11, color: Colors.white38),
                   ),
                 ],
               ),
@@ -91,12 +93,12 @@ class IncomeAnalysisSection extends StatelessWidget {
           ),
         ),
         if (sources == null || sources.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
               child: Text(
-                'No income source breakdown available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_income_data'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )

@@ -2469,13 +2469,19 @@ class MockIReportPdfService extends _i1.Mock implements _i34.IReportPdfService {
   }
 
   @override
-  _i7.Future<String> generatePdf({required _i33.ReportDataModel? data}) =>
+  _i7.Future<String> generatePdf({
+    required _i33.ReportDataModel? data,
+    String? locale = 'en',
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#generatePdf, [], {#data: data}),
+            Invocation.method(#generatePdf, [], {#data: data, #locale: locale}),
             returnValue: _i7.Future<String>.value(
               _i9.dummyValue<String>(
                 this,
-                Invocation.method(#generatePdf, [], {#data: data}),
+                Invocation.method(#generatePdf, [], {
+                  #data: data,
+                  #locale: locale,
+                }),
               ),
             ),
           )
@@ -2484,9 +2490,13 @@ class MockIReportPdfService extends _i1.Mock implements _i34.IReportPdfService {
   @override
   _i7.Future<_i35.Uint8List> generatePdfBytes({
     required _i33.ReportDataModel? data,
+    String? locale = 'en',
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#generatePdfBytes, [], {#data: data}),
+            Invocation.method(#generatePdfBytes, [], {
+              #data: data,
+              #locale: locale,
+            }),
             returnValue: _i7.Future<_i35.Uint8List>.value(_i35.Uint8List(0)),
           )
           as _i7.Future<_i35.Uint8List>);

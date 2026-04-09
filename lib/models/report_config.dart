@@ -50,6 +50,7 @@ class ReportConfig extends Equatable {
   final AudienceMode audienceMode;
   final bool aiEnabled;
   final Set<ReportSection> aiDisabledSections;
+  final String reportLocale;
 
   const ReportConfig({
     required this.enabledSections,
@@ -57,6 +58,7 @@ class ReportConfig extends Equatable {
     this.audienceMode = AudienceMode.personal,
     this.aiEnabled = true,
     this.aiDisabledSections = const <ReportSection>{},
+    this.reportLocale = 'en',
   });
 
   bool aiEnabledForSection(ReportSection section) {
@@ -72,6 +74,7 @@ class ReportConfig extends Equatable {
     AudienceMode? audienceMode,
     bool? aiEnabled,
     Set<ReportSection>? aiDisabledSections,
+    String? reportLocale,
   }) {
     return ReportConfig(
       enabledSections: enabledSections ?? this.enabledSections,
@@ -79,6 +82,7 @@ class ReportConfig extends Equatable {
       audienceMode: audienceMode ?? this.audienceMode,
       aiEnabled: aiEnabled ?? this.aiEnabled,
       aiDisabledSections: aiDisabledSections ?? this.aiDisabledSections,
+      reportLocale: reportLocale ?? this.reportLocale,
     );
   }
 
@@ -89,6 +93,7 @@ class ReportConfig extends Equatable {
         audienceMode,
         aiEnabled,
         aiDisabledSections,
+        reportLocale,
       ];
 }
 

@@ -99,6 +99,7 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage>
         options: options,
         transactions: _transactions,
         user: user,
+        locale: AppLocalizations.of(context).locale.languageCode,
       );
 
       if (!mounted) return;

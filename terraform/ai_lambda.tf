@@ -146,6 +146,20 @@ resource "aws_lambda_function" "ai_insights" {
   tags = { Project = "Plutus", Component = "AI" }
 }
 
+# Lambda Function URL for insights (bypasses API Gateway 29s timeout)
+resource "aws_lambda_function_url" "ai_insights" {
+  function_name      = aws_lambda_function.ai_insights.function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["*"]
+    allow_methods     = ["POST"]
+    allow_headers     = ["Content-Type"]
+    max_age           = 86400
+  }
+}
+
 # ── Report Insights Lambda ──
 
 resource "aws_iam_role" "ai_report_insights_role" {

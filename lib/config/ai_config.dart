@@ -15,6 +15,15 @@ class AIConfig {
         defaultValue: '',
       );
 
+  /// Lambda Function URL for insights — bypasses API Gateway's 29s timeout.
+  /// Falls back to the API Gateway URL if not set.
+  static String get insightsFunctionUrl =>
+      dotenv.env['INSIGHTS_FUNCTION_URL'] ??
+      const String.fromEnvironment(
+        'INSIGHTS_FUNCTION_URL',
+        defaultValue: '',
+      );
+
   static bool get isConfigured =>
       apiGatewayUrl.isNotEmpty && apiKey.isNotEmpty;
 }

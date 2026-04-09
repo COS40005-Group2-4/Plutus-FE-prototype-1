@@ -253,6 +253,7 @@ class GoogleAuthService implements IGoogleAuthService {
     } catch (e) {
       debugPrint('Sign-out Error: $e');
     }
+    _isHandlingCallback = false;
     await _clearSession();
   }
 
@@ -353,18 +354,19 @@ class GoogleAuthService implements IGoogleAuthService {
         if (kDebugMode) {
           debugPrint('OAuth error: $error');
         }
+        _isHandlingCallback = false;
         WebHelper.replaceState(WebHelper.currentPath);
         return;
       }
-      
+
       if (code != null) {
         _exchangeCodeForToken(code).then((data) async {
           if (data != null && data['access_token'] != null) {
             final accessToken = data['access_token'] as String;
             await _fetchAndStoreUserInfo(accessToken);
-            
+
             WebHelper.replaceState(WebHelper.currentPath);
-            
+
             _authStateController.add(gsi.GoogleSignInCredentials(
               accessToken: accessToken,
               idToken: data['id_token'] as String?,
@@ -376,10 +378,12 @@ class GoogleAuthService implements IGoogleAuthService {
           } else {
             WebHelper.replaceState(WebHelper.currentPath);
           }
+          _isHandlingCallback = false;
         }).catchError((e) {
           if (kDebugMode) {
             debugPrint('Error exchanging code: $e');
           }
+          _isHandlingCallback = false;
           WebHelper.replaceState(WebHelper.currentPath);
         });
       }

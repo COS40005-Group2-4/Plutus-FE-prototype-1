@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class TopMerchantsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<MerchantData>? merchants = data.topMerchants;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.topMerchants];
@@ -21,17 +23,17 @@ class TopMerchantsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Top Merchants',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_merchants'),
           icon: Icons.store_outlined,
         ),
         if (merchants == null || merchants.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No merchant data available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_merchant_data'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )
@@ -41,7 +43,7 @@ class TopMerchantsSection extends StatelessWidget {
                 .asMap()
                 .entries
                 .map((MapEntry<int, MerchantData> entry) =>
-                    _buildMerchantRow(entry.value, entry.key))
+                    _buildMerchantRow(entry.value, entry.key, l10n))
                 .toList(),
           ),
         if (rec != null)
@@ -53,7 +55,7 @@ class TopMerchantsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildMerchantRow(MerchantData merchant, int index) {
+  Widget _buildMerchantRow(MerchantData merchant, int index, AppLocalizations l10n) {
     final bool changeUp = merchant.changePercent > 0;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -98,7 +100,7 @@ class TopMerchantsSection extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${merchant.category} • ${merchant.transactionCount} txns',
+                  '${merchant.category} • ${merchant.transactionCount} ${l10n.translate('report_col_txns').toLowerCase()}',
                   style: const TextStyle(fontSize: 12, color: Colors.white38),
                 ),
               ],

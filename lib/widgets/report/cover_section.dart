@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -13,6 +14,7 @@ class CoverSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final DateFormat rangeFmt = DateFormat('MMM d, yyyy');
     final String rangeText =
         '${rangeFmt.format(data.config.dateRange.start)} – '
@@ -54,8 +56,8 @@ class CoverSection extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       data.config.audienceMode.name == 'professional'
-                          ? 'Financial Report'
-                          : 'Personal Finance Report',
+                          ? l10n.translate('report_financial_report')
+                          : l10n.translate('report_personal_finance_report'),
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -93,7 +95,7 @@ class CoverSection extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: ReportMetricCard(
-                  label: 'TOTAL INCOME',
+                  label: l10n.translate('report_total_income'),
                   value: data.formatAmount(data.totalIncome),
                   accentColor: AppColors.incomeAccent,
                 ),
@@ -101,7 +103,7 @@ class CoverSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: ReportMetricCard(
-                  label: 'TOTAL EXPENSES',
+                  label: l10n.translate('report_total_expenses'),
                   value: data.formatAmount(data.totalExpenses),
                   accentColor: AppColors.expenseAccent,
                 ),
@@ -109,7 +111,7 @@ class CoverSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: ReportMetricCard(
-                  label: 'HEALTH SCORE',
+                  label: l10n.translate('report_health_score'),
                   value: data.healthScore != null
                       ? '${data.healthScore!.score}/100'
                       : 'N/A',

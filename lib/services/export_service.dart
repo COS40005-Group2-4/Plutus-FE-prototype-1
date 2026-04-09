@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../l10n/report_strings.dart';
 import '../models/transaction_model.dart';
 import '../models/user_model.dart';
 
@@ -85,9 +86,11 @@ class ExportService {
     required ExportOptions options,
     required List<Transaction> transactions,
     required User? user,
+    String locale = 'en',
   }) async {
     // Load Vietnamese-compatible fonts
     await _loadFonts();
+    final ReportStrings s = ReportStrings(locale);
     // Filter transactions by date range if provided
     List<Transaction> filteredTransactions = _filterTransactionsByDate(
       transactions,
@@ -115,6 +118,7 @@ class ExportService {
         options: options,
         transactions: filteredTransactions,
         user: user,
+        s: s,
       );
     } else {
       txtContent = await _generateTxt(
@@ -122,6 +126,7 @@ class ExportService {
         options: options,
         transactions: filteredTransactions,
         user: user,
+        s: s,
       );
     }
 
@@ -197,18 +202,19 @@ class ExportService {
     required ExportOptions options,
     required List<Transaction> transactions,
     required User? user,
+    required ReportStrings s,
   }) async {
     final pdf = pw.Document();
 
     // Add pages based on content selection
     if (options.content == ExportContent.userData || options.content == ExportContent.both) {
       if (user != null) {
-        _addUserDataPage(pdf, user);
+        _addUserDataPage(pdf, user, s);
       }
     }
 
     if (options.content == ExportContent.transactions || options.content == ExportContent.both) {
-      _addTransactionsPages(pdf, transactions, options);
+      _addTransactionsPages(pdf, transactions, options, s);
     }
 
     // Save PDF
@@ -218,7 +224,7 @@ class ExportService {
     return pdf;
   }
 
-  void _addUserDataPage(pw.Document pdf, User user) {
+  void _addUserDataPage(pw.Document pdf, User user, ReportStrings s) {
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -230,27 +236,27 @@ class ExportService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              _buildPdfHeader('User Information'),
+              _buildPdfHeader(s.tr('export_user_information'), s),
               pw.SizedBox(height: 30),
-              _buildPdfInfoRow('User ID:', user.id.toString()),
-              _buildPdfInfoRow('Username:', user.username),
-              _buildPdfInfoRow('Display Name:', user.displayName),
+              _buildPdfInfoRow('${s.tr('export_user_id')}:', user.id.toString()),
+              _buildPdfInfoRow('${s.tr('export_username')}:', user.username),
+              _buildPdfInfoRow('${s.tr('export_display_name')}:', user.displayName),
               if (user.email != null)
-                _buildPdfInfoRow('Email:', user.email!),
-              _buildPdfInfoRow('Account Type:', user.isGuest ? 'Guest' : 'Registered'),
+                _buildPdfInfoRow('${s.tr('export_email')}:', user.email!),
+              _buildPdfInfoRow('${s.tr('export_account_type')}:', user.isGuest ? s.tr('export_guest') : s.tr('export_registered')),
               if (user.oauthProvider != null)
-                _buildPdfInfoRow('OAuth Provider:', user.oauthProvider!),
+                _buildPdfInfoRow('${s.tr('export_oauth_provider')}:', user.oauthProvider!),
               _buildPdfInfoRow(
-                'Account Created:',
+                '${s.tr('export_account_created')}:',
                 DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdAt),
               ),
               _buildPdfInfoRow(
-                'Last Login:',
+                '${s.tr('export_last_login')}:',
                 DateFormat('yyyy-MM-dd HH:mm:ss').format(user.lastLogin),
               ),
-              _buildPdfInfoRow('Status:', user.isActive ? 'Active' : 'Inactive'),
+              _buildPdfInfoRow('${s.tr('export_status')}:', user.isActive ? s.tr('export_active') : s.tr('export_inactive')),
               pw.SizedBox(height: 30),
-              _buildPdfFooter(),
+              _buildPdfFooter(s),
             ],
           );
         },
@@ -262,6 +268,7 @@ class ExportService {
     pw.Document pdf,
     List<Transaction> transactions,
     ExportOptions options,
+    ReportStrings s,
   ) {
     // Calculate summary statistics
     final totalTransactions = transactions.length;
@@ -284,27 +291,27 @@ class ExportService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              _buildPdfHeader('Transaction Summary'),
+              _buildPdfHeader(s.tr('export_transaction_summary'), s),
               pw.SizedBox(height: 30),
               if (options.startDate != null || options.endDate != null) ...[
                 pw.Text(
-                  'Period: ${_formatDateRange(options.startDate, options.endDate)}',
+                  '${s.tr('export_period')}: ${_formatDateRange(options.startDate, options.endDate)}',
                   style: _getTextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
               ],
-              _buildPdfInfoRow('Total Transactions:', totalTransactions.toString()),
-              _buildPdfInfoRow('Total Expenses:', _formatCurrency(totalExpenses)),
-              _buildPdfInfoRow('Total Income:', _formatCurrency(totalIncome)),
+              _buildPdfInfoRow('${s.tr('export_total_transactions')}:', totalTransactions.toString()),
+              _buildPdfInfoRow('${s.tr('report_total_expenses')}:', _formatCurrency(totalExpenses)),
+              _buildPdfInfoRow('${s.tr('report_total_income')}:', _formatCurrency(totalIncome)),
               _buildPdfInfoRow(
-                'Net Amount:',
+                '${s.tr('export_net_amount')}:',
                 _formatCurrency(totalIncome - totalExpenses),
               ),
               pw.SizedBox(height: 30),
               pw.Divider(thickness: 2),
               pw.SizedBox(height: 20),
               pw.Text(
-                'Transaction Details',
+                s.tr('export_transaction_details'),
                 style: _getTextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
@@ -318,7 +325,7 @@ class ExportService {
     const itemsPerPage = 15;
     for (int i = 0; i < transactions.length; i += itemsPerPage) {
       final pageTransactions = transactions.skip(i).take(itemsPerPage).toList();
-      _addTransactionDetailPage(pdf, pageTransactions, i + 1, transactions.length);
+      _addTransactionDetailPage(pdf, pageTransactions, i + 1, transactions.length, s);
     }
   }
 
@@ -327,6 +334,7 @@ class ExportService {
     List<Transaction> transactions,
     int startIndex,
     int totalCount,
+    ReportStrings s,
   ) {
     pdf.addPage(
       pw.Page(
@@ -340,7 +348,7 @@ class ExportService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'Transactions ($startIndex - ${startIndex + transactions.length - 1} of $totalCount)',
+                '${s.tr('report_transactions')} ($startIndex - ${startIndex + transactions.length - 1} of $totalCount)',
                 style: _getTextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 15),
@@ -357,10 +365,10 @@ class ExportService {
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: PdfColors.grey300),
                     children: [
-                      _buildTableCell('Date', isHeader: true),
-                      _buildTableCell('Description', isHeader: true),
-                      _buildTableCell('Amount', isHeader: true),
-                      _buildTableCell('Type', isHeader: true),
+                      _buildTableCell(s.tr('report_col_date'), isHeader: true),
+                      _buildTableCell(s.tr('report_col_description'), isHeader: true),
+                      _buildTableCell(s.tr('report_col_amount'), isHeader: true),
+                      _buildTableCell(s.tr('export_col_type'), isHeader: true),
                     ],
                   ),
                   // Data rows
@@ -372,14 +380,14 @@ class ExportService {
                         _buildTableCell(
                           '${tx.isExpense ? '-' : '+'}${_formatCurrency(tx.totalAmount)} ${tx.currency}',
                         ),
-                        _buildTableCell(tx.isExpense ? 'Expense' : 'Income'),
+                        _buildTableCell(tx.isExpense ? s.tr('export_expense') : s.tr('export_income')),
                       ],
                     );
                   }),
                 ],
               ),
               pw.Spacer(),
-              _buildPdfFooter(),
+              _buildPdfFooter(s),
             ],
           );
         },
@@ -387,12 +395,12 @@ class ExportService {
     );
   }
 
-  pw.Widget _buildPdfHeader(String title) {
+  pw.Widget _buildPdfHeader(String title, ReportStrings s) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Plutus Financial Report',
+          'PLUTUS ${s.tr('report_financial_report').toUpperCase()}',
           style: _getTextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 5),
@@ -443,13 +451,13 @@ class ExportService {
     );
   }
 
-  pw.Widget _buildPdfFooter() {
+  pw.Widget _buildPdfFooter(ReportStrings s) {
     return pw.Column(
       children: [
         pw.Divider(),
         pw.SizedBox(height: 5),
         pw.Text(
-          'Generated on ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}',
+          '${s.tr('report_generated_on')}${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}',
           style: _getTextStyle(fontSize: 8, color: PdfColors.grey600),
         ),
       ],
@@ -461,44 +469,45 @@ class ExportService {
     required ExportOptions options,
     required List<Transaction> transactions,
     required User? user,
+    required ReportStrings s,
   }) async {
     final buffer = StringBuffer();
 
     // Add header
     buffer.writeln('=' * 80);
-    buffer.writeln('PLUTUS FINANCIAL REPORT');
-    buffer.writeln('Generated on: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}');
+    buffer.writeln('PLUTUS ${s.tr('report_financial_report').toUpperCase()}');
+    buffer.writeln('${s.tr('report_generated_on')}${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}');
     buffer.writeln('=' * 80);
     buffer.writeln();
 
     // Add user data if requested
     if ((options.content == ExportContent.userData || options.content == ExportContent.both) && user != null) {
-      buffer.writeln('USER INFORMATION');
+      buffer.writeln(s.tr('export_user_information').toUpperCase());
       buffer.writeln('-' * 80);
-      buffer.writeln('User ID:          ${user.id}');
-      buffer.writeln('Username:         ${user.username}');
-      buffer.writeln('Display Name:     ${user.displayName}');
+      buffer.writeln('${s.tr('export_user_id')}:          ${user.id}');
+      buffer.writeln('${s.tr('export_username')}:         ${user.username}');
+      buffer.writeln('${s.tr('export_display_name')}:     ${user.displayName}');
       if (user.email != null) {
-        buffer.writeln('Email:            ${user.email}');
+        buffer.writeln('${s.tr('export_email')}:            ${user.email}');
       }
-      buffer.writeln('Account Type:     ${user.isGuest ? 'Guest' : 'Registered'}');
+      buffer.writeln('${s.tr('export_account_type')}:     ${user.isGuest ? s.tr('export_guest') : s.tr('export_registered')}');
       if (user.oauthProvider != null) {
-        buffer.writeln('OAuth Provider:   ${user.oauthProvider}');
+        buffer.writeln('${s.tr('export_oauth_provider')}:   ${user.oauthProvider}');
       }
-      buffer.writeln('Account Created:  ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdAt)}');
-      buffer.writeln('Last Login:       ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.lastLogin)}');
-      buffer.writeln('Status:           ${user.isActive ? 'Active' : 'Inactive'}');
+      buffer.writeln('${s.tr('export_account_created')}:  ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdAt)}');
+      buffer.writeln('${s.tr('export_last_login')}:       ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.lastLogin)}');
+      buffer.writeln('${s.tr('export_status')}:           ${user.isActive ? s.tr('export_active') : s.tr('export_inactive')}');
       buffer.writeln();
       buffer.writeln();
     }
 
     // Add transactions if requested
     if (options.content == ExportContent.transactions || options.content == ExportContent.both) {
-      buffer.writeln('TRANSACTION SUMMARY');
+      buffer.writeln(s.tr('export_transaction_summary').toUpperCase());
       buffer.writeln('-' * 80);
 
       if (options.startDate != null || options.endDate != null) {
-        buffer.writeln('Period:           ${_formatDateRange(options.startDate, options.endDate)}');
+        buffer.writeln('${s.tr('export_period')}:           ${_formatDateRange(options.startDate, options.endDate)}');
       }
 
       final totalTransactions = transactions.length;
@@ -509,20 +518,20 @@ class ExportService {
           .where((tx) => !tx.isExpense)
           .fold<double>(0, (sum, tx) => sum + tx.totalAmount);
 
-      buffer.writeln('Total Transactions: $totalTransactions');
-      buffer.writeln('Total Expenses:     ${_formatCurrency(totalExpenses)}');
-      buffer.writeln('Total Income:       ${_formatCurrency(totalIncome)}');
-      buffer.writeln('Net Amount:         ${_formatCurrency(totalIncome - totalExpenses)}');
+      buffer.writeln('${s.tr('export_total_transactions')}: $totalTransactions');
+      buffer.writeln('${s.tr('report_total_expenses')}:     ${_formatCurrency(totalExpenses)}');
+      buffer.writeln('${s.tr('report_total_income')}:       ${_formatCurrency(totalIncome)}');
+      buffer.writeln('${s.tr('export_net_amount')}:         ${_formatCurrency(totalIncome - totalExpenses)}');
       buffer.writeln();
       buffer.writeln();
 
-      buffer.writeln('TRANSACTION DETAILS');
+      buffer.writeln(s.tr('export_transaction_details').toUpperCase());
       buffer.writeln('-' * 80);
       buffer.writeln();
 
       // Format: Date | Description | Amount | Currency | Type
       buffer.writeln(
-        '${_padRight('Date', 20)}${_padRight('Description', 30)}${_padRight('Amount', 15)}${_padRight('Currency', 10)}Type',
+        '${_padRight(s.tr('report_col_date'), 20)}${_padRight(s.tr('report_col_description'), 30)}${_padRight(s.tr('report_col_amount'), 15)}${_padRight(s.tr('export_col_currency'), 10)}${s.tr('export_col_type')}',
       );
       buffer.writeln('-' * 80);
 
@@ -530,7 +539,7 @@ class ExportService {
         final date = DateFormat('yyyy-MM-dd HH:mm').format(tx.dateTime);
         final description = tx.label.length > 28 ? '${tx.label.substring(0, 28)}..' : tx.label;
         final amount = '${tx.isExpense ? '-' : '+'}${_formatCurrency(tx.totalAmount)}';
-        final type = tx.isExpense ? 'Expense' : 'Income';
+        final type = tx.isExpense ? s.tr('export_expense') : s.tr('export_income');
 
         buffer.writeln(
           _padRight(date, 20) +
@@ -554,7 +563,7 @@ class ExportService {
 
     buffer.writeln();
     buffer.writeln('=' * 80);
-    buffer.writeln('End of Report');
+    buffer.writeln(s.tr('export_end_of_report'));
     buffer.writeln('=' * 80);
 
     final content = buffer.toString();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class ExecutiveSummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final double netSavings = data.netSavings;
     final double compNetSavings = data.comparisonNetSavings;
     final double savingsRate = data.savingsRate;
@@ -44,61 +46,57 @@ class ExecutiveSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Executive Summary',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_summary'),
           icon: Icons.bar_chart_rounded,
         ),
-        const Text(
-          'Here\'s a snapshot of your financial health this period. '
-          'Each metric is compared against the previous period to help you track progress.',
-          style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.6),
+        Text(
+          l10n.translate('report_summary_desc'),
+          style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.6),
         ),
         const SizedBox(height: AppSpacing.lg),
         _buildMetricWithDescription(
           card: ReportMetricCard(
-            label: 'NET SAVINGS',
+            label: l10n.translate('report_net_savings'),
             value: data.formatAmount(netSavings, compact: true),
             changeText: netChangePct.isNotEmpty ? netChangePct : null,
             changeColor: netUp ? AppColors.incomeAccent : AppColors.expenseAccent,
             accentColor: AppColors.savingsAccent,
           ),
-          description:
-              'The difference between your total income and expenses. A positive number means you saved money.',
+          description: l10n.translate('report_net_savings_desc'),
         ),
         const SizedBox(height: AppSpacing.md),
         _buildMetricWithDescription(
           card: ReportMetricCard(
-            label: 'SAVINGS RATE',
+            label: l10n.translate('report_savings_rate'),
             value: '${savingsRate.toStringAsFixed(1)}%',
             changeText: rateChange,
             changeColor: rateUp ? AppColors.incomeAccent : AppColors.expenseAccent,
             accentColor: AppColors.primary,
           ),
-          description:
-              'The percentage of income you kept as savings. Financial advisors recommend at least 20%.',
+          description: l10n.translate('report_savings_rate_desc'),
         ),
         const SizedBox(height: AppSpacing.md),
         _buildMetricWithDescription(
           card: ReportMetricCard(
-            label: 'TRANSACTIONS',
+            label: l10n.translate('report_transactions'),
             value: txCount.toString(),
             changeText: txChange,
             changeColor: Colors.white54,
             accentColor: Colors.white70,
           ),
-          description: 'Total number of recorded transactions this period.',
+          description: l10n.translate('report_transactions_desc'),
         ),
         const SizedBox(height: AppSpacing.md),
         _buildMetricWithDescription(
           card: ReportMetricCard(
-            label: 'HEALTH SCORE',
+            label: l10n.translate('report_health_score'),
             value: score != null ? '$score/100' : 'N/A',
             changeText: scoreChange.isNotEmpty ? scoreChange : null,
             changeColor: scoreUp ? AppColors.incomeAccent : AppColors.expenseAccent,
             accentColor: AppColors.primary,
           ),
-          description:
-              'An overall measure of your financial health from 0 to 100, based on savings, consistency, and spending patterns.',
+          description: l10n.translate('report_health_score_desc'),
         ),
         if (rec != null)
           ReportAiRecommendation(

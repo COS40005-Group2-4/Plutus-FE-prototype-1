@@ -224,7 +224,10 @@ class ReportProvider extends ChangeNotifier {
     if (_reportData == null) return null;
 
     try {
-      final String path = await _reportPdfService.generatePdf(data: _reportData!);
+      final String path = await _reportPdfService.generatePdf(
+        data: _reportData!,
+        locale: _config?.reportLocale ?? 'en',
+      );
       if (kDebugMode) {
         debugPrint('ReportProvider: PDF exported to $path');
       }

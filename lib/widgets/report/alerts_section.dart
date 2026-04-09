@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../models/ai/insight.dart';
@@ -15,6 +16,7 @@ class AlertsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<Alert>? alerts = data.alerts;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.alerts];
@@ -22,8 +24,8 @@ class AlertsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Alerts',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_alerts'),
           icon: Icons.notifications_outlined,
         ),
         if (alerts == null || alerts.isEmpty)
@@ -35,14 +37,14 @@ class AlertsSection extends StatelessWidget {
               border: Border.all(
                   color: AppColors.incomeAccent.withValues(alpha: 0.15)),
             ),
-            child: const Row(
+            child: Row(
               children: <Widget>[
-                Icon(Icons.check_circle_outline,
+                const Icon(Icons.check_circle_outline,
                     color: AppColors.incomeAccent, size: 18),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'No alerts for this period.',
-                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                  l10n.translate('report_no_alerts'),
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ],
             ),

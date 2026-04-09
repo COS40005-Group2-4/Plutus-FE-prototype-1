@@ -2,8 +2,6 @@
 /Plutus-backend-prototype-2/
 /Plutus-backend/
 plutus.db*
-.kiro/
-.cursor/
 .dart_tool/
 .packages
 .pub/
@@ -126,16 +124,6 @@ test-results/
 integration_test/.test_coverage.dart
 OAUTH_SETUP_GUIDE.md
 docs/
-.cursor/rules/flutter-rule.mdc
-/.cursor
-.cursor/rules/flutter-rule.mdc
-/.cursor/rules
-/.cursor
-*.mdc
-*.mdc
-.cursor/rules/flutter-rule.mdc
-/.cursor
-.cursor/rules/flutter-rule.mdc
 FFI_BACKEND_REQUIREMENTS.md
 LOCAL_DATA_STORAGE_IMPLEMENTATION.md
 /.agents

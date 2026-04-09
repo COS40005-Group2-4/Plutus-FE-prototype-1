@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class BudgetActualSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<BudgetCategoryData>? categories = data.budgetCategories;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.budgetActual];
@@ -21,24 +23,24 @@ class BudgetActualSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Budget vs Actual',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_budget'),
           icon: Icons.account_balance_wallet_outlined,
         ),
         if (categories == null || categories.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No budget data available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.translate('report_no_budget_data'),
+                style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           )
         else
           Column(
             children: categories
-                .map((BudgetCategoryData cat) => _buildBudgetRow(cat))
+                .map((BudgetCategoryData cat) => _buildBudgetRow(cat, l10n))
                 .toList(),
           ),
         if (rec != null)
@@ -50,7 +52,7 @@ class BudgetActualSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetRow(BudgetCategoryData cat) {
+  Widget _buildBudgetRow(BudgetCategoryData cat, AppLocalizations l10n) {
     final double pct = cat.percentage.clamp(0.0, 100.0);
     final Color barColor =
         cat.isOverBudget ? AppColors.expenseAccent : AppColors.incomeAccent;
@@ -107,7 +109,7 @@ class BudgetActualSection extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${pct.toStringAsFixed(0)}% of budget used',
+            '${pct.toStringAsFixed(0)}% ${l10n.translate('report_budget_used')}',
             style: const TextStyle(fontSize: 11, color: Colors.white38),
           ),
         ],

@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 import boto3
@@ -22,6 +23,58 @@ class BedrockClient:
         )
         self._model_id = model_id
         self._max_tokens = max_tokens
+
+    @staticmethod
+    def _extract_json(text: str) -> dict:
+        """Extract a JSON object from model output that may contain prose or fences."""
+        text = text.strip()
+
+        # Strip markdown code fences (```json ... ``` or ``` ... ```)
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+            text = text.rsplit("```", 1)[0]
+            text = text.strip()
+
+        # Try direct parse first
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Model may have added prose before/after the JSON object.
+        # Find the outermost { ... } pair using brace counting.
+        start = text.find("{")
+        if start == -1:
+            raise ValueError(f"No JSON object found in Bedrock response: {text[:500]}")
+
+        depth = 0
+        in_string = False
+        escape = False
+        for i in range(start, len(text)):
+            ch = text[i]
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = text[start : i + 1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        break
+
+        raise ValueError(f"Failed to parse Bedrock response as JSON: {text[:500]}")
 
     def invoke(self, system_prompt: str, user_prompt: str) -> dict:
         """Send a prompt to Bedrock and return the parsed JSON response."""
@@ -48,15 +101,6 @@ class BedrockClient:
                 "Bedrock response truncated (hit max_tokens). "
                 "Increase max_tokens or simplify the prompt."
             )
-        text = response_body["content"][0]["text"].strip()
+        text = response_body["content"][0]["text"]
 
-        # Strip markdown code fences if the model wraps its JSON response
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1]  # remove opening ```json
-            text = text.rsplit("```", 1)[0]  # remove closing ```
-            text = text.strip()
-
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Failed to parse Bedrock response as JSON: {text}") from exc
+        return self._extract_json(text)

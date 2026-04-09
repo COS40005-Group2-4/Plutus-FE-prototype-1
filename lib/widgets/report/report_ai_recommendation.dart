@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -7,17 +8,16 @@ import '../../theme/app_radius.dart';
 class ReportAiRecommendation extends StatelessWidget {
   final SectionRecommendation recommendation;
   final Color accentColor;
-  final String label;
 
   const ReportAiRecommendation({
     super.key,
     required this.recommendation,
     this.accentColor = AppColors.primary,
-    this.label = 'AI Recommendation',
   });
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.md),
       decoration: BoxDecoration(
@@ -41,7 +41,7 @@ class ReportAiRecommendation extends StatelessWidget {
               Icon(Icons.auto_awesome, size: 16, color: accentColor),
               const SizedBox(width: 6),
               Text(
-                label,
+                l10n.translate('report_ai_insight'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -62,7 +62,7 @@ class ReportAiRecommendation extends StatelessWidget {
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(top: 8),
               title: Text(
-                'Show detailed analysis',
+                l10n.translate('report_show_analysis'),
                 style: TextStyle(fontSize: 12, color: accentColor, fontWeight: FontWeight.w500),
               ),
               iconColor: accentColor,

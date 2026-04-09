@@ -26,11 +26,15 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
   late Set<ReportSection> _enabledSections;
   AudienceMode _audienceMode = AudienceMode.personal;
   bool _aiEnabled = true;
+  String _reportLocale = 'en';
 
   @override
   void initState() {
     super.initState();
     _enabledSections = Set<ReportSection>.from(_selectedTemplate.sections);
+    final SettingsProvider settings =
+        Provider.of<SettingsProvider>(context, listen: false);
+    _reportLocale = settings.language.code;
   }
 
   void _applyTemplate(ReportTemplate template) {
@@ -70,6 +74,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
       dateRange: dateRange,
       audienceMode: _audienceMode,
       aiEnabled: _aiEnabled,
+      reportLocale: _reportLocale,
     );
 
     reportProvider.updateConfig(config);
@@ -109,28 +114,32 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
                 children: [
                   _buildSectionHeader(l10n.translate('report_section_template'), textPrimary),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildTemplatePicker(brightness, textPrimary, textSecondary),
+                  _buildTemplatePicker(brightness, textPrimary, textSecondary, l10n),
                   const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader(l10n.translate('report_section_date_range'), textPrimary),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildDateRangeChips(brightness),
+                  _buildDateRangeChips(brightness, l10n),
                   const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader(l10n.translate('report_section_sections'), textPrimary),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildSectionToggles(brightness, textPrimary, textSecondary),
+                  _buildSectionToggles(brightness, textPrimary, textSecondary, l10n),
                   const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader(l10n.translate('report_section_audience'), textPrimary),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildAudienceSegment(brightness, textPrimary),
+                  _buildAudienceSegment(brightness, textPrimary, l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildAiToggle(brightness, textPrimary, textSecondary),
+                  _buildSectionHeader(l10n.translate('report_language'), textPrimary),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildLanguagePicker(brightness, textPrimary, l10n),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildAiToggle(brightness, textPrimary, textSecondary, l10n),
                   const SizedBox(height: AppSpacing.xxxl),
                   _buildGenerateButton(context, reportProvider, l10n),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
               if (reportProvider.isGenerating)
-                _buildLoadingOverlay(brightness, reportProvider),
+                _buildLoadingOverlay(brightness, reportProvider, l10n),
             ],
           );
         },
@@ -154,6 +163,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     Brightness brightness,
     Color textPrimary,
     Color textSecondary,
+    AppLocalizations l10n,
   ) {
     return Wrap(
       spacing: AppSpacing.sm,
@@ -184,7 +194,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      _templateLabel(template.id),
+                      _templateLabel(template.id, l10n),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -218,24 +228,24 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     }
   }
 
-  String _templateLabel(String id) {
+  String _templateLabel(String id, AppLocalizations l10n) {
     switch (id) {
       case 'quick_summary':
-        return 'Quick Summary';
+        return l10n.translate('report_tpl_quick');
       case 'monthly_review':
-        return 'Monthly Review';
+        return l10n.translate('report_tpl_monthly');
       case 'full_financial_review':
-        return 'Full Review';
+        return l10n.translate('report_tpl_full');
       case 'tax_prep':
-        return 'Tax Prep';
+        return l10n.translate('report_tpl_tax');
       case 'investment_focus':
-        return 'Investments';
+        return l10n.translate('report_tpl_investments');
       default:
         return id;
     }
   }
 
-  Widget _buildDateRangeChips(Brightness brightness) {
+  Widget _buildDateRangeChips(Brightness brightness, AppLocalizations l10n) {
     const List<DateRangePreset> presets = <DateRangePreset>[
       DateRangePreset.thisMonth,
       DateRangePreset.lastQuarter,
@@ -248,7 +258,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
       runSpacing: AppSpacing.sm,
       children: presets.map((DateRangePreset preset) {
         return ChoiceChip(
-          label: Text(_presetLabel(preset)),
+          label: Text(_presetLabel(preset, l10n)),
           selected: _selectedPreset == preset,
           onSelected: (bool selected) {
             if (selected) {
@@ -278,18 +288,18 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     );
   }
 
-  String _presetLabel(DateRangePreset preset) {
+  String _presetLabel(DateRangePreset preset, AppLocalizations l10n) {
     switch (preset) {
       case DateRangePreset.thisMonth:
-        return 'This Month';
+        return l10n.translate('report_preset_this_month');
       case DateRangePreset.lastQuarter:
-        return 'Last Quarter';
+        return l10n.translate('report_preset_last_quarter');
       case DateRangePreset.yearToDate:
-        return 'Year to Date';
+        return l10n.translate('report_preset_ytd');
       case DateRangePreset.last12Months:
-        return 'Last 12 Months';
+        return l10n.translate('report_preset_last_12m');
       case DateRangePreset.custom:
-        return 'Custom';
+        return l10n.translate('report_preset_custom');
     }
   }
 
@@ -297,22 +307,23 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     Brightness brightness,
     Color textPrimary,
     Color textSecondary,
+    AppLocalizations l10n,
   ) {
-    const List<(ReportSection, String, IconData)> sectionMeta =
+    final List<(ReportSection, String, IconData)> sectionMeta =
         <(ReportSection, String, IconData)>[
-      (ReportSection.coverPage, 'Cover Page', Icons.bookmark_outline),
-      (ReportSection.executiveSummary, 'Executive Summary', Icons.summarize_outlined),
-      (ReportSection.spendingBreakdown, 'Spending Breakdown', Icons.pie_chart_outline),
-      (ReportSection.incomeAnalysis, 'Income Analysis', Icons.trending_up_outlined),
-      (ReportSection.cashFlow, 'Cash Flow', Icons.waterfall_chart_outlined),
-      (ReportSection.budgetActual, 'Budget vs Actual', Icons.bar_chart_outlined),
-      (ReportSection.topMerchants, 'Top Merchants', Icons.store_outlined),
-      (ReportSection.investmentPortfolio, 'Investments', Icons.candlestick_chart_outlined),
-      (ReportSection.forecast, 'Forecast', Icons.auto_graph_outlined),
-      (ReportSection.alerts, 'Alerts', Icons.notifications_outlined),
-      (ReportSection.coaching, 'Coaching Tips', Icons.lightbulb_outline),
-      (ReportSection.billsRecurring, 'Bills & Recurring', Icons.repeat_outlined),
-      (ReportSection.transactionLog, 'Transaction Log', Icons.list_alt_outlined),
+      (ReportSection.coverPage, l10n.translate('report_sec_cover'), Icons.bookmark_outline),
+      (ReportSection.executiveSummary, l10n.translate('report_sec_summary'), Icons.summarize_outlined),
+      (ReportSection.spendingBreakdown, l10n.translate('report_sec_spending'), Icons.pie_chart_outline),
+      (ReportSection.incomeAnalysis, l10n.translate('report_sec_income'), Icons.trending_up_outlined),
+      (ReportSection.cashFlow, l10n.translate('report_sec_cashflow'), Icons.waterfall_chart_outlined),
+      (ReportSection.budgetActual, l10n.translate('report_sec_budget'), Icons.bar_chart_outlined),
+      (ReportSection.topMerchants, l10n.translate('report_sec_merchants'), Icons.store_outlined),
+      (ReportSection.investmentPortfolio, l10n.translate('report_sec_investments'), Icons.candlestick_chart_outlined),
+      (ReportSection.forecast, l10n.translate('report_sec_forecast'), Icons.auto_graph_outlined),
+      (ReportSection.alerts, l10n.translate('report_sec_alerts'), Icons.notifications_outlined),
+      (ReportSection.coaching, l10n.translate('report_sec_coaching'), Icons.lightbulb_outline),
+      (ReportSection.billsRecurring, l10n.translate('report_sec_bills'), Icons.repeat_outlined),
+      (ReportSection.transactionLog, l10n.translate('report_sec_transactions'), Icons.list_alt_outlined),
     ];
 
     return GlassContainer(
@@ -362,7 +373,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     );
   }
 
-  Widget _buildAudienceSegment(Brightness brightness, Color textPrimary) {
+  Widget _buildAudienceSegment(Brightness brightness, Color textPrimary, AppLocalizations l10n) {
     return GlassContainer(
       borderRadius: AppRadius.lg,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -370,12 +381,12 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
         segments: <ButtonSegment<AudienceMode>>[
           ButtonSegment<AudienceMode>(
             value: AudienceMode.personal,
-            label: const Text('Personal'),
+            label: Text(l10n.translate('report_audience_personal')),
             icon: const Icon(Icons.person_outline, size: 18),
           ),
           ButtonSegment<AudienceMode>(
             value: AudienceMode.professional,
-            label: const Text('Professional'),
+            label: Text(l10n.translate('report_audience_professional')),
             icon: const Icon(Icons.business_center_outlined, size: 18),
           ),
         ],
@@ -407,10 +418,54 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     );
   }
 
+  Widget _buildLanguagePicker(Brightness brightness, Color textPrimary, AppLocalizations l10n) {
+    return GlassContainer(
+      borderRadius: AppRadius.lg,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: SegmentedButton<String>(
+        segments: <ButtonSegment<String>>[
+          ButtonSegment<String>(
+            value: 'en',
+            label: Text(l10n.translate('language_english')),
+          ),
+          ButtonSegment<String>(
+            value: 'vi',
+            label: Text(l10n.translate('language_vietnamese')),
+          ),
+        ],
+        selected: <String>{_reportLocale},
+        onSelectionChanged: (Set<String> selection) {
+          if (selection.isNotEmpty) {
+            setState(() => _reportLocale = selection.first);
+          }
+        },
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.selected)) {
+                return AppColors.primary.withValues(alpha: 0.25);
+              }
+              return Colors.transparent;
+            },
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.selected)) {
+                return AppColors.primary;
+              }
+              return AppColors.textSecondary(brightness);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAiToggle(
     Brightness brightness,
     Color textPrimary,
     Color textSecondary,
+    AppLocalizations l10n,
   ) {
     return GlassContainer(
       borderRadius: AppRadius.lg,
@@ -422,11 +477,11 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
           color: _aiEnabled ? AppColors.primary : textSecondary,
         ),
         title: Text(
-          'AI Recommendations',
+          l10n.translate('report_ai_title'),
           style: TextStyle(fontSize: 14, color: textPrimary),
         ),
         subtitle: Text(
-          'Add AI-powered insights to each section',
+          l10n.translate('report_ai_subtitle'),
           style: TextStyle(fontSize: 12, color: textSecondary),
         ),
         value: _aiEnabled,
@@ -472,7 +527,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     );
   }
 
-  Widget _buildLoadingOverlay(Brightness brightness, ReportProvider reportProvider) {
+  Widget _buildLoadingOverlay(Brightness brightness, ReportProvider reportProvider, AppLocalizations l10n) {
     return Positioned.fill(
       child: Container(
         color: brightness == Brightness.dark
@@ -491,7 +546,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Generating report...',
+                  l10n.translate('report_generating_loading'),
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textPrimary(brightness),

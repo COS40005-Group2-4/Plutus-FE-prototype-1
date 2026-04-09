@@ -20,6 +20,7 @@ class _ExportDialogState extends State<ExportDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       child: GlassContainer(
@@ -37,7 +38,7 @@ class _ExportDialogState extends State<ExportDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Export Data',
+                      l10n.translate('export_data'),
                       style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -55,16 +56,16 @@ class _ExportDialogState extends State<ExportDialog> {
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
-              _buildSectionTitle('Export Format'),
+              _buildSectionTitle(l10n.translate('export_format')),
               const SizedBox(height: 8),
               _buildFormatSelector(),
               const SizedBox(height: 20),
-              _buildSectionTitle('Export Content'),
+              _buildSectionTitle(l10n.translate('export_content')),
               const SizedBox(height: 8),
               _buildContentSelector(),
               const SizedBox(height: 20),
               if (_selectedContent != ExportContent.userData) ...[
-                _buildSectionTitle('Date Range (Optional)'),
+                _buildSectionTitle(l10n.translate('export_date_range_optional')),
                 const SizedBox(height: 8),
                 _buildDateRangeSelector(),
                 const SizedBox(height: 20),
@@ -76,7 +77,7 @@ class _ExportDialogState extends State<ExportDialog> {
                 children: [
                   TextButton(
                     onPressed: _isExporting ? null : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: Text(l10n.translate('export_cancel')),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
@@ -117,13 +118,14 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Widget _buildFormatSelector() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: _buildOptionCard(
             icon: Icons.picture_as_pdf,
-            title: 'PDF',
-            description: 'Professional format',
+            title: l10n.translate('export_pdf'),
+            description: l10n.translate('export_pdf_desc'),
             isSelected: _selectedFormat == ExportFormat.pdf,
             onTap: () => setState(() => _selectedFormat = ExportFormat.pdf),
           ),
@@ -132,8 +134,8 @@ class _ExportDialogState extends State<ExportDialog> {
         Expanded(
           child: _buildOptionCard(
             icon: Icons.text_snippet,
-            title: 'TXT',
-            description: 'Plain text format',
+            title: l10n.translate('export_txt'),
+            description: l10n.translate('export_txt_desc'),
             isSelected: _selectedFormat == ExportFormat.txt,
             onTap: () => setState(() => _selectedFormat = ExportFormat.txt),
           ),
@@ -143,25 +145,26 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Widget _buildContentSelector() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         _buildCheckOption(
           icon: Icons.receipt_long,
-          title: 'Transaction History',
+          title: l10n.translate('export_transactions'),
           isSelected: _selectedContent == ExportContent.transactions,
           onTap: () => setState(() => _selectedContent = ExportContent.transactions),
         ),
         const SizedBox(height: 8),
         _buildCheckOption(
           icon: Icons.person,
-          title: 'User Data',
+          title: l10n.translate('export_user_data'),
           isSelected: _selectedContent == ExportContent.userData,
           onTap: () => setState(() => _selectedContent = ExportContent.userData),
         ),
         const SizedBox(height: 8),
         _buildCheckOption(
           icon: Icons.select_all,
-          title: 'Both',
+          title: l10n.translate('export_both'),
           isSelected: _selectedContent == ExportContent.both,
           onTap: () => setState(() => _selectedContent = ExportContent.both),
         ),
@@ -170,6 +173,7 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Widget _buildDateRangeSelector() {
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return GlassContainer(
@@ -184,10 +188,10 @@ class _ExportDialogState extends State<ExportDialog> {
                 child: InkWell(
                   onTap: () => _selectStartDate(context),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Start Date',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
+                    decoration: InputDecoration(
+                      labelText: l10n.translate('export_start_date'),
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
                       ),
@@ -197,7 +201,7 @@ class _ExportDialogState extends State<ExportDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            _startDate != null ? dateFormat.format(_startDate!) : 'All',
+                            _startDate != null ? dateFormat.format(_startDate!) : l10n.translate('export_all'),
                             style: const TextStyle(fontSize: 14),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -213,10 +217,10 @@ class _ExportDialogState extends State<ExportDialog> {
                 child: InkWell(
                   onTap: () => _selectEndDate(context),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'End Date',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
+                    decoration: InputDecoration(
+                      labelText: l10n.translate('export_end_date'),
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
                       ),
@@ -226,7 +230,7 @@ class _ExportDialogState extends State<ExportDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            _endDate != null ? dateFormat.format(_endDate!) : 'All',
+                            _endDate != null ? dateFormat.format(_endDate!) : l10n.translate('export_all'),
                             style: const TextStyle(fontSize: 14),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -247,7 +251,7 @@ class _ExportDialogState extends State<ExportDialog> {
                 _endDate = null;
               }),
               icon: const Icon(Icons.clear, size: 16),
-              label: const Text('Clear Date Range'),
+              label: Text(l10n.translate('export_clear_range')),
             ),
           ],
         ],
@@ -383,6 +387,7 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Future<void> _handleExport() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isExporting = true);
 
     try {
@@ -399,7 +404,7 @@ class _ExportDialogState extends State<ExportDialog> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error preparing export: $e'),
+          content: Text('${l10n.translate('export_error')}: $e'),
           backgroundColor: Colors.red,
         ),
       );

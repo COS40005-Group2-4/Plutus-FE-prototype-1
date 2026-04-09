@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ class CashFlowSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.cashFlow];
 
@@ -23,15 +25,15 @@ class CashFlowSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const ReportSectionHeader(
-          title: 'Cash Flow',
+        ReportSectionHeader(
+          title: l10n.translate('report_sec_cashflow'),
           icon: Icons.swap_horiz_rounded,
         ),
         Row(
           children: <Widget>[
             Expanded(
               child: _buildFlowCard(
-                label: 'INFLOW',
+                label: l10n.translate('report_inflow'),
                 value: data.totalIncome,
                 data: data,
                 color: AppColors.incomeAccent,
@@ -41,7 +43,7 @@ class CashFlowSection extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildFlowCard(
-                label: 'OUTFLOW',
+                label: l10n.translate('report_outflow'),
                 value: data.totalExpenses,
                 data: data,
                 color: AppColors.expenseAccent,
@@ -51,7 +53,7 @@ class CashFlowSection extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildFlowCard(
-                label: 'NET',
+                label: l10n.translate('report_net'),
                 value: net,
                 data: data,
                 color: positive ? AppColors.incomeAccent : AppColors.expenseAccent,
@@ -81,8 +83,8 @@ class CashFlowSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Text(
                 positive
-                    ? 'Positive cash flow — you saved more than you spent.'
-                    : 'Negative cash flow — expenses exceeded income.',
+                    ? l10n.translate('report_positive_cashflow')
+                    : l10n.translate('report_negative_cashflow'),
                 style: TextStyle(
                   fontSize: 13,
                   color: positive ? Colors.white70 : AppColors.warning,
