@@ -37,7 +37,7 @@ class InsightsService implements IInsightsService {
           if (apiKey.isNotEmpty) 'x-api-key': apiKey,
         },
         body: jsonEncode(requestBody),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json =

@@ -42,6 +42,12 @@ class BedrockClient:
         )
 
         response_body = json.loads(response["body"].read())
+        stop_reason = response_body.get("stop_reason", "")
+        if stop_reason == "max_tokens":
+            raise ValueError(
+                "Bedrock response truncated (hit max_tokens). "
+                "Increase max_tokens or simplify the prompt."
+            )
         text = response_body["content"][0]["text"].strip()
 
         # Strip markdown code fences if the model wraps its JSON response
