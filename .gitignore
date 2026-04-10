@@ -134,3 +134,8 @@ terraform/terraform.tfstate
 /.superpowers
 /lambda/.build
 lambda/package.zip
+
+# Android signing
+android/key.properties
+*.keystore
+*.jks
