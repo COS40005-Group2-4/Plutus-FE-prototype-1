@@ -31,7 +31,7 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
             child: const Center(
               child: Text(
                 'No user logged in',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: AppColors.textOnDark, fontSize: 14),
               ),
             ),
           );

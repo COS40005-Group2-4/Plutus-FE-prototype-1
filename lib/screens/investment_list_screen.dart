@@ -94,7 +94,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('$assetName added to your portfolio'),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.success,
                 ),
               );
 
@@ -109,7 +109,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text("Couldn't add investment. Please try again."),
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.error,
                 ),
               );
             }
@@ -138,14 +138,14 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
                     IconButton(
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.of(context).pop(),
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       localizations.investments,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
                           ),
                     ),
                   ],
@@ -171,7 +171,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
   Widget _buildContent(AppLocalizations localizations, bool isDark) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
@@ -180,16 +180,16 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               localizations.errorLoadingData,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 18),
+              style: const TextStyle(color: AppColors.error, fontSize: 18),
             ),
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.7)),
+              style: TextStyle(color: AppColors.error.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -210,21 +210,21 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             Icon(
               Icons.account_balance_wallet_outlined,
               size: 64,
-              color: isDark ? Colors.white54 : Colors.black38,
+              color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
             ),
             const SizedBox(height: 16),
             Text(
               localizations.noInvestmentsYet,
               style: TextStyle(
                 fontSize: 18,
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Tap + to start tracking your investments',
               style: TextStyle(
-                color: isDark ? Colors.white54 : Colors.black45,
+                color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
               ),
             ),
           ],
@@ -248,7 +248,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
   Widget _buildInvestmentCard(InvestmentModel investment, bool isDark) {
     final color = investment.isPositiveReturn()
         ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? Colors.redAccent : Colors.red);
+        : AppColors.error;
 
     return GlassContainer(
       borderRadius: 12,
@@ -261,7 +261,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
           ),
         ),
         subtitle: Column(
@@ -272,7 +272,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
               '${investment.assetType.name.toUpperCase()} • ${investment.quantity} units',
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -283,7 +283,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -309,7 +309,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
         ),
         trailing: Icon(
           Icons.chevron_right,
-          color: isDark ? Colors.white54 : Colors.black45,
+          color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
         ),
         onTap: () {
           // TODO: Navigate to detail screen

@@ -51,12 +51,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             decoration: BoxDecoration(
               color: isDark
                   ? AppColors.surfaceDark.withValues(alpha: 0.4)
-                  : Colors.white.withValues(alpha: 0.65),
+                  : AppColors.surfaceLight.withValues(alpha: 0.65),
               border: Border(
                 top: BorderSide(
                   color: isDark
                       ? AppColors.borderDark.withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.4),
+                      : AppColors.surfaceLight.withValues(alpha: 0.4),
                 ),
               ),
             ),

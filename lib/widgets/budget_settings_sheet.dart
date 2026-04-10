@@ -11,6 +11,7 @@ import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
+import 'package:plutus_fe_prototype/theme/app_colors.dart';
 
 /// Common expense categories with their default account patterns and icons.
 class _DefaultCategory {
@@ -455,7 +456,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
         height: 4,
         margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.grey[400],
+          color: AppColors.textOnLightTertiary,
           borderRadius: AppRadius.borderSm,
         ),
       ),

@@ -6,6 +6,7 @@ import '../models/profile_model.dart';
 import '../providers/profile_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 import 'avatar_editor_widget.dart';
 
 /// Main Profile Widget for displaying and editing user profile
@@ -210,7 +211,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey[400],
+                        foregroundColor: AppColors.textOnDarkTertiary,
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -219,7 +220,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () async {
@@ -276,19 +277,19 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[400]),
-        prefixIcon: Icon(icon, color: Colors.blue),
+        labelStyle: TextStyle(color: AppColors.textOnDarkTertiary),
+        prefixIcon: Icon(icon, color: AppColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.05),
@@ -314,7 +315,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               }
             },
             fillColor: WidgetStateProperty.resolveWith<Color>(
-              (states) => Colors.blue,
+              (states) => AppColors.primary,
             ),
             checkColor: Colors.white,
           ),
@@ -349,7 +350,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               }
             },
             fillColor: WidgetStateProperty.resolveWith<Color>(
-              (states) => Colors.blue,
+              (states) => AppColors.primary,
             ),
             checkColor: Colors.white,
           ),
@@ -387,7 +388,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
                     const SizedBox(height: 16),
                     Text(
                       profileProvider.errorMessage,
@@ -560,7 +561,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () => _showEditDialog(profile),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: AppRadius.borderXl,
                         child: Padding(
                           padding: const EdgeInsets.all(4),
                           child: Icon(
@@ -654,7 +655,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  icon: const Icon(Icons.edit, color: AppColors.primary),
                   onPressed: () => _showEditDialog(profile),
                   tooltip: 'Edit Profile',
                   constraints: const BoxConstraints(),
@@ -866,7 +867,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
       opacity: isVisible ? 1.0 : 0.5,
       child: Row(
         children: [
-          Icon(icon, color: Colors.blue, size: isSmallScreen ? 18 : 20),
+          Icon(icon, color: AppColors.primary, size: isSmallScreen ? 18 : 20),
           SizedBox(width: isSmallScreen ? 10 : 12),
           Expanded(
             child: Column(
@@ -876,7 +877,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   label,
                   style: TextStyle(
                     fontSize: isSmallScreen ? 11 : 12,
-                    color: Colors.grey[400],
+                    color: AppColors.textOnDarkTertiary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

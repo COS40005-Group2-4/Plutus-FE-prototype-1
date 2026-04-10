@@ -30,14 +30,14 @@ class _DataConsentDialogContent extends StatelessWidget {
         side: BorderSide(
           color: isDark
               ? AppColors.borderDark.withValues(alpha: 0.3)
-              : Colors.grey.withValues(alpha: 0.3),
+              : AppColors.textOnLightTertiary.withValues(alpha: 0.3),
         ),
       ),
       title: Row(
         children: [
           Icon(
             Icons.privacy_tip_outlined,
-            color: isDark ? AppColors.accent : Colors.blue,
+            color: isDark ? AppColors.accent : AppColors.primary,
             size: 28,
           ),
           const SizedBox(width: 12),
@@ -57,7 +57,7 @@ class _DataConsentDialogContent extends StatelessWidget {
             l10n.dataConsentMessage,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+              color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -79,18 +79,18 @@ class _DataConsentDialogContent extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.orange.withValues(alpha: 0.1)
-                  : Colors.orange.withValues(alpha: 0.1),
+                  ? AppColors.warning.withValues(alpha: 0.1)
+                  : AppColors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.orange.withValues(alpha: 0.3),
+                color: AppColors.warning.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: Colors.orange[700],
+                  color: AppColors.warning,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -99,7 +99,7 @@ class _DataConsentDialogContent extends StatelessWidget {
                     l10n.dataConsentDecline,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.orange[200] : Colors.orange[800],
+                      color: isDark ? AppColors.warning.withValues(alpha: 0.7) : AppColors.warning,
                     ),
                   ),
                 ),
@@ -113,14 +113,14 @@ class _DataConsentDialogContent extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
             l10n.dataConsentDeclineBtn,
-            style: TextStyle(color: Colors.red[400]),
+            style: TextStyle(color: AppColors.error),
           ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green[400],
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.success,
+            foregroundColor: AppColors.textOnDark,
           ),
           child: Text(l10n.dataConsentAgreeBtn),
         ),
@@ -141,7 +141,7 @@ class _DataConsentDialogContent extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: isDark ? AppColors.accent : Colors.blue,
+          color: isDark ? AppColors.accent : AppColors.primary,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -159,7 +159,7 @@ class _DataConsentDialogContent extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightSecondary,
                 ),
               ),
             ],
@@ -198,14 +198,14 @@ class _TermsDialogContent extends StatelessWidget {
         side: BorderSide(
           color: isDark
               ? AppColors.borderDark.withValues(alpha: 0.3)
-              : Colors.grey.withValues(alpha: 0.3),
+              : AppColors.textOnLightTertiary.withValues(alpha: 0.3),
         ),
       ),
       title: Row(
         children: [
           Icon(
             Icons.gavel_outlined,
-            color: isDark ? AppColors.accent : Colors.blue,
+            color: isDark ? AppColors.accent : AppColors.primary,
             size: 28,
           ),
           const SizedBox(width: 12),
@@ -221,7 +221,7 @@ class _TermsDialogContent extends StatelessWidget {
         l10n.tcMessage,
         style: TextStyle(
           fontSize: 14,
-          color: isDark ? Colors.grey[300] : Colors.grey[700],
+          color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
         ),
       ),
       actions: [
@@ -229,14 +229,14 @@ class _TermsDialogContent extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
             l10n.tcDeclineBtn,
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: AppColors.textOnLightSecondary),
           ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green[400],
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.success,
+            foregroundColor: AppColors.textOnDark,
           ),
           child: Text(l10n.tcAgreeBtn),
         ),

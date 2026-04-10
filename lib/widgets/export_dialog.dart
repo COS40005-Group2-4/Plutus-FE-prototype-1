@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/export_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
 
@@ -112,7 +113,7 @@ class _ExportDialogState extends State<ExportDialog> {
       style: const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.bold,
-        color: Colors.grey,
+        color: AppColors.textOnLightSecondary,
       ),
     );
   }
@@ -273,18 +274,18 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withValues(alpha:0.3),
+            color: isSelected ? AppColors.primary : AppColors.textOnLightTertiary.withValues(alpha:0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.blue.withValues(alpha:0.1) : Colors.transparent,
+          color: isSelected ? AppColors.primary.withValues(alpha:0.1) : Colors.transparent,
         ),
         child: Column(
           children: [
             Icon(
               icon,
               size: 32,
-              color: isSelected ? Colors.blue : Colors.grey,
+              color: isSelected ? AppColors.primary : AppColors.textOnLightSecondary,
             ),
             const SizedBox(height: 8),
             Text(
@@ -293,16 +294,16 @@ class _ExportDialogState extends State<ExportDialog> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.blue : null,
+                color: isSelected ? AppColors.primary : null,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               description,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: AppColors.textOnLightSecondary,
               ),
             ),
           ],
@@ -324,17 +325,17 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.withValues(alpha:0.3),
+            color: isSelected ? AppColors.primary : AppColors.textOnLightTertiary.withValues(alpha:0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.blue.withValues(alpha:0.1) : Colors.transparent,
+          color: isSelected ? AppColors.primary.withValues(alpha:0.1) : Colors.transparent,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.blue : Colors.grey,
+              color: isSelected ? AppColors.primary : AppColors.textOnLightSecondary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -343,14 +344,14 @@ class _ExportDialogState extends State<ExportDialog> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.blue : null,
+                  color: isSelected ? AppColors.primary : null,
                 ),
               ),
             ),
             if (isSelected)
               const Icon(
                 Icons.check_circle,
-                color: Colors.blue,
+                color: AppColors.primary,
               ),
           ],
         ),
@@ -405,7 +406,7 @@ class _ExportDialogState extends State<ExportDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${l10n.translate('export_error')}: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       setState(() => _isExporting = false);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
 import '../../widgets/glass_container.dart';
 
 class ReportMetricCard extends StatelessWidget {
@@ -24,7 +25,7 @@ class ReportMetricCard extends StatelessWidget {
       color: Colors.white,
       opacity: 0.05,
       borderRadius: AppRadius.lg,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[

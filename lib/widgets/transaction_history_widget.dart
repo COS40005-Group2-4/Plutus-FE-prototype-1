@@ -12,7 +12,7 @@ import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
-const Color green = Color(0xFF34A853);
+// Color(0xFF34A853) is AppColors.success
 
 class TransactionHistoryWidget extends StatefulWidget {
   const TransactionHistoryWidget({super.key});
@@ -79,7 +79,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to delete transaction: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -163,7 +163,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return GlassContainer(
-          color: green,
+          color: AppColors.success,
           opacity: 0.2,
           borderRadius: 16,
           padding: const EdgeInsets.all(12),
@@ -227,7 +227,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                             const SizedBox(width: 8),
                             if (_selectedTransactionIds.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                icon: Icon(Icons.delete, color: AppColors.error, size: 20),
                                 onPressed: _deleteSelectedTransactions,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
@@ -298,7 +298,7 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                           child: GlassContainer(
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             padding: const EdgeInsets.all(8),
-                            color: isSelected ? Colors.blue : Colors.white,
+                            color: isSelected ? AppColors.primary : AppColors.textOnDark,
                             opacity: isSelected ? 0.3 : 0.1,
                             borderRadius: 6,
                             child: Row(

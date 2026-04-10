@@ -200,7 +200,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
 
   Color _getRateColor(double rate, Brightness brightness) {
     if (rate >= 20) return AppColors.positive(brightness);
-    if (rate >= 10) return Colors.orange;
+    if (rate >= 10) return AppColors.warning;
     return AppColors.negative(brightness);
   }
 

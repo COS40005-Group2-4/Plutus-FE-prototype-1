@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'glass_container.dart';
 
 class SpendingHeatmapWidget extends StatefulWidget {
@@ -280,7 +281,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
           // Column headers (week start dates / month names)
           Row(
             children: [
-              const SizedBox(width: 28), // row-label gutter
+              const SizedBox(width: AppSpacing.xxxl), // row-label gutter
               ...List.generate(_kWeeks, (col) {
                 return Expanded(
                   child: Text(
@@ -304,7 +305,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 28,
+                        width: AppSpacing.xxxl,
                         child: Text(
                           rowLabel,
                           style: const TextStyle(

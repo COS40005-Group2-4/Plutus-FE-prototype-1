@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -249,7 +250,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
       children: [
         // Current net worth
         GlassContainer(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(AppSpacing.md),
           color: Colors.white,
           opacity: 0.1,
           borderRadius: 8,

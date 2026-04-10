@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/glass_container.dart';
 import '../l10n/app_localizations.dart';
-
-const Color yellow = Color(0xFFFBBC05);
+import '../theme/app_colors.dart';
 
 // Report Import Button Widget
 class ReportImportWidget extends StatelessWidget {
@@ -11,7 +10,7 @@ class ReportImportWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      color: yellow,
+      color: AppColors.warning,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),
@@ -51,7 +50,7 @@ class ReportImportWidget extends StatelessWidget {
                   label: Text(AppLocalizations.of(context).import),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: yellow,
+                    foregroundColor: AppColors.warning,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                   ),

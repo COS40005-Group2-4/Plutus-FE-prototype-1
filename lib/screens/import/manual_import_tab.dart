@@ -12,6 +12,7 @@ import '../../widgets/import/ai_category_field.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/insights_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_colors.dart';
 
 class ManualImportTab extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -337,7 +338,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
 
@@ -529,7 +530,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
                 IconButton(
                   onPressed: _addItem,
                   icon: const Icon(Icons.add_circle),
-                  color: Colors.blue,
+                  color: AppColors.primary,
                 ),
               ],
             ),
@@ -578,7 +579,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
                           width: 48,
                           height: 48,
                           child: IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                            icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
                             onPressed: () => _removeItem(index),
                           ),
                         ),

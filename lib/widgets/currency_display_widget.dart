@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../theme/app_colors.dart';
 
 /// Example widget demonstrating currency conversion and formatting
 /// This can be used as a reference for implementing currency display in your app
@@ -122,18 +123,18 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
                   currencyCode: widget.sourceCurrency!,
                 )})',
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: Colors.grey,
+                  color: AppColors.textOnLightSecondary,
                 ),
               ),
             if (_error != null)
               Text(
                 _error!,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: Colors.orange,
+                  color: AppColors.warning,
                 ),
               ),
           ],

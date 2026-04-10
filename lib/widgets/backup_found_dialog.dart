@@ -27,7 +27,7 @@ Future<bool?> showBackupFoundDialog(BuildContext context) {
         title: Row(
           children: [
             Icon(Icons.cloud_download,
-                color: isDark ? AppColors.accent : Colors.blue),
+                color: isDark ? AppColors.accent : AppColors.primary),
             const SizedBox(width: 8),
             Expanded(child: Text(l10n.backupFoundTitle)),
           ],

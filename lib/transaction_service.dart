@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
@@ -15,13 +14,6 @@ import 'di/service_locator.dart';
 
 class TransactionService implements ITransactionService {
   static const String _transactionsKey = 'transactions';
-  static const String _baseUrl = String.fromEnvironment(
-    'BACKEND_URL',
-    defaultValue: 'http://localhost:8080',
-  );
-
-  // Short timeout for offline-first behavior
-  static const Duration _apiTimeout = Duration(seconds: 3);
 
   final IBackendFfiService _ffiService;
   final IDatabaseService _db;
@@ -237,42 +229,7 @@ class TransactionService implements ITransactionService {
   
   Future<void> _syncWithBackend(int userId) async {
     // The Go backend is now stateless — transactions are fed to it
-    // via JournalInitializer on startup. No need to fetch from FFI.
-
-    // Try to fetch from HTTP backend if available (legacy support)
-    try {
-      if (kIsWeb &&
-          Uri.base.scheme == 'https' &&
-          _baseUrl.startsWith('http:')) {
-        if (kDebugMode) {
-          debugPrint('Mixed content blocked: Cannot fetch HTTP backend from HTTPS frontend.');
-        }
-        return;
-      }
-
-      final response = await http
-          .get(Uri.parse('$_baseUrl/api/transactions'))
-          .timeout(_apiTimeout);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-
-        for (final tx in data) {
-          await _db.insertTransaction(userId, tx as Map<String, dynamic>);
-        }
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_transactionsKey, json.encode(data));
-
-        if (kDebugMode) {
-          debugPrint('Synced ${data.length} transactions from HTTP backend');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Backend unavailable, using local data: $e');
-      }
-    }
+    // via JournalInitializer on startup. No HTTP sync needed.
   }
 
   @override

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import '../services/tax_calculation_service.dart';
 import '../services/currency_service.dart';
 import '../transaction_service.dart';
@@ -391,13 +393,13 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha:0.1),
+                    color: AppColors.primary.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.withValues(alpha:0.3)),
+                    border: Border.all(color: AppColors.primary.withValues(alpha:0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                      Icon(Icons.info_outline, color: AppColors.primary, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -604,13 +606,13 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white30),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: AppRadius.borderSm,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.calendar_today, color: Colors.white70, size: 14),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'FY $_selectedYear',
                       style: const TextStyle(
@@ -645,7 +647,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                       SizedBox(
                         height: 24,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: AppRadius.borderSm,
                           child: Row(
                             children: [
                               Expanded(
@@ -661,7 +663,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.sm),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -728,7 +730,7 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white24, width: 1),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: AppRadius.borderSm,
                 ),
                 child: Column(
                   children: [

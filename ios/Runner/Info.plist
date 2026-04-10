@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Plutus needs camera access to scan receipts and take profile photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Plutus needs photo library access to select receipt images and profile photos.</string>
 </dict>
 </plist>

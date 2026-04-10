@@ -8,6 +8,7 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import 'glass_container.dart';
 
 class CashflowWidget extends StatefulWidget {
@@ -472,7 +473,7 @@ class _CashflowContentState extends State<_CashflowContent> {
             borderRadius: BorderRadius.circular(4),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.sm),
         Text(
           label,
           style: const TextStyle(

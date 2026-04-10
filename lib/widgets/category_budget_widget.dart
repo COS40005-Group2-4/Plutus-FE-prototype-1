@@ -6,6 +6,7 @@ import 'package:plutus_fe_prototype/models/budget_model.dart';
 import 'package:plutus_fe_prototype/providers/budget_provider.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
+import 'package:plutus_fe_prototype/theme/app_colors.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
@@ -44,9 +45,9 @@ class CategoryBudgetWidget extends StatelessWidget {
       case BudgetStatus.overBudget:
         return cs.error;
       case BudgetStatus.warning:
-        return Colors.amber.shade700;
+        return AppColors.warning;
       case BudgetStatus.onTrack:
-        return Colors.green.shade600;
+        return AppColors.success;
     }
   }
 
@@ -409,7 +410,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                                             .bodySmall
                                             ?.copyWith(
                                               color:
-                                                  Colors.amber.shade700,
+                                                  AppColors.warning,
                                             ),
                                       ),
                                   ],

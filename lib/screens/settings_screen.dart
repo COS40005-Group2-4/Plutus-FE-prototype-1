@@ -43,13 +43,13 @@ class SettingsScreen extends StatelessWidget {
           backgroundColor: currentUser?.hasOAuth == true
               ? AppColors.primary
               : currentUser?.isGuest == true
-                  ? Colors.grey
+                  ? AppColors.textOnLightSecondary
                   : AppColors.success,
           child: Text(
             authProvider.userName.isNotEmpty 
                 ? authProvider.userName[0].toUpperCase() 
                 : 'U',
-            style: const TextStyle(fontSize: 40, color: Colors.white),
+            style: const TextStyle(fontSize: 40, color: AppColors.textOnDark),
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -68,9 +68,9 @@ class SettingsScreen extends StatelessWidget {
           child: Text(
             currentUser?.username != null ? '@${currentUser!.username}' : '',
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -81,9 +81,9 @@ class SettingsScreen extends StatelessWidget {
               child: Text(
                 authProvider.userEmail,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -127,7 +127,7 @@ class SettingsScreen extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: AppColors.textOnLightSecondary.withValues(alpha: 0.2),
                     borderRadius: AppRadius.borderMd,
                   ),
                   child: Text(
@@ -135,7 +135,7 @@ class SettingsScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: AppColors.textOnLightSecondary,
                     ),
                   ),
                 ),
@@ -212,7 +212,7 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           l10n.translate('settings_offline_message'),
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                         ),
                       ],
                     ),
@@ -328,7 +328,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         if (currentUser?.hasOAuth == true)
           ListTile(
-            leading: const Icon(Icons.link_off, color: Colors.orange),
+            leading: const Icon(Icons.link_off, color: AppColors.warning),
             title: Text(l10n.unlinkGoogle),
             subtitle: Text(l10n.translate('settings_local_subtitle')),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -347,7 +347,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                      style: TextButton.styleFrom(foregroundColor: AppColors.warning),
                       child: Text(l10n.translate('settings_unlink')),
                     ),
                   ],
@@ -418,11 +418,11 @@ class SettingsScreen extends StatelessWidget {
     return ListView(
       children: [
         const SizedBox(height: 40),
-        const Center(
+        Center(
           child: Icon(
             Icons.account_circle_outlined,
             size: 100,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -441,9 +441,9 @@ class SettingsScreen extends StatelessWidget {
           child: Text(
             l10n.translate('settings_guest_message'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -740,7 +740,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             Text(
               '${l10n.backupLastSync}: --',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(

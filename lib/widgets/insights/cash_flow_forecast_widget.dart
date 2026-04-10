@@ -98,7 +98,7 @@ class CashFlowForecastWidget extends StatelessWidget {
                           color = AppColors.primary;
                         default:
                           label = 'Pess';
-                          color = Colors.red;
+                          color = AppColors.error;
                       }
                       return LineTooltipItem(
                         '$label: ${PlutusChartStyle.formatCompactCurrency(spot.y)}',
@@ -144,12 +144,12 @@ class CashFlowForecastWidget extends StatelessWidget {
               return FlSpot(e.key.toDouble(), e.value.pessimistic);
             }).toList(),
             isCurved: true,
-            color: Colors.red.withValues(alpha: 0.3),
+            color: AppColors.error.withValues(alpha: 0.3),
             dotData: const FlDotData(show: false),
             barWidth: 1,
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.red.withValues(alpha: 0.05),
+              color: AppColors.error.withValues(alpha: 0.05),
             ),
           ),
         ],

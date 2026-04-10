@@ -13,6 +13,7 @@ import '../../widgets/import/file_preview_table.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/insights_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_colors.dart';
 
 class FileImportTab extends StatefulWidget {
   const FileImportTab({super.key});
@@ -111,7 +112,7 @@ class _FileImportTabState extends State<FileImportTab> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Parse error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Parse error: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -180,7 +181,7 @@ class _FileImportTabState extends State<FileImportTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Imported $imported transactions. $skipped skipped.'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         if (context.mounted) {
@@ -193,7 +194,7 @@ class _FileImportTabState extends State<FileImportTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Import error: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -264,13 +265,13 @@ class _FileImportTabState extends State<FileImportTab> {
                 onPressed: _importing || _selectedIndices.isEmpty ? null : _importSelected,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.success,
                 ),
                 child: _importing
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : Text(
                         'Import Selected (${_selectedIndices.length})',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w600),
                       ),
               ),
             ],

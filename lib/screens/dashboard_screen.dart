@@ -30,7 +30,7 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
   ) {
     if (item != null) {
       return GlassContainer(
-        color: isSwapTarget ? const Color(0xFF4CAF50) : Colors.red,
+        color: isSwapTarget ? AppColors.success : AppColors.error,
         opacity: isSwapTarget ? 0.3 : 0.2,
         borderRadius: AppRadius.md,
       );
@@ -116,7 +116,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     final currency = context.read<SettingsProvider>().currency;
     return Container(
       width: double.infinity,
-      color: Colors.amber.withValues(alpha: 0.15),
+      color: AppColors.warning.withValues(alpha: 0.15),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -126,7 +126,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.warning_amber_outlined, color: Colors.amber, size: 18),
+            child: Icon(Icons.warning_amber_outlined, color: AppColors.warning, size: 18),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -140,7 +140,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                   '($sym${alert.spent.toStringAsFixed(0)} / '
                   '$sym${alert.budgeted.toStringAsFixed(0)})',
                   style: const TextStyle(
-                    color: Colors.amber,
+                    color: AppColors.warning,
                     fontSize: 12,
                   ),
                 );
@@ -149,7 +149,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
           ),
           GestureDetector(
             onTap: () => setState(() => _alertsDismissed = true),
-            child: const Icon(Icons.close, color: Colors.amber, size: 16),
+            child: const Icon(Icons.close, color: AppColors.warning, size: 16),
           ),
         ],
       ),
@@ -251,12 +251,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
                         if (dash.id == dashProvider.activeDashboardId)
                           const Icon(Icons.check, color: AppColors.primary, size: 18)
                         else
-                          const SizedBox(width: 18),
+                          const SizedBox(width: AppSpacing.lg),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             dash.name,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: AppColors.textOnDark),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -315,8 +315,8 @@ class _DashboardWidgetState extends State<DashboardWidget>
                     value: 'delete',
                     child: _menuItem(Icons.delete_outline, l10n.deleteDashboard,
                         color: dashProvider.dashboards.length > 1
-                            ? Colors.redAccent
-                            : Colors.grey),
+                            ? AppColors.error
+                            : AppColors.textOnDarkTertiary),
                   ),
                 ],
               );
@@ -415,19 +415,19 @@ class _DashboardWidgetState extends State<DashboardWidget>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                const Icon(Icons.dashboard_customize,
-                                    size: 48, color: Colors.grey),
+                                Icon(Icons.dashboard_customize,
+                                    size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                                 const SizedBox(height: AppSpacing.lg),
                                 Text(
                                   AppLocalizations.of(context).noWidgetsSelected,
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.grey),
+                                  style: TextStyle(
+                                      fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 Text(
                                   AppLocalizations.of(context).openMenuEnableWidgets,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.grey),
+                                  style: TextStyle(
+                                      fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                                 ),
                               ],
                               ),
@@ -450,8 +450,8 @@ class _DashboardWidgetState extends State<DashboardWidget>
                             curve: Curves.easeOut,
                             duration: const Duration(milliseconds: 150),
                             swapEnabled: true,
-                            backgroundStyle: const EditModeBackgroundStyle(
-                              lineColor: Colors.white24,
+                            backgroundStyle: EditModeBackgroundStyle(
+                              lineColor: AppColors.textOnDark.withValues(alpha: 0.24),
                               lineWidth: 1,
                               dualLineHorizontal: false,
                               dualLineVertical: false,
@@ -485,7 +485,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                                         child: Text(
                                           "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: AppColors.textOnDark,
                                           ),
                                         ),
                                       ),
@@ -501,7 +501,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                                           },
                                           child: const Icon(
                                             Icons.close,
-                                            color: Colors.white,
+                                            color: AppColors.textOnDark,
                                             size: 20,
                                           ),
                                         ),
@@ -523,7 +523,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     );
   }
 
-  Widget _menuItem(IconData icon, String label, {Color color = Colors.white}) {
+  Widget _menuItem(IconData icon, String label, {Color color = AppColors.textOnDark}) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -541,10 +541,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
       right: 0,
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0x26EF4444),
+          color: Color(0x26EF4444), // edit-mode red overlay at 15% alpha
           border: Border(
             bottom: BorderSide(
-              color: Color(0x4DEF4444),
+              color: Color(0x4DEF4444), // edit-mode red border at 30% alpha
               width: 1,
             ),
           ),
@@ -555,12 +555,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
         ),
         child: Row(
           children: [
-            const Icon(Icons.drag_indicator, color: Colors.white38, size: 14),
+            Icon(Icons.drag_indicator, color: AppColors.textOnDark.withValues(alpha: 0.38), size: 14),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 l10n.dragToMove,
-                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.38), fontSize: 11),
               ),
             ),
             IconButton(
@@ -573,7 +573,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               },
               icon: const Icon(
                 Icons.close,
-                color: Color(0xFFEF4444),
+                color: Color(0xFFEF4444), // edit-mode delete icon red
                 size: 18,
               ),
               padding: EdgeInsets.zero,
@@ -619,7 +619,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.confirm, style: const TextStyle(color: Colors.red)),
+                child: Text(l10n.confirm, style: const TextStyle(color: AppColors.error)),
               ),
             ],
           ),
@@ -659,7 +659,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+                child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
               ),
             ],
           ),
@@ -741,7 +741,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
 
   Widget _buildWidgetPreview(String widgetId) {
     final dummyItem = ColoredDashboardItem(
-      color: Colors.blue,
+      color: AppColors.primary,
       width: 2,
       height: 2,
       startX: 0,
@@ -782,7 +782,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
           child: Container(
             margin: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
+              border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: DataWidget(item: dummyItem),

@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_file/open_file.dart';
 import '../services/export_service.dart';
+import '../theme/app_colors.dart';
 import 'glass_container.dart';
 
 class ExportPreviewDialog extends StatefulWidget {
@@ -66,8 +67,8 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                 : Icons.text_snippet,
             size: 28,
             color: widget.format == ExportFormat.pdf
-                ? Colors.red
-                : Colors.blue,
+                ? AppColors.error
+                : AppColors.primary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -86,7 +87,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                   widget.filePath.split(Platform.pathSeparator).last,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: AppColors.textOnLightSecondary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -123,7 +124,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  Icon(Icons.error_outline, size: 48, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     'Error loading PDF preview: ${snapshot.error}',
@@ -218,7 +219,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
         children: [
           const Row(
             children: [
-              Icon(Icons.info_outline, size: 16, color: Colors.blue),
+              Icon(Icons.info_outline, size: 16, color: AppColors.primary),
               SizedBox(width: 8),
               Text(
                 'File Location',
@@ -235,7 +236,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
             style: const TextStyle(
               fontSize: 11,
               fontFamily: 'monospace',
-              color: Colors.grey,
+              color: AppColors.textOnLightSecondary,
             ),
           ),
         ],
@@ -255,7 +256,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not open file: ${result.message}'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
           ),
         );
       }
@@ -264,7 +265,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error opening file: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     } finally {

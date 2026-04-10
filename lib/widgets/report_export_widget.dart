@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/glass_container.dart';
 import '../l10n/app_localizations.dart';
-
-const Color red = Color(0xFFEA4335);
+import '../theme/app_colors.dart';
 
 // Report Export Button Widget
 class ReportExportWidget extends StatefulWidget {
@@ -20,7 +19,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      color: red,
+      color: AppColors.error,
       opacity: 0.2,
       borderRadius: 16,
       padding: const EdgeInsets.all(12),
@@ -58,7 +57,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
                   label: Text(AppLocalizations.of(context).export),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: red,
+                    foregroundColor: AppColors.error,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                   ),

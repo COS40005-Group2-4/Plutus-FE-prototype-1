@@ -25,7 +25,7 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
   static const Map<AssetType, Color> _assetColors = {
     AssetType.stock: AppColors.primary,
     AssetType.bond: AppColors.success,
-    AssetType.crypto: Color(0xFFF39C12),
+    AssetType.crypto: AppColors.savingsAccent,
     AssetType.other: Color(0xFF95A5A6),
   };
 

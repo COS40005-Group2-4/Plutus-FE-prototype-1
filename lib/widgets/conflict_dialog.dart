@@ -44,7 +44,7 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded,
-              color: isDark ? AppColors.accent : Colors.orange),
+              color: isDark ? AppColors.accent : AppColors.warning),
           const SizedBox(width: 8),
           Expanded(child: Text(l10n.backupConflictTitle)),
         ],

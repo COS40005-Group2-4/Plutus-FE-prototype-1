@@ -39,7 +39,7 @@ class ReportAiRecommendation extends StatelessWidget {
           Row(
             children: <Widget>[
               Icon(Icons.auto_awesome, size: 16, color: accentColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.translate('report_ai_insight'),
                 style: TextStyle(

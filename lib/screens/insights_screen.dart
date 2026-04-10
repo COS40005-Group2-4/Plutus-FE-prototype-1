@@ -63,11 +63,11 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppColors.error,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppRadius.borderMd,
                       ),
                       child: Text(
                         '${provider.unreadAlertCount}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                        style: const TextStyle(color: AppColors.textOnDark, fontSize: 10),
                       ),
                     ),
                   ],
@@ -506,7 +506,7 @@ class _AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color severityColor = alert.severity == Severity.warning
-        ? Colors.orange
+        ? AppColors.warning
         : alert.severity == Severity.positive
             ? AppColors.success
             : AppColors.primary;
@@ -715,7 +715,7 @@ class _DifficultyBadge extends StatelessWidget {
         color = AppColors.success;
         label = l10n.translate('insights_coaching_difficulty_easy');
       case CoachingDifficulty.medium:
-        color = Colors.orange;
+        color = AppColors.warning;
         label = l10n.translate('insights_coaching_difficulty_medium');
       case CoachingDifficulty.hard:
         color = AppColors.error;
@@ -726,7 +726,7 @@ class _DifficultyBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.borderMd,
       ),
       child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
     );
@@ -766,7 +766,7 @@ class _InsightCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.borderMd,
                     ),
                     child: Text(
                       category!,
@@ -812,7 +812,7 @@ class _MetricBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color color = metric.severity == Severity.warning
-        ? Colors.orange
+        ? AppColors.warning
         : metric.severity == Severity.positive
             ? AppColors.success
             : AppColors.primary;
@@ -827,7 +827,7 @@ class _MetricBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.borderMd,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

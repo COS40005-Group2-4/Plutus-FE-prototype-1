@@ -151,21 +151,21 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xxxl),
                   if (_users.isEmpty)
-                    const Expanded(
+                    Expanded(
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.people_outline, size: 80, color: Colors.grey),
+                            Icon(Icons.people_outline, size: 80, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                             SizedBox(height: AppSpacing.xl),
                             Text(
                               'No profiles found',
-                              style: TextStyle(fontSize: 18, color: Colors.grey),
+                              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                             ),
                             SizedBox(height: AppSpacing.sm),
                             Text(
                               'Create a profile to get started',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                             ),
                           ],
                         ),
@@ -189,14 +189,14 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                                 ),
                                 leading: CircleAvatar(
                                   backgroundColor: user.isGuest
-                                      ? Colors.grey
+                                      ? AppColors.textOnLightSecondary
                                       : user.hasOAuth
                                           ? AppColors.primary
                                           : AppColors.success,
                                   child: Text(
                                     user.displayName[0].toUpperCase(),
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.textOnDark,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -247,14 +247,14 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.grey.withValues(alpha: 0.2),
+                                              color: AppColors.textOnLightSecondary.withValues(alpha: 0.2),
                                               borderRadius: AppRadius.borderMd,
                                             ),
                                             child: const Text(
                                               'Guest',
                                               style: TextStyle(
                                                 fontSize: 10,
-                                                color: Colors.grey,
+                                                color: AppColors.textOnLightSecondary,
                                               ),
                                             ),
                                           ),

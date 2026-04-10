@@ -37,18 +37,18 @@ class ReportPreviewScreen extends StatelessWidget {
         title: Text(
           l10n.translate('report_preview'),
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.textOnDark,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white70),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textOnDarkSecondary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.white70),
+            icon: const Icon(Icons.share_outlined, color: AppColors.textOnDarkSecondary),
             tooltip: l10n.translate('report_share'),
             onPressed: data == null
                 ? null
@@ -72,10 +72,10 @@ class ReportPreviewScreen extends StatelessWidget {
           : FloatingActionButton.extended(
               onPressed: () => _exportPdf(context, provider),
               backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
+              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.textOnDark),
               label: Text(
                 l10n.translate('report_export_pdf'),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w600),
               ),
             ),
     );
@@ -93,7 +93,7 @@ class ReportPreviewScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               l10n.translate('report_generating_loading'),
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
+              style: const TextStyle(color: AppColors.textOnDarkTertiary, fontSize: 14),
             ),
             if (provider.progress > 0) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
@@ -101,7 +101,7 @@ class ReportPreviewScreen extends StatelessWidget {
                 width: 200,
                 child: LinearProgressIndicator(
                   value: provider.progress,
-                  backgroundColor: Colors.white12,
+                  backgroundColor: Color(0x1FFFFFFF), // subtle white on dark background
                   valueColor:
                       const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
@@ -123,7 +123,7 @@ class ReportPreviewScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Error: ${provider.error}',
-                style: const TextStyle(color: Colors.white54, fontSize: 14),
+                style: const TextStyle(color: AppColors.textOnDarkTertiary, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -136,12 +136,12 @@ class ReportPreviewScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.description_outlined, color: Colors.white24, size: 64),
+          Icon(Icons.description_outlined, color: AppColors.textOnDark.withValues(alpha: 0.24), size: 64),
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.translate('report_no_data'),
-            style: const TextStyle(
-              color: Colors.white38,
+            style: TextStyle(
+              color: AppColors.textOnDark.withValues(alpha: 0.38),
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
@@ -149,7 +149,7 @@ class ReportPreviewScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.translate('report_no_data_subtitle'),
-            style: const TextStyle(color: Colors.white24, fontSize: 13),
+            style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.24), fontSize: 13),
           ),
         ],
       ),
@@ -219,7 +219,7 @@ class ReportPreviewScreen extends StatelessWidget {
           backgroundColor: AppColors.success,
           action: SnackBarAction(
             label: l10n.translate('ok'),
-            textColor: Colors.white,
+            textColor: AppColors.textOnDark,
             onPressed: () {},
           ),
         ),

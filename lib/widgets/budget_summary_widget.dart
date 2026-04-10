@@ -9,6 +9,7 @@ import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 class BudgetSummaryWidget extends StatefulWidget {
   const BudgetSummaryWidget({super.key});
@@ -97,11 +98,11 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
 
         Color progressColor;
         if (provider.overallProgress >= 1.0) {
-          progressColor = Colors.red.shade400;
+          progressColor = AppColors.error;
         } else if (provider.overallProgress >= 0.7) {
-          progressColor = Colors.amber.shade400;
+          progressColor = AppColors.warning;
         } else {
-          progressColor = Colors.green.shade400;
+          progressColor = AppColors.success;
         }
 
         final totalBudgeted = provider.totalBudgeted;
@@ -214,14 +215,14 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                     _SummaryTile(
                       label: l10n.budgetSpent,
                       value: fmtCurrency(totalSpent),
-                      valueColor: Colors.red.shade400,
+                      valueColor: AppColors.error,
                     ),
                     _SummaryTile(
                       label: l10n.budgetLeft,
                       value: fmtCurrency(totalRemaining.abs()),
                       valueColor: totalRemaining >= 0
-                          ? Colors.green.shade400
-                          : Colors.red.shade400,
+                          ? AppColors.success
+                          : AppColors.error,
                     ),
                   ],
                 ),
@@ -319,20 +320,20 @@ class _AlertBanner extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: Colors.red.shade400.withValues(alpha: 0.12),
+        color: AppColors.error.withValues(alpha: 0.12),
         borderRadius: AppRadius.borderSm,
-        border: Border.all(color: Colors.red.shade400.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(Icons.warning_amber_rounded,
-              color: Colors.red.shade400, size: 16),
+              color: AppColors.error, size: 16),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.red.shade400,
+                    color: AppColors.error,
                   ),
             ),
           ),

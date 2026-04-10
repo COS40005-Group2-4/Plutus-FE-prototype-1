@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 
 class GlassContainer extends StatelessWidget {
   final Widget? child;
@@ -22,7 +23,7 @@ class GlassContainer extends StatelessWidget {
     this.child,
     this.width,
     this.height,
-    this.borderRadius = 16.0,
+    this.borderRadius = AppRadius.lg,
     this.blur = 10.0,
     this.borderOpacity = 0.2,
     this.opacity = 0.1,

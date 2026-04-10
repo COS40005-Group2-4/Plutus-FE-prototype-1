@@ -144,7 +144,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
                                                   size: 12,
                                                   color: score.score >= score.previousScore!
                                                       ? AppColors.success
-                                                      : Colors.red,
+                                                      : AppColors.error,
                                                 ),
                                                 Text(
                                                   '${(score.score - score.previousScore!).abs()}',
@@ -152,7 +152,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
                                                     fontSize: 11,
                                                     color: score.score >= score.previousScore!
                                                         ? AppColors.success
-                                                        : Colors.red,
+                                                        : AppColors.error,
                                                   ),
                                                 ),
                                               ],
@@ -185,8 +185,8 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
 
   static Color _scoreColor(int score) {
     if (score >= 75) return AppColors.success;
-    if (score >= 50) return Colors.orange;
-    return Colors.red;
+    if (score >= 50) return AppColors.warning;
+    return AppColors.error;
   }
 }
 
@@ -216,9 +216,9 @@ class _ScoreArcPainter extends CustomPainter {
     if (score >= 75) {
       scoreColor = AppColors.success;
     } else if (score >= 50) {
-      scoreColor = Colors.orange;
+      scoreColor = AppColors.warning;
     } else {
-      scoreColor = Colors.red;
+      scoreColor = AppColors.error;
     }
 
     final Paint scorePaint = Paint()

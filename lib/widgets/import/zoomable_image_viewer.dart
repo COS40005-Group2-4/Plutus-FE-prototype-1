@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_radius.dart';
 
 class ZoomableImageViewer extends StatefulWidget {
   final ImageProvider imageProvider;
@@ -144,7 +145,7 @@ class _ToolbarButton extends StatelessWidget {
           backgroundColor:
               Theme.of(context).colorScheme.surfaceContainerHighest,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: AppRadius.borderSm,
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/ai/category_suggestion.dart';
+import '../../theme/app_spacing.dart';
 
 class AiCategoryField extends StatelessWidget {
   final List<String> categories;
@@ -60,7 +61,7 @@ class AiCategoryField extends StatelessWidget {
           onChanged: onCategoryChanged,
         ),
         if (showRunnerUps) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 6,
             children: aiSuggestions.skip(1).take(2).map((suggestion) {

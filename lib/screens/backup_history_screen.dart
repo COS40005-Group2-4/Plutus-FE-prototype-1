@@ -94,11 +94,11 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
+                  Icon(Icons.cloud_off, size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text(
                     l10n.backupNoVersions,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
@@ -120,7 +120,7 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
                     onTap: () => _confirmRestore(context, version),
                     child: Row(
                       children: [
-                        const Icon(Icons.cloud_done, color: Colors.blue),
+                        const Icon(Icons.cloud_done, color: AppColors.primary),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -136,15 +136,15 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 '${l10n.backupVersionSize}: ${_formatFileSize(version.fileSizeBytes)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.restore, color: Colors.grey),
+                        Icon(Icons.restore, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                       ],
                     ),
                   ),

@@ -8,6 +8,8 @@ import 'glass_container.dart';
 import 'add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 
 /// Investment Dashboard Widget
 /// 
@@ -274,19 +276,19 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
         const Icon(
           Icons.error_outline,
           size: 32,
-          color: Colors.redAccent,
+          color: AppColors.error,
         ),
         const SizedBox(height: 8),
         Text(
           localizations.errorLoadingData,
-          style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+          style: const TextStyle(color: AppColors.error, fontSize: 11),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         ElevatedButton(
           onPressed: () => _loadData(forceRefresh: true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+            backgroundColor: AppColors.error.withValues(alpha: 0.8),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             minimumSize: Size.zero,
@@ -300,7 +302,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
   Widget _buildCompactInvestmentCard(InvestmentModel investment, bool isDark) {
     final color = investment.isPositiveReturn()
         ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? Colors.redAccent : Colors.red);
+        : (isDark ? AppColors.error : AppColors.error);
 
     final currentValue = investment.getCurrentValue();
     final gainLoss = investment.getGainLoss();
@@ -312,7 +314,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
         color: isDark 
             ? Colors.white.withValues(alpha: 0.05)
             : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.borderMd,
         border: Border.all(
           color: isDark 
               ? Colors.white.withValues(alpha: 0.1)
@@ -375,8 +377,8 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          
+          const SizedBox(height: AppSpacing.md),
+
           // Investment details in compact grid
           Row(
             children: [
@@ -483,7 +485,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Added $assetName'),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.success,
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -501,7 +503,7 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Failed to add investment: $e'),
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.error,
                 ),
               );
             }
@@ -627,7 +629,7 @@ class _InvestmentListDialog extends StatelessWidget {
   ) {
     final color = investment.isPositiveReturn()
         ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? Colors.redAccent : Colors.red);
+        : (isDark ? AppColors.error : AppColors.error);
 
     final currentValue = investment.getCurrentValue();
     final gainLoss = investment.getGainLoss();
@@ -689,7 +691,7 @@ class _InvestmentListDialog extends StatelessWidget {
                       onPressed: () {
                         _showDeleteConfirmation(context, investment, onRefresh);
                       },
-                      color: Colors.redAccent,
+                      color: AppColors.error,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -832,7 +834,7 @@ class _InvestmentListDialog extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Updated $assetName'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
           onRefresh();
@@ -886,7 +888,7 @@ class _InvestmentListDialog extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Deleted ${investment.assetName}'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                     ),
                   );
                   
@@ -899,13 +901,13 @@ class _InvestmentListDialog extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                     ),
                   );
                 }
               }
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],

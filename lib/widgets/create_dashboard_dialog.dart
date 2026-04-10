@@ -49,9 +49,9 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : AppColors.textOnLight;
-    final secondaryTextColor = isDark ? Colors.white70 : AppColors.textOnLightSecondary;
-    final tertiaryTextColor = isDark ? Colors.white54 : AppColors.textOnLightTertiary;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.textOnLight;
+    final secondaryTextColor = isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary;
+    final tertiaryTextColor = isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary;
     final containerColor = isDark ? AppColors.menuBackground : Colors.white;
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.3)
@@ -150,7 +150,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                     onPressed: _validate,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textOnDark,
                     ),
                     child: Text(l10n.create),
                   ),

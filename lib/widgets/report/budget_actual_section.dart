@@ -97,7 +97,7 @@ class BudgetActualSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.sm),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.xs),
             child: LinearProgressIndicator(

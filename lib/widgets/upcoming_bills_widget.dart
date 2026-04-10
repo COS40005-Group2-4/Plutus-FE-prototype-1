@@ -11,6 +11,8 @@ import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -327,7 +329,7 @@ class _BillsContentState extends State<_BillsContent> {
 
     final maxVal = weeklyTotals.values.fold(0.0, (a, b) => a > b ? a : b);
     final labels = ['Overdue', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'];
-    final colors = [Colors.red, Colors.orange, Colors.blue, Colors.blue, Colors.blue];
+    final colors = [AppColors.error, AppColors.warning, AppColors.primary, AppColors.primary, AppColors.primary];
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -429,9 +431,9 @@ class _BillsContentState extends State<_BillsContent> {
     
     Color dateColor;
     if (bill.isOverdue) {
-      dateColor = Colors.red;
+      dateColor = AppColors.error;
     } else if (daysUntilDue <= 3) {
-      dateColor = Colors.pink;
+      dateColor = AppColors.error;
     } else {
       dateColor = const Color(0xFF6050dc);
     }
@@ -445,7 +447,7 @@ class _BillsContentState extends State<_BillsContent> {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: GlassContainer(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(AppSpacing.md),
           color: Colors.white,
           opacity: 0.05,
           borderRadius: 8,
@@ -454,10 +456,10 @@ class _BillsContentState extends State<_BillsContent> {
               // Date indicator
               Container(
                 width: 50,
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: dateColor.withValues(alpha:0.2),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: AppRadius.borderSm,
                   border: Border.all(color: dateColor.withValues(alpha:0.5)),
                 ),
                 child: Column(
@@ -481,7 +483,7 @@ class _BillsContentState extends State<_BillsContent> {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.md),
               // Bill details
               Expanded(
                 child: Column(
@@ -522,14 +524,14 @@ class _BillsContentState extends State<_BillsContent> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha:0.25),
+                              color: AppColors.error.withValues(alpha:0.25),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.red.withValues(alpha:0.6)),
+                              border: Border.all(color: AppColors.error.withValues(alpha:0.6)),
                             ),
                             child: const Text(
                               'OVERDUE',
                               style: TextStyle(
-                                color: Colors.redAccent,
+                                color: AppColors.error,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -539,13 +541,13 @@ class _BillsContentState extends State<_BillsContent> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha:0.2),
+                              color: AppColors.primary.withValues(alpha:0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               _getRecurrenceLabel(bill.recurrence),
                               style: const TextStyle(
-                                color: Colors.lightBlueAccent,
+                                color: AppColors.accent,
                                 fontSize: 9,
                               ),
                             ),
@@ -560,7 +562,7 @@ class _BillsContentState extends State<_BillsContent> {
                 ElevatedButton(
                   onPressed: () => _handlePayBill(bill),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.withValues(alpha:0.8),
+                    backgroundColor: AppColors.success.withValues(alpha:0.8),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
@@ -577,7 +579,7 @@ class _BillsContentState extends State<_BillsContent> {
                       scale: value,
                       child: Icon(
                         Icons.check_circle,
-                        color: Colors.green.withValues(alpha:value),
+                        color: AppColors.success.withValues(alpha:value),
                         size: 20,
                       ),
                     );
@@ -857,10 +859,10 @@ class _BillSelectorDialog extends StatelessWidget {
                     leading: Icon(
                       bill.isPaid ? Icons.check_circle : Icons.receipt_long,
                       color: bill.isPaid
-                          ? Colors.green
+                          ? AppColors.success
                           : bill.isOverdue
-                              ? Colors.red
-                              : Colors.orange,
+                              ? AppColors.error
+                              : AppColors.warning,
                     ),
                     title: Text(bill.name),
                     subtitle: Text(
@@ -883,7 +885,7 @@ class _BillSelectorDialog extends StatelessWidget {
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                          icon: Icon(Icons.delete, size: 20, color: AppColors.error),
                           onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
@@ -897,7 +899,7 @@ class _BillSelectorDialog extends StatelessWidget {
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    child: Text('Delete', style: TextStyle(color: AppColors.error)),
                                   ),
                                 ],
                               ),

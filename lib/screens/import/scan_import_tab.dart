@@ -16,6 +16,7 @@ import '../../widgets/glass_container.dart';
 import '../../widgets/import/ai_category_field.dart';
 import '../../widgets/import/zoomable_image_viewer.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_colors.dart';
 
 class ScanImportTab extends StatefulWidget {
   const ScanImportTab({super.key});
@@ -131,14 +132,14 @@ class _ScanImportTabState extends State<ScanImportTab> {
         final error = details?['error'] ?? 'Could not read text from image';
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error), backgroundColor: Colors.red),
+            SnackBar(content: Text(error), backgroundColor: AppColors.error),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('OCR error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('OCR error: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -211,7 +212,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         if (context.mounted) {
@@ -224,7 +225,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -251,12 +252,11 @@ class _ScanImportTabState extends State<ScanImportTab> {
                   icon: const Icon(Icons.image),
                   label: Text(AppLocalizations.of(context).selectInvoiceImage),
                 ),
-                if (!kIsWeb)
-                  ElevatedButton.icon(
-                    onPressed: _scanning ? null : () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
-                  ),
+                ElevatedButton.icon(
+                  onPressed: _scanning ? null : () => _pickImage(ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Camera'),
+                ),
               ],
             ),
             const SizedBox(height: 16),
