@@ -11,6 +11,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class IncomeTrendWidget extends StatefulWidget {
   const IncomeTrendWidget({super.key});
@@ -46,13 +47,22 @@ class _IncomeTrendWidgetState extends State<IncomeTrendWidget> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.trending_up, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text(
+                  const Icon(Icons.trending_up, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  const Text(
                     'Income Trend',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: AppLocalizations.of(context).widgetHelpIncomeTrend,
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                    ),
                   ),
                 ],
               ),

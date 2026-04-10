@@ -79,6 +79,15 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
                         AppLocalizations.of(context).savingsRate,
                         style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: AppLocalizations.of(context).widgetHelpSavingsRate,
+                        child: Icon(
+                          Icons.help_outline,
+                          size: 14,
+                          color: AppColors.textTertiary(Theme.of(context).brightness),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

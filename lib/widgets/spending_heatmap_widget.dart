@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
 import 'glass_container.dart';
+import '../l10n/app_localizations.dart';
 
 class SpendingHeatmapWidget extends StatefulWidget {
   const SpendingHeatmapWidget({super.key});
@@ -45,16 +46,25 @@ class _SpendingHeatmapWidgetState extends State<SpendingHeatmapWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.calendar_view_week, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text(
+                  const Icon(Icons.calendar_view_week, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  const Text(
                     'Spending Heatmap',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: AppLocalizations.of(context).widgetHelpSpendingHeatmap,
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                    ),
                   ),
                 ],
               ),
