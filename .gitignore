@@ -139,3 +139,7 @@ lambda/package.zip
 android/key.properties
 *.keystore
 *.jks
+
+#Claude
+.claude/
+.codesight/

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart' show databaseFactory;
 
 import '../config/aws_config.dart';
 import '../models/backup_models.dart';
@@ -62,15 +63,21 @@ class BackupService implements IBackupService {
     _validateCredentials();
 
     final dbPath = await getDatabasePath();
-    final dbFile = File(dbPath);
-    if (!await dbFile.exists()) {
-      throw BackupException('Local database file not found', code: 'local_db_missing');
+
+    // Read database bytes cross-platform (works on web + native)
+    final Uint8List bytes;
+    if (kIsWeb) {
+      bytes = await databaseFactory.readDatabaseBytes(dbPath);
+    } else {
+      final dbFile = File(dbPath);
+      if (!await dbFile.exists()) {
+        throw BackupException('Local database file not found', code: 'local_db_missing');
+      }
+      bytes = await dbFile.readAsBytes();
     }
 
     // Enforce version limit before uploading
     await enforceVersionLimit(userId);
-
-    final bytes = await dbFile.readAsBytes();
     final checksum = md5.convert(bytes).toString();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final s3Key = 'backups/$userId/$timestamp.db';
@@ -117,20 +124,31 @@ class BackupService implements IBackupService {
   }
 
   /// Download a specific backup version and overwrite local DB.
-  /// Uses a temp file for rollback on failure.
+  /// Uses a temp file for rollback on failure (native only).
   @override
   Future<void> restoreBackup(int userId, String s3ObjectKey) async {
     _validateCredentials();
 
     final dbPath = await getDatabasePath();
-    final dbFile = File(dbPath);
-    final tempPath = '$dbPath.tmp';
-    final tempFile = File(tempPath);
 
-    // Back up current DB to temp file for rollback
-    bool hadExistingDb = await dbFile.exists();
-    if (hadExistingDb) {
-      await dbFile.copy(tempPath);
+    // Save current DB for rollback (native only; web has no temp files)
+    Uint8List? originalBytes;
+    if (kIsWeb) {
+      try {
+        originalBytes = await databaseFactory.readDatabaseBytes(dbPath);
+      } catch (_) {}
+    }
+
+    File? tempFile;
+    bool hadExistingDb = false;
+    if (!kIsWeb) {
+      final dbFile = File(dbPath);
+      final tempPath = '$dbPath.tmp';
+      tempFile = File(tempPath);
+      hadExistingDb = await dbFile.exists();
+      if (hadExistingDb) {
+        await dbFile.copy(tempPath);
+      }
     }
 
     try {
@@ -152,10 +170,13 @@ class BackupService implements IBackupService {
       );
 
       if (response.statusCode == 200) {
-        await dbFile.writeAsBytes(response.bodyBytes);
-        // Clean up temp file on success
-        if (await tempFile.exists()) {
-          await tempFile.delete();
+        if (kIsWeb) {
+          await databaseFactory.writeDatabaseBytes(dbPath, response.bodyBytes);
+        } else {
+          await File(dbPath).writeAsBytes(response.bodyBytes);
+          if (tempFile != null && await tempFile.exists()) {
+            await tempFile.delete();
+          }
         }
         if (kDebugMode) {
           debugPrint('BackupService: Restored backup from $s3ObjectKey');
@@ -167,8 +188,12 @@ class BackupService implements IBackupService {
         );
       }
     } catch (e) {
-      // Rollback: restore original DB from temp
-      if (hadExistingDb && await tempFile.exists()) {
+      // Rollback
+      if (kIsWeb && originalBytes != null) {
+        try {
+          await databaseFactory.writeDatabaseBytes(dbPath, originalBytes);
+        } catch (_) {}
+      } else if (!kIsWeb && hadExistingDb && tempFile != null && await tempFile.exists()) {
         await tempFile.copy(dbPath);
         await tempFile.delete();
       }
@@ -396,11 +421,17 @@ class BackupService implements IBackupService {
   @override
   Future<String> computeLocalChecksum() async {
     final dbPath = await getDatabasePath();
-    final dbFile = File(dbPath);
-    if (!await dbFile.exists()) {
-      throw BackupException('Local database file not found', code: 'local_db_missing');
+
+    final Uint8List bytes;
+    if (kIsWeb) {
+      bytes = await databaseFactory.readDatabaseBytes(dbPath);
+    } else {
+      final dbFile = File(dbPath);
+      if (!await dbFile.exists()) {
+        throw BackupException('Local database file not found', code: 'local_db_missing');
+      }
+      bytes = await dbFile.readAsBytes();
     }
-    final bytes = await dbFile.readAsBytes();
     return md5.convert(bytes).toString();
   }
 
