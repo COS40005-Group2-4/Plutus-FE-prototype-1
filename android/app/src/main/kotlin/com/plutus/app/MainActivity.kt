@@ -1,4 +1,4 @@
-package com.example.plutus_fe_prototype
+package com.plutus.app
 
 import io.flutter.embedding.android.FlutterActivity
 
