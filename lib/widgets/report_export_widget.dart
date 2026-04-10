@@ -35,14 +35,28 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
               children: [
                 Icon(Icons.download, size: isCompact ? 28 : 40, color: Colors.white),
                 SizedBox(height: isCompact ? 6 : 12),
-                Text(
-                  AppLocalizations.of(context).widgetExportReport,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isCompact ? 13 : 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context).widgetExportReport,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isCompact ? 13 : 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(width: 4),
+                    Tooltip(
+                      message: AppLocalizations.of(context).widgetHelpExport,
+                      child: Icon(
+                        Icons.help_outline,
+                        size: 14,
+                        color: AppColors.textTertiary(Theme.of(context).brightness),
+                      ),
+                    ),
+                  ],
                 ),
                 if (!isCompact) ...[
                   const SizedBox(height: 8),

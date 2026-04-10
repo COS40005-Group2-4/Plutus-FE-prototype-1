@@ -188,12 +188,25 @@ class CategoryBudgetWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Widget title ──────────────────────────────────────────────
-              Text(
-                  l10n.categoryBudgetTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+              Row(
+                children: [
+                  Text(
+                    l10n.categoryBudgetTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: l10n.widgetHelpCategoryBudget,
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
 
               // ── Header ────────────────────────────────────────────────────

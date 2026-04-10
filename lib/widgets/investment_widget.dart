@@ -161,13 +161,27 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          localizations.investments,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              localizations.investments,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Tooltip(
+              message: localizations.widgetHelpInvestments,
+              child: Icon(
+                Icons.help_outline,
+                size: 14,
+                color: AppColors.textTertiary(Theme.of(context).brightness),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(

@@ -584,13 +584,27 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              AppLocalizations.of(context).taxEstimation,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppLocalizations.of(context).taxEstimation,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context).widgetHelpTaxEstimation,
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 14,
+                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

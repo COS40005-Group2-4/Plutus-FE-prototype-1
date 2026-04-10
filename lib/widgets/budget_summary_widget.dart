@@ -130,11 +130,24 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 0. Widget title
-                Text(
-                  l10n.widgetBudgetTracking,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Text(
+                      l10n.widgetBudgetTracking,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(width: 4),
+                    Tooltip(
+                      message: l10n.widgetHelpBudget,
+                      child: Icon(
+                        Icons.help_outline,
+                        size: 14,
+                        color: AppColors.textTertiary(Theme.of(context).brightness),
                       ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.md),
 
