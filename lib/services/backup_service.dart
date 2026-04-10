@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart' show databaseFactory;
+import 'package:sqflite/sqflite.dart' show databaseFactory, getDatabasesPath;
 
 import '../config/aws_config.dart';
 import '../models/backup_models.dart';
@@ -47,7 +47,7 @@ class BackupService implements IBackupService {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       directory = (await getApplicationSupportDirectory()).path;
     } else if (Platform.isAndroid) {
-      directory = (await getApplicationSupportDirectory()).path;
+      directory = await getDatabasesPath();
     } else if (Platform.isIOS) {
       directory = (await getApplicationDocumentsDirectory()).path;
     } else {
@@ -174,6 +174,13 @@ class BackupService implements IBackupService {
           await databaseFactory.writeDatabaseBytes(dbPath, response.bodyBytes);
         } else {
           await File(dbPath).writeAsBytes(response.bodyBytes);
+          // Remove stale WAL/SHM files so SQLite opens the fresh DB cleanly
+          for (final suffix in ['-wal', '-shm']) {
+            try {
+              final f = File('$dbPath$suffix');
+              if (await f.exists()) await f.delete();
+            } catch (_) {}
+          }
           if (tempFile != null && await tempFile.exists()) {
             await tempFile.delete();
           }

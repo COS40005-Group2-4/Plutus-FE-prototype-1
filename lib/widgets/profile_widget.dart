@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../providers/profile_provider.dart';
+import '../services/database_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -31,6 +34,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   late TextEditingController _dobController;
   late TextEditingController _positionController;
   late TextEditingController _employmentController;
+  Uint8List? _avatarBytes;
 
   @override
   void initState() {
@@ -41,6 +45,16 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
     _profileProvider = ProfileProvider();
     _profileProvider.loadProfile(widget.user.id);
+    _loadAvatarBytes();
+  }
+
+  Future<void> _loadAvatarBytes() async {
+    try {
+      final blob = await DatabaseService().getAvatarBlob(widget.user.id);
+      if (blob != null && mounted) {
+        setState(() => _avatarBytes = blob);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -827,10 +841,33 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   }
 
   Widget _buildAvatarImage(Profile profile) {
+    // On web, load from DB blob since dart:io File is unavailable
+    if (kIsWeb) {
+      if (_avatarBytes != null) {
+        return Image.memory(
+          _avatarBytes!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Image.asset(
+            widget.defaultAvatarAsset,
+            fit: BoxFit.cover,
+          ),
+        );
+      }
+      return Image.asset(
+        widget.defaultAvatarAsset,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // On native platforms, load from file path
     if (profile.avatarPath != null && File(profile.avatarPath!).existsSync()) {
       return Image.file(
         File(profile.avatarPath!),
         fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Image.asset(
+          widget.defaultAvatarAsset,
+          fit: BoxFit.cover,
+        ),
       );
     }
     return Image.asset(
