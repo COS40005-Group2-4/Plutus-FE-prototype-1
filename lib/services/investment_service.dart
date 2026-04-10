@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/investment_model.dart';
 import '../utils/date_format_utils.dart';
@@ -264,7 +265,7 @@ class InvestmentService implements IInvestmentService {
   @override
   Future<Map<String, dynamic>> getInvestmentReport({String? currency}) async {
     if (!_ffiService.isAvailable) {
-      return {'roi': 0.0, 'irr': 0.0};
+      return _dartFallbackReport();
     }
 
     try {
@@ -282,14 +283,82 @@ class InvestmentService implements IInvestmentService {
 
       if (decoded.containsKey('code')) {
         debugPrint('InvestmentService: Report error — ${decoded['message']}');
-        return {'roi': 0.0, 'irr': 0.0};
+        return _dartFallbackReport();
       }
 
       return decoded;
     } catch (e) {
       debugPrint('InvestmentService: Failed to get investment report - $e');
+      return _dartFallbackReport();
+    }
+  }
+
+  /// Pure Dart ROI/IRR calculation as fallback when FFI is unavailable.
+  Future<Map<String, dynamic>> _dartFallbackReport() async {
+    try {
+      final investments = await getInvestmentList();
+      if (investments.isEmpty) return {'roi': 0.0, 'irr': 0.0};
+
+      double totalCost = 0;
+      double totalCurrentValue = 0;
+
+      for (final inv in investments) {
+        totalCost += inv.purchaseValue;
+        totalCurrentValue += (inv.currentPrice ?? 0) * inv.quantity;
+      }
+
+      // ROI = (current - cost) / cost * 100
+      final roi = totalCost > 0
+          ? (totalCurrentValue - totalCost) / totalCost * 100
+          : 0.0;
+
+      // IRR approximation via Newton's method on cash flows
+      final irr = _computeIrr(investments);
+
+      return {'roi': roi, 'irr': irr};
+    } catch (e) {
+      debugPrint('InvestmentService: Dart fallback report failed - $e');
       return {'roi': 0.0, 'irr': 0.0};
     }
+  }
+
+  /// Approximate annualized IRR using Newton's method.
+  double _computeIrr(List<InvestmentModel> investments) {
+    final now = DateTime.now();
+    // Build cash flow list: negative at purchase, positive at current value
+    final List<(double amount, double years)> cashFlows = [];
+
+    for (final inv in investments) {
+      final yearsAgo = now.difference(inv.purchaseDate).inDays / 365.25;
+      if (yearsAgo <= 0) continue;
+      cashFlows.add((-inv.purchaseValue, yearsAgo));
+      final currentValue = (inv.currentPrice ?? 0) * inv.quantity;
+      cashFlows.add((currentValue, 0.0));
+    }
+
+    if (cashFlows.isEmpty) return 0.0;
+
+    // Newton's method to find rate where NPV = 0
+    double rate = 0.1; // initial guess 10%
+    for (int i = 0; i < 100; i++) {
+      double npv = 0;
+      double dnpv = 0;
+      for (final (amount, years) in cashFlows) {
+        final base = (1 + rate).clamp(0.001, double.maxFinite);
+        final factor = 1 / math.pow(base, years);
+        npv += amount * factor;
+        dnpv -= years * amount * factor / base;
+      }
+      if (dnpv.abs() < 1e-12) break;
+      final newRate = rate - npv / dnpv;
+      if ((newRate - rate).abs() < 1e-8) {
+        rate = newRate;
+        break;
+      }
+      rate = newRate.clamp(-0.99, 10.0); // keep in reasonable range
+    }
+
+    return rate * 100; // return as percentage
   }
 
   @override

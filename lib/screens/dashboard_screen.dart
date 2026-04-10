@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dashboard/dashboard.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,18 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+
+/// On web, prevent mouse drag from scrolling so that pan gestures
+/// in edit mode can move widgets instead of scrolling the viewport.
+class _WebDragScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+        // Exclude PointerDeviceKind.mouse so mouse drag goes to GestureDetector
+      };
+}
 
 class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
   @override
@@ -390,6 +403,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
                           shrinkToPlace: true,
                           slideToTop: true,
                           absorbPointer: false,
+                          scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
                           slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                             (context, item, x, y, editing) {
                               return const GlassContainer(
