@@ -115,8 +115,8 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
                   ),
                   const Spacer(),
                   Tooltip(
-                    message: l10n.internalRateOfReturn,
-                    child: Icon(Icons.info_outline, size: 14,
+                    message: l10n.widgetHelpIrr,
+                    child: Icon(Icons.help_outline, size: 14,
                         color: AppColors.textTertiary(brightness)),
                   ),
                 ],

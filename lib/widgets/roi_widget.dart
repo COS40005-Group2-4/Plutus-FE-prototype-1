@@ -115,8 +115,8 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
                   ),
                   const Spacer(),
                   Tooltip(
-                    message: l10n.returnOnInvestment,
-                    child: Icon(Icons.info_outline, size: 14,
+                    message: l10n.widgetHelpRoi,
+                    child: Icon(Icons.help_outline, size: 14,
                         color: AppColors.textTertiary(brightness)),
                   ),
                 ],
