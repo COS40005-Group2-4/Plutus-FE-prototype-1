@@ -213,10 +213,8 @@ void main() {
       verify(mockDb.deleteInvestment('inv_del')).called(1);
     });
 
-    test('creates reversal posting in FFI when available', () async {
-      when(mockFfi.isAvailable).thenReturn(true);
-      // ignore: argument_type_not_assignable (resolved after mock regeneration)
-      when(mockFfi.addInvestment(argThat(isA<String>()))).thenReturn('{"code":200}');
+    test('deletes transaction and investment from database', () async {
+      when(mockFfi.isAvailable).thenReturn(false);
       when(mockDb.getInvestmentById('inv_del'))
           .thenAnswer((_) async => {
                 'currency': 'VND',
@@ -224,13 +222,14 @@ void main() {
                 'asset_name': 'AAPL',
                 'quantity': 10.0,
               });
+      when(mockDb.deleteTransactionById('inv_tx_inv_del'))
+          .thenAnswer((_) async {});
       when(mockDb.deleteInvestment('inv_del'))
           .thenAnswer((_) async {});
 
       await service.deleteInvestment('inv_del');
 
-      // ignore: argument_type_not_assignable (resolved after mock regeneration)
-      verify(mockFfi.addInvestment(argThat(isA<String>()))).called(1);
+      verify(mockDb.deleteTransactionById('inv_tx_inv_del')).called(1);
       verify(mockDb.deleteInvestment('inv_del')).called(1);
     });
 
@@ -319,6 +318,8 @@ void main() {
       // ignore: argument_type_not_assignable (resolved after mock regeneration)
       when(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>())))
           .thenAnswer((_) async => 1);
+      when(mockDb.insertTransaction(1, argThat(isA<Map<String, dynamic>>())))
+          .thenAnswer((_) async => 1);
 
       final newId = await service.saveInvestment(inv);
 
@@ -326,8 +327,7 @@ void main() {
       verify(mockPrice.getCurrentPrice('TSLA')).called(1);
       // ignore: argument_type_not_assignable (resolved after mock regeneration)
       verify(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>()))).called(1);
-      // ignore: argument_type_not_assignable (resolved after mock regeneration)
-      verify(mockFfi.addInvestment(argThat(isA<String>()))).called(1);
+      verify(mockDb.insertTransaction(1, argThat(isA<Map<String, dynamic>>()))).called(1);
     });
 
     test('saves investment without price fetch for bond type', () async {
@@ -344,6 +344,8 @@ void main() {
       when(mockFfi.addInvestment(argThat(isA<String>()))).thenReturn('{"code":200}');
       // ignore: argument_type_not_assignable (resolved after mock regeneration)
       when(mockDb.insertInvestment(1, argThat(isA<Map<String, dynamic>>())))
+          .thenAnswer((_) async => 1);
+      when(mockDb.insertTransaction(1, argThat(isA<Map<String, dynamic>>())))
           .thenAnswer((_) async => 1);
 
       final newId = await service.saveInvestment(inv);
