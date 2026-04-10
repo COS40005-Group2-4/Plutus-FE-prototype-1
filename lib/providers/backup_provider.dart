@@ -67,10 +67,17 @@ class BackupProvider extends ChangeNotifier {
       _isBackupEnabled =
           await _settingsService.getAutoBackupEnabled(userId);
 
-      // Always check if remote backups exist (for new device sync)
+      // Check if remote backups exist for this user
       try {
         final backups = await _backupService.listBackups(userId);
         _hasRemoteBackup = backups.isNotEmpty;
+
+        // If no backups found for current user, check ALL backups
+        // (recovers orphaned backups from old user IDs)
+        if (!_hasRemoteBackup) {
+          final allBackups = await _backupService.listAllBackups();
+          _hasRemoteBackup = allBackups.isNotEmpty;
+        }
       } catch (_) {
         _hasRemoteBackup = false;
       }
@@ -179,7 +186,12 @@ class BackupProvider extends ChangeNotifier {
       switch (choice) {
         case ConflictChoice.overrideLocal:
           // Download latest S3 version and replace local DB
-          final backups = await _backupService.listBackups(_userId!);
+          var backups = await _backupService.listBackups(_userId!);
+          // Fall back to all backups if none found for current user
+          // (recovers orphaned backups from old user IDs)
+          if (backups.isEmpty) {
+            backups = await _backupService.listAllBackups();
+          }
           if (backups.isNotEmpty) {
             await _backupService.restoreBackup(
                 _userId!, backups.first.s3ObjectKey);

@@ -1073,6 +1073,16 @@ class MockIBackupService extends _i1.Mock implements _i12.IBackupService {
           as _i7.Future<List<_i13.VersionEntry>>);
 
   @override
+  _i7.Future<List<_i13.VersionEntry>> listAllBackups() =>
+      (super.noSuchMethod(
+            Invocation.method(#listAllBackups, []),
+            returnValue: _i7.Future<List<_i13.VersionEntry>>.value(
+              <_i13.VersionEntry>[],
+            ),
+          )
+          as _i7.Future<List<_i13.VersionEntry>>);
+
+  @override
   _i7.Future<void> deleteBackup(String? s3ObjectKey) =>
       (super.noSuchMethod(
             Invocation.method(#deleteBackup, [s3ObjectKey]),

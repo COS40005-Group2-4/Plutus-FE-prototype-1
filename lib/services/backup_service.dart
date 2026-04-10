@@ -262,6 +262,50 @@ class BackupService implements IBackupService {
     return entries;
   }
 
+  /// List ALL backups across all user IDs, sorted by timestamp descending.
+  /// Used to recover orphaned backups from old user IDs.
+  @override
+  Future<List<VersionEntry>> listAllBackups() async {
+    _validateCredentials();
+
+    const prefix = 'backups/';
+
+    try {
+      final uri = Uri.https(_s3Host, '/', {
+        'list-type': '2',
+        'prefix': prefix,
+      });
+      final request = AWSHttpRequest(
+        method: AWSHttpMethod.get,
+        uri: uri,
+        headers: {},
+      );
+
+      final signedRequest = await _signer.sign(
+        request,
+        credentialScope: _scope,
+      );
+
+      final response = await http.get(
+        signedRequest.uri,
+        headers: signedRequest.headers,
+      );
+
+      if (response.statusCode == 200) {
+        return _parseListResponse(response.body);
+      } else {
+        throw BackupException(
+          'S3 list failed: ${response.statusCode} ${response.body}',
+          code: 's3_error',
+        );
+      }
+    } on SocketException catch (e) {
+      throw BackupException('Network error during list: $e', code: 'network_error');
+    } on HttpException catch (e) {
+      throw BackupException('Network error during list: $e', code: 'network_error');
+    }
+  }
+
   /// Delete a specific backup from S3.
   @override
   Future<void> deleteBackup(String s3ObjectKey) async {
