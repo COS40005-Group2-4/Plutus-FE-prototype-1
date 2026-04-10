@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/market_data_model.dart';
 import '../services/interfaces/i_price_api_service.dart';
 import '../di/service_locator.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
@@ -141,6 +142,24 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  const Text(
+                    'Market Trending',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: AppLocalizations.of(context).widgetHelpMarketTrending,
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               _buildHeader(),
               const SizedBox(height: 8),
               if (_isLoading)

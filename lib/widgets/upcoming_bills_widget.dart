@@ -98,13 +98,26 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          AppLocalizations.of(context).upcomingBills,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Text(
+              AppLocalizations.of(context).upcomingBills,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Tooltip(
+              message: AppLocalizations.of(context).widgetHelpBills,
+              child: Icon(
+                Icons.help_outline,
+                size: 14,
+                color: AppColors.textTertiary(Theme.of(context).brightness),
+              ),
+            ),
+          ],
         ),
         Row(
           children: [

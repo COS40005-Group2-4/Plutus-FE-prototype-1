@@ -124,6 +124,15 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 4),
+            Tooltip(
+              message: AppLocalizations.of(context).widgetHelpExpenseBreakdown,
+              child: Icon(
+                Icons.help_outline,
+                size: 14,
+                color: AppColors.textTertiary(Theme.of(context).brightness),
+              ),
+            ),
             Row(
               children: [
                 _buildToggle('Month', 0),

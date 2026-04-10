@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
@@ -50,9 +51,22 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Net Worth Trend',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      const Text(
+                        'Net Worth Trend',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: AppLocalizations.of(context).widgetHelpNetWorthTrend,
+                        child: Icon(
+                          Icons.help_outline,
+                          size: 14,
+                          color: AppColors.textTertiary(Theme.of(context).brightness),
+                        ),
+                      ),
+                    ],
                   ),
                   Row(
                     children: [

@@ -212,6 +212,15 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 4),
+                    Tooltip(
+                      message: AppLocalizations.of(context).widgetHelpTransactionHistory,
+                      child: Icon(
+                        Icons.help_outline,
+                        size: 14,
+                        color: AppColors.textTertiary(Theme.of(context).brightness),
+                      ),
+                    ),
                       if (_isEditMode)
                         Row(
                           children: [

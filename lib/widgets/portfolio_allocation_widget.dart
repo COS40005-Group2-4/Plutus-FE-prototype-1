@@ -5,6 +5,7 @@ import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
@@ -75,10 +76,23 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Portfolio Allocation',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+                    Row(
+                      children: [
+                        const Text(
+                          'Portfolio Allocation',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: AppLocalizations.of(context).widgetHelpPortfolioAllocation,
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 14,
+                            color: AppColors.textTertiary(Theme.of(context).brightness),
+                          ),
+                        ),
+                      ],
+                    ),
               IconButton(
                 icon: const Icon(Icons.refresh, color: Colors.white70, size: 18),
                 onPressed: _loadData,
