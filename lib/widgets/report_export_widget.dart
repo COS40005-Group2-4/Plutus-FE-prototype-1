@@ -28,10 +28,11 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact = constraints.maxHeight < 160;
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
+          return Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.download, size: isCompact ? 28 : 40, color: Colors.white),
                 SizedBox(height: isCompact ? 6 : 12),
@@ -79,6 +80,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
                   ),
                 ),
               ],
+              ),
             ),
           );
         },
