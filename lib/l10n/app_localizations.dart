@@ -484,6 +484,31 @@ class AppLocalizations {
       'widget_label_cash_flow_forecast': 'Cash Flow Forecast',
       'widget_label_coaching_tips': 'Coaching Tips',
 
+      // ── Widget Help Tooltips ──
+      'widget_help_profile': 'Your account overview and personal details.',
+      'widget_help_budget': 'Tracks how much you\'ve spent vs. your set budget.',
+      'widget_help_category_budget': 'Shows spending limits for each category.',
+      'widget_help_savings_rate': 'The percentage of income you\'re saving.',
+      'widget_help_net_worth_trend': 'Your total assets minus debts over time.',
+      'widget_help_transaction_history': 'A log of all your recent transactions.',
+      'widget_help_cashflow': 'Shows money coming in vs. going out this month.',
+      'widget_help_expense_breakdown': 'Where your money is going, split by category.',
+      'widget_help_income_trend': 'How your income has changed over time.',
+      'widget_help_spending_heatmap': 'Highlights your heaviest spending days.',
+      'widget_help_tax_estimation': 'An estimate of your tax based on income and expenses.',
+      'widget_help_investments': 'Overview of your investment portfolio value.',
+      'widget_help_portfolio_allocation': 'How your investments are spread across assets.',
+      'widget_help_roi': 'The profit or loss on your investments as a percentage.',
+      'widget_help_irr': 'Your investment\'s annualised growth rate.',
+      'widget_help_market_trending': 'Current market movements and trending assets.',
+      'widget_help_bills': 'Bills and payments due soon.',
+      'widget_help_import': 'Import transactions from a file.',
+      'widget_help_export': 'Export your data to a file.',
+      'widget_help_insights_feed': 'Personalised tips based on your spending habits.',
+      'widget_help_health_score': 'An overall score of your financial wellbeing.',
+      'widget_help_cashflow_forecast': 'Predicts your cash flow for the coming weeks.',
+      'widget_help_coaching_tips': 'Actionable advice to improve your finances.',
+
       // ── Widget Catalog Category Labels ──
       'widget_cat_overview': 'Overview',
       'widget_cat_analytics': 'Analytics',
@@ -1263,6 +1288,31 @@ class AppLocalizations {
       'widget_label_cash_flow_forecast': 'Dự báo dòng tiền',
       'widget_label_coaching_tips': 'Lời khuyên tài chính',
 
+      // ── Widget Help Tooltips ──
+      'widget_help_profile': 'Tổng quan tài khoản và thông tin cá nhân của bạn.',
+      'widget_help_budget': 'Theo dõi chi tiêu so với ngân sách đã đặt.',
+      'widget_help_category_budget': 'Hiển thị hạn mức chi tiêu cho từng danh mục.',
+      'widget_help_savings_rate': 'Phần trăm thu nhập bạn đang tiết kiệm.',
+      'widget_help_net_worth_trend': 'Tổng tài sản trừ nợ theo thời gian.',
+      'widget_help_transaction_history': 'Danh sách các giao dịch gần đây.',
+      'widget_help_cashflow': 'Tiền vào so với tiền ra trong tháng này.',
+      'widget_help_expense_breakdown': 'Tiền của bạn đang đi đâu, chia theo danh mục.',
+      'widget_help_income_trend': 'Thu nhập của bạn thay đổi theo thời gian.',
+      'widget_help_spending_heatmap': 'Nổi bật những ngày chi tiêu nhiều nhất.',
+      'widget_help_tax_estimation': 'Ước tính thuế dựa trên thu nhập và chi tiêu.',
+      'widget_help_investments': 'Tổng quan giá trị danh mục đầu tư.',
+      'widget_help_portfolio_allocation': 'Đầu tư của bạn được phân bổ ra sao.',
+      'widget_help_roi': 'Lãi hoặc lỗ trên khoản đầu tư tính theo phần trăm.',
+      'widget_help_irr': 'Tỷ lệ tăng trưởng hàng năm của khoản đầu tư.',
+      'widget_help_market_trending': 'Biến động thị trường và tài sản đang hot.',
+      'widget_help_bills': 'Các hóa đơn và khoản thanh toán sắp đến hạn.',
+      'widget_help_import': 'Nhập giao dịch từ tệp.',
+      'widget_help_export': 'Xuất dữ liệu ra tệp.',
+      'widget_help_insights_feed': 'Mẹo cá nhân dựa trên thói quen chi tiêu.',
+      'widget_help_health_score': 'Điểm tổng quan về sức khỏe tài chính.',
+      'widget_help_cashflow_forecast': 'Dự đoán dòng tiền trong những tuần tới.',
+      'widget_help_coaching_tips': 'Lời khuyên thiết thực để cải thiện tài chính.',
+
       // ── Widget Catalog Category Labels ──
       'widget_cat_overview': 'Tổng quan',
       'widget_cat_analytics': 'Phân tích',
@@ -1744,6 +1794,31 @@ class AppLocalizations {
   String get totalExpenses => translate('total_expenses');
   String get returnOnInvestment => translate('return_on_investment');
   String get internalRateOfReturn => translate('internal_rate_of_return');
+
+  // Widget Help Tooltips
+  String get widgetHelpProfile => translate('widget_help_profile');
+  String get widgetHelpBudget => translate('widget_help_budget');
+  String get widgetHelpCategoryBudget => translate('widget_help_category_budget');
+  String get widgetHelpSavingsRate => translate('widget_help_savings_rate');
+  String get widgetHelpNetWorthTrend => translate('widget_help_net_worth_trend');
+  String get widgetHelpTransactionHistory => translate('widget_help_transaction_history');
+  String get widgetHelpCashflow => translate('widget_help_cashflow');
+  String get widgetHelpExpenseBreakdown => translate('widget_help_expense_breakdown');
+  String get widgetHelpIncomeTrend => translate('widget_help_income_trend');
+  String get widgetHelpSpendingHeatmap => translate('widget_help_spending_heatmap');
+  String get widgetHelpTaxEstimation => translate('widget_help_tax_estimation');
+  String get widgetHelpInvestments => translate('widget_help_investments');
+  String get widgetHelpPortfolioAllocation => translate('widget_help_portfolio_allocation');
+  String get widgetHelpRoi => translate('widget_help_roi');
+  String get widgetHelpIrr => translate('widget_help_irr');
+  String get widgetHelpMarketTrending => translate('widget_help_market_trending');
+  String get widgetHelpBills => translate('widget_help_bills');
+  String get widgetHelpImport => translate('widget_help_import');
+  String get widgetHelpExport => translate('widget_help_export');
+  String get widgetHelpInsightsFeed => translate('widget_help_insights_feed');
+  String get widgetHelpHealthScore => translate('widget_help_health_score');
+  String get widgetHelpCashflowForecast => translate('widget_help_cashflow_forecast');
+  String get widgetHelpCoachingTips => translate('widget_help_coaching_tips');
   String get estimatedTax => translate('estimated_tax');
   String get noBillsUpcoming => translate('no_bills_upcoming');
   String get dueDate => translate('due_date');
