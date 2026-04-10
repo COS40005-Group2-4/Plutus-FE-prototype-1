@@ -86,6 +86,15 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: l10n.widgetHelpHealthScore,
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 14,
+                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

@@ -36,6 +36,15 @@ class CashFlowForecastWidget extends StatelessWidget {
                   l10n.insightsForecastTitle,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: l10n.widgetHelpCashflowForecast,
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 14,
+                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

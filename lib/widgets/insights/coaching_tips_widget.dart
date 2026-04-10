@@ -73,6 +73,15 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
                   l10n.translate('widget_label_coaching_tips'),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: l10n.widgetHelpCoachingTips,
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 14,
+                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                  ),
+                ),
                 const Spacer(),
                 if (tips.length > 1)
                   Text(

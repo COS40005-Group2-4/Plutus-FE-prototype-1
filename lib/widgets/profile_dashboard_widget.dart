@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../l10n/app_localizations.dart';
 
 // Profile Display Widget for Dashboard
 class ProfileDashboardWidget extends StatefulWidget {
@@ -42,12 +43,41 @@ class _ProfileDashboardWidgetState extends State<ProfileDashboardWidget> {
           opacity: 0.2,
           borderRadius: AppRadius.lg,
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: SingleChildScrollView(
-            child: ProfileWidget(
-            user: currentUser,
-            defaultAvatarAsset: 'lib/assets/avatar/default-avatar.jpg',
-            isCompact: true,
-          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    AppLocalizations.of(context).translate('widget_label_profile'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: AppLocalizations.of(context).widgetHelpProfile,
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 14,
+                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: ProfileWidget(
+                    user: currentUser,
+                    defaultAvatarAsset: 'lib/assets/avatar/default-avatar.jpg',
+                    isCompact: true,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
