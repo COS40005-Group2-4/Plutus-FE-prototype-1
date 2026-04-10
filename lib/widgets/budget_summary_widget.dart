@@ -58,7 +58,8 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
             opacity: 0.2,
             borderRadius: AppRadius.lg,
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
+            child: Center(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
@@ -66,6 +67,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   FilledButton(
@@ -80,6 +82,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                   ),
                 ],
               ),
+            ),
           );
         }
 

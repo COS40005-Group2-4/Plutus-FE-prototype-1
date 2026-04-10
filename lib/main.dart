@@ -303,10 +303,19 @@ class _MainPageState extends State<MainPage> {
     final backupProvider =
         Provider.of<BackupProvider>(context, listen: false);
 
-    // Register InsightsProvider reload after backup restore
+    // Register provider reloads after backup restore so restored data appears
     final insightsProvider =
         Provider.of<InsightsProvider>(context, listen: false);
     backupProvider.addPostRestoreCallback(insightsProvider.reloadFromCache);
+
+    final transactionService = sl<ITransactionService>();
+    final billService = sl<IBillService>();
+    final budgetProvider = Provider.of<BudgetProvider>(context, listen: false);
+    backupProvider.addPostRestoreCallback(() async {
+      transactionService.notifyTransactionUpdate();
+      await billService.notifyBillUpdate();
+      await budgetProvider.loadBudget();
+    });
 
     await backupProvider.initialize(userId);
 
