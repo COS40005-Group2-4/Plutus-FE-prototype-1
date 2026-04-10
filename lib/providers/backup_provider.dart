@@ -46,6 +46,11 @@ class BackupProvider extends ChangeNotifier {
     _postRestoreCallbacks.add(cb);
   }
 
+  /// Close the DB connection before restore so the file isn't locked.
+  Future<void> _onPreRestore() async {
+    await DatabaseService().resetConnection();
+  }
+
   /// After a restore, reset the DB connection and notify registered callbacks.
   Future<void> _onPostRestore() async {
     await DatabaseService().resetConnection();
@@ -162,6 +167,7 @@ class BackupProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _onPreRestore();
       await _backupService.restoreBackup(_userId!, version.s3ObjectKey);
       await _onPostRestore();
     } on BackupException catch (e) {
@@ -193,6 +199,7 @@ class BackupProvider extends ChangeNotifier {
             backups = await _backupService.listAllBackups();
           }
           if (backups.isNotEmpty) {
+            await _onPreRestore();
             await _backupService.restoreBackup(
                 _userId!, backups.first.s3ObjectKey);
             await _onPostRestore();

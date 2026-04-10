@@ -56,23 +56,41 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
+                    l10n.widgetBudgetTracking,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
                     l10n.budgetNoBudgetYet,
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (_) => const BudgetSettingsSheet(),
-                      );
-                    },
-                    child: Text(l10n.budgetCreate),
+                  const SizedBox(height: AppSpacing.lg),
+                  Center(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => const BudgetSettingsSheet(),
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.budgetCreate),
+                    ),
                   ),
                 ],
               ),

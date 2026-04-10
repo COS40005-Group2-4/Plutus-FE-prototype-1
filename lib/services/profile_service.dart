@@ -5,11 +5,14 @@ import '../models/profile_model.dart';
 import 'interfaces/i_database_service.dart';
 import 'interfaces/i_profile_service.dart';
 import '../di/service_locator.dart';
+import 'database_service.dart';
 
 class ProfileService implements IProfileService {
   final IDatabaseService _db;
 
   ProfileService({IDatabaseService? db}) : _db = db ?? sl<IDatabaseService>();
+
+  DatabaseService get _dbService => DatabaseService();
 
   @override
   Future<Profile> createProfile({
@@ -55,7 +58,28 @@ class ProfileService implements IProfileService {
   Future<Profile?> getProfileByUserId(int userId) async {
     try {
       final profileMap = await _db.getProfileByUserId(userId);
-      return profileMap != null ? Profile.fromMap(profileMap) : null;
+      if (profileMap == null) return null;
+
+      var profile = Profile.fromMap(profileMap);
+
+      // If avatar path is set but file doesn't exist (restored backup on
+      // a new device), extract from the DB blob and recreate the file.
+      if (profile.avatarPath != null && !kIsWeb) {
+        final file = File(profile.avatarPath!);
+        if (!file.existsSync()) {
+          final blob = await _dbService.getAvatarBlob(userId);
+          if (blob != null) {
+            final dir = file.parent;
+            if (!dir.existsSync()) dir.createSync(recursive: true);
+            await file.writeAsBytes(blob);
+            if (kDebugMode) {
+              debugPrint('Restored avatar from DB blob for user $userId');
+            }
+          }
+        }
+      }
+
+      return profile;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error getting profile: $e');
@@ -94,6 +118,11 @@ class ProfileService implements IProfileService {
       final savedPath = '${avatarDir.path}/$fileName';
 
       final savedFile = await imageFile.copy(savedPath);
+
+      // Also store the bytes in the DB so backups include the avatar
+      final bytes = await savedFile.readAsBytes();
+      await _dbService.saveAvatarBlob(userId, bytes);
+
       return savedFile.path;
     } catch (e) {
       if (kDebugMode) {

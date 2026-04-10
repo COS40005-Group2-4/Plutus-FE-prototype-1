@@ -116,7 +116,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 9,
+      version: 10,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -212,6 +212,7 @@ class DatabaseService implements IDatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL UNIQUE,
         avatar_path TEXT,
+        avatar_blob BLOB,
         date_of_birth TEXT,
         position TEXT,
         place_of_employment TEXT,
@@ -664,6 +665,18 @@ class DatabaseService implements IDatabaseService {
 
       await db.execute('CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id)');
     }
+
+    // Upgrade from version 9 to 10: Add avatar_blob to profiles
+    if (oldVersion < 10) {
+      try {
+        await db.execute('ALTER TABLE profiles ADD COLUMN avatar_blob BLOB');
+      } catch (e) {
+        // Column may already exist
+        if (kDebugMode) {
+          debugPrint('avatar_blob column may already exist: $e');
+        }
+      }
+    }
   }
 
   // User operations
@@ -1030,6 +1043,33 @@ class DatabaseService implements IDatabaseService {
       where: 'user_id = ?',
       whereArgs: [profile.userId],
     );
+  }
+
+  /// Save avatar image bytes into the profiles table.
+  Future<void> saveAvatarBlob(int userId, Uint8List bytes) async {
+    final db = await database;
+    await db.update(
+      'profiles',
+      {'avatar_blob': bytes},
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Read avatar image bytes from the profiles table.
+  Future<Uint8List?> getAvatarBlob(int userId) async {
+    final db = await database;
+    final results = await db.query(
+      'profiles',
+      columns: ['avatar_blob'],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+    if (results.isNotEmpty && results.first['avatar_blob'] != null) {
+      return results.first['avatar_blob'] as Uint8List;
+    }
+    return null;
   }
 
   @override
