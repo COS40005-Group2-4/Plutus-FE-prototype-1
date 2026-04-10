@@ -98,15 +98,15 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
 
     return InkWell(
       onTap: () => _showInvestmentListDialog(),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppRadius.borderLg,
       child: GlassContainer(
-        borderRadius: 16,
+        borderRadius: AppRadius.lg,
         blur: 10.0,
         borderOpacity: isDark ? 0.3 : 0.2,
         opacity: isDark ? 0.3 : 0.1,
         color: isDark ? AppColors.surfaceDark : Colors.white,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: SingleChildScrollView(
             child: _buildContent(localizations, isDark),
           ),

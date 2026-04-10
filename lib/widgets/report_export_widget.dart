@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/glass_container.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 
 // Report Export Button Widget
 class ReportExportWidget extends StatefulWidget {
@@ -21,8 +23,8 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
     return GlassContainer(
       color: AppColors.error,
       opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(12),
+      borderRadius: AppRadius.lg,
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact = constraints.maxHeight < 160;

@@ -563,8 +563,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
     return GlassContainer(
       color: AppColors.taxAccent,
       opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(16),
+      borderRadius: AppRadius.lg,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

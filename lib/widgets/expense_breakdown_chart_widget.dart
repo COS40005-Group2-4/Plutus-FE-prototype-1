@@ -8,6 +8,8 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -71,8 +73,8 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
         return GlassContainer(
           color: AppColors.expenseAccent,
           opacity: 0.2,
-          borderRadius: 16,
-          padding: const EdgeInsets.all(16),
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
               _buildHeader(context),

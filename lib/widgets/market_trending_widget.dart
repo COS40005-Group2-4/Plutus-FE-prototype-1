@@ -5,6 +5,8 @@ import '../models/market_data_model.dart';
 import '../services/interfaces/i_price_api_service.dart';
 import '../di/service_locator.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -131,8 +133,8 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
     return GlassContainer(
       color: AppColors.borderDark,
       opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(12),
+      borderRadius: AppRadius.lg,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxHeight < 220;

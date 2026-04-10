@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../services/settings_service.dart';
 import '../di/service_locator.dart';
@@ -87,7 +88,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
             : Icons.trending_down;
 
     return GlassContainer(
-      borderRadius: 16,
+      borderRadius: AppRadius.lg,
       opacity: 0.08,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(

@@ -6,6 +6,8 @@ import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -66,8 +68,8 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
     return GlassContainer(
       color: AppColors.primary,
       opacity: 0.2,
-      borderRadius: 16,
-      padding: const EdgeInsets.all(16),
+      borderRadius: AppRadius.lg,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           Row(

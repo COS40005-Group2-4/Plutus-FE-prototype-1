@@ -10,6 +10,7 @@ import 'package:plutus_fe_prototype/theme/app_colors.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
+import 'package:plutus_fe_prototype/widgets/glass_container.dart';
 
 class CategoryBudgetWidget extends StatelessWidget {
   const CategoryBudgetWidget({super.key});
@@ -177,36 +178,26 @@ class CategoryBudgetWidget extends StatelessWidget {
         final budget = provider.activeBudget!;
         final currency = budget.currencyCode;
 
-        return Card(
+        return GlassContainer(
+          color: AppColors.categoryBudgetAccent,
+          opacity: 0.2,
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Widget title ──────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  0,
-                ),
-                child: Text(
+              Text(
                   l10n.categoryBudgetTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-              ),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Header ────────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.xs,
-                ),
-                child: Row(
+              Row(
                   children: [
                     // Period navigation
                     _PeriodNav(
@@ -240,7 +231,6 @@ class CategoryBudgetWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
 
               // ── Category rows ─────────────────────────────────────────────
               ...provider.categorySpending.map((cs) {
@@ -254,7 +244,6 @@ class CategoryBudgetWidget extends StatelessWidget {
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
                     vertical: AppSpacing.xs,
                   ),
                   child: InkWell(
@@ -444,15 +433,9 @@ class CategoryBudgetWidget extends StatelessWidget {
               if (provider.unbudgetedSpending.isNotEmpty) ...[
                 const Divider(
                   height: AppSpacing.lg,
-                  indent: AppSpacing.md,
-                  endIndent: AppSpacing.md,
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  child: Row(
+                Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -475,14 +458,12 @@ class CategoryBudgetWidget extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
 
                 const SizedBox(height: AppSpacing.sm),
 
                 ...provider.unbudgetedSpending.map((entry) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
                       vertical: AppSpacing.xs,
                     ),
                     child: Container(

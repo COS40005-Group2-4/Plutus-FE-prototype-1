@@ -50,8 +50,8 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
         return GlassContainer(
           color: AppColors.billsAccent,
           opacity: 0.2,
-          borderRadius: 16,
-          padding: const EdgeInsets.all(16),
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
               _buildHeader(context),

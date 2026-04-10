@@ -8,6 +8,7 @@ import '../providers/settings_provider.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
@@ -42,8 +43,8 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
         return GlassContainer(
           color: AppColors.netWorthAccent,
           opacity: 0.2,
-          borderRadius: 16,
-          padding: const EdgeInsets.all(16),
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
               Row(

@@ -10,6 +10,7 @@ import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../widgets/glass_container.dart';
 
 class BudgetSummaryWidget extends StatefulWidget {
   const BudgetSummaryWidget({super.key});
@@ -41,60 +42,44 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
 
         // Loading state with no budget yet
         if (provider.isLoading && budget == null) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
+          return GlassContainer(
+            color: AppColors.budgetAccent,
+            opacity: 0.2,
+            borderRadius: AppRadius.lg,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: const Center(child: CircularProgressIndicator()),
           );
         }
 
         // Empty state — no active budget
         if (budget == null) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
+          return GlassContainer(
+            color: AppColors.budgetAccent,
+            opacity: 0.2,
+            borderRadius: AppRadius.lg,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    l10n.widgetBudgetTracking,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Icon(
-                    Icons.account_balance_wallet_outlined,
-                    size: 40,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
                     l10n.budgetNoBudgetYet,
-                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Center(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (_) => const BudgetSettingsSheet(),
-                        );
-                      },
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.budgetCreate),
-                    ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => const BudgetSettingsSheet(),
+                      );
+                    },
+                    child: Text(l10n.budgetCreate),
                   ),
                 ],
               ),
-            ),
           );
         }
 
@@ -132,10 +117,12 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
 
         final periodLabel = _periodLabel(budget.periodType, periodStart);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
+        return GlassContainer(
+          color: AppColors.budgetAccent,
+          opacity: 0.2,
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -255,7 +242,6 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                 ],
               ],
             ),
-          ),
         );
       },
     );

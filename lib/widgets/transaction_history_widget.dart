@@ -11,6 +11,8 @@ import '../services/database_service.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 
 // Color(0xFF34A853) is AppColors.success
 
@@ -165,8 +167,8 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
         return GlassContainer(
           color: AppColors.success,
           opacity: 0.2,
-          borderRadius: 16,
-          padding: const EdgeInsets.all(12),
+          borderRadius: AppRadius.lg,
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: StreamBuilder<List<Transaction>>(
             stream: _transactionService.transactionStream,
             builder: (context, snapshot) {
