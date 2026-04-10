@@ -88,29 +88,58 @@ class AuthProvider extends ChangeNotifier {
     final email = userInfo['email'] ?? '';
     final name = userInfo['name'] ?? '';
     final oauthId = email; // Use email as unique OAuth ID
-    
-    // Check if OAuth user exists
+
+    // 1. Check if OAuth user already exists (previously linked)
     User? user = await _userService.getUserByOAuth('google', oauthId);
-    
+
     if (user == null) {
-      // Create new OAuth user
-      user = await _userService.createOAuthUser(
-        username: email.split('@')[0],
-        displayName: name,
-        email: email,
-        oauthProvider: 'google',
-        oauthId: oauthId,
-      );
+      // 2. If currently signed in as a local/guest user, link OAuth to them
+      //    (preserves their data, backups, and settings)
+      if (_currentUser != null && !_currentUser!.hasOAuth) {
+        await _userService.linkOAuthToUser(
+          userId: _currentUser!.id,
+          provider: 'google',
+          oauthId: oauthId,
+          email: email,
+        );
+        user = await _userService.getUserById(_currentUser!.id);
+      } else {
+        // 3. No current user (signed out) — check for a single local/guest
+        //    user in the database and link to them instead of creating a
+        //    duplicate that orphans their backups and settings.
+        final allUsers = await _userService.getAllUsers();
+        final localUsers = allUsers.where((u) => !u.hasOAuth).toList();
+        if (localUsers.length == 1) {
+          await _userService.linkOAuthToUser(
+            userId: localUsers.first.id,
+            provider: 'google',
+            oauthId: oauthId,
+            email: email,
+          );
+          user = await _userService.getUserById(localUsers.first.id);
+        } else {
+          // 4. No linkable user found — create a new OAuth user
+          user = await _userService.createOAuthUser(
+            username: email.split('@')[0],
+            displayName: name,
+            email: email,
+            oauthProvider: 'google',
+            oauthId: oauthId,
+          );
+        }
+      }
     } else {
       await _userService.updateLastLogin(user.id);
     }
     
+    if (user == null) return;
+
     _currentUser = user;
     _isAuthenticated = true;
     _isGuest = false;
     _userEmail = email;
     _userName = name;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_user_id', user.id);
     _notifyUserChanged(user.id);

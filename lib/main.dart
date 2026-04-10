@@ -91,6 +91,9 @@ class _MyAppState extends State<MyApp> {
     _authProvider.onUserChanged = (int userId) async {
       await _settingsProvider.reinitialize(userId);
       await _dashboardProvider.reinitialize(userId);
+      if (userId > 0) {
+        await _backupProvider.initialize(userId);
+      }
     };
     _initializeAuth();
     _setupConnectivity();
