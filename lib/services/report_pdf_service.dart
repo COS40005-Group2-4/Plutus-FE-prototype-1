@@ -46,13 +46,25 @@ class ReportPdfService implements IReportPdfService {
   @override
   Future<String> generatePdf({required ReportDataModel data, String locale = 'en'}) async {
     final Uint8List bytes = await generatePdfBytes(data: data, locale: locale);
-    final Directory dir = await getApplicationDocumentsDirectory();
-    final String exportDir = '${dir.path}/exports';
-    await Directory(exportDir).create(recursive: true);
+    final Directory dir = await _getExportDirectory();
     final String timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
-    final String filePath = '$exportDir/plutus_report_$timestamp.pdf';
+    final String filePath = '${dir.path}${Platform.pathSeparator}plutus_report_$timestamp.pdf';
     await File(filePath).writeAsBytes(bytes);
     return filePath;
+  }
+
+  Future<Directory> _getExportDirectory() async {
+    Directory? directory;
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      directory = await getDownloadsDirectory();
+    }
+    directory ??= await getApplicationDocumentsDirectory();
+    final String exportDir = '${directory.path}${Platform.pathSeparator}exports';
+    final Directory dir = Directory(exportDir);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
   }
 
   @override

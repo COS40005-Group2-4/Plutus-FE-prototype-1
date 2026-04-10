@@ -165,14 +165,15 @@ class ExportService {
     }
 
     Directory? directory;
-    if (Platform.isAndroid) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      directory = await getDownloadsDirectory();
+    } else if (Platform.isAndroid) {
       directory = await getExternalStorageDirectory();
-    } else {
-      directory = await getApplicationDocumentsDirectory();
     }
+    directory ??= await getApplicationDocumentsDirectory();
 
     // Create exports subdirectory
-    final exportsDir = Directory('${directory!.path}${Platform.pathSeparator}exports');
+    final exportsDir = Directory('${directory.path}${Platform.pathSeparator}exports');
     if (!await exportsDir.exists()) {
       await exportsDir.create(recursive: true);
     }
@@ -185,14 +186,10 @@ class ExportService {
       return 'Web exports not supported';
     }
 
-    if (Platform.isAndroid) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      return 'Downloads/exports/';
+    } else if (Platform.isAndroid) {
       return 'Android/data/app_package/files/exports/';
-    } else if (Platform.isWindows) {
-      return 'Documents/exports/';
-    } else if (Platform.isMacOS) {
-      return '~/Documents/exports/';
-    } else if (Platform.isLinux) {
-      return '~/Documents/exports/';
     }
     return 'Application documents/exports/';
   }
