@@ -5,7 +5,6 @@ abstract class IBackupService {
   Future<String> uploadBackup(int userId);
   Future<void> restoreBackup(int userId, String s3ObjectKey);
   Future<List<VersionEntry>> listBackups(int userId);
-  Future<List<VersionEntry>> listAllBackups();
   Future<void> deleteBackup(String s3ObjectKey);
   Future<String?> getLatestBackupChecksum(int userId);
   Future<String> computeLocalChecksum();
