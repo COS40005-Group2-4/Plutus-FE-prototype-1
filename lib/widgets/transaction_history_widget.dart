@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../widgets/glass_container.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../services/database_service.dart';
 import '../utils/date_time_formatter.dart';
@@ -16,15 +16,15 @@ import '../theme/app_radius.dart';
 
 // Color(0xFF34A853) is AppColors.success
 
-class TransactionHistoryWidget extends StatefulWidget {
+class TransactionHistoryWidget extends ConsumerStatefulWidget {
   const TransactionHistoryWidget({super.key});
 
   @override
-  State<TransactionHistoryWidget> createState() =>
+  ConsumerState<TransactionHistoryWidget> createState() =>
       _TransactionHistoryWidgetState();
 }
 
-class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
+class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWidget> {
   late TransactionService _transactionService;
   late DatabaseService _databaseService;
   bool _isEditMode = false;
@@ -38,9 +38,9 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
     super.initState();
     _transactionService = TransactionService();
     _databaseService = DatabaseService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
@@ -162,9 +162,8 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.success,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -375,14 +374,12 @@ class _TransactionHistoryWidgetState extends State<TransactionHistoryWidget> {
           },
         ),
       );
-    },
-    );
   }
 }
 
 class _DashboardTransactionAmount extends StatefulWidget {
   final Transaction transaction;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _DashboardTransactionAmount({
     super.key,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
-import 'package:plutus_fe_prototype/providers/budget_provider.dart';
+import 'package:plutus_fe_prototype/providers/budget_notifier.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/theme/app_colors.dart';
@@ -12,7 +12,7 @@ import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/widgets/glass_container.dart';
 
-class CategoryBudgetWidget extends StatelessWidget {
+class CategoryBudgetWidget extends ConsumerWidget {
   const CategoryBudgetWidget({super.key});
 
   // ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ class CategoryBudgetWidget extends StatelessWidget {
     return CurrencyService.formatAmount(amount.abs(), currencyCode);
   }
 
-  String _periodLabel(BudgetProvider provider) {
+  String _periodLabel(BudgetState provider) {
     final start = provider.currentPeriodStart;
     final budget = provider.activeBudget;
     if (budget == null) return '';
@@ -58,7 +58,8 @@ class CategoryBudgetWidget extends StatelessWidget {
 
   void _showInlineEdit(
     BuildContext context,
-    BudgetProvider provider,
+    WidgetRef ref,
+    BudgetState provider,
     CategorySpending cs,
   ) {
     final l10n = AppLocalizations.of(context);
@@ -88,7 +89,7 @@ class CategoryBudgetWidget extends StatelessWidget {
           TextButton(
             onPressed: () {
               final amount = double.tryParse(controller.text) ?? cs.budgetedAmount;
-              provider.quickUpdateAmount(cs.category.id!, amount);
+              ref.read(budgetNotifierProvider.notifier).quickUpdateAmount(cs.category.id!, amount);
               Navigator.of(ctx).pop();
             },
             child: Text(l10n.save),
@@ -161,15 +162,13 @@ class CategoryBudgetWidget extends StatelessWidget {
   // ---------------------------------------------------------------------------
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return Consumer<BudgetProvider>(
-      builder: (context, provider, _) {
-        // Loading state
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
+    final asyncBudget = ref.watch(budgetNotifierProvider);
+    return asyncBudget.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (provider) {
         // No active budget — summary widget handles empty state
         if (provider.activeBudget == null) {
           return const SizedBox.shrink();
@@ -215,8 +214,8 @@ class CategoryBudgetWidget extends StatelessWidget {
                     // Period navigation
                     _PeriodNav(
                       label: _periodLabel(provider),
-                      onPrev: () => provider.navigatePeriod(-1),
-                      onNext: () => provider.navigatePeriod(1),
+                      onPrev: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(-1),
+                      onNext: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(1),
                     ),
 
                     const Spacer(),
@@ -261,7 +260,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                   ),
                   child: InkWell(
                     borderRadius: AppRadius.borderSm,
-                    onTap: () => _showInlineEdit(context, provider, cs),
+                    onTap: () => _showInlineEdit(context, ref, provider, cs),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         vertical: AppSpacing.sm,
@@ -333,7 +332,7 @@ class CategoryBudgetWidget extends StatelessWidget {
                               // Remaining amount + label
                               GestureDetector(
                                 onTap: () =>
-                                    _showInlineEdit(context, provider, cs),
+                                    _showInlineEdit(context, ref, provider, cs),
                                 child: RichText(
                                   text: TextSpan(
                                     children: [

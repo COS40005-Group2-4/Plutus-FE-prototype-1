@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import 'glass_container.dart';
 import 'add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
@@ -14,14 +14,14 @@ import '../theme/app_radius.dart';
 /// Investment Dashboard Widget
 /// 
 /// Displays portfolio summary with line chart showing price history
-class InvestmentWidget extends StatefulWidget {
+class InvestmentWidget extends ConsumerStatefulWidget {
   const InvestmentWidget({super.key});
 
   @override
-  State<InvestmentWidget> createState() => _InvestmentWidgetState();
+  ConsumerState<InvestmentWidget> createState() => _InvestmentWidgetState();
 }
 
-class _InvestmentWidgetState extends State<InvestmentWidget> {
+class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
   final IInvestmentService _service = sl<IInvestmentService>();
   List<InvestmentModel>? _investments;
   bool _isLoading = false;
@@ -31,9 +31,9 @@ class _InvestmentWidgetState extends State<InvestmentWidget> {
   void initState() {
     super.initState();
     // Set user ID in the investment service for database operations
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.currentUserId != null) {
-      _service.setUserId(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _service.setUserId(currentUserId);
     }
     _loadData();
   }

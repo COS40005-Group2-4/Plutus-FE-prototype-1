@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
-import '../providers/profile_provider.dart';
+import '../providers/profile_notifier.dart';
 import '../services/database_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -13,7 +13,7 @@ import '../theme/app_radius.dart';
 import 'avatar_editor_widget.dart';
 
 /// Main Profile Widget for displaying and editing user profile
-class ProfileWidget extends StatefulWidget {
+class ProfileWidget extends ConsumerStatefulWidget {
   final User user;
   final String defaultAvatarAsset;
   final bool isCompact;
@@ -26,11 +26,10 @@ class ProfileWidget extends StatefulWidget {
   });
 
   @override
-  State<ProfileWidget> createState() => _ProfileWidgetState();
+  ConsumerState<ProfileWidget> createState() => _ProfileWidgetState();
 }
 
-class _ProfileWidgetState extends State<ProfileWidget> {
-  late ProfileProvider _profileProvider;
+class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   late TextEditingController _dobController;
   late TextEditingController _positionController;
   late TextEditingController _employmentController;
@@ -42,9 +41,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     _dobController = TextEditingController();
     _positionController = TextEditingController();
     _employmentController = TextEditingController();
-
-    _profileProvider = ProfileProvider();
-    _profileProvider.loadProfile(widget.user.id);
     _loadAvatarBytes();
   }
 
@@ -71,14 +67,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     _employmentController.text = profile.placeOfEmployment ?? '';
   }
 
-  void _showAvatarPicker() {
+  void _showAvatarPicker(Profile profile) {
     showDialog(
       context: context,
       builder: (context) => AvatarPickerDialog(
-        currentAvatarPath: _profileProvider.profile?.avatarPath,
+        currentAvatarPath: profile.avatarPath,
         defaultAvatarAsset: widget.defaultAvatarAsset,
         onAvatarSelected: (file) {
-          _profileProvider.updateAvatar(file);
+          ref.read(profileNotifierProvider.notifier).updateAvatar(file);
         },
       ),
     );
@@ -100,19 +96,17 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     _initializeControllers(profile);
     showDialog(
       context: context,
-      builder: (dialogContext) => ChangeNotifierProvider.value(
-        value: _profileProvider,
-        child: Consumer<ProfileProvider>(
-          builder: (ctx, provider, _) {
-            final p = provider.profile ?? profile;
-            return _buildEditDialog(p);
-          },
-        ),
+      builder: (dialogContext) => Consumer(
+        builder: (ctx, dialogRef, _) {
+          final profileState = dialogRef.watch(profileNotifierProvider);
+          final p = profileState.profile ?? profile;
+          return _buildEditDialog(p, dialogRef);
+        },
       ),
     );
   }
 
-  Widget _buildEditDialog(Profile profile) {
+  Widget _buildEditDialog(Profile profile, WidgetRef dialogRef) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
@@ -191,11 +185,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 'Name',
                 profile.showName,
                 'name',
+                dialogRef,
               ),
               _buildEditDialogCheckbox(
                 'Email',
                 profile.showEmail,
                 'email',
+                dialogRef,
               ),
               if (profile.dateOfBirth != null &&
                   profile.dateOfBirth!.isNotEmpty)
@@ -203,12 +199,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   'Date of Birth',
                   profile.showDateOfBirth,
                   'dateOfBirth',
+                  dialogRef,
                 ),
               if (profile.position != null && profile.position!.isNotEmpty)
                 _buildEditDialogCheckbox(
                   'Position',
                   profile.showPosition,
                   'position',
+                  dialogRef,
                 ),
               if (profile.placeOfEmployment != null &&
                   profile.placeOfEmployment!.isNotEmpty)
@@ -216,6 +214,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   'Place of Employment',
                   profile.showPlaceOfEmployment,
                   'placeOfEmployment',
+                  dialogRef,
                 ),
               const SizedBox(height: 24),
               Row(
@@ -249,7 +248,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         final wasAddingEmployment =
                             profile.placeOfEmployment == null ||
                                 profile.placeOfEmployment!.isEmpty;
-                        await _profileProvider.updateProfile(
+                        await ref.read(profileNotifierProvider.notifier).updateProfile(
                           dateOfBirth:
                               hasDob ? _dobController.text : null,
                           position:
@@ -316,6 +315,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     String label,
     bool value,
     String fieldName,
+    WidgetRef dialogRef,
   ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -325,7 +325,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             value: value,
             onChanged: (newValue) async {
               if (newValue != null) {
-                await _profileProvider.toggleFieldVisibility(fieldName);
+                await dialogRef.read(profileNotifierProvider.notifier).toggleFieldVisibility(fieldName);
               }
             },
             fillColor: WidgetStateProperty.resolveWith<Color>(
@@ -360,7 +360,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             value: value,
             onChanged: (newValue) async {
               if (newValue != null) {
-                await _profileProvider.toggleFieldVisibility(fieldName);
+                await ref.read(profileNotifierProvider.notifier).toggleFieldVisibility(fieldName);
               }
             },
             fillColor: WidgetStateProperty.resolveWith<Color>(
@@ -384,60 +384,54 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _profileProvider,
-      child: Consumer<ProfileProvider>(
-        builder: (context, profileProvider, _) {
-          final profile = profileProvider.profile;
+    final profileState = ref.watch(profileNotifierProvider);
+    final profile = profileState.profile;
 
-          if (profileProvider.state == ProfileState.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    if (profileState.status == ProfileStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          if (profileProvider.state == ProfileState.error) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                    const SizedBox(height: 16),
-                    Text(
-                      profileProvider.errorMessage,
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      profileProvider.resetState();
-                      _profileProvider.loadProfile(widget.user.id);
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-                ),
+    if (profileState.status == ProfileStatus.error) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text(
+                profileState.errorMessage,
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
               ),
-            );
-          }
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.read(profileNotifierProvider.notifier).resetState();
+                  ref.read(profileNotifierProvider.notifier).loadProfile(widget.user.id);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-          if (profile == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    if (profile == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          // Build display mode or edit mode
-          if (widget.isCompact) {
-            return _buildCompactView(profile);
-          } else {
-            return _buildFullView(profile);
-          }
-        },
-      ),
-    );
+    // Build display mode or edit mode
+    if (widget.isCompact) {
+      return _buildCompactView(profile);
+    } else {
+      return _buildFullView(profile);
+    }
   }
 
   Widget _buildCompactView(Profile profile) {
@@ -470,7 +464,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     SizedBox(height: isCompact ? 28 : 36),
                     Center(
                       child: GestureDetector(
-                        onTap: _showAvatarPicker,
+                        onTap: () => _showAvatarPicker(profile),
                         child: _buildAvatarCircle(profile, size: avatarSize),
                       ),
                     ),
@@ -682,7 +676,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             // Avatar section
             Center(
               child: GestureDetector(
-                onTap: _showAvatarPicker,
+                onTap: () => _showAvatarPicker(profile),
                 child: _buildAvatarCircle(profile, size: avatarSize),
               ),
             ),
@@ -748,7 +742,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             _buildInfoCard(
               child: Column(
                 children: [

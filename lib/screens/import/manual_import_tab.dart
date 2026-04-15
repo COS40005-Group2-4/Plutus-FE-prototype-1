@@ -1,30 +1,30 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/interfaces/i_transaction_service.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/ai_category_field.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/insights_provider.dart';
+import '../../providers/auth_notifier.dart';
+import '../../providers/insights_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
-class ManualImportTab extends StatefulWidget {
+class ManualImportTab extends ConsumerStatefulWidget {
   final Map<String, dynamic>? initialData;
   final VoidCallback? onSuccess;
 
   const ManualImportTab({super.key, this.initialData, this.onSuccess});
 
   @override
-  State<ManualImportTab> createState() => _ManualImportTabState();
+  ConsumerState<ManualImportTab> createState() => _ManualImportTabState();
 }
 
-class _ManualImportTabState extends State<ManualImportTab> {
+class _ManualImportTabState extends ConsumerState<ManualImportTab> {
   final _formKey = GlobalKey<FormState>();
   late ITransactionService _service;
 
@@ -84,9 +84,9 @@ class _ManualImportTabState extends State<ManualImportTab> {
   void initState() {
     super.initState();
     _service = GetIt.instance<ITransactionService>();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _service.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _service.setCurrentUser(currentUserId);
     }
     _initControllers();
     _aiPipeline = GetIt.instance<IAICategoryPipeline>();
@@ -343,7 +343,7 @@ class _ManualImportTabState extends State<ManualImportTab> {
         );
 
         if (context.mounted) {
-          context.read<InsightsProvider>().onTransactionsImported();
+          ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
         }
 
         if (widget.onSuccess != null) {

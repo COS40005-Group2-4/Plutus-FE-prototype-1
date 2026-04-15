@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -12,14 +12,14 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
-class PortfolioAllocationWidget extends StatefulWidget {
+class PortfolioAllocationWidget extends ConsumerStatefulWidget {
   const PortfolioAllocationWidget({super.key});
 
   @override
-  State<PortfolioAllocationWidget> createState() => _PortfolioAllocationWidgetState();
+  ConsumerState<PortfolioAllocationWidget> createState() => _PortfolioAllocationWidgetState();
 }
 
-class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
+class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationWidget> {
   final IInvestmentService _service = sl<IInvestmentService>();
   List<InvestmentModel>? _investments;
   bool _isLoading = true;
@@ -42,9 +42,9 @@ class _PortfolioAllocationWidgetState extends State<PortfolioAllocationWidget> {
   @override
   void initState() {
     super.initState();
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.currentUserId != null) {
-      _service.setUserId(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _service.setUserId(currentUserId);
     }
     _loadData();
   }

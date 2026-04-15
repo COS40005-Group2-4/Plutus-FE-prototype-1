@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -13,14 +13,14 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
-class NetWorthTrendWidget extends StatefulWidget {
+class NetWorthTrendWidget extends ConsumerStatefulWidget {
   const NetWorthTrendWidget({super.key});
 
   @override
-  State<NetWorthTrendWidget> createState() => _NetWorthTrendWidgetState();
+  ConsumerState<NetWorthTrendWidget> createState() => _NetWorthTrendWidgetState();
 }
 
-class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
+class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
   late TransactionService _transactionService;
   int _viewMode = 0; // 0 = Last 12 months, 1 = Yearly
 
@@ -28,9 +28,9 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
@@ -39,9 +39,8 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.netWorthAccent,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -102,8 +101,6 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildToggle(String label, int mode) {
@@ -130,7 +127,7 @@ class _NetWorthTrendWidgetState extends State<NetWorthTrendWidget> {
 
 class _NetWorthContent extends StatefulWidget {
   final List<Transaction> transactions;
-  final SettingsProvider settings;
+  final SettingsState settings;
   final int viewMode;
 
   const _NetWorthContent({

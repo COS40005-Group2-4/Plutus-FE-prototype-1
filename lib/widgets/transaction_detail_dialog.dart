@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/transaction_model.dart';
-import '../providers/settings_provider.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import 'glass_container.dart';
 
-class TransactionDetailDialog extends StatelessWidget {
+class TransactionDetailDialog extends ConsumerWidget {
   final Transaction transaction;
 
   const TransactionDetailDialog({super.key, required this.transaction});
 
   @override
-  Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsNotifierProvider);
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
@@ -156,7 +156,7 @@ class _InfoRow extends StatelessWidget {
 
 class _DetailAmount extends StatefulWidget {
   final Transaction transaction;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _DetailAmount({required this.transaction, required this.settings});
 
@@ -274,7 +274,7 @@ class _DetailAmountState extends State<_DetailAmount> {
 
 class _PostingDetailRow extends StatefulWidget {
   final Posting posting;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _PostingDetailRow({
     super.key,

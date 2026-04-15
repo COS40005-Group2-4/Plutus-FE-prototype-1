@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
-import 'package:plutus_fe_prototype/providers/auth_provider.dart';
-import 'package:plutus_fe_prototype/providers/budget_provider.dart';
-import 'package:plutus_fe_prototype/providers/settings_provider.dart';
+import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
+import 'package:plutus_fe_prototype/providers/budget_notifier.dart';
+import 'package:plutus_fe_prototype/providers/settings_notifier.dart';
 import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
@@ -31,14 +31,14 @@ const _defaultCategories = [
   _DefaultCategory('Education', 'Expenses:Education', '📚'),
 ];
 
-class BudgetSettingsSheet extends StatefulWidget {
+class BudgetSettingsSheet extends ConsumerStatefulWidget {
   const BudgetSettingsSheet({super.key});
 
   @override
-  State<BudgetSettingsSheet> createState() => _BudgetSettingsSheetState();
+  ConsumerState<BudgetSettingsSheet> createState() => _BudgetSettingsSheetState();
 }
 
-class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
+class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
   late IBudgetService _budgetService;
   bool _alertEnabled = false;
   List<String> _userAccounts = [];
@@ -49,12 +49,11 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
     _budgetService = GetIt.I<IBudgetService>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final authProvider = context.read<AuthProvider>();
-        if (authProvider.currentUserId != null) {
-          final provider = context.read<BudgetProvider>();
-          provider.setCurrentUser(authProvider.currentUserId!);
-          _budgetService.setCurrentUser(authProvider.currentUserId!);
-          provider.loadBudget();
+        final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+        if (currentUserId != null) {
+          ref.read(budgetNotifierProvider.notifier).setCurrentUser(currentUserId);
+          _budgetService.setCurrentUser(currentUserId);
+          ref.read(budgetNotifierProvider.notifier).refreshSpending();
           _loadUserAccounts();
         }
       }
@@ -85,8 +84,8 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
 
   Future<void> _createNewBudget() async {
     try {
-      final authProvider = context.read<AuthProvider>();
-      if (authProvider.currentUserId == null) {
+      final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+      if (currentUserId == null) {
         if (mounted) {
           final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -95,11 +94,11 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
         }
         return;
       }
-      _budgetService.setCurrentUser(authProvider.currentUserId!);
+      _budgetService.setCurrentUser(currentUserId);
 
       // Use the app's current currency setting
-      final settingsProvider = context.read<SettingsProvider>();
-      final currency = settingsProvider.currency;
+      final settingsState = ref.read(settingsNotifierProvider);
+      final currency = settingsState.currency;
       final currencyCode =
           currency.isOriginal ? 'USD' : currency.code;
 
@@ -123,7 +122,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
 
   Future<void> _reloadProvider() async {
     if (mounted) {
-      await context.read<BudgetProvider>().loadBudget();
+      await ref.read(budgetNotifierProvider.notifier).refreshSpending();
     }
   }
 
@@ -753,11 +752,12 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Consumer<BudgetProvider>(
-          builder: (context, provider, _) {
-            final budget = provider.activeBudget;
+        final asyncBudget = ref.watch(budgetNotifierProvider);
+        final isLoading = asyncBudget.isLoading;
+        final provider = asyncBudget.valueOrNull;
+        final budget = provider?.activeBudget;
 
-            return Container(
+        return Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.vertical(
@@ -781,7 +781,7 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  if (provider.isLoading)
+                  if (isLoading)
                     Padding(
                       padding: EdgeInsets.all(AppSpacing.xxxl),
                       child: const Center(child: CircularProgressIndicator()),
@@ -840,8 +840,6 @@ class _BudgetSettingsSheetState extends State<BudgetSettingsSheet> {
                   ],
                 ],
               ),
-            );
-          },
         );
       },
     );

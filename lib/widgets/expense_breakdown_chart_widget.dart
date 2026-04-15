@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -13,14 +13,14 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
-class ExpenseBreakdownChartWidget extends StatefulWidget {
+class ExpenseBreakdownChartWidget extends ConsumerStatefulWidget {
   const ExpenseBreakdownChartWidget({super.key});
 
   @override
-  State<ExpenseBreakdownChartWidget> createState() => _ExpenseBreakdownChartWidgetState();
+  ConsumerState<ExpenseBreakdownChartWidget> createState() => _ExpenseBreakdownChartWidgetState();
 }
 
-class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidget> {
+class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownChartWidget> {
   late TransactionService _transactionService;
   int _viewMode = 0; // 0 = Month, 1 = Year
   DateTime _selectedDate = DateTime.now();
@@ -29,9 +29,9 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
@@ -68,9 +68,8 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.expenseAccent,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -107,8 +106,6 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -207,7 +204,7 @@ class _ExpenseBreakdownChartWidgetState extends State<ExpenseBreakdownChartWidge
 
 class _ExpenseBreakdownContent extends StatefulWidget {
   final Map<String, double> categoryData;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _ExpenseBreakdownContent({
     super.key,

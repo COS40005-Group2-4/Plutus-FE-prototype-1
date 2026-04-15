@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/transaction_model.dart';
 import '../transaction_service.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -12,14 +12,14 @@ import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
 import 'glass_container.dart';
 
-class CashflowWidget extends StatefulWidget {
+class CashflowWidget extends ConsumerStatefulWidget {
   const CashflowWidget({super.key});
 
   @override
-  State<CashflowWidget> createState() => _CashflowWidgetState();
+  ConsumerState<CashflowWidget> createState() => _CashflowWidgetState();
 }
 
-class _CashflowWidgetState extends State<CashflowWidget> {
+class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
   late TransactionService _transactionService;
   int _viewMode = 0; // 0 = Monthly, 1 = Yearly, 2 = All Years
   DateTime _selectedDate = DateTime.now();
@@ -29,9 +29,9 @@ class _CashflowWidgetState extends State<CashflowWidget> {
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
@@ -40,9 +40,8 @@ class _CashflowWidgetState extends State<CashflowWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.borderDark,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -87,8 +86,6 @@ class _CashflowWidgetState extends State<CashflowWidget> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -267,7 +264,7 @@ class _CashflowWidgetState extends State<CashflowWidget> {
 class _CashflowContent extends StatefulWidget {
   final List<Transaction> transactions;
   final List<Transaction> allTransactions;
-  final SettingsProvider settings;
+  final SettingsState settings;
   final int viewMode;
   final DateTime selectedDate;
   final bool showBarChart;

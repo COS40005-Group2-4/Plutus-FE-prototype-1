@@ -3,14 +3,14 @@ import 'dart:ui';
 import 'package:dashboard/dashboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data_widget.dart';
 import '../sidebar_menu.dart';
 import '../storage.dart';
-import '../providers/dashboard_provider.dart';
-import '../providers/budget_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/dashboard_notifier.dart';
+import '../providers/budget_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/budget_notification_service.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/create_dashboard_dialog.dart';
@@ -53,14 +53,14 @@ class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
   }
 }
 
-class DashboardWidget extends StatefulWidget {
+class DashboardWidget extends ConsumerStatefulWidget {
   const DashboardWidget({super.key});
 
   @override
-  State<DashboardWidget> createState() => _DashboardWidgetState();
+  ConsumerState<DashboardWidget> createState() => _DashboardWidgetState();
 }
 
-class _DashboardWidgetState extends State<DashboardWidget>
+class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
@@ -85,12 +85,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
   @override
   void initState() {
     super.initState();
-    final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
-    _lastDashboardId = dashProvider.activeDashboardId;
-    _lastUserId = dashProvider.currentUserId;
+    final dashState = ref.read(dashboardNotifierProvider);
+    _lastDashboardId = dashState.activeDashboardId;
+    _lastUserId = ref.read(dashboardNotifierProvider.notifier).currentUserId;
     storage = MyItemStorage(
-      dashboardId: dashProvider.activeDashboardId,
-      userId: dashProvider.currentUserId,
+      dashboardId: dashState.activeDashboardId,
+      userId: ref.read(dashboardNotifierProvider.notifier).currentUserId,
     );
     _itemController = DashboardItemController<ColoredDashboardItem>.withDelegate(
       itemStorageDelegate: storage,
@@ -111,7 +111,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
   void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) {
     storage = MyItemStorage(
       dashboardId: dashboardId,
-      userId: Provider.of<DashboardProvider>(context, listen: false).currentUserId,
+      userId: ref.read(dashboardNotifierProvider.notifier).currentUserId,
     );
     storage.setVisibilityFilter(visibleWidgets);
 
@@ -126,7 +126,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
   }
 
   Widget _buildAlertsBanner(List<BudgetAlert> alerts) {
-    final currency = context.read<SettingsProvider>().currency;
+    final currency = ref.read(settingsNotifierProvider).currency;
     return Container(
       width: double.infinity,
       color: AppColors.warning.withValues(alpha: 0.15),
@@ -170,8 +170,8 @@ class _DashboardWidgetState extends State<DashboardWidget>
   }
 
   void _updateHiddenItems(List<String> visibleWidgets) {
-    final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
-    _recreateStorageAndController(dashProvider.activeDashboardId, visibleWidgets);
+    final dashState = ref.read(dashboardNotifierProvider);
+    _recreateStorageAndController(dashState.activeDashboardId, visibleWidgets);
   }
 
   double _getAspectRatio(double width) {
@@ -191,6 +191,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
         : 2;
     final aspectRatio = _getAspectRatio(w);
     final l10n = AppLocalizations.of(context);
+
+    final dashState = ref.watch(dashboardNotifierProvider);
+    final budgetAsync = ref.watch(budgetNotifierProvider);
+    final alerts = budgetAsync.valueOrNull?.alerts ?? [];
 
     return Scaffold(
       drawer: SidebarMenu(
@@ -218,122 +222,114 @@ class _DashboardWidgetState extends State<DashboardWidget>
           ),
         ),
         automaticallyImplyLeading: true,
-        title: Consumer<DashboardProvider>(
-          builder: (context, dashProvider, _) {
-            return PopupMenuButton<String>(
-              onSelected: (value) async {
-                if (value == '__new__') {
-                  await _showCreateDashboardDialog(dashProvider);
-                } else {
-                  dashProvider.setActiveDashboard(value);
-                }
-              },
-              offset: const Offset(0, 40),
-              color: AppColors.menuBackground.withValues(alpha: 0.95),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      dashProvider.activeDashboard.name.toUpperCase(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 2.0,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.accent
-                            : AppColors.textOnLight,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_drop_down,
+        title: PopupMenuButton<String>(
+          onSelected: (value) async {
+            if (value == '__new__') {
+              await _showCreateDashboardDialog();
+            } else {
+              ref.read(dashboardNotifierProvider.notifier).setActiveDashboard(value);
+            }
+          },
+          offset: const Offset(0, 40),
+          color: AppColors.menuBackground.withValues(alpha: 0.95),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  dashState.activeDashboard.name.toUpperCase(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 2.0,
                     color: Theme.of(context).brightness == Brightness.dark
                         ? AppColors.accent
                         : AppColors.textOnLight,
                   ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              itemBuilder: (context) {
-                final items = <PopupMenuEntry<String>>[];
-                for (final dash in dashProvider.dashboards) {
-                  items.add(PopupMenuItem<String>(
-                    value: dash.id,
-                    child: Row(
-                      children: [
-                        if (dash.id == dashProvider.activeDashboardId)
-                          const Icon(Icons.check, color: AppColors.primary, size: 18)
-                        else
-                          const SizedBox(width: AppSpacing.lg),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            dash.name,
-                            style: const TextStyle(color: AppColors.textOnDark),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+              Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.accent
+                    : AppColors.textOnLight,
+              ),
+            ],
+          ),
+          itemBuilder: (context) {
+            final items = <PopupMenuEntry<String>>[];
+            for (final dash in dashState.dashboards) {
+              items.add(PopupMenuItem<String>(
+                value: dash.id,
+                child: Row(
+                  children: [
+                    if (dash.id == dashState.activeDashboardId)
+                      const Icon(Icons.check, color: AppColors.primary, size: 18)
+                    else
+                      const SizedBox(width: AppSpacing.lg),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        dash.name,
+                        style: const TextStyle(color: AppColors.textOnDark),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ));
-                }
-                if (dashProvider.canCreateDashboard) {
-                  items.add(const PopupMenuDivider());
-                  items.add(PopupMenuItem<String>(
-                    value: '__new__',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.add, color: AppColors.primary, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.newDashboard,
-                          style: const TextStyle(color: AppColors.primary),
-                        ),
-                      ],
+                  ],
+                ),
+              ));
+            }
+            if (dashState.canCreateDashboard) {
+              items.add(const PopupMenuDivider());
+              items.add(PopupMenuItem<String>(
+                value: '__new__',
+                child: Row(
+                  children: [
+                    const Icon(Icons.add, color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.newDashboard,
+                      style: const TextStyle(color: AppColors.primary),
                     ),
-                  ));
-                }
-                return items;
-              },
-            );
+                  ],
+                ),
+              ));
+            }
+            return items;
           },
         ),
         actions: [
-          Consumer<DashboardProvider>(
-            builder: (context, dashProvider, _) {
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                color: AppColors.menuBackground.withValues(alpha: 0.95),
-                onSelected: (value) => _handleMenuAction(value, dashProvider),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'save',
-                    child: _menuItem(Icons.save, l10n.saveLayout),
-                  ),
-                  PopupMenuItem(
-                    value: 'reset',
-                    child: _menuItem(Icons.restore, l10n.resetDashboard),
-                  ),
-                  PopupMenuItem(
-                    value: 'hardReset',
-                    child: _menuItem(Icons.restart_alt, l10n.hardResetDashboard),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'rename',
-                    child: _menuItem(Icons.edit, l10n.renameDashboard),
-                  ),
-                  PopupMenuItem(
-                    enabled: dashProvider.dashboards.length > 1,
-                    value: 'delete',
-                    child: _menuItem(Icons.delete_outline, l10n.deleteDashboard,
-                        color: dashProvider.dashboards.length > 1
-                            ? AppColors.error
-                            : AppColors.textOnDarkTertiary),
-                  ),
-                ],
-              );
-            },
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            color: AppColors.menuBackground.withValues(alpha: 0.95),
+            onSelected: (value) => _handleMenuAction(value),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'save',
+                child: _menuItem(Icons.save, l10n.saveLayout),
+              ),
+              PopupMenuItem(
+                value: 'reset',
+                child: _menuItem(Icons.restore, l10n.resetDashboard),
+              ),
+              PopupMenuItem(
+                value: 'hardReset',
+                child: _menuItem(Icons.restart_alt, l10n.hardResetDashboard),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'rename',
+                child: _menuItem(Icons.edit, l10n.renameDashboard),
+              ),
+              PopupMenuItem(
+                enabled: dashState.dashboards.length > 1,
+                value: 'delete',
+                child: _menuItem(Icons.delete_outline, l10n.deleteDashboard,
+                    color: dashState.dashboards.length > 1
+                        ? AppColors.error
+                        : AppColors.textOnDarkTertiary),
+              ),
+            ],
           ),
           IconButton(
             onPressed: () {
@@ -345,193 +341,189 @@ class _DashboardWidgetState extends State<DashboardWidget>
         ],
       ),
       body: SafeArea(
-        child: Consumer<BudgetProvider>(
-          builder: (context, budgetProvider, _) {
-            final alerts = budgetProvider.alerts;
-            return Column(
-              children: [
-                if (alerts.isNotEmpty && !_alertsDismissed)
-                  _buildAlertsBanner(alerts),
-                Expanded(
-                  child: Consumer<DashboardProvider>(
-                    builder: (context, dashProvider, _) {
-            // Detect dashboard switch
-            if (_lastDashboardId != dashProvider.activeDashboardId) {
-              _lastDashboardId = dashProvider.activeDashboardId;
-              _lastVisibilityKey = [];
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _recreateStorageAndController(
-                  dashProvider.activeDashboardId,
-                  dashProvider.getVisibleWidgets(),
-                );
-              });
-            }
+        child: Column(
+          children: [
+            if (alerts.isNotEmpty && !_alertsDismissed)
+              _buildAlertsBanner(alerts),
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  // Detect dashboard switch
+                  if (_lastDashboardId != dashState.activeDashboardId) {
+                    _lastDashboardId = dashState.activeDashboardId;
+                    _lastVisibilityKey = [];
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _recreateStorageAndController(
+                        dashState.activeDashboardId,
+                        ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets(),
+                      );
+                    });
+                  }
 
-            // Detect user switch (safety net for in-session switches)
-            if (_lastUserId != dashProvider.currentUserId) {
-              _lastUserId = dashProvider.currentUserId;
-              _lastVisibilityKey = [];
-              _alertsDismissed = false;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  _recreateStorageAndController(
-                    dashProvider.activeDashboardId,
-                    dashProvider.getVisibleWidgets(),
-                  );
-                }
-              });
-            }
-
-            final visibleWidgets = dashProvider.getVisibleWidgets();
-            final visibilityKey = visibleWidgets.join(',');
-
-            final oldKey = _lastVisibilityKey.isNotEmpty ? _lastVisibilityKey.first : '';
-            if (oldKey != visibilityKey) {
-              _lastVisibilityKey = [visibilityKey];
-
-              if (oldKey.isNotEmpty) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _updateHiddenItems(visibleWidgets);
-                });
-              }
-            }
-
-            return _selectedWidget != null
-                ? _buildWidgetPreview(_selectedWidget!)
-                : Dashboard<ColoredDashboardItem>(
-                          key: ValueKey('${dashProvider.activeDashboardId}_${visibleWidgets.join(',')}_$_controllerVersion'),
-                          shrinkToPlace: true,
-                          slideToTop: true,
-                          absorbPointer: false,
-                          scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
-                          slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
-                            (context, item, x, y, editing) {
-                              return const GlassContainer(
-                                borderRadius: AppRadius.md,
-                                borderOpacity: 0.1,
-                                opacity: 0.05,
-                              );
-                            },
-                          ),
-                          padding: const EdgeInsets.all(6.0),
-                          horizontalSpace: 6.0,
-                          verticalSpace: 6.0,
-                          slotAspectRatio: aspectRatio,
-                          animateEverytime: false,
-                          dashboardItemController: itemController,
-                          slotCount: slot ?? 2,
-                          errorPlaceholder: (e, s) {
-                            return Text("$e , $s");
-                          },
-                          emptyPlaceholder: Center(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                Icon(Icons.dashboard_customize,
-                                    size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                const SizedBox(height: AppSpacing.lg),
-                                Text(
-                                  AppLocalizations.of(context).noWidgetsSelected,
-                                  style: TextStyle(
-                                      fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  AppLocalizations.of(context).openMenuEnableWidgets,
-                                  style: TextStyle(
-                                      fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                ),
-                              ],
-                              ),
-                            ),
-                          ),
-                          itemStyle: ItemStyle(
-                            color: Colors.transparent,
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.lg),
-                            ),
-                          ),
-                          physics: const RangeMaintainingScrollPhysics(),
-                          editModeSettings: EditModeSettings(
-                            draggableOutside: false,
-                            paintBackgroundLines: true,
-                            autoScroll: true,
-                            resizeCursorSide: 15,
-                            curve: Curves.easeOut,
-                            duration: const Duration(milliseconds: 150),
-                            swapEnabled: true,
-                            backgroundStyle: EditModeBackgroundStyle(
-                              lineColor: AppColors.textOnDark.withValues(alpha: 0.24),
-                              lineWidth: 1,
-                              dualLineHorizontal: false,
-                              dualLineVertical: false,
-                            ),
-                          ),
-                          itemBuilder: (ColoredDashboardItem item) {
-                            var layout = item.layoutData;
-
-                            if (item.data != null) {
-                              return Stack(
-                                children: [
-                                  DataWidget(item: item),
-                                  if (_itemController.isEditing)
-                                    _buildEditModeBar(item),
-                                ],
-                              );
-                            }
-
-                            return LayoutBuilder(
-                              builder: (_, c) {
-                                return Stack(
-                                  children: [
-                                    GlassContainer(
-                                      padding: const EdgeInsets.all(AppSpacing.md),
-                                      color: item.color,
-                                      opacity: 0.3,
-                                      borderRadius: AppRadius.md,
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        child: Text(
-                                          "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
-                                          style: const TextStyle(
-                                            color: AppColors.textOnDark,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (_itemController.isEditing)
-                                      Positioned(
-                                        right: AppSpacing.xs,
-                                        top: AppSpacing.xs,
-                                        child: InkResponse(
-                                          radius: 20,
-                                          onTap: () {
-                                            _itemController.delete(item.identifier);
-                                          },
-                                          child: const Icon(
-                                            Icons.close,
-                                            color: AppColors.textOnDark,
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
+                  // Detect user switch (safety net for in-session switches)
+                  final currentUserId = ref.read(dashboardNotifierProvider.notifier).currentUserId;
+                  if (_lastUserId != currentUserId) {
+                    _lastUserId = currentUserId;
+                    _lastVisibilityKey = [];
+                    _alertsDismissed = false;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        _recreateStorageAndController(
+                          dashState.activeDashboardId,
+                          ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets(),
                         );
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
+                      }
+                    });
+                  }
+
+                  final visibleWidgets = ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets();
+                  final visibilityKey = visibleWidgets.join(',');
+
+                  final oldKey = _lastVisibilityKey.isNotEmpty ? _lastVisibilityKey.first : '';
+                  if (oldKey != visibilityKey) {
+                    _lastVisibilityKey = [visibilityKey];
+
+                    if (oldKey.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _updateHiddenItems(visibleWidgets);
+                      });
+                    }
+                  }
+
+                  return _selectedWidget != null
+                      ? _buildWidgetPreview(_selectedWidget!)
+                      : Dashboard<ColoredDashboardItem>(
+                                key: ValueKey('${dashState.activeDashboardId}_${visibleWidgets.join(',')}_$_controllerVersion'),
+                                shrinkToPlace: true,
+                                slideToTop: true,
+                                absorbPointer: false,
+                                scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
+                                slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
+                                  (context, item, x, y, editing) {
+                                    return const GlassContainer(
+                                      borderRadius: AppRadius.md,
+                                      borderOpacity: 0.1,
+                                      opacity: 0.05,
+                                    );
+                                  },
+                                ),
+                                padding: const EdgeInsets.all(6.0),
+                                horizontalSpace: 6.0,
+                                verticalSpace: 6.0,
+                                slotAspectRatio: aspectRatio,
+                                animateEverytime: false,
+                                dashboardItemController: itemController,
+                                slotCount: slot ?? 2,
+                                errorPlaceholder: (e, s) {
+                                  return Text("$e , $s");
+                                },
+                                emptyPlaceholder: Center(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                      Icon(Icons.dashboard_customize,
+                                          size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                      const SizedBox(height: AppSpacing.lg),
+                                      Text(
+                                        AppLocalizations.of(context).noWidgetsSelected,
+                                        style: TextStyle(
+                                            fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Text(
+                                        AppLocalizations.of(context).openMenuEnableWidgets,
+                                        style: TextStyle(
+                                            fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                      ),
+                                    ],
+                                    ),
+                                  ),
+                                ),
+                                itemStyle: ItemStyle(
+                                  color: Colors.transparent,
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  elevation: 5,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                                  ),
+                                ),
+                                physics: const RangeMaintainingScrollPhysics(),
+                                editModeSettings: EditModeSettings(
+                                  draggableOutside: false,
+                                  paintBackgroundLines: true,
+                                  autoScroll: true,
+                                  resizeCursorSide: 15,
+                                  curve: Curves.easeOut,
+                                  duration: const Duration(milliseconds: 150),
+                                  swapEnabled: true,
+                                  backgroundStyle: EditModeBackgroundStyle(
+                                    lineColor: AppColors.textOnDark.withValues(alpha: 0.24),
+                                    lineWidth: 1,
+                                    dualLineHorizontal: false,
+                                    dualLineVertical: false,
+                                  ),
+                                ),
+                                itemBuilder: (ColoredDashboardItem item) {
+                                  var layout = item.layoutData;
+
+                                  if (item.data != null) {
+                                    return Stack(
+                                      children: [
+                                        DataWidget(item: item),
+                                        if (_itemController.isEditing)
+                                          _buildEditModeBar(item),
+                                      ],
+                                    );
+                                  }
+
+                                  return LayoutBuilder(
+                                    builder: (_, c) {
+                                      return Stack(
+                                        children: [
+                                          GlassContainer(
+                                            padding: const EdgeInsets.all(AppSpacing.md),
+                                            color: item.color,
+                                            opacity: 0.3,
+                                            borderRadius: AppRadius.md,
+                                            child: SizedBox(
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              child: Text(
+                                                "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
+                                                style: const TextStyle(
+                                                  color: AppColors.textOnDark,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          if (_itemController.isEditing)
+                                            Positioned(
+                                              right: AppSpacing.xs,
+                                              top: AppSpacing.xs,
+                                              child: InkResponse(
+                                                radius: 20,
+                                                onTap: () {
+                                                  _itemController.delete(item.identifier);
+                                                },
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  color: AppColors.textOnDark,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -581,9 +573,8 @@ class _DashboardWidgetState extends State<DashboardWidget>
               onPressed: () async {
                 // Both calls are needed: delete() removes the item from the in-memory grid,
                 // removeWidgetInstance() removes it from the persisted widgetVisibility map.
-                final dashProvider = Provider.of<DashboardProvider>(context, listen: false);
                 _itemController.delete(item.identifier);
-                await dashProvider.removeWidgetInstance(item.identifier);
+                await ref.read(dashboardNotifierProvider.notifier).removeWidgetInstance(item.identifier);
               },
               icon: const Icon(
                 Icons.close,
@@ -599,11 +590,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
     );
   }
 
-  Future<void> _handleMenuAction(String action, DashboardProvider dashProvider) async {
+  Future<void> _handleMenuAction(String action) async {
     final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(dashboardNotifierProvider.notifier);
     switch (action) {
       case 'save':
-        await dashProvider.saveLayout();
+        await notifier.saveLayout();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.layoutSaved)),
@@ -612,11 +604,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
         break;
       case 'reset':
         _lastVisibilityKey = [];
-        await dashProvider.resetToSaved();
+        await notifier.resetToSaved();
         if (mounted) {
+          final dashState = ref.read(dashboardNotifierProvider);
           _recreateStorageAndController(
-            dashProvider.activeDashboardId,
-            dashProvider.getVisibleWidgets(),
+            dashState.activeDashboardId,
+            notifier.getVisibleWidgets(),
           );
         }
         break;
@@ -640,13 +633,14 @@ class _DashboardWidgetState extends State<DashboardWidget>
         );
         if (confirmed == true) {
           try {
-            final dashId = dashProvider.activeDashboardId;
+            final dashState = ref.read(dashboardNotifierProvider);
+            final dashId = dashState.activeDashboardId;
             _lastVisibilityKey = [];
-            await dashProvider.hardReset();
+            await notifier.hardReset();
             if (mounted) {
               _recreateStorageAndController(
                 dashId,
-                dashProvider.getVisibleWidgets(),
+                notifier.getVisibleWidgets(),
               );
             }
           } catch (e, stackTrace) {
@@ -657,10 +651,11 @@ class _DashboardWidgetState extends State<DashboardWidget>
         }
         break;
       case 'rename':
-        await _showRenameDashboardDialog(dashProvider);
+        await _showRenameDashboardDialog();
         break;
       case 'delete':
-        if (dashProvider.dashboards.length <= 1) return;
+        final dashState = ref.read(dashboardNotifierProvider);
+        if (dashState.dashboards.length <= 1) return;
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -679,12 +674,14 @@ class _DashboardWidgetState extends State<DashboardWidget>
           ),
         );
         if (confirmed == true) {
-          final oldId = dashProvider.activeDashboardId;
-          await dashProvider.deleteDashboard(oldId);
+          final currentDashState = ref.read(dashboardNotifierProvider);
+          final oldId = currentDashState.activeDashboardId;
+          await notifier.deleteDashboard(oldId);
           if (mounted) {
+            final newDashState = ref.read(dashboardNotifierProvider);
             _recreateStorageAndController(
-              dashProvider.activeDashboardId,
-              dashProvider.getVisibleWidgets(),
+              newDashState.activeDashboardId,
+              notifier.getVisibleWidgets(),
             );
           }
         }
@@ -692,31 +689,36 @@ class _DashboardWidgetState extends State<DashboardWidget>
     }
   }
 
-  Future<void> _showCreateDashboardDialog(DashboardProvider dashProvider) async {
+  Future<void> _showCreateDashboardDialog() async {
+    final dashState = ref.read(dashboardNotifierProvider);
+    final notifier = ref.read(dashboardNotifierProvider.notifier);
     final result = await showDialog<CreateDashboardResult>(
       context: context,
       builder: (ctx) => CreateDashboardDialog(
-        existingNames: dashProvider.dashboards.map((d) => d.name).toList(),
+        existingNames: dashState.dashboards.map((d) => d.name).toList(),
       ),
     );
     if (result != null) {
-      await dashProvider.createDashboard(
+      await notifier.createDashboard(
         name: result.name,
         useDefaults: result.useDefaults,
       );
       if (mounted) {
+        final newDashState = ref.read(dashboardNotifierProvider);
         _recreateStorageAndController(
-          dashProvider.activeDashboardId,
-          dashProvider.getVisibleWidgets(),
+          newDashState.activeDashboardId,
+          notifier.getVisibleWidgets(),
         );
       }
     }
   }
 
-  Future<void> _showRenameDashboardDialog(DashboardProvider dashProvider) async {
+  Future<void> _showRenameDashboardDialog() async {
     final l10n = AppLocalizations.of(context);
+    final dashState = ref.read(dashboardNotifierProvider);
+    final notifier = ref.read(dashboardNotifierProvider.notifier);
     final controller = TextEditingController(
-      text: dashProvider.activeDashboard.name,
+      text: dashState.activeDashboard.name,
     );
     final newName = await showDialog<String>(
       context: context,
@@ -746,8 +748,9 @@ class _DashboardWidgetState extends State<DashboardWidget>
     );
     controller.dispose();
     if (newName != null && newName.isNotEmpty) {
-      await dashProvider.renameDashboard(
-        dashProvider.activeDashboardId,
+      final currentDashState = ref.read(dashboardNotifierProvider);
+      await notifier.renameDashboard(
+        currentDashState.activeDashboardId,
         newName,
       );
     }

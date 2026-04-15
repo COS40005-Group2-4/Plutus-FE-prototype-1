@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/bill_model.dart';
@@ -7,8 +7,8 @@ import '../services/bill_service.dart';
 import '../services/database_service.dart';
 import '../services/currency_service.dart';
 import '../transaction_service.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -16,14 +16,14 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
-class UpcomingBillsWidget extends StatefulWidget {
+class UpcomingBillsWidget extends ConsumerStatefulWidget {
   const UpcomingBillsWidget({super.key});
 
   @override
-  State<UpcomingBillsWidget> createState() => _UpcomingBillsWidgetState();
+  ConsumerState<UpcomingBillsWidget> createState() => _UpcomingBillsWidgetState();
 }
 
-class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
+class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
   late BillService _billService;
   late TransactionService _transactionService;
   int _daysFilter = 30;
@@ -33,10 +33,10 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     super.initState();
     _billService = BillService();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _billService.setCurrentUser(authProvider.currentUserId!);
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _billService.setCurrentUser(currentUserId);
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _billService.notifyBillUpdate();
@@ -45,9 +45,8 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.billsAccent,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -90,8 +89,6 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -182,8 +179,8 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
   Future<void> _handlePayBill(Bill bill) async {
     if (bill.id == null) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId == null) return;
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId == null) return;
 
     // Create transaction in database
     final now = DateTime.now();
@@ -212,7 +209,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
     };
 
     final db = DatabaseService();
-    await db.insertTransaction(authProvider.currentUserId!, transaction);
+    await db.insertTransaction(currentUserId, transaction);
 
     // Mark bill as paid
     await _billService.markBillAsPaid(bill.id!);
@@ -230,7 +227,7 @@ class _UpcomingBillsWidgetState extends State<UpcomingBillsWidget> {
 
 class _BillsContent extends StatefulWidget {
   final List<Bill> bills;
-  final SettingsProvider settings;
+  final SettingsState settings;
   final int daysFilter;
   final Function(Bill) onPayBill;
 

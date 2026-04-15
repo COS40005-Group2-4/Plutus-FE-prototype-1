@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/insights_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/insights_notifier.dart';
 import '../../models/ai/insight.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -9,14 +9,14 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
 import '../glass_container.dart';
 
-class HealthScoreWidget extends StatefulWidget {
+class HealthScoreWidget extends ConsumerStatefulWidget {
   const HealthScoreWidget({super.key});
 
   @override
-  State<HealthScoreWidget> createState() => _HealthScoreWidgetState();
+  ConsumerState<HealthScoreWidget> createState() => _HealthScoreWidgetState();
 }
 
-class _HealthScoreWidgetState extends State<HealthScoreWidget>
+class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _animation;
@@ -56,7 +56,7 @@ class _HealthScoreWidgetState extends State<HealthScoreWidget>
 
   @override
   Widget build(BuildContext context) {
-    final InsightsProvider provider = context.watch<InsightsProvider>();
+    final InsightsState provider = ref.watch(insightsNotifierProvider);
     final AppLocalizations l10n = AppLocalizations.of(context);
     final HealthScore? score = provider.healthScore;
 

@@ -2,27 +2,27 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
-import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/interfaces/i_transaction_service.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/file_preview_table.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/insights_provider.dart';
+import '../../providers/auth_notifier.dart';
+import '../../providers/insights_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
-class FileImportTab extends StatefulWidget {
+class FileImportTab extends ConsumerStatefulWidget {
   const FileImportTab({super.key});
 
   @override
-  State<FileImportTab> createState() => _FileImportTabState();
+  ConsumerState<FileImportTab> createState() => _FileImportTabState();
 }
 
-class _FileImportTabState extends State<FileImportTab> {
+class _FileImportTabState extends ConsumerState<FileImportTab> {
   late ITransactionService _service;
   late IAICategoryPipeline _aiPipeline;
 
@@ -41,9 +41,9 @@ class _FileImportTabState extends State<FileImportTab> {
   void initState() {
     super.initState();
     _service = GetIt.instance<ITransactionService>();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _service.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _service.setCurrentUser(currentUserId);
     }
     _aiPipeline = GetIt.instance<IAICategoryPipeline>();
   }
@@ -185,7 +185,7 @@ class _FileImportTabState extends State<FileImportTab> {
           ),
         );
         if (context.mounted) {
-          context.read<InsightsProvider>().onTransactionsImported();
+          ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
         }
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.pop(context, true);

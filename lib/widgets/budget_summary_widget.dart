@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
-import 'package:plutus_fe_prototype/providers/auth_provider.dart';
-import 'package:plutus_fe_prototype/providers/budget_provider.dart';
+import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
+import 'package:plutus_fe_prototype/providers/budget_notifier.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
@@ -12,44 +12,42 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
-class BudgetSummaryWidget extends StatefulWidget {
+class BudgetSummaryWidget extends ConsumerStatefulWidget {
   const BudgetSummaryWidget({super.key});
 
   @override
-  State<BudgetSummaryWidget> createState() => _BudgetSummaryWidgetState();
+  ConsumerState<BudgetSummaryWidget> createState() => _BudgetSummaryWidgetState();
 }
 
-class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
+class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = context.read<AuthProvider>();
-      if (authProvider.currentUserId != null) {
-        final provider = context.read<BudgetProvider>();
-        provider.setCurrentUser(authProvider.currentUserId!);
-        provider.loadBudget();
+      final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+      if (currentUserId != null) {
+        ref.read(budgetNotifierProvider.notifier).setCurrentUser(currentUserId);
+        ref.read(budgetNotifierProvider.notifier).refreshSpending();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<BudgetProvider>(
-      builder: (context, provider, _) {
-        final l10n = AppLocalizations.of(context);
-        final budget = provider.activeBudget;
+    final asyncBudget = ref.watch(budgetNotifierProvider);
+    final l10n = AppLocalizations.of(context);
 
-        // Loading state with no budget yet
-        if (provider.isLoading && budget == null) {
-          return GlassContainer(
-            color: AppColors.budgetAccent,
-            opacity: 0.2,
-            borderRadius: AppRadius.lg,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        }
+    return asyncBudget.when(
+      loading: () => GlassContainer(
+        color: AppColors.budgetAccent,
+        opacity: 0.2,
+        borderRadius: AppRadius.lg,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (provider) {
+        final budget = provider.activeBudget;
 
         // Empty state — no active budget
         if (budget == null) {
@@ -157,7 +155,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
-                      onPressed: () => provider.navigatePeriod(-1),
+                      onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(-1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -167,7 +165,7 @@ class _BudgetSummaryWidgetState extends State<BudgetSummaryWidget> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
-                      onPressed: () => provider.navigatePeriod(1),
+                      onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),

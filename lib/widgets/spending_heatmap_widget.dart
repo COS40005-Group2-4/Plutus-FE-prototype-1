@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -11,23 +11,23 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
 
-class SpendingHeatmapWidget extends StatefulWidget {
+class SpendingHeatmapWidget extends ConsumerStatefulWidget {
   const SpendingHeatmapWidget({super.key});
 
   @override
-  State<SpendingHeatmapWidget> createState() => _SpendingHeatmapWidgetState();
+  ConsumerState<SpendingHeatmapWidget> createState() => _SpendingHeatmapWidgetState();
 }
 
-class _SpendingHeatmapWidgetState extends State<SpendingHeatmapWidget> {
+class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
   late TransactionService _transactionService;
 
   @override
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
@@ -36,9 +36,8 @@ class _SpendingHeatmapWidgetState extends State<SpendingHeatmapWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return GlassContainer(
+    final settings = ref.watch(settingsNotifierProvider);
+    return GlassContainer(
           color: AppColors.heatmapAccent,
           opacity: 0.2,
           borderRadius: AppRadius.lg,
@@ -102,8 +101,6 @@ class _SpendingHeatmapWidgetState extends State<SpendingHeatmapWidget> {
             ],
           ),
         );
-      },
-    );
   }
 }
 
@@ -134,7 +131,7 @@ DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
 class _HeatmapContent extends StatefulWidget {
   final List<Transaction> transactions;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _HeatmapContent({
     super.key,

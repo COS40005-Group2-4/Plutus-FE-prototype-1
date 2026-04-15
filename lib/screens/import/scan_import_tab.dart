@@ -1,31 +1,31 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/interfaces/i_transaction_service.dart';
 import '../../services/ocr_service.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/insights_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/auth_notifier.dart';
+import '../../providers/insights_notifier.dart';
+import '../../providers/settings_notifier.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/import/ai_category_field.dart';
 import '../../widgets/import/zoomable_image_viewer.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
-class ScanImportTab extends StatefulWidget {
+class ScanImportTab extends ConsumerStatefulWidget {
   const ScanImportTab({super.key});
 
   @override
-  State<ScanImportTab> createState() => _ScanImportTabState();
+  ConsumerState<ScanImportTab> createState() => _ScanImportTabState();
 }
 
-class _ScanImportTabState extends State<ScanImportTab> {
+class _ScanImportTabState extends ConsumerState<ScanImportTab> {
   final OCRService _ocrService = OCRService();
   final ImagePicker _picker = ImagePicker();
   late ITransactionService _service;
@@ -63,9 +63,9 @@ class _ScanImportTabState extends State<ScanImportTab> {
     _descController = TextEditingController();
 
     _service = GetIt.instance<ITransactionService>();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _service.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _service.setCurrentUser(currentUserId);
     }
     _aiPipeline = GetIt.instance<IAICategoryPipeline>();
   }
@@ -105,8 +105,8 @@ class _ScanImportTabState extends State<ScanImportTab> {
 
     try {
       // Read OCR mode from settings
-      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-      final ocrMode = settingsProvider.ocrMode;
+      final settingsState = ref.read(settingsNotifierProvider);
+      final ocrMode = settingsState.ocrMode;
 
       final details = await _ocrService.processInvoice(_imageFile!.path, mode: ocrMode);
 
@@ -216,7 +216,7 @@ class _ScanImportTabState extends State<ScanImportTab> {
           ),
         );
         if (context.mounted) {
-          context.read<InsightsProvider>().onTransactionsImported();
+          ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
         }
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.of(context).pop(true);

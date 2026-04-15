@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/settings_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
 
 /// Example widget demonstrating currency conversion and formatting
 /// This can be used as a reference for implementing currency display in your app
-class CurrencyDisplayWidget extends StatefulWidget {
+class CurrencyDisplayWidget extends ConsumerStatefulWidget {
   final double amount;
   final String? sourceCurrency;
   final TextStyle? textStyle;
   final bool showSourceCurrency;
-  
+
   const CurrencyDisplayWidget({
     super.key,
     required this.amount,
@@ -21,10 +21,10 @@ class CurrencyDisplayWidget extends StatefulWidget {
   });
 
   @override
-  State<CurrencyDisplayWidget> createState() => _CurrencyDisplayWidgetState();
+  ConsumerState<CurrencyDisplayWidget> createState() => _CurrencyDisplayWidgetState();
 }
 
-class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
+class _CurrencyDisplayWidgetState extends ConsumerState<CurrencyDisplayWidget> {
   final CurrencyService _currencyService = CurrencyService();
   double? _convertedAmount;
   bool _isLoading = false;
@@ -39,14 +39,14 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
   @override
   void didUpdateWidget(CurrencyDisplayWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.amount != widget.amount || 
+    if (oldWidget.amount != widget.amount ||
         oldWidget.sourceCurrency != widget.sourceCurrency) {
       _convertCurrency();
     }
   }
 
   Future<void> _convertCurrency() async {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final settings = ref.read(settingsNotifierProvider);
     final targetCurrency = settings.currency.code;
     final sourceCurrency = widget.sourceCurrency ?? targetCurrency;
 
@@ -69,7 +69,7 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
         fromCurrency: sourceCurrency,
         toCurrency: targetCurrency,
       );
-      
+
       if (mounted) {
         setState(() {
           _convertedAmount = converted;
@@ -89,66 +89,63 @@ class _CurrencyDisplayWidgetState extends State<CurrencyDisplayWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        if (_isLoading) {
-          return const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          );
-        }
+    final SettingsState settings = ref.watch(settingsNotifierProvider);
+    if (_isLoading) {
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
 
-        final displayAmount = _convertedAmount ?? widget.amount;
-        final formatted = _currencyService.formatCurrency(
-          amount: displayAmount,
-          currencyCode: settings.currency.code,
-        );
+    final displayAmount = _convertedAmount ?? widget.amount;
+    final formatted = _currencyService.formatCurrency(
+      amount: displayAmount,
+      currencyCode: settings.currency.code,
+    );
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              formatted,
-              style: widget.textStyle,
-              overflow: TextOverflow.ellipsis,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          formatted,
+          style: widget.textStyle,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (widget.showSourceCurrency &&
+            widget.sourceCurrency != null &&
+            widget.sourceCurrency != settings.currency.code)
+          Text(
+            '(Original: ${_currencyService.formatCurrency(
+              amount: widget.amount,
+              currencyCode: widget.sourceCurrency!,
+            )})',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppColors.textOnLightSecondary,
             ),
-            if (widget.showSourceCurrency && 
-                widget.sourceCurrency != null && 
-                widget.sourceCurrency != settings.currency.code)
-              Text(
-                '(Original: ${_currencyService.formatCurrency(
-                  amount: widget.amount,
-                  currencyCode: widget.sourceCurrency!,
-                )})',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textOnLightSecondary,
-                ),
-              ),
-            if (_error != null)
-              Text(
-                _error!,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.warning,
-                ),
-              ),
-          ],
-        );
-      },
+          ),
+        if (_error != null)
+          Text(
+            _error!,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppColors.warning,
+            ),
+          ),
+      ],
     );
   }
 }
 
 /// Simple synchronous currency display without conversion
-class SimpleCurrencyDisplay extends StatelessWidget {
+class SimpleCurrencyDisplay extends ConsumerWidget {
   final double amount;
   final TextStyle? textStyle;
-  
+
   const SimpleCurrencyDisplay({
     super.key,
     required this.amount,
@@ -156,20 +153,17 @@ class SimpleCurrencyDisplay extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        final currencyService = CurrencyService();
-        final formatted = currencyService.formatCurrency(
-          amount: amount,
-          currencyCode: settings.currency.code,
-        );
-        
-        return Text(
-          formatted,
-          style: textStyle,
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final SettingsState settings = ref.watch(settingsNotifierProvider);
+    final currencyService = CurrencyService();
+    final formatted = currencyService.formatCurrency(
+      amount: amount,
+      currencyCode: settings.currency.code,
+    );
+
+    return Text(
+      formatted,
+      style: textStyle,
     );
   }
 }

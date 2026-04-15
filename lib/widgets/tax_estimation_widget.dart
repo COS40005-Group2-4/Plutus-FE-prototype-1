@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'glass_container.dart';
 import '../theme/app_colors.dart';
@@ -10,18 +10,18 @@ import '../theme/app_radius.dart';
 import '../services/tax_calculation_service.dart';
 import '../services/currency_service.dart';
 import '../transaction_service.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../l10n/app_localizations.dart';
 
-class TaxEstimationWidget extends StatefulWidget {
+class TaxEstimationWidget extends ConsumerStatefulWidget {
   const TaxEstimationWidget({super.key});
 
   @override
-  State<TaxEstimationWidget> createState() => _TaxEstimationWidgetState();
+  ConsumerState<TaxEstimationWidget> createState() => _TaxEstimationWidgetState();
 }
 
-class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
+class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   late TransactionService _transactionService;
   final NumberFormat _currencyFormat = NumberFormat('#,##0', 'vi_VN');
   
@@ -36,9 +36,9 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     
     // Listen to transaction updates
@@ -58,8 +58,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Recalculate when currency settings change
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    if (settingsProvider.isInitialized) {
+    final settingsState = ref.read(settingsNotifierProvider);
+    if (settingsState.isInitialized) {
       _calculateTax();
     }
   }
@@ -76,8 +76,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
     try {
       final transactions = await _transactionService.getTransactions();
       if (!mounted) return;
-      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-      final userCurrency = settingsProvider.currency.code;
+      final settingsState = ref.read(settingsNotifierProvider);
+      final userCurrency = settingsState.currency.code;
       
       final startOfYear = DateTime(_selectedYear, 1, 1);
       final endOfYear = DateTime(_selectedYear, 12, 31, 23, 59, 59);
@@ -231,8 +231,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   }
 
   void _showTaxDetails() {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final userCurrency = settingsProvider.currency.code;
+    final settingsState = ref.read(settingsNotifierProvider);
+    final userCurrency = settingsState.currency.code;
     final taxResult = TaxCalculationService.calculateAnnualTax(
       annualIncome: CurrencyService.toVND(_annualIncome, userCurrency),
       numberOfDependents: 0,
@@ -520,9 +520,9 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   }
 
   Widget _buildDetailRow(String label, double value, {bool highlight = false, bool isPercentage = false}) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final currencySymbol = settingsProvider.currency.symbol;
-    final userCurrency = settingsProvider.currency.code;
+    final settingsState = ref.read(settingsNotifierProvider);
+    final currencySymbol = settingsState.currency.symbol;
+    final userCurrency = settingsState.currency.code;
     
     // Convert VND values to user currency for display
     final displayValue = isPercentage ? value : CurrencyService.fromVND(value, userCurrency);
@@ -557,8 +557,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final currencySymbol = settingsProvider.currency.symbol;
+    final settingsState = ref.watch(settingsNotifierProvider);
+    final currencySymbol = settingsState.currency.symbol;
     
     return GlassContainer(
       color: AppColors.taxAccent,
@@ -777,8 +777,8 @@ class _TaxEstimationWidgetState extends State<TaxEstimationWidget> {
   }
 
   Widget _buildInfoRow(String label, double value) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final currencySymbol = settingsProvider.currency.symbol;
+    final settingsState = ref.read(settingsNotifierProvider);
+    final currencySymbol = settingsState.currency.symbol;
     
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../transaction_service.dart';
 import '../models/transaction_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -12,30 +12,30 @@ import '../theme/app_radius.dart';
 import 'glass_container.dart';
 import 'chart_theme.dart';
 
-class SavingsRateWidget extends StatefulWidget {
+class SavingsRateWidget extends ConsumerStatefulWidget {
   const SavingsRateWidget({super.key});
 
   @override
-  State<SavingsRateWidget> createState() => _SavingsRateWidgetState();
+  ConsumerState<SavingsRateWidget> createState() => _SavingsRateWidgetState();
 }
 
-class _SavingsRateWidgetState extends State<SavingsRateWidget> {
+class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
   late TransactionService _transactionService;
 
   @override
   void initState() {
     super.initState();
     _transactionService = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _transactionService.setCurrentUser(authProvider.currentUserId!);
+    final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
+    if (currentUserId != null) {
+      _transactionService.setCurrentUser(currentUserId);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transactionService.notifyTransactionUpdate();
     });
   }
 
-  Widget _buildStreamContent(BuildContext context, SettingsProvider settings) {
+  Widget _buildStreamContent(BuildContext context, SettingsState settings) {
     return StreamBuilder<List<Transaction>>(
       stream: _transactionService.transactionStream,
       builder: (context, snapshot) {
@@ -58,9 +58,8 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return LayoutBuilder(
+    final settings = ref.watch(settingsNotifierProvider);
+    return LayoutBuilder(
           builder: (context, outerConstraints) {
             final bool hasBoundedHeight = outerConstraints.maxHeight.isFinite;
             return GlassContainer(
@@ -105,14 +104,12 @@ class _SavingsRateWidgetState extends State<SavingsRateWidget> {
             );
           },
         );
-      },
-    );
   }
 }
 
 class _SavingsRateContent extends StatefulWidget {
   final List<Transaction> transactions;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _SavingsRateContent({
     super.key,

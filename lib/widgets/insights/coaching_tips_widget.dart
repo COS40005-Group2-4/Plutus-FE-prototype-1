@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/insights_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/insights_notifier.dart';
 import '../../models/ai/insight.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -10,14 +10,14 @@ import '../../theme/app_radius.dart';
 import '../chart_theme.dart';
 import '../glass_container.dart';
 
-class CoachingTipsWidget extends StatefulWidget {
+class CoachingTipsWidget extends ConsumerStatefulWidget {
   const CoachingTipsWidget({super.key});
 
   @override
-  State<CoachingTipsWidget> createState() => _CoachingTipsWidgetState();
+  ConsumerState<CoachingTipsWidget> createState() => _CoachingTipsWidgetState();
 }
 
-class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
+class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
   int _currentIndex = 0;
   Timer? _rotateTimer;
 
@@ -36,7 +36,7 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
   void _startAutoRotate() {
     _rotateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
-      final InsightsProvider provider = context.read<InsightsProvider>();
+      final InsightsState provider = ref.read(insightsNotifierProvider);
       final int count = provider.coachingTips.length;
       if (count > 1) {
         setState(() {
@@ -48,7 +48,7 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final InsightsProvider provider = context.watch<InsightsProvider>();
+    final InsightsState provider = ref.watch(insightsNotifierProvider);
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<CoachingTip> tips = provider.coachingTips;
 
@@ -116,7 +116,7 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
     );
   }
 
-  Widget _buildTipCard(BuildContext context, CoachingTip tip, InsightsProvider provider, AppLocalizations l10n) {
+  Widget _buildTipCard(BuildContext context, CoachingTip tip, InsightsState provider, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,7 +161,7 @@ class _CoachingTipsWidgetState extends State<CoachingTipsWidget> {
             if (!tip.isSaved)
               IconButton(
                 icon: const Icon(Icons.bookmark_border, size: 18),
-                onPressed: () => provider.saveCoachingTip(tip.id),
+                onPressed: () => ref.read(insightsNotifierProvider.notifier).saveCoachingTip(tip.id),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 color: AppColors.primary,
