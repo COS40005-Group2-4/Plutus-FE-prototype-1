@@ -87,8 +87,43 @@ class PriceApiService implements IPriceApiService {
     }
   }
 
-  /// Fetches stock price from Alpha Vantage
+  /// Fetches stock price — tries Yahoo Finance first, falls back to Alpha Vantage
   Future<double?> _getStockPrice(String symbol) async {
+    final yahooPrice = await _getStockPriceYahoo(symbol);
+    if (yahooPrice != null) return yahooPrice;
+    return await _getStockPriceAlphaVantage(symbol);
+  }
+
+  /// Fetches stock price from Yahoo Finance (no API key required)
+  Future<double?> _getStockPriceYahoo(String symbol) async {
+    try {
+      final url = Uri.parse(
+        'https://query1.finance.yahoo.com/v8/finance/chart/$symbol?interval=1d&range=1d',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'Mozilla/5.0'},
+      ).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final chart = data['chart'] as Map<String, dynamic>?;
+        final result = (chart?['result'] as List?)?.firstOrNull as Map<String, dynamic>?;
+        final meta = result?['meta'] as Map<String, dynamic>?;
+        final price = meta?['regularMarketPrice'];
+        if (price != null) return (price as num).toDouble();
+      } else {
+        debugPrint('Yahoo Finance returned status ${response.statusCode} for $symbol');
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Yahoo Finance API error for $symbol: $e');
+      return null;
+    }
+  }
+
+  /// Fetches stock price from Alpha Vantage (fallback)
+  Future<double?> _getStockPriceAlphaVantage(String symbol) async {
     try {
       if (_alphaVantageApiKey == null) {
         debugPrint('Alpha Vantage API key not configured');
@@ -96,25 +131,31 @@ class PriceApiService implements IPriceApiService {
       }
 
       final url = Uri.parse(
-        '$_alphaVantageBase?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$_alphaVantageApiKey'
+        '$_alphaVantageBase?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$_alphaVantageApiKey',
       );
-
       final response = await http.get(url).timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
-        
+
+        // Alpha Vantage returns "Information" or "Note" when rate-limited
+        final info = data['Information'] as String? ?? data['Note'] as String?;
+        if (info != null) {
+          debugPrint('Alpha Vantage rate limited: $info');
+          return null;
+        }
+
         final quote = data['Global Quote'] as Map<String, dynamic>?;
-        if (quote == null) return null;
-        
+        if (quote == null || quote.isEmpty) return null;
+
         final priceStr = quote['05. price'] as String?;
         if (priceStr == null) return null;
-        
+
         return double.tryParse(priceStr);
       }
       return null;
     } catch (e) {
-      debugPrint('Alpha Vantage API error: $e');
+      debugPrint('Alpha Vantage API error for $symbol: $e');
       return null;
     }
   }
@@ -278,17 +319,75 @@ class PriceApiService implements IPriceApiService {
   }
 
   Future<MarketData?> _getStockMarketData(String symbol) async {
+    final yahooData = await _getStockMarketDataYahoo(symbol);
+    if (yahooData != null) return yahooData;
+    return await _getStockMarketDataAlphaVantage(symbol);
+  }
+
+  /// Fetches stock market data from Yahoo Finance
+  Future<MarketData?> _getStockMarketDataYahoo(String symbol) async {
+    try {
+      final url = Uri.parse(
+        'https://query1.finance.yahoo.com/v8/finance/chart/$symbol?interval=1d&range=1d',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'Mozilla/5.0'},
+      ).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final chart = data['chart'] as Map<String, dynamic>?;
+        final result = (chart?['result'] as List?)?.firstOrNull as Map<String, dynamic>?;
+        final meta = result?['meta'] as Map<String, dynamic>?;
+        if (meta == null) return null;
+
+        final price = meta['regularMarketPrice'];
+        if (price == null) return null;
+
+        return MarketData(
+          currentPrice: (price as num).toDouble(),
+          priceChangePercent24h: meta['regularMarketChangePercent'] != null
+              ? (meta['regularMarketChangePercent'] as num).toDouble()
+              : 0.0,
+          high24h: meta['regularMarketDayHigh'] != null
+              ? (meta['regularMarketDayHigh'] as num).toDouble()
+              : price.toDouble(),
+          low24h: meta['regularMarketDayLow'] != null
+              ? (meta['regularMarketDayLow'] as num).toDouble()
+              : price.toDouble(),
+          marketCap: null,
+          volume: meta['regularMarketVolume'] != null
+              ? (meta['regularMarketVolume'] as num).toDouble()
+              : null,
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Yahoo Finance market data API error for $symbol: $e');
+      return null;
+    }
+  }
+
+  /// Fetches stock market data from Alpha Vantage (fallback)
+  Future<MarketData?> _getStockMarketDataAlphaVantage(String symbol) async {
     try {
       if (_alphaVantageApiKey == null) return null;
 
       final url = Uri.parse(
         '$_alphaVantageBase?function=GLOBAL_QUOTE&symbol=$symbol&apikey=$_alphaVantageApiKey',
       );
-
       final response = await http.get(url).timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
+
+        final info = data['Information'] as String? ?? data['Note'] as String?;
+        if (info != null) {
+          debugPrint('Alpha Vantage rate limited: $info');
+          return null;
+        }
+
         final quote = data['Global Quote'] as Map<String, dynamic>?;
         if (quote == null || quote.isEmpty) return null;
 
@@ -314,13 +413,76 @@ class PriceApiService implements IPriceApiService {
       }
       return null;
     } catch (e) {
-      debugPrint('Alpha Vantage market data API error: $e');
+      debugPrint('Alpha Vantage market data API error for $symbol: $e');
       return null;
     }
   }
 
-  /// Fetches stock historical prices from Alpha Vantage
+  /// Fetches stock historical prices — tries Yahoo Finance first, falls back to Alpha Vantage
   Future<List<Map<String, dynamic>>?> _getStockHistoricalPrices(
+    String symbol,
+    int days,
+  ) async {
+    final yahooHistory = await _getStockHistoricalPricesYahoo(symbol, days);
+    if (yahooHistory != null) return yahooHistory;
+    return await _getStockHistoricalPricesAlphaVantage(symbol, days);
+  }
+
+  /// Fetches stock historical prices from Yahoo Finance
+  Future<List<Map<String, dynamic>>?> _getStockHistoricalPricesYahoo(
+    String symbol,
+    int days,
+  ) async {
+    try {
+      // Yahoo Finance range param: use 1mo, 3mo, 6mo, 1y based on days
+      final range = days <= 30 ? '1mo' : days <= 90 ? '3mo' : days <= 180 ? '6mo' : '1y';
+      final url = Uri.parse(
+        'https://query1.finance.yahoo.com/v8/finance/chart/$symbol?interval=1d&range=$range',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'Mozilla/5.0'},
+      ).timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final chart = data['chart'] as Map<String, dynamic>?;
+        final result = (chart?['result'] as List?)?.firstOrNull as Map<String, dynamic>?;
+        if (result == null) return null;
+
+        final timestamps = result['timestamp'] as List?;
+        final indicators = result['indicators'] as Map<String, dynamic>?;
+        final closes = ((indicators?['quote'] as List?)?.firstOrNull
+            as Map<String, dynamic>?)?['close'] as List?;
+
+        if (timestamps == null || closes == null) return null;
+
+        final prices = <Map<String, dynamic>>[];
+        final limit = days < timestamps.length ? days : timestamps.length;
+
+        // Take the most recent `days` entries
+        final startIndex = timestamps.length - limit;
+        for (int i = startIndex; i < timestamps.length; i++) {
+          final ts = timestamps[i];
+          final close = closes[i];
+          if (ts != null && close != null) {
+            prices.add({
+              'date': (ts as num).toInt() * 1000, // seconds → milliseconds
+              'price': (close as num).toDouble(),
+            });
+          }
+        }
+        return prices;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Yahoo Finance historical API error for $symbol: $e');
+      return null;
+    }
+  }
+
+  /// Fetches stock historical prices from Alpha Vantage (fallback)
+  Future<List<Map<String, dynamic>>?> _getStockHistoricalPricesAlphaVantage(
     String symbol,
     int days,
   ) async {
@@ -330,46 +492,42 @@ class PriceApiService implements IPriceApiService {
         return null;
       }
 
-      // Use TIME_SERIES_DAILY for historical data
       final url = Uri.parse(
-        '$_alphaVantageBase?function=TIME_SERIES_DAILY&symbol=$symbol&apikey=$_alphaVantageApiKey'
+        '$_alphaVantageBase?function=TIME_SERIES_DAILY&symbol=$symbol&apikey=$_alphaVantageApiKey',
       );
-
       final response = await http.get(url).timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
+
+        final info = data['Information'] as String? ?? data['Note'] as String?;
+        if (info != null) {
+          debugPrint('Alpha Vantage rate limited: $info');
+          return null;
+        }
+
         final timeSeries = data['Time Series (Daily)'] as Map<String, dynamic>?;
-        
         if (timeSeries == null) return null;
-        
+
         final prices = <Map<String, dynamic>>[];
-        final entries = timeSeries.entries.toList();
-        
-        // Sort by date descending and take only requested days
-        entries.sort((a, b) => b.key.compareTo(a.key));
-        final limitedEntries = entries.take(days);
-        
-        for (final entry in limitedEntries) {
-          final dateStr = entry.key;
+        final entries = timeSeries.entries.toList()
+          ..sort((a, b) => b.key.compareTo(a.key));
+
+        for (final entry in entries.take(days)) {
           final values = entry.value as Map<String, dynamic>;
           final closePrice = values['4. close'] as String?;
-          
           if (closePrice != null) {
-            final date = DateTime.parse(dateStr);
             prices.add({
-              'date': date.millisecondsSinceEpoch,
+              'date': DateTime.parse(entry.key).millisecondsSinceEpoch,
               'price': double.parse(closePrice),
             });
           }
         }
-        
-        // Reverse to get chronological order
         return prices.reversed.toList();
       }
       return null;
     } catch (e) {
-      debugPrint('Alpha Vantage historical API error: $e');
+      debugPrint('Alpha Vantage historical API error for $symbol: $e');
       return null;
     }
   }
