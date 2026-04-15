@@ -9,8 +9,9 @@ import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
 import '../services/tax_calculation_service.dart';
 import '../services/currency_service.dart';
-import '../transaction_service.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../l10n/app_localizations.dart';
 
@@ -22,9 +23,9 @@ class TaxEstimationWidget extends ConsumerStatefulWidget {
 }
 
 class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
   final NumberFormat _currencyFormat = NumberFormat('#,##0', 'vi_VN');
-  
+
   double _annualIncome = 0;
   double _estimatedTax = 0;
   double _effectiveRate = 0;
@@ -35,7 +36,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);

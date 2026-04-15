@@ -341,7 +341,8 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
 
     final padding = (maxY - minY) * 0.05;
 
-    return LineChart(
+    return RepaintBoundary(
+      child: LineChart(
       LineChartData(
         minY: minY - padding,
         maxY: maxY + padding,
@@ -417,6 +418,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
           ),
         ],
       ),
+    ),
     );
   }
 

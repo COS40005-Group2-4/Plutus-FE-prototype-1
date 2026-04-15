@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
@@ -21,13 +22,13 @@ class NetWorthTrendWidget extends ConsumerStatefulWidget {
 }
 
 class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
   int _viewMode = 0; // 0 = Last 12 months, 1 = Yearly
 
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);
@@ -283,7 +284,8 @@ class _NetWorthContentState extends State<_NetWorthContent> {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: LineChart(
+          child: RepaintBoundary(
+            child: LineChart(
             LineChartData(
               minY: minY - range * 0.1,
               maxY: maxY + range * 0.1,
@@ -366,6 +368,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ],

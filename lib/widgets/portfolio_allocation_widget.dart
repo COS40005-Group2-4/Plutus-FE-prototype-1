@@ -146,7 +146,8 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    PieChart(
+                    RepaintBoundary(
+                      child: PieChart(
                       PieChartData(
                         pieTouchData: PieTouchData(
                           touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -175,6 +176,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                           );
                         }),
                       ),
+                    ),
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,

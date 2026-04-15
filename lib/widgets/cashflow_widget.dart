@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/transaction_model.dart';
-import '../transaction_service.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
@@ -20,7 +21,7 @@ class CashflowWidget extends ConsumerStatefulWidget {
 }
 
 class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
   int _viewMode = 0; // 0 = Monthly, 1 = Yearly, 2 = All Years
   DateTime _selectedDate = DateTime.now();
   bool _showBarChart = true;
@@ -28,7 +29,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);
@@ -567,7 +568,8 @@ class _CashflowContentState extends State<_CashflowContent> {
       ..._expenseData.values,
     ].fold(0.0, (max, val) => val > max ? val : max);
 
-    return BarChart(
+    return RepaintBoundary(
+      child: BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: maxValue * 1.2,
@@ -670,6 +672,7 @@ class _CashflowContentState extends State<_CashflowContent> {
         borderData: FlBorderData(show: false),
         barGroups: _buildBarGroups(),
       ),
+    ),
     );
   }
 
@@ -716,7 +719,8 @@ class _CashflowContentState extends State<_CashflowContent> {
       ..._expenseData.values,
     ].fold(0.0, (max, val) => val > max ? val : max);
 
-    return LineChart(
+    return RepaintBoundary(
+      child: LineChart(
       LineChartData(
         maxY: maxValue * 1.2,
         minY: 0,
@@ -869,6 +873,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           ),
         ],
       ),
+    ),
     );
   }
 

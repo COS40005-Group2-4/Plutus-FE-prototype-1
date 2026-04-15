@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
-import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
@@ -20,12 +21,12 @@ class SavingsRateWidget extends ConsumerStatefulWidget {
 }
 
 class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
 
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);

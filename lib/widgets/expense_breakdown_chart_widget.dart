@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
@@ -21,14 +22,14 @@ class ExpenseBreakdownChartWidget extends ConsumerStatefulWidget {
 }
 
 class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownChartWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
   int _viewMode = 0; // 0 = Month, 1 = Year
   DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);
@@ -286,7 +287,8 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    PieChart(
+                    RepaintBoundary(
+                      child: PieChart(
                       PieChartData(
                         pieTouchData: PieTouchData(
                           touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -315,6 +317,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                           );
                         }),
                       ),
+                    ),
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,

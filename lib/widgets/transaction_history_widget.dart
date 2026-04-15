@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../widgets/glass_container.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
-import '../services/database_service.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -25,8 +25,8 @@ class TransactionHistoryWidget extends ConsumerStatefulWidget {
 }
 
 class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWidget> {
-  late TransactionService _transactionService;
-  late DatabaseService _databaseService;
+  late ITransactionService _transactionService;
+  late IDatabaseService _databaseService;
   bool _isEditMode = false;
   final Set<dynamic> _selectedTransactionIds = {};
   DateTime? _startDate;
@@ -36,8 +36,8 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
-    _databaseService = DatabaseService();
+    _transactionService = sl<ITransactionService>();
+    _databaseService = sl<IDatabaseService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../transaction_service.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../theme/app_colors.dart';
@@ -21,12 +22,12 @@ class IncomeTrendWidget extends ConsumerStatefulWidget {
 }
 
 class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
-  late TransactionService _transactionService;
+  late ITransactionService _transactionService;
 
   @override
   void initState() {
     super.initState();
-    _transactionService = TransactionService();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _transactionService.setCurrentUser(currentUserId);
@@ -283,7 +284,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
         const SizedBox(height: 8),
         // Stacked area chart
         Expanded(
-          child: LineChart(
+          child: RepaintBoundary(
+            child: LineChart(
             LineChartData(
               maxY: maxY,
               minY: 0,
@@ -423,6 +425,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
 import 'widgets/export_dialog.dart';
@@ -11,6 +10,8 @@ import 'providers/settings_notifier.dart';
 import 'services/currency_service.dart';
 import 'services/export_service.dart';
 import 'services/user_service.dart';
+import 'services/interfaces/interfaces.dart';
+import 'di/service_locator.dart';
 import 'utils/date_time_formatter.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_colors.dart';
@@ -26,7 +27,7 @@ class TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-  late TransactionService _service;
+  late ITransactionService _service;
   final ExportService _exportService = ExportService();
   final UserService _userService = UserService();
   List<Transaction> _transactions = [];
@@ -35,7 +36,7 @@ class TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage>
   @override
   void initState() {
     super.initState();
-    _service = TransactionService();
+    _service = sl<ITransactionService>();
     final authNotifier = ref.read(authNotifierProvider.notifier);
     if (authNotifier.currentUserId != null) {
       _service.setCurrentUser(authNotifier.currentUserId!);

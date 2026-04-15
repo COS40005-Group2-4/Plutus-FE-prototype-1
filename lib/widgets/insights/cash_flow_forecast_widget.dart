@@ -85,7 +85,8 @@ class CashFlowForecastWidget extends ConsumerWidget {
   static Widget buildForecastChart(BuildContext context, Forecast forecast, {bool showTooltips = true}) {
     final List<DailyProjection> data = forecast.dailyProjection;
 
-    return LineChart(
+    return RepaintBoundary(
+      child: LineChart(
       LineChartData(
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(show: false),
@@ -163,6 +164,7 @@ class CashFlowForecastWidget extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

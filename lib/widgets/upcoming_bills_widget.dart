@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/bill_model.dart';
-import '../services/bill_service.dart';
-import '../services/database_service.dart';
 import '../services/currency_service.dart';
-import '../transaction_service.dart';
 import '../providers/auth_notifier.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -24,15 +23,15 @@ class UpcomingBillsWidget extends ConsumerStatefulWidget {
 }
 
 class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
-  late BillService _billService;
-  late TransactionService _transactionService;
+  late IBillService _billService;
+  late ITransactionService _transactionService;
   int _daysFilter = 30;
 
   @override
   void initState() {
     super.initState();
-    _billService = BillService();
-    _transactionService = TransactionService();
+    _billService = sl<IBillService>();
+    _transactionService = sl<ITransactionService>();
     final currentUserId = ref.read(authNotifierProvider.notifier).currentUserId;
     if (currentUserId != null) {
       _billService.setCurrentUser(currentUserId);
@@ -208,7 +207,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
       ],
     };
 
-    final db = DatabaseService();
+    final db = sl<IDatabaseService>();
     await db.insertTransaction(currentUserId, transaction);
 
     // Mark bill as paid
@@ -345,7 +344,8 @@ class _BillsContentState extends State<_BillsContent> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: SizedBox(
         height: 80,
-        child: BarChart(
+        child: RepaintBoundary(
+          child: BarChart(
           BarChartData(
             alignment: BarChartAlignment.spaceAround,
             maxY: maxVal * 1.3,
@@ -400,6 +400,7 @@ class _BillsContentState extends State<_BillsContent> {
               );
             }).toList(),
           ),
+        ),
         ),
       ),
     );
@@ -647,7 +648,7 @@ class _BillsContentState extends State<_BillsContent> {
 }
 
 class _BillEditorDialog extends StatefulWidget {
-  final BillService billService;
+  final IBillService billService;
   final Bill? bill;
 
   const _BillEditorDialog({
@@ -838,7 +839,7 @@ class _BillEditorDialogState extends State<_BillEditorDialog> {
 
 class _BillSelectorDialog extends StatelessWidget {
   final List<Bill> bills;
-  final BillService billService;
+  final IBillService billService;
 
   const _BillSelectorDialog({
     required this.bills,
