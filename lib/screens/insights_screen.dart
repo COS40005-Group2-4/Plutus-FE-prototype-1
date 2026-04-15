@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/insights_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../providers/insights_notifier.dart';
+import '../router/app_router.dart';
 import '../models/ai/insight.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -10,14 +12,14 @@ import '../widgets/chart_theme.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/insights/cash_flow_forecast_widget.dart';
 
-class InsightsScreen extends StatefulWidget {
+class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
 
   @override
-  State<InsightsScreen> createState() => _InsightsScreenState();
+  ConsumerState<InsightsScreen> createState() => _InsightsScreenState();
 }
 
-class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProviderStateMixin {
+class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -34,7 +36,8 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final InsightsProvider provider = context.watch<InsightsProvider>();
+    final InsightsState provider = ref.watch(insightsNotifierProvider);
+    final insightsNotifier = ref.read(insightsNotifierProvider.notifier);
     final AppLocalizations l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -44,7 +47,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            onPressed: () => context.push(AppRoutes.settings),
           ),
         ],
         bottom: TabBar(
@@ -85,7 +88,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
         children: <Widget>[
           FloatingActionButton.small(
             heroTag: 'font_increase',
-            onPressed: provider.canIncreaseFontSize ? provider.increaseFontSize : null,
+            onPressed: provider.canIncreaseFontSize ? insightsNotifier.increaseFontSize : null,
             backgroundColor: provider.canIncreaseFontSize
                 ? AppColors.primary
                 : AppColors.primary.withValues(alpha: 0.3),
@@ -95,7 +98,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
           const SizedBox(height: 8),
           FloatingActionButton.small(
             heroTag: 'font_decrease',
-            onPressed: provider.canDecreaseFontSize ? provider.decreaseFontSize : null,
+            onPressed: provider.canDecreaseFontSize ? insightsNotifier.decreaseFontSize : null,
             backgroundColor: provider.canDecreaseFontSize
                 ? AppColors.primary
                 : AppColors.primary.withValues(alpha: 0.3),
@@ -108,9 +111,9 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
         children: [
           // Import banner
           if (provider.showImportBanner)
-            _buildImportBanner(context, provider, l10n),
+            _buildImportBanner(context, provider, insightsNotifier, l10n),
           // Period selector
-          _buildPeriodBar(context, provider, l10n),
+          _buildPeriodBar(context, provider, insightsNotifier, l10n),
           // Tab content
           Expanded(
             child: TabBarView(
@@ -118,19 +121,19 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
               children: [
                 _SpendingTab(provider: provider, l10n: l10n),
                 _ForecastTab(provider: provider, l10n: l10n),
-                _AlertsTab(provider: provider, l10n: l10n),
-                _CoachingTab(provider: provider, l10n: l10n),
+                _AlertsTab(provider: provider, insightsNotifier: insightsNotifier, l10n: l10n),
+                _CoachingTab(provider: provider, insightsNotifier: insightsNotifier, l10n: l10n),
               ],
             ),
           ),
           // Generate button
-          _buildGenerateButton(context, provider, l10n),
+          _buildGenerateButton(context, provider, insightsNotifier, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildImportBanner(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+  Widget _buildImportBanner(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
@@ -146,12 +149,12 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
             ),
           ),
           TextButton(
-            onPressed: () => provider.generateInsights(),
+            onPressed: () => insightsNotifier.generateInsights(),
             child: Text(l10n.insightsImportBannerAction),
           ),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
-            onPressed: () => provider.dismissImportBanner(),
+            onPressed: () => insightsNotifier.dismissImportBanner(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -160,7 +163,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildPeriodBar(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+  Widget _buildPeriodBar(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
     final List<({int months, String label})> presets = <({int months, String label})>[
       (months: 1, label: l10n.insightsPeriod1m),
       (months: 3, label: l10n.insightsPeriod3m),
@@ -183,7 +186,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
               child: ChoiceChip(
                 label: Text(preset.label),
                 selected: selected,
-                onSelected: (_) => provider.setPeriodPreset(preset.months),
+                onSelected: (_) => insightsNotifier.setSelectedPeriod(preset.months),
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
                   color: selected ? Colors.white : null,
@@ -206,7 +209,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
                     : l10n.insightsPeriodCustom,
               ),
               selected: provider.hasCustomDateRange,
-              onSelected: (_) => _pickCustomRange(context, provider),
+              onSelected: (_) => _pickCustomRange(context, provider, insightsNotifier),
               selectedColor: AppColors.primary,
               labelStyle: TextStyle(
                 color: provider.hasCustomDateRange ? Colors.white : null,
@@ -228,7 +231,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
     return '$s–$e';
   }
 
-  Future<void> _pickCustomRange(BuildContext context, InsightsProvider provider) async {
+  Future<void> _pickCustomRange(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier) async {
     final DateTimeRange? range = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
@@ -249,11 +252,11 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
       },
     );
     if (range != null) {
-      provider.setCustomDateRange(range.start, range.end);
+      insightsNotifier.setCustomDateRange(range.start, range.end);
     }
   }
 
-  Widget _buildGenerateButton(BuildContext context, InsightsProvider provider, AppLocalizations l10n) {
+  Widget _buildGenerateButton(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -262,7 +265,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: provider.isGenerating ? null : () => provider.generateInsights(),
+              onPressed: provider.isGenerating ? null : () => insightsNotifier.generateInsights(),
               icon: provider.isGenerating
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.auto_awesome),
@@ -308,7 +311,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
 
 // ── Spending Tab ──
 class _SpendingTab extends StatelessWidget {
-  final InsightsProvider provider;
+  final InsightsState provider;
   final AppLocalizations l10n;
 
   const _SpendingTab({required this.provider, required this.l10n});
@@ -334,6 +337,7 @@ class _SpendingTab extends StatelessWidget {
           body: insight.body,
           category: insight.category,
           metric: insight.metric,
+          fontSize: provider.insightsFontSize,
         );
       },
     );
@@ -342,7 +346,7 @@ class _SpendingTab extends StatelessWidget {
 
 // ── Forecast Tab ──
 class _ForecastTab extends StatelessWidget {
-  final InsightsProvider provider;
+  final InsightsState provider;
   final AppLocalizations l10n;
 
   const _ForecastTab({required this.provider, required this.l10n});
@@ -376,10 +380,7 @@ class _ForecastTab extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Builder(builder: (BuildContext ctx) {
-                  final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
-                  return Text(forecast.summary, style: TextStyle(fontSize: fs));
-                }),
+                Text(forecast.summary, style: TextStyle(fontSize: provider.insightsFontSize)),
                 const SizedBox(height: AppSpacing.md),
                 // Projected balance breakdown
                 _ForecastRow(
@@ -450,10 +451,11 @@ class _ForecastRow extends StatelessWidget {
 
 // ── Alerts Tab ──
 class _AlertsTab extends StatelessWidget {
-  final InsightsProvider provider;
+  final InsightsState provider;
+  final InsightsNotifier insightsNotifier;
   final AppLocalizations l10n;
 
-  const _AlertsTab({required this.provider, required this.l10n});
+  const _AlertsTab({required this.provider, required this.insightsNotifier, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -474,7 +476,7 @@ class _AlertsTab extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () => provider.markAllAlertsRead(),
+                onPressed: () => insightsNotifier.markAllAlertsRead(),
                 child: Text(l10n.insightsAlertsMarkRead),
               ),
             ),
@@ -487,7 +489,8 @@ class _AlertsTab extends StatelessWidget {
               final Alert alert = alerts[index];
               return _AlertCard(
                 alert: alert,
-                onTap: () => provider.markAlertRead(alert.id),
+                fontSize: provider.insightsFontSize,
+                onTap: () => insightsNotifier.markAlertRead(alert.id),
               );
             },
           ),
@@ -499,9 +502,10 @@ class _AlertsTab extends StatelessWidget {
 
 class _AlertCard extends StatelessWidget {
   final Alert alert;
+  final double fontSize;
   final VoidCallback onTap;
 
-  const _AlertCard({required this.alert, required this.onTap});
+  const _AlertCard({required this.alert, required this.fontSize, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -537,29 +541,21 @@ class _AlertCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Builder(builder: (BuildContext ctx) {
-                      final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            alert.title,
-                            style: TextStyle(
-                              fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
-                              fontSize: fs + 1,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            alert.body,
-                            style: TextStyle(
-                              fontSize: fs,
-                              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
+                    Text(
+                      alert.title,
+                      style: TextStyle(
+                        fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
+                        fontSize: fontSize + 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      alert.body,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -579,10 +575,11 @@ class _AlertCard extends StatelessWidget {
 
 // ── Coaching Tab ──
 class _CoachingTab extends StatelessWidget {
-  final InsightsProvider provider;
+  final InsightsState provider;
+  final InsightsNotifier insightsNotifier;
   final AppLocalizations l10n;
 
-  const _CoachingTab({required this.provider, required this.l10n});
+  const _CoachingTab({required this.provider, required this.insightsNotifier, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -603,8 +600,9 @@ class _CoachingTab extends StatelessWidget {
         return _CoachingCard(
           tip: tip,
           l10n: l10n,
-          onSave: () => provider.saveCoachingTip(tip.id),
-          onDismiss: () => provider.dismissCoachingTip(tip.id),
+          fontSize: provider.insightsFontSize,
+          onSave: () => insightsNotifier.saveCoachingTip(tip.id),
+          onDismiss: () => insightsNotifier.dismissCoachingTip(tip.id),
         );
       },
     );
@@ -614,12 +612,14 @@ class _CoachingTab extends StatelessWidget {
 class _CoachingCard extends StatelessWidget {
   final CoachingTip tip;
   final AppLocalizations l10n;
+  final double fontSize;
   final VoidCallback onSave;
   final VoidCallback onDismiss;
 
   const _CoachingCard({
     required this.tip,
     required this.l10n,
+    required this.fontSize,
     required this.onSave,
     required this.onDismiss,
   });
@@ -638,22 +638,16 @@ class _CoachingCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Builder(builder: (BuildContext ctx) {
-                    final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
-                    return Text(
-                      tip.title,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: fs + 1),
-                    );
-                  }),
+                  child: Text(
+                    tip.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize + 1),
+                  ),
                 ),
                 _DifficultyBadge(difficulty: tip.difficulty, l10n: l10n),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Builder(builder: (BuildContext ctx) {
-              final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
-              return Text(tip.body, style: TextStyle(fontSize: fs));
-            }),
+            Text(tip.body, style: TextStyle(fontSize: fontSize)),
             if (tip.savingsEstimate != null && tip.savingsEstimate! > 0) ...[
               const SizedBox(height: AppSpacing.sm),
               Row(
@@ -740,12 +734,14 @@ class _InsightCard extends StatelessWidget {
   final String body;
   final String? category;
   final InsightMetric? metric;
+  final double fontSize;
 
   const _InsightCard({
     required this.title,
     required this.body,
     this.category,
     this.metric,
+    required this.fontSize,
   });
 
   @override
@@ -780,23 +776,15 @@ class _InsightCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Builder(builder: (BuildContext ctx) {
-              final double fs = ctx.watch<InsightsProvider>().insightsFontSize;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: fs + 1)),
-                  const SizedBox(height: 4),
-                  Text(
-                    body,
-                    style: TextStyle(
-                      fontSize: fs,
-                      color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              );
-            }),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize + 1)),
+            const SizedBox(height: 4),
+            Text(
+              body,
+              style: TextStyle(
+                fontSize: fontSize,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
           ],
         ),
       ),

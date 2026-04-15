@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/report_config.dart';
 import '../models/report_template.dart';
-import '../providers/auth_provider.dart';
-import '../providers/insights_provider.dart';
-import '../providers/report_provider.dart';
-import '../providers/settings_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/report_notifier.dart';
+import '../providers/settings_notifier.dart';
+import '../router/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/glass_container.dart';
 
-class ReportConfigScreen extends StatefulWidget {
+class ReportConfigScreen extends ConsumerStatefulWidget {
   const ReportConfigScreen({super.key});
 
   @override
-  State<ReportConfigScreen> createState() => _ReportConfigScreenState();
+  ConsumerState<ReportConfigScreen> createState() => _ReportConfigScreenState();
 }
 
-class _ReportConfigScreenState extends State<ReportConfigScreen> {
+class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
   ReportTemplate _selectedTemplate = ReportTemplate.quickSummary;
   DateRangePreset _selectedPreset = DateRangePreset.thisMonth;
   late Set<ReportSection> _enabledSections;
@@ -32,8 +33,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
   void initState() {
     super.initState();
     _enabledSections = Set<ReportSection>.from(_selectedTemplate.sections);
-    final SettingsProvider settings =
-        Provider.of<SettingsProvider>(context, listen: false);
+    final SettingsState settings = ref.read(settingsNotifierProvider);
     _reportLocale = settings.language.code;
   }
 
@@ -59,14 +59,8 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
   }
 
   Future<void> _generate(BuildContext context) async {
-    final ReportProvider reportProvider =
-        Provider.of<ReportProvider>(context, listen: false);
-    final AuthProvider authProvider =
-        Provider.of<AuthProvider>(context, listen: false);
-    final InsightsProvider insightsProvider =
-        Provider.of<InsightsProvider>(context, listen: false);
-    final SettingsProvider settingsProvider =
-        Provider.of<SettingsProvider>(context, listen: false);
+    final reportNotifier = ref.read(reportNotifierProvider.notifier);
+    final authNotifier = ref.read(authNotifierProvider.notifier);
 
     final DateRange dateRange = _buildDateRange();
     final ReportConfig config = ReportConfig(
@@ -77,16 +71,14 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
       reportLocale: _reportLocale,
     );
 
-    reportProvider.updateConfig(config);
+    reportNotifier.updateConfig(config);
 
-    await reportProvider.generateReport(
-      userId: authProvider.currentUserId,
-      insightsProvider: insightsProvider,
-      settingsProvider: settingsProvider,
+    await reportNotifier.generateReport(
+      userId: authNotifier.currentUserId,
     );
 
     if (context.mounted) {
-      Navigator.pushNamed(context, '/report-preview');
+      context.push(AppRoutes.reportPreview);
     }
   }
 
@@ -105,8 +97,9 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
         ),
         backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
-      body: Consumer<ReportProvider>(
-        builder: (BuildContext ctx, ReportProvider reportProvider, Widget? _) {
+      body: Consumer(
+        builder: (BuildContext ctx, WidgetRef innerRef, Widget? _) {
+          final ReportState reportState = innerRef.watch(reportNotifierProvider);
           return Stack(
             children: [
               ListView(
@@ -134,12 +127,12 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
                   const SizedBox(height: AppSpacing.xl),
                   _buildAiToggle(brightness, textPrimary, textSecondary, l10n),
                   const SizedBox(height: AppSpacing.xxxl),
-                  _buildGenerateButton(context, reportProvider, l10n),
+                  _buildGenerateButton(context, reportState, l10n),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
-              if (reportProvider.isGenerating)
-                _buildLoadingOverlay(brightness, reportProvider, l10n),
+              if (reportState.isGenerating)
+                _buildLoadingOverlay(brightness, reportState, l10n),
             ],
           );
         },
@@ -495,7 +488,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
 
   Widget _buildGenerateButton(
     BuildContext context,
-    ReportProvider reportProvider,
+    ReportState reportState,
     AppLocalizations l10n,
   ) {
     final bool hasAnySections = _enabledSections.isNotEmpty;
@@ -503,7 +496,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
-        onPressed: (reportProvider.isGenerating || !hasAnySections)
+        onPressed: (reportState.isGenerating || !hasAnySections)
             ? null
             : () => _generate(context),
         icon: const Icon(Icons.auto_awesome),
@@ -527,7 +520,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
     );
   }
 
-  Widget _buildLoadingOverlay(Brightness brightness, ReportProvider reportProvider, AppLocalizations l10n) {
+  Widget _buildLoadingOverlay(Brightness brightness, ReportState reportState, AppLocalizations l10n) {
     return Positioned.fill(
       child: Container(
         color: brightness == Brightness.dark
@@ -556,7 +549,7 @@ class _ReportConfigScreenState extends State<ReportConfigScreen> {
                 SizedBox(
                   width: 180,
                   child: LinearProgressIndicator(
-                    value: reportProvider.progress,
+                    value: reportState.progress,
                     color: AppColors.primary,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.xs),

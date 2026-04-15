@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/glass_background.dart';
 import '../widgets/add_investment_dialog.dart';
@@ -11,14 +12,14 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 /// Full screen view of all investments
-class InvestmentListScreen extends StatefulWidget {
+class InvestmentListScreen extends ConsumerStatefulWidget {
   const InvestmentListScreen({super.key});
 
   @override
-  State<InvestmentListScreen> createState() => _InvestmentListScreenState();
+  ConsumerState<InvestmentListScreen> createState() => _InvestmentListScreenState();
 }
 
-class _InvestmentListScreenState extends State<InvestmentListScreen> {
+class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
   final IInvestmentService _service = sl<IInvestmentService>();
   List<InvestmentModel>? _investments;
   bool _isLoading = false;
@@ -28,9 +29,9 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
   void initState() {
     super.initState();
     // Set user ID in the investment service for database operations
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.currentUserId != null) {
-      _service.setUserId(authProvider.currentUserId!);
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    if (authNotifier.currentUserId != null) {
+      _service.setUserId(authNotifier.currentUserId!);
     }
     _loadData();
   }
@@ -84,9 +85,9 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
             
             // Save to backend (this fetches price data)
             final service = sl<IInvestmentService>();
-            final authProvider = context.read<AuthProvider>();
-            if (authProvider.currentUserId != null) {
-              service.setUserId(authProvider.currentUserId!);
+            final authNotifier = ref.read(authNotifierProvider.notifier);
+            if (authNotifier.currentUserId != null) {
+              service.setUserId(authNotifier.currentUserId!);
             }
             await service.saveInvestment(investment);
             
@@ -137,7 +138,7 @@ class _InvestmentListScreenState extends State<InvestmentListScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => context.pop(),
                       color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
                     ),
                     const SizedBox(width: 8),

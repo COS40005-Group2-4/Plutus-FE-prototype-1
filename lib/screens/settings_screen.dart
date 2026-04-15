@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/glass_container.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
-import '../providers/backup_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
+import '../providers/backup_notifier.dart';
+import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -11,30 +13,32 @@ import '../theme/app_spacing.dart';
 import '../models/ai/insight.dart';
 import '../services/ocr_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
-  
+
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authNotifier = ref.read(authNotifierProvider.notifier);
     final l10n = AppLocalizations.of(context);
-    
+
+    final bool isAuthenticated = authNotifier.isAuthenticated;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings),
         backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
-      body: authProvider.isAuthenticated 
-        ? _buildAuthenticatedSettings(context, authProvider)
-        : _buildGuestSettings(context, authProvider),
+      body: isAuthenticated
+        ? _buildAuthenticatedSettings(context, ref, authNotifier, l10n)
+        : _buildGuestSettings(context, authNotifier, l10n),
     );
   }
 
-  Widget _buildAuthenticatedSettings(BuildContext context, AuthProvider authProvider) {
-    final currentUser = authProvider.currentUser;
-    final l10n = AppLocalizations.of(context);
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    
+  Widget _buildAuthenticatedSettings(BuildContext context, WidgetRef ref, AuthNotifier authNotifier, AppLocalizations l10n) {
+    final currentUser = authNotifier.currentUser;
+    final settings = ref.watch(settingsNotifierProvider);
+    final settingsNotifier = ref.read(settingsNotifierProvider.notifier);
+
     return ListView(
       children: [
         const SizedBox(height: AppSpacing.xl),
@@ -46,8 +50,8 @@ class SettingsScreen extends StatelessWidget {
                   ? AppColors.textOnLightSecondary
                   : AppColors.success,
           child: Text(
-            authProvider.userName.isNotEmpty 
-                ? authProvider.userName[0].toUpperCase() 
+            authNotifier.userName.isNotEmpty
+                ? authNotifier.userName[0].toUpperCase()
                 : 'U',
             style: const TextStyle(fontSize: 40, color: AppColors.textOnDark),
           ),
@@ -55,7 +59,7 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
         Center(
           child: Text(
-            authProvider.userName,
+            authNotifier.userName,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 24,
@@ -74,12 +78,12 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (authProvider.userEmail.isNotEmpty)
+        if (authNotifier.userEmail.isNotEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
-                authProvider.userEmail,
+                authNotifier.userEmail,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 16,
@@ -164,17 +168,13 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
         // Session info
         FutureBuilder<Map<String, dynamic>>(
-          future: authProvider.getSessionInfo(),
+          future: authNotifier.getSessionInfo(),
           builder: (context, snapshot) {
             if (snapshot.hasData && snapshot.data != null) {
               final sessionInfo = snapshot.data!;
               final daysUntilExpiry = sessionInfo['daysUntilExpiry'] as int?;
               final isVerificationDue = sessionInfo['isVerificationDue'] as bool? ?? false;
 
-              // Only show the offline banner when the session is unverified
-              // (i.e. the user hasn't been confirmed online recently).
-              // Right after a fresh sign-in, isVerificationDue is false,
-              // so we hide the banner.
               if (daysUntilExpiry == null || !isVerificationDue) {
                 return const SizedBox.shrink();
               }
@@ -204,11 +204,10 @@ class SettingsScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        if (daysUntilExpiry != null)
-                          Text(
-                            l10n.translate('settings_offline_days_remaining').replaceFirst('\$days', daysUntilExpiry.toString()),
-                            style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
-                          ),
+                        Text(
+                          l10n.translate('settings_offline_days_remaining').replaceFirst('\$days', daysUntilExpiry.toString()),
+                          style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color),
+                        ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           l10n.translate('settings_offline_message'),
@@ -236,9 +235,9 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        _buildThemeModeSelector(context, settingsProvider, l10n),
+        _buildThemeModeSelector(context, settings, settingsNotifier, l10n),
         const Divider(),
-        
+
         // Preferences Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
@@ -250,11 +249,11 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        _buildLanguageSelector(context, settingsProvider, l10n),
-        _buildCurrencySelector(context, settingsProvider, l10n),
-        _buildDateFormatSelector(context, settingsProvider, l10n),
-        _buildTimeFormatSelector(context, settingsProvider, l10n),
-        _buildBackupCard(context, l10n),
+        _buildLanguageSelector(context, settings, settingsNotifier, l10n),
+        _buildCurrencySelector(context, settings, settingsNotifier, l10n),
+        _buildDateFormatSelector(context, settings, settingsNotifier, l10n),
+        _buildTimeFormatSelector(context, settings, settingsNotifier, l10n),
+        _buildBackupCard(context, ref, l10n),
         const Divider(),
 
         // AI & OCR Section
@@ -268,8 +267,8 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        _buildOcrModeSelector(context, settingsProvider),
-        _buildAiPrivacySelector(context, settingsProvider),
+        _buildOcrModeSelector(context, settings, settingsNotifier),
+        _buildAiPrivacySelector(context, settings, settingsNotifier),
         const Divider(),
 
         // Account Settings Section
@@ -309,9 +308,9 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
               );
-              
+
               if (confirm == true && context.mounted) {
-                final success = await authProvider.linkOAuthAccount();
+                final success = await authNotifier.linkOAuthAccount();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -353,9 +352,9 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
               );
-              
+
               if (confirm == true && context.mounted) {
-                await authProvider.unlinkOAuthAccount();
+                await authNotifier.unlinkOAuthAccount();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -372,7 +371,7 @@ class SettingsScreen extends StatelessWidget {
           title: Text(l10n.switchUser),
           trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () {
-            Navigator.pushReplacementNamed(context, '/user_selection');
+            context.go(AppRoutes.userSelection);
           },
         ),
         ListTile(
@@ -399,11 +398,11 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             );
-            
+
             if (confirm == true && context.mounted) {
-              await authProvider.signOut();
+              await authNotifier.signOut();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/user_selection');
+                context.go(AppRoutes.userSelection);
               }
             }
           },
@@ -412,9 +411,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGuestSettings(BuildContext context, AuthProvider authProvider) {
-    final l10n = AppLocalizations.of(context);
-    
+  Widget _buildGuestSettings(BuildContext context, AuthNotifier authNotifier, AppLocalizations l10n) {
     return ListView(
       children: [
         const SizedBox(height: 40),
@@ -452,7 +449,7 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: ElevatedButton.icon(
             onPressed: () {
-              Navigator.pushNamed(context, '/login');
+              context.push(AppRoutes.login);
             },
             icon: const Icon(Icons.login),
             label: Text(l10n.signIn),
@@ -467,7 +464,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeModeSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+  Widget _buildThemeModeSelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       child: Column(
@@ -501,9 +498,9 @@ class SettingsScreen extends StatelessWidget {
                   label: Text(l10n.themeSystem, style: const TextStyle(fontSize: 12)),
                 ),
               ],
-              selected: {settingsProvider.themeMode},
+              selected: {settings.themeMode},
               onSelectionChanged: (Set<ThemeMode> newSelection) {
-                settingsProvider.setThemeMode(newSelection.first);
+                settingsNotifier.setThemeMode(newSelection.first);
               },
             ),
           ),
@@ -512,12 +509,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+  Widget _buildLanguageSelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier, AppLocalizations l10n) {
     return ListTile(
       leading: const Icon(Icons.language),
       title: Text(l10n.language),
       trailing: DropdownButton<AppLanguage>(
-        value: settingsProvider.language,
+        value: settings.language,
         items: AppLanguage.values.map((language) {
           return DropdownMenuItem(
             value: language,
@@ -526,19 +523,19 @@ class SettingsScreen extends StatelessWidget {
         }).toList(),
         onChanged: (AppLanguage? newLanguage) {
           if (newLanguage != null) {
-            settingsProvider.setLanguage(newLanguage);
+            settingsNotifier.setLanguage(newLanguage);
           }
         },
       ),
     );
   }
 
-  Widget _buildCurrencySelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+  Widget _buildCurrencySelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier, AppLocalizations l10n) {
     return ListTile(
       leading: const Icon(Icons.attach_money),
       title: Text(l10n.currency),
       trailing: DropdownButton<AppCurrency>(
-        value: settingsProvider.currency,
+        value: settings.currency,
         items: AppCurrency.values.map((currency) {
           return DropdownMenuItem(
             value: currency,
@@ -549,19 +546,19 @@ class SettingsScreen extends StatelessWidget {
         }).toList(),
         onChanged: (AppCurrency? newCurrency) {
           if (newCurrency != null) {
-            settingsProvider.setCurrency(newCurrency);
+            settingsNotifier.setCurrency(newCurrency);
           }
         },
       ),
     );
   }
 
-  Widget _buildDateFormatSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+  Widget _buildDateFormatSelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier, AppLocalizations l10n) {
     return ListTile(
       leading: const Icon(Icons.calendar_today),
       title: Text(l10n.dateFormat),
       trailing: DropdownButton<DateFormatType>(
-        value: settingsProvider.dateFormat,
+        value: settings.dateFormat,
         items: DateFormatType.values.map((format) {
           return DropdownMenuItem(
             value: format,
@@ -570,19 +567,19 @@ class SettingsScreen extends StatelessWidget {
         }).toList(),
         onChanged: (DateFormatType? newFormat) {
           if (newFormat != null) {
-            settingsProvider.setDateFormat(newFormat);
+            settingsNotifier.setDateFormat(newFormat);
           }
         },
       ),
     );
   }
 
-  Widget _buildTimeFormatSelector(BuildContext context, SettingsProvider settingsProvider, AppLocalizations l10n) {
+  Widget _buildTimeFormatSelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier, AppLocalizations l10n) {
     return ListTile(
       leading: const Icon(Icons.access_time),
       title: Text(l10n.timeFormat),
       trailing: DropdownButton<TimeFormatType>(
-        value: settingsProvider.timeFormat,
+        value: settings.timeFormat,
         items: TimeFormatType.values.map((format) {
           return DropdownMenuItem(
             value: format,
@@ -591,14 +588,14 @@ class SettingsScreen extends StatelessWidget {
         }).toList(),
         onChanged: (TimeFormatType? newFormat) {
           if (newFormat != null) {
-            settingsProvider.setTimeFormat(newFormat);
+            settingsNotifier.setTimeFormat(newFormat);
           }
         },
       ),
     );
   }
 
-  Widget _buildOcrModeSelector(BuildContext context, SettingsProvider settingsProvider) {
+  Widget _buildOcrModeSelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
@@ -615,7 +612,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<OCRMode>(
-              initialValue: settingsProvider.ocrMode,
+              initialValue: settings.ocrMode,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -626,14 +623,14 @@ class SettingsScreen extends StatelessWidget {
                 DropdownMenuItem(value: OCRMode.offline, child: Text(l10n.translate('settings_ocr_offline'))),
               ],
               onChanged: (val) {
-                if (val != null) settingsProvider.setOcrMode(val);
+                if (val != null) settingsNotifier.setOcrMode(val);
               },
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              settingsProvider.ocrMode == OCRMode.auto
+              settings.ocrMode == OCRMode.auto
                   ? l10n.translate('settings_ocr_auto_desc')
-                  : settingsProvider.ocrMode == OCRMode.online
+                  : settings.ocrMode == OCRMode.online
                       ? l10n.translate('settings_ocr_online_desc')
                       : l10n.translate('settings_ocr_offline_desc'),
               style: TextStyle(
@@ -647,7 +644,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAiPrivacySelector(BuildContext context, SettingsProvider settingsProvider) {
+  Widget _buildAiPrivacySelector(BuildContext context, SettingsState settings, SettingsNotifier settingsNotifier) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
@@ -664,7 +661,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<PrivacyLevel>(
-              initialValue: settingsProvider.privacyLevel,
+              initialValue: settings.privacyLevel,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -675,14 +672,14 @@ class SettingsScreen extends StatelessWidget {
                 DropdownMenuItem(value: PrivacyLevel.full, child: Text(l10n.translate('settings_privacy_full'))),
               ],
               onChanged: (val) {
-                if (val != null) settingsProvider.setPrivacyLevel(val);
+                if (val != null) settingsNotifier.setPrivacyLevel(val);
               },
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              settingsProvider.privacyLevel == PrivacyLevel.minimal
+              settings.privacyLevel == PrivacyLevel.minimal
                   ? l10n.translate('settings_privacy_minimal_desc')
-                  : settingsProvider.privacyLevel == PrivacyLevel.standard
+                  : settings.privacyLevel == PrivacyLevel.standard
                       ? l10n.translate('settings_privacy_standard_desc')
                       : l10n.translate('settings_privacy_full_desc'),
               style: TextStyle(
@@ -696,8 +693,9 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBackupCard(BuildContext context, AppLocalizations l10n) {
-    final backupProvider = context.watch<BackupProvider>();
+  Widget _buildBackupCard(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    final backupState = ref.watch(backupNotifierProvider);
+    final backupNotifier = ref.read(backupNotifierProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
@@ -726,15 +724,15 @@ class SettingsScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  backupProvider.isBackupEnabled
+                  backupState.isBackupEnabled
                       ? l10n.backupEnabled
                       : l10n.backupDisabled,
                 ),
                 Switch(
-                  value: backupProvider.isBackupEnabled,
-                  onChanged: backupProvider.isLoading
+                  value: backupState.isBackupEnabled,
+                  onChanged: backupState.isLoading
                       ? null
-                      : (value) => backupProvider.setBackupEnabled(value),
+                      : (value) => backupNotifier.setBackupEnabled(value),
                 ),
               ],
             ),
@@ -746,10 +744,10 @@ class SettingsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: backupProvider.isBackupEnabled && !backupProvider.isLoading
-                    ? () => backupProvider.triggerManualBackup()
+                onPressed: backupState.isBackupEnabled && !backupState.isLoading
+                    ? () => backupNotifier.triggerManualBackup()
                     : null,
-                icon: backupProvider.isLoading
+                icon: backupState.isLoading
                     ? const SizedBox(
                         width: 16,
                         height: 16,
@@ -759,10 +757,10 @@ class SettingsScreen extends StatelessWidget {
                 label: Text(l10n.backupManualBackup),
               ),
             ),
-            if (backupProvider.errorMessage != null) ...[
+            if (backupState.errorMessage != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                l10n.translate(backupProvider.errorMessage!),
+                l10n.translate(backupState.errorMessage!),
                 style: const TextStyle(fontSize: 12, color: AppColors.error),
               ),
             ],
@@ -771,7 +769,7 @@ class SettingsScreen extends StatelessWidget {
               leading: const Icon(Icons.history, color: AppColors.primary),
               title: Text(l10n.backupHistory),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () => Navigator.pushNamed(context, '/backup-history'),
+              onTap: () => context.push(AppRoutes.backupHistory),
             ),
           ],
         ),

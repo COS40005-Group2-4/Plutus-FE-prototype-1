@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'widgets/glass_container.dart';
-import 'providers/auth_provider.dart';
-import 'providers/dashboard_provider.dart';
+import 'providers/auth_notifier.dart';
+import 'providers/dashboard_notifier.dart';
+import 'router/app_router.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_radius.dart';
@@ -10,7 +12,7 @@ import 'theme/app_spacing.dart';
 import 'models/widget_catalog.dart';
 
 
-class SidebarMenu extends StatefulWidget {
+class SidebarMenu extends ConsumerStatefulWidget {
   final Function(String)? onMenuItemSelected;
   final void Function(String instanceId, String widgetType)? onWidgetAdded;
   final void Function(String instanceId)? onWidgetRemoved;
@@ -23,10 +25,10 @@ class SidebarMenu extends StatefulWidget {
   });
 
   @override
-  State<SidebarMenu> createState() => _SidebarMenuState();
+  ConsumerState<SidebarMenu> createState() => _SidebarMenuState();
 }
 
-class _SidebarMenuState extends State<SidebarMenu> {
+class _SidebarMenuState extends ConsumerState<SidebarMenu> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
@@ -45,53 +47,50 @@ class _SidebarMenuState extends State<SidebarMenu> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dashNotifier = ref.read(dashboardNotifierProvider.notifier);
 
-    return Consumer<DashboardProvider>(
-      builder: (context, dashProvider, _) {
-        final instanceCounts = dashProvider.getInstanceCounts();
-        final grouped = WidgetCatalog.grouped;
+    final instanceCounts = dashNotifier.getInstanceCounts();
+    final grouped = WidgetCatalog.grouped;
 
-        return Drawer(
-          backgroundColor: Colors.transparent,
-          child: GlassContainer(
-            borderRadius: 0,
-            color: isDark ? AppColors.menuBackground : Colors.white,
-            opacity: isDark ? 0.6 : 0.85,
-            blur: 15,
-            child: Column(
-              children: [
-                // ── Header ──
-                _buildHeader(context, isDark),
-                // ── Search ──
-                _buildSearchBar(context, isDark, l10n),
-                // ── Widget Categories ──
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    children: [
-                      for (final cat in WidgetCategory.values)
-                        _buildCategory(
-                          context,
-                          cat,
-                          grouped[cat] ?? [],
-                          dashProvider,
-                          instanceCounts,
-                          isDark,
-                          l10n,
-                        ),
-                    ],
-                  ),
+    return Drawer(
+      backgroundColor: Colors.transparent,
+      child: GlassContainer(
+        borderRadius: 0,
+        color: isDark ? AppColors.menuBackground : Colors.white,
+        opacity: isDark ? 0.6 : 0.85,
+        blur: 15,
+        child: Column(
+          children: [
+            // ── Header ──
+            _buildHeader(context, isDark),
+            // ── Search ──
+            _buildSearchBar(context, isDark, l10n),
+            // ── Widget Categories ──
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
                 ),
-                // ── Footer ──
-                _buildFooter(context, dashProvider, isDark, l10n),
-              ],
+                children: [
+                  for (final cat in WidgetCategory.values)
+                    _buildCategory(
+                      context,
+                      cat,
+                      grouped[cat] ?? [],
+                      dashNotifier,
+                      instanceCounts,
+                      isDark,
+                      l10n,
+                    ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+            // ── Footer ──
+            _buildFooter(context, dashNotifier, isDark, l10n),
+          ],
+        ),
+      ),
     );
   }
 
@@ -100,6 +99,11 @@ class _SidebarMenuState extends State<SidebarMenu> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context, bool isDark) {
+    ref.watch(authNotifierProvider); // watch for rebuilds on auth changes
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    final bool isAuthenticated = authNotifier.isAuthenticated;
+    final String userName = authNotifier.userName;
+
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + AppSpacing.lg,
@@ -122,54 +126,50 @@ class _SidebarMenuState extends State<SidebarMenu> {
                 ],
         ),
       ),
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: AppRadius.borderSm,
-                    ),
-                    child: Icon(
-                      Icons.dashboard_customize,
-                      color: isDark ? AppColors.accent : AppColors.primary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      auth.isAuthenticated ? 'Plutus' : 'Plutus (Guest)',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.textOnLight,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  borderRadius: AppRadius.borderSm,
+                ),
+                child: Icon(
+                  Icons.dashboard_customize,
+                  color: isDark ? AppColors.accent : AppColors.primary,
+                  size: 24,
+                ),
               ),
-              if (auth.isAuthenticated) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Welcome, ${auth.userName}',
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  isAuthenticated ? 'Plutus' : 'Plutus (Guest)',
                   style: TextStyle(
-                    color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
-                    fontSize: 13,
+                    color: isDark ? Colors.white : AppColors.textOnLight,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
             ],
-          );
-        },
+          ),
+          if (isAuthenticated) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Welcome, $userName',
+              style: TextStyle(
+                color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -246,7 +246,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
     BuildContext context,
     WidgetCategory category,
     List<WidgetMeta> widgets,
-    DashboardProvider dashProvider,
+    DashboardNotifier dashNotifier,
     Map<String, int> instanceCounts,
     bool isDark,
     AppLocalizations l10n,
@@ -356,7 +356,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                         _buildWidgetTile(
                           context,
                           meta,
-                          dashProvider,
+                          dashNotifier,
                           instanceCounts[meta.widgetType] ?? 0,
                           isDark,
                           l10n,
@@ -377,7 +377,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
   Widget _buildWidgetTile(
     BuildContext context,
     WidgetMeta meta,
-    DashboardProvider dashProvider,
+    DashboardNotifier dashNotifier,
     int instanceCount,
     bool isDark,
     AppLocalizations l10n,
@@ -449,7 +449,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
               _buildTileControls(
                 context,
                 meta,
-                dashProvider,
+                dashNotifier,
                 instanceCount,
                 canAdd,
                 isDark,
@@ -465,7 +465,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
   Widget _buildTileControls(
     BuildContext context,
     WidgetMeta meta,
-    DashboardProvider dashProvider,
+    DashboardNotifier dashNotifier,
     int instanceCount,
     bool canAdd,
     bool isDark,
@@ -478,13 +478,13 @@ class _SidebarMenuState extends State<SidebarMenu> {
         icon: Icons.add_rounded,
         color: meta.color,
         isDark: isDark,
-        onTap: () => _addInstance(dashProvider, meta),
+        onTap: () => _addInstance(dashNotifier, meta),
       );
     }
 
     // Single instance (no duplicates allowed) — show toggle
     if (!meta.allowDuplicates) {
-      return _buildToggle(dashProvider, meta, isDark);
+      return _buildToggle(dashNotifier, meta, isDark);
     }
 
     // Has instances — show count + add/remove
@@ -495,7 +495,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
         _buildIconBtn(
           icon: Icons.remove_rounded,
           color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
-          onTap: () => _removeLastInstance(dashProvider, meta),
+          onTap: () => _removeLastInstance(dashNotifier, meta),
         ),
         // Count badge
         AnimatedSwitcher(
@@ -525,16 +525,17 @@ class _SidebarMenuState extends State<SidebarMenu> {
         _buildIconBtn(
           icon: Icons.add_rounded,
           color: canAdd ? meta.color : (isDark ? Colors.white24 : Colors.black12),
-          onTap: canAdd ? () => _addInstance(dashProvider, meta) : null,
+          onTap: canAdd ? () => _addInstance(dashNotifier, meta) : null,
         ),
       ],
     );
   }
 
-  Widget _buildToggle(DashboardProvider dashProvider, WidgetMeta meta, bool isDark) {
-    final instances = dashProvider.activeDashboard.instancesOfType(meta.widgetType);
+  Widget _buildToggle(DashboardNotifier dashNotifier, WidgetMeta meta, bool isDark) {
+    final dashState = ref.watch(dashboardNotifierProvider);
+    final instances = dashState.activeDashboard.instancesOfType(meta.widgetType);
     final instanceId = instances.isNotEmpty ? instances.first : null;
-    final isVisible = instanceId != null && dashProvider.isWidgetVisible(instanceId);
+    final isVisible = instanceId != null && dashNotifier.isWidgetVisible(instanceId);
 
     return SizedBox(
       height: 28,
@@ -543,9 +544,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
         onChanged: (value) {
           if (instanceId != null) {
             if (value) {
-              dashProvider.showWidget(instanceId);
+              dashNotifier.showWidget(instanceId);
             } else {
-              dashProvider.hideWidget(instanceId);
+              dashNotifier.hideWidget(instanceId);
             }
           }
         },
@@ -616,13 +617,16 @@ class _SidebarMenuState extends State<SidebarMenu> {
 
   Widget _buildFooter(
     BuildContext context,
-    DashboardProvider dashProvider,
+    DashboardNotifier dashNotifier,
     bool isDark,
     AppLocalizations l10n,
   ) {
-    final totalActive = dashProvider.getVisibleWidgets().length;
+    final totalActive = dashNotifier.getVisibleWidgets().length;
     final textColor = isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary;
     final primaryTextColor = isDark ? Colors.white : AppColors.textOnLight;
+    ref.watch(authNotifierProvider); // watch for rebuilds on auth changes
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    final bool isAuthenticated = authNotifier.isAuthenticated;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -660,42 +664,38 @@ class _SidebarMenuState extends State<SidebarMenu> {
             overflow: TextOverflow.ellipsis,
           ),
           onTap: () {
-            Navigator.pop(context);
-            Navigator.pushNamed(context, '/settings');
+            context.pop();
+            context.push(AppRoutes.settings);
           },
           hoverColor: AppColors.primary.withValues(alpha: 0.1),
         ),
         // Sign in/out
-        Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            return ListTile(
-              dense: true,
-              leading: Icon(
-                auth.isAuthenticated ? Icons.logout_rounded : Icons.login_rounded,
-                color: auth.isAuthenticated ? AppColors.error : AppColors.success,
-                size: 20,
-              ),
-              title: Text(
-                auth.isAuthenticated ? l10n.signOut : l10n.signIn,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: auth.isAuthenticated ? AppColors.error : AppColors.success,
-                  fontSize: 14,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                if (auth.isAuthenticated) {
-                  _handleSignOut(context, l10n);
-                } else {
-                  Navigator.pushNamed(context, '/login');
-                }
-              },
-              hoverColor: auth.isAuthenticated
-                  ? AppColors.error.withValues(alpha: 0.1)
-                  : AppColors.success.withValues(alpha: 0.1),
-            );
+        ListTile(
+          dense: true,
+          leading: Icon(
+            isAuthenticated ? Icons.logout_rounded : Icons.login_rounded,
+            color: isAuthenticated ? AppColors.error : AppColors.success,
+            size: 20,
+          ),
+          title: Text(
+            isAuthenticated ? l10n.signOut : l10n.signIn,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isAuthenticated ? AppColors.error : AppColors.success,
+              fontSize: 14,
+            ),
+          ),
+          onTap: () {
+            context.pop();
+            if (isAuthenticated) {
+              _handleSignOut(context, l10n, authNotifier);
+            } else {
+              context.push(AppRoutes.login);
+            }
           },
+          hoverColor: isAuthenticated
+              ? AppColors.error.withValues(alpha: 0.1)
+              : AppColors.success.withValues(alpha: 0.1),
         ),
         SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.xs),
       ],
@@ -706,22 +706,23 @@ class _SidebarMenuState extends State<SidebarMenu> {
   // Actions
   // ─────────────────────────────────────────────────────────────────────────
 
-  Future<void> _addInstance(DashboardProvider dashProvider, WidgetMeta meta) async {
-    final instanceId = await dashProvider.addWidgetInstance(meta.widgetType);
+  Future<void> _addInstance(DashboardNotifier dashNotifier, WidgetMeta meta) async {
+    final instanceId = await dashNotifier.addWidgetInstance(meta.widgetType);
     widget.onWidgetAdded?.call(instanceId, meta.widgetType);
   }
 
-  Future<void> _removeLastInstance(DashboardProvider dashProvider, WidgetMeta meta) async {
-    final instances = dashProvider.activeDashboard.instancesOfType(meta.widgetType);
+  Future<void> _removeLastInstance(DashboardNotifier dashNotifier, WidgetMeta meta) async {
+    final dashState = ref.read(dashboardNotifierProvider);
+    final instances = dashState.activeDashboard.instancesOfType(meta.widgetType);
     if (instances.isEmpty) return;
 
     // Remove the last instance
     final lastInstance = instances.last;
     widget.onWidgetRemoved?.call(lastInstance);
-    await dashProvider.removeWidgetInstance(lastInstance);
+    await dashNotifier.removeWidgetInstance(lastInstance);
   }
 
-  void _handleSignOut(BuildContext context, AppLocalizations l10n) {
+  void _handleSignOut(BuildContext context, AppLocalizations l10n, AuthNotifier authNotifier) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -735,10 +736,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-              await authProvider.signOut();
+              await authNotifier.signOut();
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                context.go(AppRoutes.login);
               }
             },
             child: Text(l10n.signOut),

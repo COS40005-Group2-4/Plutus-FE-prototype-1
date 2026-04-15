@@ -1,33 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/glass_container.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../router/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-  
+
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _hasRedirected = false;
   String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+
     return Scaffold(
       body: Center(
-        child: Consumer<AuthProvider>(
-          builder: (context, authProvider, child) {
+        child: Builder(
+          builder: (context) {
+            final authState = ref.watch(authNotifierProvider);
+
             // Listen to authentication state changes on web
             if (kIsWeb) {
               return StreamBuilder<dynamic>(
-                stream: authProvider.authenticationState,
+                stream: authNotifier.authenticationState,
                 builder: (context, snapshot) {
                   // If authenticated, navigate to dashboard
                   if (snapshot.hasData && snapshot.data != null && !_hasRedirected) {
@@ -37,33 +43,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     }
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
+                        context.go(AppRoutes.dashboard);
                       }
                     });
                   }
-                  
-                  if (authProvider.isLoading) {
+
+                  if (authState is AuthLoading) {
                     return const CircularProgressIndicator();
                   }
-                  
-                  return _buildLoginUI(context, authProvider);
+
+                  return _buildLoginUI(context, authNotifier);
                 },
               );
             }
-            
+
             // For non-web platforms
-            if (authProvider.isLoading) {
+            if (authState is AuthLoading) {
               return const CircularProgressIndicator();
             }
-            
-            return _buildLoginUI(context, authProvider);
+
+            return _buildLoginUI(context, authNotifier);
           },
         ),
       ),
     );
   }
-  
-  Widget _buildLoginUI(BuildContext context, AuthProvider authProvider) {
+
+  Widget _buildLoginUI(BuildContext context, AuthNotifier authNotifier) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 400;
 
@@ -120,14 +126,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             // Use sign-in button widget on web, regular button on other platforms
             if (kIsWeb)
-              authProvider.getSignInButton() ?? const SizedBox.shrink()
+              authNotifier.authService.getSignInButton() ?? const SizedBox.shrink()
             else
               ElevatedButton.icon(
                 onPressed: () async {
                   setState(() => _errorMessage = null);
-                  final success = await authProvider.signIn();
+                  final success = await authNotifier.signIn();
                   if (success && context.mounted) {
-                    Navigator.pushReplacementNamed(context, '/dashboard');
+                    context.go(AppRoutes.dashboard);
                   } else if (context.mounted) {
                     setState(() => _errorMessage = 'Sign-in failed. Please check your Google account and try again.');
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -151,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () async {
                 // Navigate to user selection where they can create guest account
                 if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/user_selection');
+                  context.go(AppRoutes.userSelection);
                 }
               },
               child: Text(

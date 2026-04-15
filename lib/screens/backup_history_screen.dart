@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
-import '../providers/backup_provider.dart';
+import '../providers/backup_notifier.dart';
 import '../widgets/glass_container.dart';
 import '../theme/app_colors.dart';
 
-class BackupHistoryScreen extends StatefulWidget {
+class BackupHistoryScreen extends ConsumerStatefulWidget {
   const BackupHistoryScreen({super.key});
 
   @override
-  State<BackupHistoryScreen> createState() => _BackupHistoryScreenState();
+  ConsumerState<BackupHistoryScreen> createState() => _BackupHistoryScreenState();
 }
 
-class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
+class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BackupProvider>().refreshVersions();
+      ref.read(backupNotifierProvider.notifier).refreshVersions();
     });
   }
 
@@ -58,14 +58,14 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      await context.read<BackupProvider>().restoreVersion(version);
+      await ref.read(backupNotifierProvider.notifier).restoreVersion(version);
       if (context.mounted) {
-        final provider = context.read<BackupProvider>();
+        final backupState = ref.read(backupNotifierProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              provider.errorMessage != null
-                  ? AppLocalizations.of(context).translate(provider.errorMessage!)
+              backupState.errorMessage != null
+                  ? AppLocalizations.of(context).translate(backupState.errorMessage!)
                   : AppLocalizations.of(context).backupSuccess,
             ),
           ),
@@ -77,19 +77,20 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final backupState = ref.watch(backupNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backupHistory),
         backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
-      body: Consumer<BackupProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading) {
+      body: Builder(
+        builder: (context) {
+          if (backupState.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.versions.isEmpty) {
+          if (backupState.versions.isEmpty) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -107,9 +108,9 @@ class _BackupHistoryScreenState extends State<BackupHistoryScreen> {
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: provider.versions.length,
+            itemCount: backupState.versions.length,
             itemBuilder: (context, index) {
-              final version = provider.versions[index];
+              final version = backupState.versions[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: GlassContainer(

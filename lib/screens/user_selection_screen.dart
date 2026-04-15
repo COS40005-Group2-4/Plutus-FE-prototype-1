@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../providers/auth_notifier.dart';
+import '../router/app_router.dart';
 import '../models/user_model.dart';
 import '../widgets/glass_container.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
-class UserSelectionScreen extends StatefulWidget {
+class UserSelectionScreen extends ConsumerStatefulWidget {
   const UserSelectionScreen({super.key});
 
   @override
-  State<UserSelectionScreen> createState() => _UserSelectionScreenState();
+  ConsumerState<UserSelectionScreen> createState() => _UserSelectionScreenState();
 }
 
-class _UserSelectionScreenState extends State<UserSelectionScreen> {
+class _UserSelectionScreenState extends ConsumerState<UserSelectionScreen> {
   List<User> _users = [];
   bool _isLoading = true;
 
@@ -25,8 +27,8 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
   }
 
   Future<void> _loadUsers() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final users = await authProvider.getAllUsers();
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    final users = await authNotifier.getAllUsers();
     setState(() {
       _users = users;
       _isLoading = false;
@@ -34,11 +36,11 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
   }
 
   Future<void> _selectUser(User user) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.signInWithLocalUser(user.username);
-    
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    final success = await authNotifier.signInWithLocalUser(user.username);
+
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      context.go(AppRoutes.dashboard);
     }
   }
 
@@ -99,11 +101,11 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
         return;
       }
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.createLocalUser(username, displayName);
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      final success = await authNotifier.createLocalUser(username, displayName);
 
       if (success && mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        context.go(AppRoutes.dashboard);
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Couldn't create your account. That username may already be taken.")),
@@ -113,16 +115,16 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
   }
 
   Future<void> _createGuestUser() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authNotifier = ref.read(authNotifierProvider.notifier);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final success = await authProvider.createLocalUser(
+    final success = await authNotifier.createLocalUser(
       'guest_$timestamp',
       'Guest',
       isGuest: true,
     );
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      context.go(AppRoutes.dashboard);
     }
   }
 
@@ -293,7 +295,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                   const SizedBox(height: AppSpacing.md),
                   TextButton.icon(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
+                      context.go(AppRoutes.login);
                     },
                     icon: const Icon(Icons.login),
                     label: const Text('Sign in with Google'),

@@ -1,10 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:get_it/get_it.dart';
 import '../transaction_history_page.dart';
-import '../import_transaction_page.dart';
 import '../services/interfaces/i_transaction_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -142,12 +142,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   Widget _buildFab() {
     return GestureDetector(
       onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ImportTransactionPage(),
-          ),
-        );
+        final result = await context.push<bool>('/dashboard/import');
         if (result == true) {
           _historyKey.currentState?.refresh();
           GetIt.instance<ITransactionService>().notifyTransactionUpdate();

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'transaction_service.dart';
 import 'models/transaction_model.dart';
 import 'widgets/glass_container.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/export_preview_dialog.dart';
 import 'widgets/transaction_detail_dialog.dart';
-import 'providers/auth_provider.dart';
-import 'providers/settings_provider.dart';
+import 'providers/auth_notifier.dart';
+import 'providers/settings_notifier.dart';
 import 'services/currency_service.dart';
 import 'services/export_service.dart';
 import 'services/user_service.dart';
@@ -15,14 +15,14 @@ import 'utils/date_time_formatter.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_colors.dart';
 
-class TransactionHistoryPage extends StatefulWidget {
+class TransactionHistoryPage extends ConsumerStatefulWidget {
   const TransactionHistoryPage({super.key});
 
   @override
-  State<TransactionHistoryPage> createState() => TransactionHistoryPageState();
+  ConsumerState<TransactionHistoryPage> createState() => TransactionHistoryPageState();
 }
 
-class TransactionHistoryPageState extends State<TransactionHistoryPage>
+class TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
@@ -36,9 +36,9 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage>
   void initState() {
     super.initState();
     _service = TransactionService();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.currentUserId != null) {
-      _service.setCurrentUser(authProvider.currentUserId!);
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+    if (authNotifier.currentUserId != null) {
+      _service.setCurrentUser(authNotifier.currentUserId!);
     }
     _loadTransactions();
   }
@@ -90,16 +90,17 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage>
         ),
       );
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final user = authProvider.currentUserId != null
-          ? await _userService.getUserById(authProvider.currentUserId!)
+      final authNotifier = ref.read(authNotifierProvider.notifier);
+      final locale = AppLocalizations.of(context).locale.languageCode;
+      final user = authNotifier.currentUserId != null
+          ? await _userService.getUserById(authNotifier.currentUserId!)
           : null;
 
       final result = await _exportService.exportData(
         options: options,
         transactions: _transactions,
         user: user,
-        locale: AppLocalizations.of(context).locale.languageCode,
+        locale: locale,
       );
 
       if (!mounted) return;
@@ -131,119 +132,117 @@ class TransactionHistoryPageState extends State<TransactionHistoryPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(AppLocalizations.of(context).transactionHistory),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.download),
-                tooltip: 'Export',
-                onPressed: _showExportDialog,
-              ),
-            ],
+    final settings = ref.watch(settingsNotifierProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).transactionHistory),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Export',
+            onPressed: _showExportDialog,
           ),
-          body: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _transactions.isEmpty
-                  ? Center(child: Text(AppLocalizations.of(context).noTransactionsFound))
-                  : RefreshIndicator(
-                      onRefresh: _loadTransactions,
-                      child: ListView.builder(
-                        key: ValueKey('transaction_list_${settings.currency.code}'),
-                        itemCount: _transactions.length,
-                        itemBuilder: (context, index) {
-                          final transaction = _transactions[index];
-                          
-                          final brightness = Theme.of(context).brightness;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            child: GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => TransactionDetailDialog(
-                                    transaction: transaction,
-                                  ),
-                                );
-                              },
-                              child: GlassContainer(
-                                borderRadius: 10,
-                                opacity: 0.2,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                child: Row(
-                                  children: [
-                                    // Type icon
-                                    Icon(
-                                      transaction.isExpense
-                                          ? Icons.arrow_downward
-                                          : Icons.arrow_upward,
-                                      color: transaction.isExpense
-                                          ? AppColors.negative(brightness)
-                                          : AppColors.positive(brightness),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    // Label + date
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            transaction.label,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            DateTimeFormatter.formatDateTimeShort(
-                                              transaction.dateTime,
-                                              settings.dateFormat,
-                                              settings.timeFormat,
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[500],
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // Amount
-                                    _TransactionAmount(
-                                      key: ValueKey('${transaction.dateTime}_${settings.currency.code}'),
-                                      transaction: transaction,
-                                      settings: settings,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.grey[500],
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _transactions.isEmpty
+              ? Center(child: Text(AppLocalizations.of(context).noTransactionsFound))
+              : RefreshIndicator(
+                  onRefresh: _loadTransactions,
+                  child: ListView.builder(
+                    key: ValueKey('transaction_list_${settings.currency.code}'),
+                    itemCount: _transactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = _transactions[index];
+
+                      final brightness = Theme.of(context).brightness;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => TransactionDetailDialog(
+                                transaction: transaction,
                               ),
+                            );
+                          },
+                          child: GlassContainer(
+                            borderRadius: 10,
+                            opacity: 0.2,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                // Type icon
+                                Icon(
+                                  transaction.isExpense
+                                      ? Icons.arrow_downward
+                                      : Icons.arrow_upward,
+                                  color: transaction.isExpense
+                                      ? AppColors.negative(brightness)
+                                      : AppColors.positive(brightness),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                // Label + date
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        transaction.label,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateTimeFormatter.formatDateTimeShort(
+                                          transaction.dateTime,
+                                          settings.dateFormat,
+                                          settings.timeFormat,
+                                        ),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[500],
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Amount
+                                _TransactionAmount(
+                                  key: ValueKey('${transaction.dateTime}_${settings.currency.code}'),
+                                  transaction: transaction,
+                                  settings: settings,
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.grey[500],
+                                  size: 20,
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                      ),
-                    ),
-        );
-      },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
     );
   }
 }
 
 class _TransactionAmount extends StatefulWidget {
   final Transaction transaction;
-  final SettingsProvider settings;
+  final SettingsState settings;
 
   const _TransactionAmount({
     super.key,
