@@ -211,7 +211,7 @@ class _MyAppState extends State<MyApp> {
                 elevation: 0,
                 foregroundColor: AppColors.textOnLight,
               ),
-              dialogTheme: const DialogThemeData(backgroundColor: Colors.transparent),
+              dialogTheme: const DialogThemeData(backgroundColor: AppColors.surfaceLight),
               textTheme: const TextTheme(
                 displayLarge: TextStyle(color: AppColors.textOnLight),
                 displayMedium: TextStyle(color: AppColors.textOnLight),
@@ -242,7 +242,7 @@ class _MyAppState extends State<MyApp> {
                 elevation: 0,
                 foregroundColor: AppColors.textOnDark,
               ),
-              dialogTheme: const DialogThemeData(backgroundColor: Colors.transparent),
+              dialogTheme: const DialogThemeData(backgroundColor: AppColors.surfaceDark),
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.borderDark,
                 brightness: Brightness.dark,

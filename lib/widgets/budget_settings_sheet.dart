@@ -22,21 +22,13 @@ class _DefaultCategory {
 }
 
 const _defaultCategories = [
-  _DefaultCategory('Food & Dining', 'Expenses:Food', '🍔'),
-  _DefaultCategory('Groceries', 'Expenses:Groceries', '🛒'),
+  _DefaultCategory('Food', 'Expenses:Food', '🍔'),
   _DefaultCategory('Transportation', 'Expenses:Transportation', '🚗'),
-  _DefaultCategory('Housing & Rent', 'Expenses:Housing', '🏠'),
-  _DefaultCategory('Utilities', 'Expenses:Utilities', '💡'),
   _DefaultCategory('Entertainment', 'Expenses:Entertainment', '🎮'),
   _DefaultCategory('Shopping', 'Expenses:Shopping', '🛍️'),
+  _DefaultCategory('Bills', 'Expenses:Bills', '📄'),
   _DefaultCategory('Healthcare', 'Expenses:Healthcare', '🏥'),
   _DefaultCategory('Education', 'Expenses:Education', '📚'),
-  _DefaultCategory('Insurance', 'Expenses:Insurance', '🛡️'),
-  _DefaultCategory('Subscriptions', 'Expenses:Subscriptions', '📱'),
-  _DefaultCategory('Personal Care', 'Expenses:Personal', '💇'),
-  _DefaultCategory('Travel', 'Expenses:Travel', '✈️'),
-  _DefaultCategory('Gifts & Donations', 'Expenses:Gifts', '🎁'),
-  _DefaultCategory('Bills & Fees', 'Expenses:Bills', '📄'),
 ];
 
 class BudgetSettingsSheet extends StatefulWidget {
