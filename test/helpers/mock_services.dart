@@ -21,5 +21,7 @@ import 'package:plutus_fe_prototype/services/interfaces/i_report_pdf_service.dar
   IAICategoryPipeline,
   IReportAiService,
   IReportPdfService,
+  IConsentService,
+  IInsightsService,
 ])
 void main() {}

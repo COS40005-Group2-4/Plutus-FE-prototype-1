@@ -1,19 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:plutus_fe_prototype/models/user_model.dart';
+import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
+import 'package:plutus_fe_prototype/providers/settings_notifier.dart';
 import 'package:plutus_fe_prototype/providers/settings_provider.dart';
+
+// ---------------------------------------------------------------------------
+// Fake AuthNotifier — returns a fixed state without GetIt dependencies
+// ---------------------------------------------------------------------------
+
+class FakeAuthNotifier extends AuthNotifier {
+  final AuthState _initialState;
+  FakeAuthNotifier(this._initialState);
+
+  @override
+  AuthState build() => _initialState;
+}
+
+User _makeUser({required int userId}) {
+  final now = DateTime(2024, 1, 1);
+  return User(
+    id: userId,
+    username: 'user$userId',
+    displayName: 'User $userId',
+    email: 'user$userId@example.com',
+    isGuest: false,
+    createdAt: now,
+    lastLogin: now,
+    isActive: true,
+  );
+}
+
+ProviderContainer makeContainer({required AuthState authState}) {
+  return ProviderContainer(
+    overrides: [
+      authNotifierProvider.overrideWith(() => FakeAuthNotifier(authState)),
+    ],
+  );
+}
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('AuthProvider.onUserChanged callback contract', () {
+  group('AuthNotifier.onUserChanged callback contract', () {
     test('callback fires with userId when registered and called', () {
       final List<int> calls = [];
       void fakeCallback(int userId) => calls.add(userId);
 
-      // Simulate what AuthProvider._notifyUserChanged does:
+      // Simulate what AuthNotifier internally does when user changes:
       void notifyUserChanged(int userId, void Function(int)? cb) {
         cb?.call(userId);
       }
@@ -44,7 +82,7 @@ void main() {
     });
   });
 
-  group('SettingsProvider key scoping', () {
+  group('SettingsNotifier key scoping', () {
     test('_userKey prefixes correctly', () {
       // Mirror the production helper
       String userKey(int userId, String key) => 'user_${userId}_$key';
@@ -53,29 +91,21 @@ void main() {
       expect(userKey(0, 'language'), equals('user_0_language'));
       expect(userKey(99, 'currency'), equals('user_99_currency'));
     });
-
-    test('reinitialize changes userId used for keys', () {
-      // Verify that after reinitialize the userId is updated
-      int currentUserId = 0;
-      void reinitialize(int userId) { currentUserId = userId; }
-
-      reinitialize(5);
-      expect(currentUserId, equals(5));
-
-      reinitialize(0);
-      expect(currentUserId, equals(0));
-    });
   });
 
-  group('SettingsProvider integration', () {
+  group('SettingsNotifier integration', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
 
     test('setThemeMode writes to user-scoped key', () async {
-      final provider = SettingsProvider();
-      await provider.reinitialize(7);
-      await provider.setThemeMode(ThemeMode.dark);
+      final container = makeContainer(
+        authState: AuthAuthenticated(_makeUser(userId: 7)),
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(settingsNotifierProvider.notifier);
+      await notifier.setThemeMode(ThemeMode.dark);
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('user_7_theme_mode'), equals('dark'));
@@ -83,17 +113,32 @@ void main() {
       expect(prefs.getString('theme_mode'), isNull);
     });
 
-    test('reinitialize with different userId reads different data', () async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_1_theme_mode', 'dark');
-      await prefs.setString('user_2_theme_mode', 'light');
+    test('different users read different data from SharedPreferences', () async {
+      // Pre-seed separate user data
+      SharedPreferences.setMockInitialValues({
+        'user_1_theme_mode': 'dark',
+        'user_2_theme_mode': 'light',
+      });
 
-      final provider = SettingsProvider();
-      await provider.reinitialize(1);
-      expect(provider.themeMode, ThemeMode.dark);
+      // Container for user 1
+      final container1 = makeContainer(
+        authState: AuthAuthenticated(_makeUser(userId: 1)),
+      );
+      addTearDown(container1.dispose);
+      container1.read(settingsNotifierProvider);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(container1.read(settingsNotifierProvider).themeMode,
+          ThemeMode.dark);
 
-      await provider.reinitialize(2);
-      expect(provider.themeMode, ThemeMode.light);
+      // Container for user 2 (separate ProviderContainer simulates a different session)
+      final container2 = makeContainer(
+        authState: AuthAuthenticated(_makeUser(userId: 2)),
+      );
+      addTearDown(container2.dispose);
+      container2.read(settingsNotifierProvider);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(container2.read(settingsNotifierProvider).themeMode,
+          ThemeMode.light);
     });
   });
 
@@ -142,6 +187,21 @@ void main() {
         userKey(12, 'init_${dashId}_v4'),
         equals('user_12_init_myDash_v4'),
       );
+    });
+  });
+
+  // Enum tests for enums still exported from settings_provider.dart
+  group('AppLanguage', () {
+    test('fromCode returns correct language', () {
+      expect(AppLanguage.fromCode('en'), AppLanguage.english);
+      expect(AppLanguage.fromCode('vi'), AppLanguage.vietnamese);
+    });
+  });
+
+  group('AppCurrency', () {
+    test('fromCode returns correct currency', () {
+      expect(AppCurrency.fromCode('VND'), AppCurrency.vnd);
+      expect(AppCurrency.fromCode('USD'), AppCurrency.usd);
     });
   });
 }

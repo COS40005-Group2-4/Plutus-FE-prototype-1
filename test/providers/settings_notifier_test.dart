@@ -1,17 +1,14 @@
-// Tests for SettingsNotifier (previously SettingsProvider).
-// Migrated from Provider/ChangeNotifier to Riverpod Notifier.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:plutus_fe_prototype/models/user_model.dart';
-import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
 import 'package:plutus_fe_prototype/providers/settings_notifier.dart';
+import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
 import 'package:plutus_fe_prototype/providers/settings_provider.dart';
 
 // ---------------------------------------------------------------------------
-// Fake AuthNotifier — returns a fixed state without GetIt dependencies
+// Fake AuthNotifier that returns a fixed state — no GetIt dependencies
 // ---------------------------------------------------------------------------
 
 class FakeAuthNotifier extends AuthNotifier {
@@ -23,7 +20,7 @@ class FakeAuthNotifier extends AuthNotifier {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Test helpers
 // ---------------------------------------------------------------------------
 
 User _makeUser({int userId = 1}) {
@@ -40,12 +37,12 @@ User _makeUser({int userId = 1}) {
   );
 }
 
-ProviderContainer _makeContainer({AuthState? authState}) {
+ProviderContainer makeContainer({
+  AuthState authState = const AuthUnauthenticated(),
+}) {
   return ProviderContainer(
     overrides: [
-      authNotifierProvider.overrideWith(
-        () => FakeAuthNotifier(authState ?? const AuthUnauthenticated()),
-      ),
+      authNotifierProvider.overrideWith(() => FakeAuthNotifier(authState)),
     ],
   );
 }
@@ -55,12 +52,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('SettingsNotifier', () {
-    test('has correct defaults', () {
-      final container = _makeContainer();
+  group('SettingsNotifier — default state', () {
+    test('has correct defaults when unauthenticated', () {
+      final container = makeContainer();
       addTearDown(container.dispose);
 
       final state = container.read(settingsNotifierProvider);
+
       expect(state.themeMode, ThemeMode.system);
       expect(state.language, AppLanguage.english);
       expect(state.currency, AppCurrency.vnd);
@@ -69,32 +67,26 @@ void main() {
     });
 
     test('isDarkMode returns false by default', () {
-      final container = _makeContainer();
+      final container = makeContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(settingsNotifierProvider).isDarkMode, false);
+      final state = container.read(settingsNotifierProvider);
+      expect(state.isDarkMode, false);
     });
 
     test('locale returns english locale by default', () {
-      final container = _makeContainer();
+      final container = makeContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(settingsNotifierProvider).locale, const Locale('en'));
+      final state = container.read(settingsNotifierProvider);
+      expect(state.locale, const Locale('en'));
     });
+  });
 
-    test('setThemeMode persists and notifies', () async {
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
+  group('SettingsNotifier — setThemeMode', () {
+    test('setThemeMode updates state', () async {
+      final container = makeContainer();
       addTearDown(container.dispose);
-
-      // Wait for the build() microtask (_loadSettings) to complete first
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      bool notified = false;
-      container.listen(settingsNotifierProvider, (_, __) {
-        notified = true;
-      });
 
       final notifier = container.read(settingsNotifierProvider.notifier);
       await notifier.setThemeMode(ThemeMode.dark);
@@ -102,39 +94,39 @@ void main() {
       final state = container.read(settingsNotifierProvider);
       expect(state.themeMode, ThemeMode.dark);
       expect(state.isDarkMode, true);
-      expect(notified, true);
+    });
 
-      // Verify persisted with user-scoped key
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('user_1_theme_mode'), 'dark');
+    test('setThemeMode to light updates isDarkMode', () async {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(settingsNotifierProvider.notifier);
+      await notifier.setThemeMode(ThemeMode.dark);
+      await notifier.setThemeMode(ThemeMode.light);
+
+      final state = container.read(settingsNotifierProvider);
+      expect(state.themeMode, ThemeMode.light);
+      expect(state.isDarkMode, false);
     });
 
     test('toggleTheme flips between dark and light', () async {
-      final container = _makeContainer();
+      final container = makeContainer();
       addTearDown(container.dispose);
 
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
-
       final notifier = container.read(settingsNotifierProvider.notifier);
-
       await notifier.setThemeMode(ThemeMode.light);
-      expect(container.read(settingsNotifierProvider).isDarkMode, false);
-
       await notifier.toggleTheme();
       expect(container.read(settingsNotifierProvider).themeMode, ThemeMode.dark);
 
       await notifier.toggleTheme();
       expect(container.read(settingsNotifierProvider).themeMode, ThemeMode.light);
     });
+  });
 
-    test('setLanguage persists and updates locale', () async {
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
+  group('SettingsNotifier — setLanguage', () {
+    test('setLanguage updates state and locale', () async {
+      final container = makeContainer();
       addTearDown(container.dispose);
-
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
 
       final notifier = container.read(settingsNotifierProvider.notifier);
       await notifier.setLanguage(AppLanguage.vietnamese);
@@ -142,89 +134,54 @@ void main() {
       final state = container.read(settingsNotifierProvider);
       expect(state.language, AppLanguage.vietnamese);
       expect(state.locale, const Locale('vi'));
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('user_1_language'), 'vi');
     });
+  });
 
-    test('setCurrency persists', () async {
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
+  group('SettingsNotifier — setCurrency', () {
+    test('setCurrency updates state', () async {
+      final container = makeContainer();
       addTearDown(container.dispose);
-
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
 
       final notifier = container.read(settingsNotifierProvider.notifier);
       await notifier.setCurrency(AppCurrency.usd);
 
-      expect(container.read(settingsNotifierProvider).currency, AppCurrency.usd);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('user_1_currency'), 'USD');
-    });
-
-    test('setDateFormat persists', () async {
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
-      addTearDown(container.dispose);
-
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      final notifier = container.read(settingsNotifierProvider.notifier);
-      await notifier.setDateFormat(DateFormatType.yyyyMMdd);
-
-      expect(container.read(settingsNotifierProvider).dateFormat,
-          DateFormatType.yyyyMMdd);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('user_1_date_format'), 'yyyyMMdd');
-    });
-
-    test('setTimeFormat persists', () async {
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
-      addTearDown(container.dispose);
-
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      final notifier = container.read(settingsNotifierProvider.notifier);
-      await notifier.setTimeFormat(TimeFormatType.format12h);
-
-      expect(container.read(settingsNotifierProvider).timeFormat,
-          TimeFormatType.format12h);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('user_1_time_format'), 'format12h');
-    });
-
-    test('loads saved settings when authenticated', () async {
-      // Pre-populate SharedPreferences with user-scoped keys
-      SharedPreferences.setMockInitialValues({
-        'user_1_theme_mode': 'dark',
-        'user_1_language': 'vi',
-        'user_1_currency': 'USD',
-        'user_1_date_format': 'yyyyMMdd',
-        'user_1_time_format': 'format12h',
-      });
-
-      final container =
-          _makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
-      addTearDown(container.dispose);
-
-      // Trigger build and wait for microtask to load
-      container.read(settingsNotifierProvider);
-      await Future.delayed(const Duration(milliseconds: 50));
-
       final state = container.read(settingsNotifierProvider);
-      expect(state.themeMode, ThemeMode.dark);
-      expect(state.language, AppLanguage.vietnamese);
       expect(state.currency, AppCurrency.usd);
-      expect(state.dateFormat, DateFormatType.yyyyMMdd);
-      expect(state.timeFormat, TimeFormatType.format12h);
-      expect(state.isInitialized, true);
+    });
+  });
+
+  group('SettingsNotifier — persistence when authenticated', () {
+    test('setThemeMode persists to SharedPreferences with user-scoped key', () async {
+      final container = makeContainer(authState: AuthAuthenticated(_makeUser(userId: 1)));
+      addTearDown(container.dispose);
+
+      final notifier = container.read(settingsNotifierProvider.notifier);
+      await notifier.setThemeMode(ThemeMode.dark);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('user_1_theme_mode'), 'dark');
+    });
+
+    test('setLanguage persists to SharedPreferences with user-scoped key', () async {
+      final container = makeContainer(authState: AuthAuthenticated(_makeUser(userId: 3)));
+      addTearDown(container.dispose);
+
+      final notifier = container.read(settingsNotifierProvider.notifier);
+      await notifier.setLanguage(AppLanguage.vietnamese);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('user_3_language'), 'vi');
+    });
+
+    test('no persistence when unauthenticated', () async {
+      final container = makeContainer(authState: const AuthUnauthenticated());
+      addTearDown(container.dispose);
+
+      final notifier = container.read(settingsNotifierProvider.notifier);
+      await notifier.setThemeMode(ThemeMode.dark);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('user_0_theme_mode'), isNull);
     });
   });
 

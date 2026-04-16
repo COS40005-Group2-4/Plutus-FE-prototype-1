@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/models/budget_model.dart';
 import 'package:plutus_fe_prototype/models/transaction_model.dart';
-import 'package:plutus_fe_prototype/providers/budget_provider.dart';
+import 'package:plutus_fe_prototype/providers/budget_notifier.dart';
 import 'package:plutus_fe_prototype/services/budget_notification_service.dart';
+import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
+import 'package:plutus_fe_prototype/services/interfaces/i_transaction_service.dart';
 import '../helpers/mock_services.mocks.dart';
 import '../helpers/test_fixtures.dart';
 
@@ -14,37 +18,55 @@ void main() {
   late BudgetNotificationService notificationService;
   late StreamController<Budget?> budgetStreamController;
   late StreamController<List<Transaction>> transactionStreamController;
+  final GetIt sl = GetIt.instance;
 
-  setUp(() {
+  setUp(() async {
     mockBudgetService = MockIBudgetService();
     mockTransactionService = MockITransactionService();
     budgetStreamController = StreamController<Budget?>.broadcast();
     transactionStreamController = StreamController<List<Transaction>>.broadcast();
 
-    // Stub budgetStream to return our controller's stream
-    when(mockBudgetService.budgetStream).thenAnswer((_) => budgetStreamController.stream);
-    // Stub transactionStream
-    when(mockTransactionService.transactionStream).thenAnswer((_) => transactionStreamController.stream);
+    // Stub streams
+    when(mockBudgetService.budgetStream)
+        .thenAnswer((_) => budgetStreamController.stream);
+    when(mockTransactionService.transactionStream)
+        .thenAnswer((_) => transactionStreamController.stream);
 
-    notificationService = BudgetNotificationService(budgetService: mockBudgetService);
+    notificationService =
+        BudgetNotificationService(budgetService: mockBudgetService);
+
+    // Register mocks in GetIt
+    Future<void> register<T extends Object>(T instance) async {
+      if (sl.isRegistered<T>()) await sl.unregister<T>();
+      sl.registerSingleton<T>(instance);
+    }
+
+    await register<IBudgetService>(mockBudgetService);
+    await register<ITransactionService>(mockTransactionService);
+    await register<BudgetNotificationService>(notificationService);
   });
 
-  tearDown(() {
-    budgetStreamController.close();
-    transactionStreamController.close();
+  tearDown(() async {
+    await budgetStreamController.close();
+    await transactionStreamController.close();
+
+    Future<void> unregister<T extends Object>() async {
+      if (sl.isRegistered<T>()) await sl.unregister<T>();
+    }
+
+    await unregister<IBudgetService>();
+    await unregister<ITransactionService>();
+    await unregister<BudgetNotificationService>();
   });
 
-  BudgetProvider createProvider() {
-    return BudgetProvider(
-      budgetService: mockBudgetService,
-      notificationService: notificationService,
-      transactionService: mockTransactionService,
-    );
+  ProviderContainer makeContainer() {
+    return ProviderContainer();
   }
 
-  group('BudgetProvider', () {
+  group('BudgetNotifier', () {
     test('loadBudget sets activeBudget and computes spending', () async {
-      final category = createTestBudgetCategory(id: 10, budgetedAmount: 400.0);
+      final category =
+          createTestBudgetCategory(id: 10, budgetedAmount: 400.0);
       final budget = createTestBudget(id: 1, categories: [category]);
 
       when(mockBudgetService.getActiveBudget())
@@ -60,38 +82,38 @@ void main() {
       when(mockBudgetService.getNotificationRules(any))
           .thenAnswer((_) async => []);
 
-      final provider = createProvider();
-      addTearDown(provider.dispose);
+      final container = makeContainer();
+      addTearDown(container.dispose);
 
-      await provider.loadBudget();
+      // Wait for async build to complete
+      final state = await container.read(budgetNotifierProvider.future);
 
-      expect(provider.activeBudget, isNotNull);
-      expect(provider.categorySpending.length, equals(1));
+      expect(state.activeBudget, isNotNull);
+      expect(state.categorySpending.length, equals(1));
 
-      final cs = provider.categorySpending.first;
+      final cs = state.categorySpending.first;
       expect(cs.spent, equals(250.0));
       expect(cs.remaining, equals(150.0));
-      expect(provider.totalBudgeted, equals(400.0));
-      expect(provider.totalSpent, equals(250.0));
-      expect(provider.isLoading, isFalse);
+      expect(state.totalBudgeted, equals(400.0));
+      expect(state.totalSpent, equals(250.0));
     });
 
     test('loadBudget handles null budget', () async {
       when(mockBudgetService.getActiveBudget())
           .thenAnswer((_) async => null);
 
-      final provider = createProvider();
-      addTearDown(provider.dispose);
+      final container = makeContainer();
+      addTearDown(container.dispose);
 
-      await provider.loadBudget();
+      final state = await container.read(budgetNotifierProvider.future);
 
-      expect(provider.activeBudget, isNull);
-      expect(provider.categorySpending, isEmpty);
-      expect(provider.isLoading, isFalse);
+      expect(state.activeBudget, isNull);
+      expect(state.categorySpending, isEmpty);
     });
 
     test('navigatePeriod moves monthly period forward', () async {
-      final category = createTestBudgetCategory(id: 10, budgetedAmount: 400.0);
+      final category =
+          createTestBudgetCategory(id: 10, budgetedAmount: 400.0);
       final budget = createTestBudget(
         id: 1,
         periodType: BudgetPeriodType.monthly,
@@ -111,17 +133,18 @@ void main() {
       when(mockBudgetService.getNotificationRules(any))
           .thenAnswer((_) async => []);
 
-      final provider = createProvider();
-      addTearDown(provider.dispose);
+      final container = makeContainer();
+      addTearDown(container.dispose);
 
-      await provider.loadBudget();
+      final initialState = await container.read(budgetNotifierProvider.future);
+      final startBefore = initialState.currentPeriodStart;
 
-      final startBefore = provider.currentPeriodStart;
+      final notifier = container.read(budgetNotifierProvider.notifier);
+      await notifier.navigatePeriod(1);
 
-      await provider.navigatePeriod(1);
-
+      final state = await container.read(budgetNotifierProvider.future);
       expect(
-        provider.currentPeriodStart.month,
+        state.currentPeriodStart.month,
         equals(startBefore.month == 12 ? 1 : startBefore.month + 1),
       );
     });
@@ -154,20 +177,17 @@ void main() {
       when(mockBudgetService.getNotificationRules(any))
           .thenAnswer((_) async => []);
 
-      final provider = createProvider();
-      addTearDown(provider.dispose);
+      final container = makeContainer();
+      addTearDown(container.dispose);
 
-      await provider.loadBudget();
+      final state = await container.read(budgetNotifierProvider.future);
 
-      expect(provider.overBudgetCount, equals(1));
+      expect(state.overBudgetCount, equals(1));
 
-      // Verify statuses individually
-      final food = provider.categorySpending.firstWhere(
-        (cs) => cs.category.id == 10,
-      );
-      final transport = provider.categorySpending.firstWhere(
-        (cs) => cs.category.id == 11,
-      );
+      final food =
+          state.categorySpending.firstWhere((cs) => cs.category.id == 10);
+      final transport =
+          state.categorySpending.firstWhere((cs) => cs.category.id == 11);
       expect(food.status, equals(BudgetStatus.overBudget));
       expect(transport.status, equals(BudgetStatus.onTrack));
     });
