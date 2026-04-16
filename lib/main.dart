@@ -88,12 +88,21 @@ class _MyAppState extends ConsumerState<MyApp> {
     final BackupNotifier backupNotifier = ref.read(backupNotifierProvider.notifier);
 
     backupNotifier.addPostRestoreCallback(() async {
+      // Notify service streams so StreamBuilder-based widgets refresh
       sl<ITransactionService>().notifyTransactionUpdate();
       await sl<IBillService>().notifyBillUpdate();
+
+      // Invalidate all Riverpod providers so they re-fetch from restored DB
       ref.invalidate(budgetNotifierProvider);
       ref.invalidate(profileNotifierProvider);
       ref.invalidate(insightsNotifierProvider);
       ref.invalidate(dashboardDataProvider);
+
+      // Explicitly reload profile for the current user after invalidation
+      final authState = ref.read(authNotifierProvider);
+      if (authState is AuthAuthenticated) {
+        await ref.read(profileNotifierProvider.notifier).loadProfile(authState.user.id);
+      }
     });
 
     // Initialize backup for the authenticated user.

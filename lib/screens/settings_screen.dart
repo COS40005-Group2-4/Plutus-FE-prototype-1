@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import '../widgets/glass_container.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../providers/backup_notifier.dart';
+import '../providers/profile_notifier.dart';
 import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -38,6 +41,8 @@ class SettingsScreen extends ConsumerWidget {
     final currentUser = authNotifier.currentUser;
     final settings = ref.watch(settingsNotifierProvider);
     final settingsNotifier = ref.read(settingsNotifierProvider.notifier);
+    final profileState = ref.watch(profileNotifierProvider);
+    final avatarPath = profileState.profile?.avatarPath;
 
     return ListView(
       children: [
@@ -49,12 +54,17 @@ class SettingsScreen extends ConsumerWidget {
               : currentUser?.isGuest == true
                   ? AppColors.textOnLightSecondary
                   : AppColors.success,
-          child: Text(
-            authNotifier.userName.isNotEmpty
-                ? authNotifier.userName[0].toUpperCase()
-                : 'U',
-            style: const TextStyle(fontSize: 40, color: AppColors.textOnDark),
-          ),
+          backgroundImage: avatarPath != null
+              ? FileImage(File(avatarPath))
+              : null,
+          child: avatarPath == null
+              ? Text(
+                  authNotifier.userName.isNotEmpty
+                      ? authNotifier.userName[0].toUpperCase()
+                      : 'U',
+                  style: const TextStyle(fontSize: 40, color: AppColors.textOnDark),
+                )
+              : null,
         ),
         const SizedBox(height: AppSpacing.xl),
         Center(

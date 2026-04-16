@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../di/service_locator.dart';
@@ -38,6 +40,11 @@ class DashboardData {
 // ---------------------------------------------------------------------------
 
 class DashboardDataNotifier extends AsyncNotifier<DashboardData> {
+  StreamSubscription<dynamic>? _transactionSub;
+  StreamSubscription<dynamic>? _billSub;
+  StreamSubscription<dynamic>? _budgetSub;
+  StreamSubscription<dynamic>? _investmentSub;
+
   @override
   Future<DashboardData> build() async {
     final AuthState authState = ref.watch(authNotifierProvider);
@@ -46,11 +53,36 @@ class DashboardDataNotifier extends AsyncNotifier<DashboardData> {
       return const DashboardData.empty();
     }
 
+    final transactionService = sl<ITransactionService>();
+    final investmentService = sl<IInvestmentService>();
+    final billService = sl<IBillService>();
+    final budgetService = sl<IBudgetService>();
+
+    // Listen to data change streams — refresh everything when anything changes
+    _transactionSub?.cancel();
+    _billSub?.cancel();
+    _budgetSub?.cancel();
+    _investmentSub?.cancel();
+
+    _transactionSub =
+        transactionService.transactionStream.listen((_) => ref.invalidateSelf());
+    _investmentSub =
+        investmentService.onChanged.listen((_) => ref.invalidateSelf());
+    _billSub = billService.billStream.listen((_) => ref.invalidateSelf());
+    _budgetSub = budgetService.budgetStream.listen((_) => ref.invalidateSelf());
+
+    ref.onDispose(() {
+      _transactionSub?.cancel();
+      _investmentSub?.cancel();
+      _billSub?.cancel();
+      _budgetSub?.cancel();
+    });
+
     final results = await Future.wait([
-      sl<ITransactionService>().getTransactions(),
-      sl<IInvestmentService>().getInvestmentList(),
-      sl<IBillService>().getBills(),
-      sl<IBudgetService>().getActiveBudget(),
+      transactionService.getTransactions(),
+      investmentService.getInvestmentList(),
+      billService.getBills(),
+      budgetService.getActiveBudget(),
     ]);
 
     final List<Transaction> allTransactions =
