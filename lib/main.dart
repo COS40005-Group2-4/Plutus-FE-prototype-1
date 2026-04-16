@@ -11,6 +11,9 @@ import 'providers/auth_notifier.dart';
 import 'providers/settings_notifier.dart';
 import 'providers/backup_notifier.dart';
 import 'providers/budget_notifier.dart';
+import 'providers/profile_notifier.dart';
+import 'providers/insights_notifier.dart';
+import 'providers/dashboard_data_provider.dart';
 import 'router/app_router.dart';
 import 'services/interfaces/interfaces.dart';
 import 'services/journal_initializer.dart';
@@ -88,6 +91,9 @@ class _MyAppState extends ConsumerState<MyApp> {
       sl<ITransactionService>().notifyTransactionUpdate();
       await sl<IBillService>().notifyBillUpdate();
       ref.invalidate(budgetNotifierProvider);
+      ref.invalidate(profileNotifierProvider);
+      ref.invalidate(insightsNotifierProvider);
+      ref.invalidate(dashboardDataProvider);
     });
 
     // Initialize backup for the authenticated user.
