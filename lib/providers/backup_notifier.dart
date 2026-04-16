@@ -55,9 +55,9 @@ class BackupState {
 // ---------------------------------------------------------------------------
 
 class BackupNotifier extends Notifier<BackupState> {
-  late final IBackupService _backupService;
-  late final ISyncManager _syncManager;
-  late final ISettingsService _settingsService;
+  late IBackupService _backupService;
+  late ISyncManager _syncManager;
+  late ISettingsService _settingsService;
 
   /// Registered callbacks that run after a backup restore completes.
   final List<PostRestoreCallback> _postRestoreCallbacks = <PostRestoreCallback>[];

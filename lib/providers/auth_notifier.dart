@@ -39,9 +39,9 @@ class AuthError extends AuthState {
 // ---------------------------------------------------------------------------
 
 class AuthNotifier extends Notifier<AuthState> {
-  late final GoogleAuthService _authService;
-  late final UserService _userService;
-  late final IConsentService _consentService;
+  late GoogleAuthService _authService;
+  late UserService _userService;
+  late IConsentService _consentService;
 
   @override
   AuthState build() {

@@ -87,9 +87,9 @@ class BudgetState {
 // ---------------------------------------------------------------------------
 
 class BudgetNotifier extends AsyncNotifier<BudgetState> {
-  late final IBudgetService _budgetService;
-  late final ITransactionService _transactionService;
-  late final BudgetNotificationService _notificationService;
+  late IBudgetService _budgetService;
+  late ITransactionService _transactionService;
+  late BudgetNotificationService _notificationService;
 
   StreamSubscription<Budget?>? _budgetSubscription;
   StreamSubscription<dynamic>? _transactionSubscription;

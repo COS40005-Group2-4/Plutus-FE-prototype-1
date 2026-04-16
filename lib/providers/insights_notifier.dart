@@ -90,8 +90,8 @@ class InsightsState {
 // ---------------------------------------------------------------------------
 
 class InsightsNotifier extends Notifier<InsightsState> {
-  late final IInsightsService _insightsService;
-  late final DatabaseService _databaseService;
+  late IInsightsService _insightsService;
+  late DatabaseService _databaseService;
 
   @override
   InsightsState build() {

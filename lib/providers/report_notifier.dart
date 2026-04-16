@@ -53,16 +53,16 @@ class ReportState {
 // ---------------------------------------------------------------------------
 
 class ReportNotifier extends Notifier<ReportState> {
-  late final ITransactionService _transactionService;
+  late ITransactionService _transactionService;
   // ignore: unused_field
-  late final IInvestmentService _investmentService; // reserved for investment portfolio section
+  late IInvestmentService _investmentService; // reserved for investment portfolio section
   // ignore: unused_field
-  late final IBillService _billService; // reserved for bills/recurring section
+  late IBillService _billService; // reserved for bills/recurring section
   // ignore: unused_field
-  late final IBudgetService _budgetService; // reserved for budget vs actual section
-  late final IReportAiService _reportAiService;
-  late final IReportPdfService _reportPdfService;
-  late final IUserService _userService;
+  late IBudgetService _budgetService; // reserved for budget vs actual section
+  late IReportAiService _reportAiService;
+  late IReportPdfService _reportPdfService;
+  late IUserService _userService;
 
   @override
   ReportState build() {

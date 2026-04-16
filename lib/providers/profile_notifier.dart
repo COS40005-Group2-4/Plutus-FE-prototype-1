@@ -48,7 +48,7 @@ class ProfileState {
 // ---------------------------------------------------------------------------
 
 class ProfileNotifier extends Notifier<ProfileState> {
-  late final IProfileService _profileService;
+  late IProfileService _profileService;
 
   @override
   ProfileState build() {
