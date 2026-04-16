@@ -58,7 +58,7 @@ class IncomeAnalysisSection extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       data.formatAmount(data.totalIncome),
                       style: const TextStyle(

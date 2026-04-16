@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'package:intl/intl.dart';
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
@@ -56,23 +57,23 @@ class _ExportDialogState extends State<ExportDialog> {
               ),
               const SizedBox(height: 24),
               const Divider(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               _buildSectionTitle(l10n.translate('export_format')),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildFormatSelector(),
               const SizedBox(height: 20),
               _buildSectionTitle(l10n.translate('export_content')),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildContentSelector(),
               const SizedBox(height: 20),
               if (_selectedContent != ExportContent.userData) ...[
                 _buildSectionTitle(l10n.translate('export_date_range_optional')),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildDateRangeSelector(),
                 const SizedBox(height: 20),
               ],
               const Divider(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -155,14 +156,14 @@ class _ExportDialogState extends State<ExportDialog> {
           isSelected: _selectedContent == ExportContent.transactions,
           onTap: () => setState(() => _selectedContent = ExportContent.transactions),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         _buildCheckOption(
           icon: Icons.person,
           title: l10n.translate('export_user_data'),
           isSelected: _selectedContent == ExportContent.userData,
           onTap: () => setState(() => _selectedContent = ExportContent.userData),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         _buildCheckOption(
           icon: Icons.select_all,
           title: l10n.translate('export_both'),
@@ -245,7 +246,7 @@ class _ExportDialogState extends State<ExportDialog> {
             ],
           ),
           if (_startDate != null || _endDate != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             TextButton.icon(
               onPressed: () => setState(() {
                 _startDate = null;
@@ -287,7 +288,7 @@ class _ExportDialogState extends State<ExportDialog> {
               size: 32,
               color: isSelected ? AppColors.primary : AppColors.textOnLightSecondary,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               title,
               overflow: TextOverflow.ellipsis,
@@ -297,7 +298,7 @@ class _ExportDialogState extends State<ExportDialog> {
                 color: isSelected ? AppColors.primary : null,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               description,
               overflow: TextOverflow.ellipsis,

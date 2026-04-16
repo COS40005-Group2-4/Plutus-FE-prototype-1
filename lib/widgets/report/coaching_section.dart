@@ -118,7 +118,7 @@ class CoachingSection extends StatelessWidget {
                   size: 14,
                   color: AppColors.savingsAccent,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   '${l10n.translate('report_potential_savings')}${tip.savingsEstimate!.toStringAsFixed(0)}${l10n.translate('report_per_month')}',
                   style: const TextStyle(

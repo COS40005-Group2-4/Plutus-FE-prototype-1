@@ -202,7 +202,7 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
                               child: Row(
                                 children: [
                                   Text(d.icon, style: const TextStyle(fontSize: 16)),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   Expanded(
                                     child: Text(d.name, overflow: TextOverflow.ellipsis),
                                   ),
@@ -235,7 +235,7 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
                               child: Row(
                                 children: [
                                   const Text('📊', style: TextStyle(fontSize: 16)),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   Expanded(
                                     child: Text(display, overflow: TextOverflow.ellipsis),
                                   ),
@@ -251,7 +251,7 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
                           child: Row(
                             children: [
                               const Text('✏️', style: TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(l10n.budgetOtherCustom),
                             ],
                           ),
@@ -592,7 +592,7 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
                       child: Row(
                         children: [
                           const Icon(Icons.delete_outline, size: 18),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(AppLocalizations.of(context).budgetDeleteCategory),
                         ],
                       ),

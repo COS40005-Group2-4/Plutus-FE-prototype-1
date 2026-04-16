@@ -79,7 +79,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 totalValue != null ? totalValue.toStringAsFixed(2) : 'N/A',
                 style: const TextStyle(

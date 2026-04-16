@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -80,7 +81,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: _controller,
                 maxLength: 20,
@@ -136,7 +137,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -145,7 +146,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                     child: Text(l10n.cancel,
                         style: TextStyle(color: secondaryTextColor)),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   ElevatedButton(
                     onPressed: _validate,
                     style: ElevatedButton.styleFrom(

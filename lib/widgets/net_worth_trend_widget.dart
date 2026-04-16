@@ -57,7 +57,7 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
                         'Net Worth Trend',
                         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       Tooltip(
                         message: AppLocalizations.of(context).widgetHelpNetWorthTrend,
                         child: Icon(
@@ -71,13 +71,13 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
                   Row(
                     children: [
                       _buildToggle('Monthly', 0),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       _buildToggle('Yearly', 1),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: StreamBuilder<List<Transaction>>(
                   stream: _transactionService.transactionStream,

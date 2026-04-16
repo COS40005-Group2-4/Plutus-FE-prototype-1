@@ -39,7 +39,7 @@ class ReportImportWidget extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Tooltip(
                       message: AppLocalizations.of(context).widgetHelpImport,
                       child: Icon(
@@ -51,7 +51,7 @@ class ReportImportWidget extends StatelessWidget {
                   ],
                 ),
                 if (!isCompact) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     AppLocalizations.of(context).clickImportTransactions,
                     style: const TextStyle(color: Colors.white70, fontSize: 12),

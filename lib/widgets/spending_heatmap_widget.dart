@@ -49,7 +49,7 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
               Row(
                 children: [
                   const Icon(Icons.calendar_view_week, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   const Text(
                     'Spending Heatmap',
                     style: TextStyle(
@@ -57,7 +57,7 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Tooltip(
                     message: AppLocalizations.of(context).widgetHelpSpendingHeatmap,
                     child: Icon(
@@ -276,7 +276,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
       children: [
         _buildGrid(),
         if (_selectedDate != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _buildTooltip(_selectedDate!),
         ],
       ],
@@ -304,7 +304,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
               }),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           // Grid rows: Mon … Sun
           Expanded(
             child: Column(

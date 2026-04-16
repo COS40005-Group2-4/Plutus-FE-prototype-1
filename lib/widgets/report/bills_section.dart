@@ -74,7 +74,7 @@ class BillsSection extends StatelessWidget {
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 data.totalRecurring.toStringAsFixed(2),
                 style: const TextStyle(

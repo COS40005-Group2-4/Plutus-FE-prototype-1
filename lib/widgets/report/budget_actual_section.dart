@@ -86,7 +86,7 @@ class BudgetActualSection extends StatelessWidget {
                     ),
                   ),
                   if (cat.isOverBudget) ...<Widget>[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     const Icon(
                       Icons.warning_amber_rounded,
                       size: 14,
@@ -107,7 +107,7 @@ class BudgetActualSection extends StatelessWidget {
               minHeight: 6,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             '${pct.toStringAsFixed(0)}% ${l10n.translate('report_budget_used')}',
             style: const TextStyle(fontSize: 11, color: Colors.white38),

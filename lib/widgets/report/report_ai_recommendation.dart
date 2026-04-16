@@ -50,12 +50,12 @@ class ReportAiRecommendation extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             recommendation.oneLiner,
             style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.5),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(

@@ -148,7 +148,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                     'Market Trending',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Tooltip(
                     message: AppLocalizations.of(context).widgetHelpMarketTrending,
                     child: Icon(
@@ -159,9 +159,9 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildHeader(),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               if (_isLoading)
                 const Expanded(
                   child: Center(
@@ -180,7 +180,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
               else if (_marketData != null) ...[
                 _buildMetrics(_marketData!),
                 if (!compact) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Expanded(child: _buildChart()),
                 ],
               ],
@@ -214,13 +214,13 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
             onSubmitted: _onSymbolSubmit,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         _buildDayButton(7),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.xs),
         _buildDayButton(30),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.xs),
         _buildDayButton(90),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.xs),
         GestureDetector(
           onTap: _fetchData,
           child: const Icon(Icons.refresh, color: Colors.white70, size: 18),
@@ -269,25 +269,25 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               '$changeSign${data.priceChangePercent24h.toStringAsFixed(2)}%',
               style: TextStyle(color: changeColor, fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Row(
           children: [
             _buildMetricChip('H', '\$${_formatPrice(data.high24h)}'),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             _buildMetricChip('L', '\$${_formatPrice(data.low24h)}'),
             if (data.volume != null) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               _buildMetricChip('Vol', PlutusChartStyle.formatCompactCurrency(data.volume!)),
             ],
             if (data.marketCap != null) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               _buildMetricChip('MCap', '\$${PlutusChartStyle.formatCompactCurrency(data.marketCap!)}'),
             ],
             if (data.marketCap == null)

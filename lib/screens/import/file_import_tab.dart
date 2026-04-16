@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../theme/app_spacing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -222,7 +223,7 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             ElevatedButton.icon(
               onPressed: _loading ? null : _pickFile,
               icon: const Icon(Icons.folder_open),
@@ -232,7 +233,7 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
               ),
             ),
             if (_fileName != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text('File: $_fileName', style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
             ],
             if (_loading)
@@ -242,7 +243,7 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
               ),
             // Preview table
             if (_parsedTransactions != null && !_loading) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Expanded(
                 child: FilePreviewTable(
                   transactions: _parsedTransactions!,
@@ -260,7 +261,7 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
                   aiTotal: _parsedTransactions!.length,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
                 onPressed: _importing || _selectedIndices.isEmpty ? null : _importSelected,
                 style: ElevatedButton.styleFrom(

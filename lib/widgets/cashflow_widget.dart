@@ -50,7 +50,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
           child: Column(
             children: [
               _buildHeader(context),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: StreamBuilder<List<Transaction>>(
                   stream: _transactionService.transactionStream,
@@ -105,7 +105,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Tooltip(
                   message: AppLocalizations.of(context).widgetHelpCashflow,
                   child: Icon(
@@ -136,7 +136,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 GestureDetector(
                   onTap: () => setState(() => _viewMode = 1),
                   child: Container(
@@ -155,7 +155,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 GestureDetector(
                   onTap: () => setState(() => _viewMode = 2),
                   child: Container(
@@ -174,7 +174,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 IconButton(
                   icon: Icon(
                     _showBarChart ? Icons.bar_chart : Icons.show_chart,
@@ -190,7 +190,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         if (_viewMode != 2) // Hide navigation for "All Years" view
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -447,12 +447,12 @@ class _CashflowContentState extends State<_CashflowContent> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildSummary(totalIncome, totalExpense, netCashflow),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               SizedBox(
                 height: chartHeight,
                 child: widget.showBarChart ? _buildBarChart() : _buildLineChart(),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildLegend(),
             ],
           ),
@@ -510,7 +510,7 @@ class _CashflowContentState extends State<_CashflowContent> {
             income,
             AppColors.positive(Theme.of(context).brightness),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _buildSummaryRow(
             AppLocalizations.of(context).expense,
             expense,

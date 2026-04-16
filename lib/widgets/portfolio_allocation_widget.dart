@@ -82,7 +82,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                           'Portfolio Allocation',
                           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppSpacing.xs),
                         Tooltip(
                           message: AppLocalizations.of(context).widgetHelpPortfolioAllocation,
                           child: Icon(
@@ -101,7 +101,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(child: _buildContent()),
         ],
       ),
@@ -205,7 +205,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           _assetLabels[entry.key] ?? 'Other',
@@ -213,7 +213,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                         ),
                       ),
                       Text('$pct%', style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         PlutusChartStyle.formatCompactCurrency(entry.value),
                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),

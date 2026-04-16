@@ -61,7 +61,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 children: [
                   Text(l10n.insightsTabAlerts),
                   if (provider.unreadAlertCount > 0) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -95,7 +95,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
             tooltip: 'Increase text size',
             child: const Text('A+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           FloatingActionButton.small(
             heroTag: 'font_decrease',
             onPressed: provider.canDecreaseFontSize ? insightsNotifier.decreaseFontSize : null,
@@ -548,7 +548,7 @@ class _AlertCard extends StatelessWidget {
                         fontSize: fontSize + 1,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       alert.body,
                       style: TextStyle(
@@ -653,7 +653,7 @@ class _CoachingCard extends StatelessWidget {
               Row(
                 children: [
                   const Icon(Icons.savings_outlined, size: 16, color: AppColors.success),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${l10n.insightsCoachingPotentialSavings}: ${PlutusChartStyle.formatCompactCurrency(tip.savingsEstimate!)}',
                     style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
@@ -777,7 +777,7 @@ class _InsightCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize + 1)),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               body,
               style: TextStyle(

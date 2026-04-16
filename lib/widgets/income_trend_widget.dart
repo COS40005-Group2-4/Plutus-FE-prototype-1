@@ -50,12 +50,12 @@ class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
               Row(
                 children: [
                   const Icon(Icons.trending_up, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   const Text(
                     'Income Trend',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Tooltip(
                     message: AppLocalizations.of(context).widgetHelpIncomeTrend,
                     child: Icon(
@@ -66,7 +66,7 @@ class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: StreamBuilder<List<Transaction>>(
                   stream: _transactionService.transactionStream,
@@ -281,7 +281,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         // Stacked area chart
         Expanded(
           child: RepaintBoundary(

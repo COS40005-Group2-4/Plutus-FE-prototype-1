@@ -147,7 +147,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                   constraints: const BoxConstraints(),
                   tooltip: 'Add Investment',
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 20),
                   onPressed: () => _loadData(forceRefresh: true),
@@ -160,7 +160,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -172,7 +172,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Tooltip(
               message: localizations.widgetHelpInvestments,
               child: Icon(
@@ -183,7 +183,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'Portfolio Overview',
           style: const TextStyle(color: Colors.white70, fontSize: 11),
@@ -220,7 +220,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
         
         // Show count if there are more investments
         if (_investments!.length > 1) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             '+${_investments!.length - 1} more investment${_investments!.length - 1 > 1 ? 's' : ''}',
             style: const TextStyle(
@@ -230,7 +230,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           ),
         ],
         
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         // View All Button
         TextButton.icon(
           onPressed: _showInvestmentListDialog,
@@ -266,7 +266,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         ElevatedButton.icon(
           onPressed: () => _showAddDialog(),
           icon: const Icon(Icons.add, size: 18),
@@ -292,13 +292,13 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           size: 32,
           color: AppColors.error,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           localizations.errorLoadingData,
           style: const TextStyle(color: AppColors.error, fontSize: 11),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         ElevatedButton(
           onPressed: () => _loadData(forceRefresh: true),
           style: ElevatedButton.styleFrom(
@@ -376,7 +376,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                         size: 14,
                         color: color,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         '${gainLossPercent >= 0 ? '+' : ''}${gainLossPercent.toStringAsFixed(2)}%',
                         style: TextStyle(
@@ -403,7 +403,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                   isDark,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildCompactDetail(
                   'Purchase',
@@ -413,7 +413,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(
@@ -423,7 +423,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                   isDark,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildCompactDetail(
                   'Gain/Loss',
@@ -622,7 +622,7 @@ class _InvestmentListDialog extends StatelessWidget {
             size: 64,
             color: isDark ? Colors.white54 : Colors.black38,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             localizations.noInvestmentsYet,
             style: TextStyle(
@@ -674,7 +674,7 @@ class _InvestmentListDialog extends StatelessWidget {
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         investment.assetType.name.toUpperCase(),
                         style: TextStyle(
@@ -713,7 +713,7 @@ class _InvestmentListDialog extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             
             // Investment details
             _buildDetailRow(
@@ -721,13 +721,13 @@ class _InvestmentListDialog extends StatelessWidget {
               '${investment.quantity} units',
               isDark,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _buildDetailRow(
               'Purchase Value',
               '${investment.getCurrencySymbol()}${investment.purchaseValue.toStringAsFixed(2)}',
               isDark,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _buildDetailRow(
               'Purchase Date',
               '${investment.purchaseDate.day}/${investment.purchaseDate.month}/${investment.purchaseDate.year}',
@@ -735,7 +735,7 @@ class _InvestmentListDialog extends StatelessWidget {
             ),
             
             if (investment.currentPrice != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildDetailRow(
                 'Current Price',
                 '${investment.getCurrencySymbol()}${investment.currentPrice!.toStringAsFixed(2)}',
@@ -743,9 +743,9 @@ class _InvestmentListDialog extends StatelessWidget {
               ),
             ],
             
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Divider(color: isDark ? Colors.white24 : Colors.black12),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             
             // Current value and gain/loss
             Row(
@@ -761,7 +761,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         color: isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${investment.getCurrencySymbol()}${currentValue.toStringAsFixed(2)}',
                       style: TextStyle(
@@ -782,7 +782,7 @@ class _InvestmentListDialog extends StatelessWidget {
                           size: 16,
                           color: color,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppSpacing.xs),
                         Text(
                           '${gainLossPercent >= 0 ? '+' : ''}${gainLossPercent.toStringAsFixed(2)}%',
                           style: TextStyle(
@@ -793,7 +793,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${gainLoss >= 0 ? '+' : ''}${investment.getCurrencySymbol()}${gainLoss.abs().toStringAsFixed(2)}',
                       style: TextStyle(
@@ -1046,7 +1046,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Quantity field
                   TextFormField(
@@ -1069,7 +1069,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Purchase Value field
                   TextFormField(
@@ -1102,7 +1102,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(localizations.cancel),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       ElevatedButton(
                         onPressed: _handleSave,
                         style: ElevatedButton.styleFrom(

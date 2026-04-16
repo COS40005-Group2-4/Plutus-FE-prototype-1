@@ -48,7 +48,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Tooltip(
                       message: AppLocalizations.of(context).widgetHelpExport,
                       child: Icon(
@@ -60,7 +60,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
                   ],
                 ),
                 if (!isCompact) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     AppLocalizations.of(context).clickExportTransactions,
                     style: const TextStyle(color: Colors.white70, fontSize: 12),

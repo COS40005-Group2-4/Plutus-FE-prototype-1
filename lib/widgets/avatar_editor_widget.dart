@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../theme/app_spacing.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -106,7 +107,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             // Image preview area with circle guide
             Stack(
               alignment: Alignment.center,
@@ -150,7 +151,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             // Controls
             Wrap(
               alignment: WrapAlignment.center,
@@ -189,7 +190,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             // Action buttons
             Wrap(
               alignment: WrapAlignment.center,
@@ -370,7 +371,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(l10n.cancel),
@@ -400,7 +401,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
             ),
             child: Icon(icon, color: AppColors.textOnDark, size: 40),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(label, overflow: TextOverflow.ellipsis),
         ],
       ),

@@ -267,7 +267,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                       const Icon(Icons.check, color: AppColors.primary, size: 18)
                     else
                       const SizedBox(width: AppSpacing.lg),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         dash.name,
@@ -286,7 +286,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                 child: Row(
                   children: [
                     const Icon(Icons.add, color: AppColors.primary, size: 18),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       l10n.newDashboard,
                       style: const TextStyle(color: AppColors.primary),
@@ -562,7 +562,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         child: Row(
           children: [
             Icon(Icons.drag_indicator, color: AppColors.textOnDark.withValues(alpha: 0.38), size: 14),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
                 l10n.dragToMove,

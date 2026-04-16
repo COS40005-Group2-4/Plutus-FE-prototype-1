@@ -473,7 +473,7 @@ class SettingsScreen extends ConsumerWidget {
           Row(
             children: [
               const Icon(Icons.brightness_6),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.lg),
               Text(l10n.themeMode),
             ],
           ),

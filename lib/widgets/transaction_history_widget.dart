@@ -211,7 +211,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Tooltip(
                       message: AppLocalizations.of(context).widgetHelpTransactionHistory,
                       child: Icon(
@@ -234,7 +234,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             if (_selectedTransactionIds.isNotEmpty)
                               IconButton(
                                 icon: Icon(Icons.delete, color: AppColors.error, size: 20),
@@ -283,7 +283,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                         ),
                     ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),

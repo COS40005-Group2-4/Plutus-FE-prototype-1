@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -392,7 +393,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 child: Text(DateFormat('yyyy-MM-dd').format(_selectedDate)),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Payee
             TextFormField(
@@ -402,7 +403,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Amount & Currency
             Row(
@@ -423,7 +424,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _currency,
@@ -441,7 +442,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Type Dropdown
             DropdownButtonFormField<String>(
@@ -461,7 +462,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 _aiSuggestions = [];
               }),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Category (AI-enhanced)
             AiCategoryField(
@@ -503,7 +504,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 },
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Description
             TextFormField(
@@ -535,7 +536,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
               ],
             ),
             if (_items.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -558,7 +559,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                             onChanged: (val) => item['description'] = val,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           flex: 2,
                           child: TextFormField(

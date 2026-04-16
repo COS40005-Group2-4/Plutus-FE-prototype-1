@@ -27,7 +27,7 @@ class ReportSectionHeader extends StatelessWidget {
             children: <Widget>[
               if (icon != null) ...<Widget>[
                 Icon(icon, size: 20, color: Colors.white54),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
               ],
               Text(
                 title,

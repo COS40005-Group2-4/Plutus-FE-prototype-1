@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/transaction_model.dart';
 import '../providers/settings_notifier.dart';
@@ -52,7 +53,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
 
               // Amount
               Center(
@@ -61,7 +62,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                   settings: settings,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
 
               // Info rows
               _InfoRow(label: l10n.payee, value: transaction.payee),
@@ -91,7 +92,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 ...transaction.postings.asMap().entries.map((entry) {
                   return _PostingDetailRow(
                     key: ValueKey('detail_posting_${entry.key}_${settings.currency.code}'),
@@ -101,7 +102,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                 }),
               ],
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               // Close button
               SizedBox(
                 width: double.infinity,

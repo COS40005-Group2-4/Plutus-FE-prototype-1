@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
@@ -60,21 +61,21 @@ class _DataConsentDialogContent extends StatelessWidget {
               color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           _buildFeatureItem(
             context,
             Icons.cloud_upload_outlined,
             l10n.dataConsentBackup,
             l10n.dataConsentBackupDesc,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _buildFeatureItem(
             context,
             Icons.sync_outlined,
             l10n.dataConsentSync,
             l10n.dataConsentSyncDesc,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -93,7 +94,7 @@ class _DataConsentDialogContent extends StatelessWidget {
                   color: AppColors.warning,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     l10n.dataConsentDecline,

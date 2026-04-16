@@ -73,7 +73,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
                   l10n.translate('widget_label_coaching_tips'),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Tooltip(
                   message: l10n.widgetHelpCoachingTips,
                   child: Icon(
@@ -129,7 +129,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Expanded(
           child: Text(
             tip.body,
@@ -147,7 +147,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
             child: Row(
               children: [
                 const Icon(Icons.savings_outlined, size: 14, color: AppColors.success),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   PlutusChartStyle.formatCompactCurrency(tip.savingsEstimate!),
                   style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600),

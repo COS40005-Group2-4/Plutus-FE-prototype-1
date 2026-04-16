@@ -53,7 +53,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
           child: Column(
             children: [
               _buildHeader(context),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: StreamBuilder<List<Bill>>(
                   stream: _billService.billStream,
@@ -104,7 +104,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Tooltip(
               message: AppLocalizations.of(context).widgetHelpBills,
               child: Icon(
@@ -306,7 +306,7 @@ class _BillsContentState extends State<_BillsContent> {
       children: [
         _buildSummary(totalDue),
         if (widget.bills.length > 1) _buildBillsBarChart(),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Expanded(
           child: ListView.builder(
             itemCount: widget.bills.length,
@@ -521,7 +521,7 @@ class _BillsContentState extends State<_BillsContent> {
                         ),
                         // Show original amount if different currency
                         if (bill.currency != widget.settings.currency.code) ...[
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             '(${billCurrency.symbol}${_formatAmount(bill.amount, billCurrency)})',
                             style: const TextStyle(
@@ -530,7 +530,7 @@ class _BillsContentState extends State<_BillsContent> {
                             ),
                           ),
                         ],
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         if (bill.isOverdue)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

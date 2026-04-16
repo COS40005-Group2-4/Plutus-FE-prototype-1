@@ -50,7 +50,7 @@ class ProfileDashboardWidget extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Tooltip(
                 message: AppLocalizations.of(context).widgetHelpProfile,
                 child: Icon(

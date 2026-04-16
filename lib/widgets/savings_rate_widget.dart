@@ -74,12 +74,12 @@ class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
                   Row(
                     children: [
                       const Icon(Icons.savings, color: Colors.white, size: 18),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         AppLocalizations.of(context).savingsRate,
                         style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       Tooltip(
                         message: AppLocalizations.of(context).widgetHelpSavingsRate,
                         child: Icon(
@@ -90,7 +90,7 @@ class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   if (hasBoundedHeight)
                     Expanded(
                       child: _buildStreamContent(context, settings),
@@ -275,7 +275,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(_getStatusIcon(_currentRate), size: 14, color: rateColor),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     _getStatusText(_currentRate, l10n),
                     style: TextStyle(
@@ -290,7 +290,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Zone 3 — Progress Bar toward 20% target
         Column(
@@ -308,7 +308,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: Stack(
@@ -343,7 +343,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Zone 4 — Income / Expenses / Saved breakdown
         IntrinsicHeight(
@@ -420,7 +420,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
 
         // MoM Delta footer
         Row(

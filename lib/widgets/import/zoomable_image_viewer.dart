@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
 
 class ZoomableImageViewer extends StatefulWidget {
@@ -68,15 +69,15 @@ class _ZoomableImageViewerState extends State<ZoomableImageViewer> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _ToolbarButton(icon: Icons.remove, onPressed: _zoomOut),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 _ToolbarButton(icon: Icons.add, onPressed: _zoomIn),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 _ToolbarButton(icon: Icons.refresh, onPressed: _resetZoom),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         // Image viewer
         Expanded(
           child: ClipRRect(
@@ -110,7 +111,7 @@ class _ZoomableImageViewerState extends State<ZoomableImageViewer> {
                                 size: 48,
                                 color: theme.colorScheme.error,
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: AppSpacing.sm),
                               const Text('Could not load image'),
                             ],
                           ),

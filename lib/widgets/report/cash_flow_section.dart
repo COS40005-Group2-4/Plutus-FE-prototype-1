@@ -122,7 +122,7 @@ class CashFlowSection extends StatelessWidget {
           Row(
             children: <Widget>[
               Icon(icon, size: 16, color: color),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Text(
                 label,
                 style: TextStyle(

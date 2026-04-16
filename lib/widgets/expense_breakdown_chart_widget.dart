@@ -78,7 +78,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
           child: Column(
             children: [
               _buildHeader(context),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: StreamBuilder<List<Transaction>>(
                   stream: _transactionService.transactionStream,
@@ -122,7 +122,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Tooltip(
               message: AppLocalizations.of(context).widgetHelpExpenseBreakdown,
               child: Icon(
@@ -134,13 +134,13 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
             Row(
               children: [
                 _buildToggle('Month', 0),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 _buildToggle('Year', 1),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -335,7 +335,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               ...sorted.take(6).toList().asMap().entries.map((mapEntry) {
                 final i = mapEntry.key;
                 final entry = mapEntry.value;
@@ -351,7 +351,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(entry.key, style: const TextStyle(color: Colors.white70, fontSize: 11), overflow: TextOverflow.ellipsis),
                       ),
@@ -359,7 +359,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                         '$pct%',
                         style: const TextStyle(color: Colors.white54, fontSize: 11),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         _currencyService.formatCurrency(amount: entry.value, currencyCode: widget.settings.currency.code),
                         style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),

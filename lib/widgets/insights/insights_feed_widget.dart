@@ -34,7 +34,7 @@ class InsightsFeedWidget extends ConsumerWidget {
                   l10n.translate('widget_label_insights_feed'),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Tooltip(
                   message: l10n.widgetHelpInsightsFeed,
                   child: Icon(
@@ -116,7 +116,7 @@ class InsightsFeedWidget extends ConsumerWidget {
                 child: Row(
                   children: [
                     const Icon(Icons.new_releases, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
                         l10n.insightsImportBannerAction,

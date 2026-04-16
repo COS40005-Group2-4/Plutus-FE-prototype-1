@@ -136,7 +136,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                             fontWeight: FontWeight.bold,
                           ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Tooltip(
                       message: l10n.widgetHelpBudget,
                       child: Icon(

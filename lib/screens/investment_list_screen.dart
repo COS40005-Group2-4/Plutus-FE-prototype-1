@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/investment_model.dart';
@@ -141,7 +142,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                       onPressed: () => context.pop(),
                       color: isDark ? AppColors.textOnDark : AppColors.textOnLight,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       localizations.investments,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -182,12 +183,12 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               localizations.errorLoadingData,
               style: const TextStyle(color: AppColors.error, fontSize: 18),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               _error!,
               style: TextStyle(color: AppColors.error.withValues(alpha: 0.7)),
@@ -213,7 +214,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
               size: 64,
               color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               localizations.noInvestmentsYet,
               style: TextStyle(
@@ -221,7 +222,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                 color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Tap + to start tracking your investments',
               style: TextStyle(
@@ -268,7 +269,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               '${investment.assetType.name.toUpperCase()} • ${investment.quantity} units',
               style: TextStyle(
@@ -276,7 +277,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                 color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Text(
@@ -295,7 +296,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                   size: 16,
                   color: color,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   investment.getFormattedGainLoss(),
                   style: TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
@@ -28,7 +29,7 @@ Future<bool?> showBackupFoundDialog(BuildContext context) {
           children: [
             Icon(Icons.cloud_download,
                 color: isDark ? AppColors.accent : AppColors.primary),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(child: Text(l10n.backupFoundTitle)),
           ],
         ),

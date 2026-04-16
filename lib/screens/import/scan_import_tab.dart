@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../theme/app_spacing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -259,7 +260,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             if (_imageFile != null) ...[
               // Adaptive layout
@@ -297,7 +298,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                   : FileImage(File(_imageFile!.path)) as ImageProvider,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(child: SingleChildScrollView(child: _buildExtractedFields())),
         ],
       ),
@@ -315,7 +316,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                 : FileImage(File(_imageFile!.path)) as ImageProvider,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         _buildExtractedFields(),
       ],
     );
@@ -330,7 +331,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Extracted Fields', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         TextFormField(
           controller: _payeeController,
           decoration: const InputDecoration(labelText: 'Payee', border: OutlineInputBorder(), isDense: true),
@@ -346,7 +347,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: DropdownButtonFormField<String>(
                 initialValue: _currency,
@@ -400,7 +401,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
         const SizedBox(height: 12),
         if (_scannedData != null && _scannedData!['items'] != null) ...[
           Text('Items', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           ...(_scannedData!['items'] as List).map((item) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
@@ -411,13 +412,13 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                   ],
                 ),
               )),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         TextFormField(
           controller: _descController,
           decoration: const InputDecoration(labelText: 'Note', border: OutlineInputBorder(), isDense: true),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         ElevatedButton(
           onPressed: _saving || _scanning ? null : _saveTransaction,
           style: ElevatedButton.styleFrom(

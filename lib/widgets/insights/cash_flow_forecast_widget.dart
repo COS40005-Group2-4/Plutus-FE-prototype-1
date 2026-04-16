@@ -36,7 +36,7 @@ class CashFlowForecastWidget extends ConsumerWidget {
                   l10n.insightsForecastTitle,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Tooltip(
                   message: l10n.widgetHelpCashflowForecast,
                   child: Icon(

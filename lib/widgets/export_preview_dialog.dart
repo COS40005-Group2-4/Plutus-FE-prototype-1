@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../theme/app_spacing.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -82,7 +83,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   widget.filePath.split(Platform.pathSeparator).last,
                   style: const TextStyle(
@@ -125,7 +126,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'Error loading PDF preview: ${snapshot.error}',
                     textAlign: TextAlign.center,
@@ -181,7 +182,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildFileLocationInfo(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -220,7 +221,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
           const Row(
             children: [
               Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 'File Location',
                 style: TextStyle(
@@ -230,7 +231,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           SelectableText(
             widget.filePath,
             style: const TextStyle(

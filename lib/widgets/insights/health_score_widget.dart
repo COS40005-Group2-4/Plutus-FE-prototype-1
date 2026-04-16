@@ -86,7 +86,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
                 Tooltip(
                   message: l10n.widgetHelpHealthScore,
                   child: Icon(

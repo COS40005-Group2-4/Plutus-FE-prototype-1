@@ -39,7 +39,7 @@ class ReportMetricCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             value,
             style: TextStyle(

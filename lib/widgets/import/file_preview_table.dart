@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_spacing.dart';
 import '../../models/ai/category_suggestion.dart';
 import 'ai_category_field.dart';
 
@@ -70,7 +71,7 @@ class FilePreviewTable extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Categorizing... $aiProgress/$aiTotal', style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 LinearProgressIndicator(value: aiTotal > 0 ? aiProgress / aiTotal : 0),
               ],
             ),
@@ -126,9 +127,9 @@ class FilePreviewTable extends StatelessWidget {
                           Text('${txn['amount']} ${txn['currency'] ?? 'VND'}', style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(txn['date'] as String? ?? '', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       AiCategoryField(
                         categories: _expenseCategories,
                         selectedCategory: txnCategory,

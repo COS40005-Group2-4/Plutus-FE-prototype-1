@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'package:flutter/services.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
@@ -136,7 +137,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       setState(() => _assetType = value!);
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Asset Name/Symbol field
                   TextFormField(
@@ -166,7 +167,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Quantity field
                   TextFormField(
@@ -193,7 +194,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Purchase Value field
                   TextFormField(
@@ -220,7 +221,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Currency Dropdown
                   DropdownButtonFormField<Currency>(
@@ -249,7 +250,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                       setState(() => _currency = value!);
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   
                   // Purchase Date field
                   InkWell(
@@ -283,7 +284,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(localizations.cancel),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       ElevatedButton(
                         onPressed: _handleSave,
                         style: ElevatedButton.styleFrom(

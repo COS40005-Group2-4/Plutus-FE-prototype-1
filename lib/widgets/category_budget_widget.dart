@@ -195,7 +195,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Tooltip(
                     message: l10n.widgetHelpCategoryBudget,
                     child: Icon(

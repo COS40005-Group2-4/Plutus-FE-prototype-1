@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
@@ -96,7 +97,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.cloud_off, size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.backupNoVersions,
                     style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -122,7 +123,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
                     child: Row(
                       children: [
                         const Icon(Icons.cloud_done, color: AppColors.primary),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppSpacing.lg),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +135,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.xs),
                               Text(
                                 '${l10n.backupVersionSize}: ${_formatFileSize(version.fileSizeBytes)}',
                                 style: TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_spacing.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
 import '../theme/app_colors.dart';
@@ -45,7 +46,7 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
         children: [
           Icon(Icons.warning_amber_rounded,
               color: isDark ? AppColors.accent : AppColors.warning),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(child: Text(l10n.backupConflictTitle)),
         ],
       ),
@@ -54,7 +55,7 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l10n.backupConflictMessage),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           RadioListTile<ConflictChoice>(
             value: ConflictChoice.overrideLocal,
             // ignore: deprecated_member_use

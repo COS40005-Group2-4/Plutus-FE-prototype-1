@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../theme/app_spacing.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -400,7 +401,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 profileState.errorMessage,
                 style: const TextStyle(color: Colors.white),
@@ -408,7 +409,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
                 onPressed: () {
                   ref.read(profileNotifierProvider.notifier).resetState();
@@ -742,7 +743,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _buildInfoCard(
               child: Column(
                 children: [
