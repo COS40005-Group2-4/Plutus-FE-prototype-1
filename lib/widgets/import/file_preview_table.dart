@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_spacing.dart';
+import '../../theme/app_spacing.dart';
 import '../../models/ai/category_suggestion.dart';
 import 'ai_category_field.dart';
 
