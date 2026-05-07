@@ -144,3 +144,19 @@ android/key.properties
 #Claude
 .claude/
 .codesight/
+CLAUDE.md
+
+# Native FFI artifacts (built from Plutus-backend/)
+libplutus.so
+libplutus.dll
+libplutus.dylib
+libplutus.h
+*.so
+*.dll
+*.dylib
+
+# Misc local files
+default.profraw
+*.dmg
+TEST.md
+config.md
