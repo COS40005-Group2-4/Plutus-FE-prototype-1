@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'l10n/app_localizations.dart';
-import 'screens/import/manual_import_tab.dart';
-import 'screens/import/file_import_tab.dart';
-import 'screens/import/scan_import_tab.dart';
+import '../l10n/app_localizations.dart';
+import 'import/manual_import_tab.dart';
+import 'import/file_import_tab.dart';
+import 'import/scan_import_tab.dart';
 
 class ImportTransactionPage extends StatefulWidget {
   const ImportTransactionPage({super.key});

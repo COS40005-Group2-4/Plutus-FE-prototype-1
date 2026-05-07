@@ -5,8 +5,8 @@ import 'package:dashboard/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'models/widget_catalog.dart';
-import 'models/dashboard_config.dart';
+import '../models/widget_catalog.dart';
+import '../models/dashboard_config.dart';
 
 class ColoredDashboardItem extends DashboardItem {
   ColoredDashboardItem({

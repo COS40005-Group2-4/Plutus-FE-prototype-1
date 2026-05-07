@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data_widget.dart';
-import '../sidebar_menu.dart';
-import '../storage.dart';
+import '../widgets/data_widget.dart';
+import '../widgets/sidebar_menu.dart';
+import '../services/storage_service.dart';
 import '../providers/dashboard_notifier.dart';
 import '../providers/budget_notifier.dart';
 import '../providers/settings_notifier.dart';

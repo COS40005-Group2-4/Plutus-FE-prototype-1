@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:get_it/get_it.dart';
-import '../transaction_history_page.dart';
+import 'transaction_history_page.dart';
 import '../services/interfaces/i_transaction_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';

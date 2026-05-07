@@ -12,8 +12,8 @@ import '../screens/backup_history_screen.dart';
 import '../screens/insights_screen.dart';
 import '../screens/report_config_screen.dart';
 import '../screens/report_preview_screen.dart';
-import '../transaction_history_page.dart';
-import '../import_transaction_page.dart';
+import '../screens/transaction_history_page.dart';
+import '../screens/import_transaction_page.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants

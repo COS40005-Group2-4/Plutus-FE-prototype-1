@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'widgets/glass_container.dart';
-import 'providers/auth_notifier.dart';
-import 'providers/dashboard_notifier.dart';
-import 'router/app_router.dart';
-import 'l10n/app_localizations.dart';
-import 'theme/app_colors.dart';
-import 'theme/app_radius.dart';
-import 'theme/app_spacing.dart';
-import 'models/widget_catalog.dart';
+import 'glass_container.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/dashboard_notifier.dart';
+import '../router/app_router.dart';
+import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../models/widget_catalog.dart';
 
 
 class SidebarMenu extends ConsumerStatefulWidget {

@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:csv/csv.dart';
 import 'package:xml/xml.dart';
-import 'services/interfaces/i_backend_ffi_service.dart';
-import 'services/interfaces/i_database_service.dart';
-import 'services/interfaces/i_transaction_service.dart';
-import 'services/file_handler.dart';
-import 'utils/date_format_utils.dart';
-import 'models/transaction_model.dart';
-import 'di/service_locator.dart';
+import 'interfaces/i_backend_ffi_service.dart';
+import 'interfaces/i_database_service.dart';
+import 'interfaces/i_transaction_service.dart';
+import 'file_handler.dart';
+import '../utils/date_format_utils.dart';
+import '../models/transaction_model.dart';
+import '../di/service_locator.dart';
 
 class TransactionService implements ITransactionService {
   static const String _transactionsKey = 'transactions';

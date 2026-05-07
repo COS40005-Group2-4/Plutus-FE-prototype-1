@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'models/transaction_model.dart';
-import 'widgets/glass_container.dart';
-import 'widgets/export_dialog.dart';
-import 'widgets/export_preview_dialog.dart';
-import 'widgets/transaction_detail_dialog.dart';
-import 'providers/auth_notifier.dart';
-import 'providers/settings_notifier.dart';
-import 'services/currency_service.dart';
-import 'services/export_service.dart';
-import 'services/user_service.dart';
-import 'services/interfaces/interfaces.dart';
-import 'di/service_locator.dart';
-import 'utils/date_time_formatter.dart';
-import 'l10n/app_localizations.dart';
-import 'theme/app_colors.dart';
+import '../models/transaction_model.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/export_dialog.dart';
+import '../widgets/export_preview_dialog.dart';
+import '../widgets/transaction_detail_dialog.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/settings_notifier.dart';
+import '../services/currency_service.dart';
+import '../services/export_service.dart';
+import '../services/user_service.dart';
+import '../services/interfaces/interfaces.dart';
+import '../di/service_locator.dart';
+import '../utils/date_time_formatter.dart';
+import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 class TransactionHistoryPage extends ConsumerStatefulWidget {
   const TransactionHistoryPage({super.key});
