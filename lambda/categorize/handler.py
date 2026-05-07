@@ -18,12 +18,18 @@ def _response(status_code: int, body: dict) -> dict:
     }
 
 
+_MAX_BODY_BYTES = 32_768  # 32 KB
+
+
 def handler(event: dict, context: Any) -> dict:
     """Lambda handler for POST /categorize."""
     try:
         raw_body = event.get("body")
         if not raw_body:
             return _response(400, ErrorResponse(error="Missing request body").model_dump())
+
+        if len(raw_body.encode("utf-8")) > _MAX_BODY_BYTES:
+            return _response(413, ErrorResponse(error="Request body too large").model_dump())
 
         request = CategorizeRequest.model_validate_json(raw_body)
     except Exception as exc:

@@ -23,7 +23,7 @@ resource "aws_api_gateway_method" "categorize_post" {
   resource_id      = aws_api_gateway_resource.categorize.id
   http_method      = "POST"
   authorization    = "NONE"
-  api_key_required = false
+  api_key_required = true
 }
 
 # OPTIONS /categorize for CORS
@@ -104,7 +104,7 @@ resource "aws_api_gateway_method" "insights_post" {
   resource_id      = aws_api_gateway_resource.insights.id
   http_method      = "POST"
   authorization    = "NONE"
-  api_key_required = false
+  api_key_required = true
 }
 
 # OPTIONS /insights for CORS
@@ -185,7 +185,7 @@ resource "aws_api_gateway_method" "report_insights_post" {
   resource_id      = aws_api_gateway_resource.report_insights.id
   http_method      = "POST"
   authorization    = "NONE"
-  api_key_required = false
+  api_key_required = true
 }
 
 # OPTIONS /report-insights for CORS

@@ -24,6 +24,15 @@ class AIConfig {
         defaultValue: '',
       );
 
+  /// Bearer token for the insights Lambda Function URL.
+  /// Managed in AWS Secrets Manager under plutus/secrets > INSIGHTS_BEARER_TOKEN.
+  static String get insightsBearerToken =>
+      dotenv.env['INSIGHTS_BEARER_TOKEN'] ??
+      const String.fromEnvironment(
+        'INSIGHTS_BEARER_TOKEN',
+        defaultValue: '',
+      );
+
   static bool get isConfigured =>
       apiGatewayUrl.isNotEmpty && apiKey.isNotEmpty;
 }

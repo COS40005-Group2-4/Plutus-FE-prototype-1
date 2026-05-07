@@ -138,8 +138,9 @@ resource "aws_lambda_function" "ai_insights" {
 
   environment {
     variables = {
-      AWS_REGION_NAME  = var.aws_region
-      BEDROCK_MODEL_ID = var.insights_bedrock_model_id
+      AWS_REGION_NAME   = var.aws_region
+      BEDROCK_MODEL_ID  = var.insights_bedrock_model_id
+      PLUTUS_SECRET_ARN = aws_secretsmanager_secret.plutus.arn
     }
   }
 
@@ -147,16 +148,17 @@ resource "aws_lambda_function" "ai_insights" {
 }
 
 # Lambda Function URL for insights (bypasses API Gateway 29s timeout)
+# Auth is handled inside the Lambda via Bearer token checked against Secrets Manager.
 resource "aws_lambda_function_url" "ai_insights" {
   function_name      = aws_lambda_function.ai_insights.function_name
   authorization_type = "NONE"
 
   cors {
     allow_credentials = false
-    allow_origins     = ["*"]
+    allow_origins     = var.cors_allow_origins
     allow_methods     = ["POST"]
-    allow_headers     = ["Content-Type"]
-    max_age           = 86400
+    allow_headers     = ["Content-Type", "Authorization"]
+    max_age           = 3600
   }
 }
 

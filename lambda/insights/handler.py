@@ -1,9 +1,39 @@
 import json
 import os
+import secrets
 from datetime import datetime, timedelta
 from typing import Any
 
+import boto3
 from shared.bedrock_client import BedrockClient
+
+# ── Bearer token auth ─────────────────────────────────────────────────────────
+_cached_bearer_token: str | None = None
+
+
+def _get_bearer_token() -> str:
+    """Fetch INSIGHTS_BEARER_TOKEN from Secrets Manager (cached per container)."""
+    global _cached_bearer_token
+    if _cached_bearer_token:
+        return _cached_bearer_token
+    secret_arn = os.environ.get("PLUTUS_SECRET_ARN")
+    if not secret_arn:
+        raise RuntimeError("PLUTUS_SECRET_ARN environment variable not set")
+    client = boto3.client("secretsmanager", region_name=os.environ.get("AWS_REGION_NAME", "ap-southeast-1"))
+    response = client.get_secret_value(SecretId=secret_arn)
+    secret = json.loads(response["SecretString"])
+    _cached_bearer_token = secret["INSIGHTS_BEARER_TOKEN"]
+    return _cached_bearer_token
+
+
+def _check_auth(event: dict) -> bool:
+    """Return True if the request carries a valid Bearer token."""
+    headers: dict = event.get("headers") or {}
+    auth_header: str = headers.get("authorization") or headers.get("Authorization") or ""
+    if not auth_header.startswith("Bearer "):
+        return False
+    provided = auth_header[len("Bearer "):]
+    return secrets.compare_digest(provided, _get_bearer_token())
 
 
 def _response(status_code: int, body: dict) -> dict:
@@ -466,10 +496,18 @@ def _build_prompt(
 
 # ── Handler ───────────────────────────────────────────────────────────────────
 
+_MAX_BODY_BYTES = 65_536  # 64 KB
+
+
 def handler(event: dict, context: Any) -> dict:
     """Lambda handler for POST /insights."""
+    if not _check_auth(event):
+        return _response(401, {"error": "Unauthorized"})
+
     try:
         raw = event.get("body") or ""
+        if isinstance(raw, str) and len(raw.encode("utf-8")) > _MAX_BODY_BYTES:
+            return _response(413, {"error": "Request body too large"})
         if isinstance(raw, str):
             payload = json.loads(raw) if raw else {}
         elif isinstance(raw, dict):

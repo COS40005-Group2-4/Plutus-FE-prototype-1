@@ -108,6 +108,7 @@ coverage/
 .env.local
 .env.production
 .env.staging
+app.env
 
 # Logs
 *.log

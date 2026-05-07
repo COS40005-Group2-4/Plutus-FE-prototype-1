@@ -36,12 +36,16 @@ class InsightsService implements IInsightsService {
       'data': data,
     };
 
+    final String bearerToken = AIConfig.insightsBearerToken;
+
     try {
       final http.Response response = await http.post(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          // API key only needed for API Gateway, not Function URL
+          // Function URL: bearer token auth; API Gateway: API key auth
+          if (functionUrl.isNotEmpty && bearerToken.isNotEmpty)
+            'Authorization': 'Bearer $bearerToken',
           if (functionUrl.isEmpty && apiKey.isNotEmpty) 'x-api-key': apiKey,
         },
         body: jsonEncode(requestBody),

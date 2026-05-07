@@ -65,9 +65,14 @@ def _build_prompt(body: dict) -> str:
     return "\n".join(lines)
 
 
+_MAX_BODY_BYTES = 32_768  # 32 KB
+
+
 def handler(event: dict, context: Any) -> dict:
     try:
         raw_body = event.get("body", "{}")
+        if isinstance(raw_body, str) and len(raw_body.encode("utf-8")) > _MAX_BODY_BYTES:
+            return _response(413, {"error": "Request body too large"})
         body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
     except (json.JSONDecodeError, TypeError):
         return _response(400, {"error": "Invalid JSON body"})

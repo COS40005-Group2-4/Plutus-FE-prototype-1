@@ -36,3 +36,14 @@ output "insights_function_url" {
   description = "Lambda Function URL for insights (no API Gateway timeout)"
   value       = aws_lambda_function_url.ai_insights.function_url
 }
+
+output "plutus_secret_arn" {
+  description = "ARN of the Plutus Secrets Manager secret"
+  value       = aws_secretsmanager_secret.plutus.arn
+}
+
+output "insights_bearer_token" {
+  description = "Bearer token for the insights Lambda Function URL — add to app.env as INSIGHTS_BEARER_TOKEN"
+  value       = random_password.insights_bearer_token.result
+  sensitive   = true
+}
