@@ -28,7 +28,7 @@ void main() {
       const spent = 1500000.0;
       const budgeted = 1000000.0;
       final pct = (spent / budgeted * 100).round();
-      final text = 'Food: $pct% (${sym}${spent.toStringAsFixed(0)} / ${sym}${budgeted.toStringAsFixed(0)})';
+      final text = 'Food: $pct% ($sym${spent.toStringAsFixed(0)} / $sym${budgeted.toStringAsFixed(0)})';
       expect(text, contains('₫'));
       expect(text, isNot(contains('\$')));
       expect(text, equals('Food: 150% (₫1500000 / ₫1000000)'));

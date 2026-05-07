@@ -1,10 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mockito/mockito.dart';
 import 'package:plutus_fe_prototype/models/report_config.dart';
 import 'package:plutus_fe_prototype/models/report_template.dart';
-import 'package:plutus_fe_prototype/models/ai/insight.dart';
 import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
 import 'package:plutus_fe_prototype/providers/insights_notifier.dart';
 import 'package:plutus_fe_prototype/providers/report_notifier.dart';
@@ -16,7 +14,6 @@ import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
 import 'package:plutus_fe_prototype/services/interfaces/i_report_ai_service.dart';
 import 'package:plutus_fe_prototype/services/interfaces/i_report_pdf_service.dart';
 import 'package:plutus_fe_prototype/services/interfaces/i_user_service.dart';
-import 'package:plutus_fe_prototype/services/interfaces/i_insights_service.dart';
 import '../helpers/mock_services.mocks.dart';
 
 // ---------------------------------------------------------------------------

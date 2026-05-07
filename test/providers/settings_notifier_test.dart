@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:plutus_fe_prototype/models/user_model.dart';
 import 'package:plutus_fe_prototype/providers/settings_notifier.dart';
 import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
-import 'package:plutus_fe_prototype/providers/settings_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Fake AuthNotifier that returns a fixed state — no GetIt dependencies

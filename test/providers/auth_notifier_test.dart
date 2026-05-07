@@ -17,7 +17,7 @@ import 'package:plutus_fe_prototype/providers/auth_notifier.dart';
 // ---------------------------------------------------------------------------
 
 class FakeAuthNotifier extends AuthNotifier {
-  AuthState _overrideState;
+  final AuthState _overrideState;
   FakeAuthNotifier(this._overrideState);
 
   @override
