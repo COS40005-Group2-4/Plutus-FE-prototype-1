@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_notifier.dart';
 import 'glass_container.dart';
 import 'add_investment_dialog.dart';
+import 'sell_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -653,7 +656,13 @@ class _InvestmentListDialog extends StatelessWidget {
       borderRadius: 12,
       opacity: isDark ? 0.2 : 0.05,
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/dashboard/investments/${investment.id}');
+        },
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,6 +698,30 @@ class _InvestmentListDialog extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (!investment.isClosed) ...[
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 20),
+                        onPressed: () {
+                          _showUpdateValueSheet(context, investment, onRefresh);
+                        },
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: AppLocalizations.of(context).investmentUpdateValue,
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(Icons.sell, size: 20),
+                        onPressed: () {
+                          _showSellDialog(context, investment, onRefresh);
+                        },
+                        color: AppColors.success,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: AppLocalizations.of(context).investmentSell,
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20),
                       onPressed: () {
@@ -808,7 +841,174 @@ class _InvestmentListDialog extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
+  }
+
+  Future<void> _showSellDialog(
+    BuildContext context,
+    InvestmentModel investment,
+    VoidCallback onRefresh,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final service = sl<IInvestmentService>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => SellInvestmentDialog(
+        investment: investment,
+        onConfirm: ({
+          required quantity,
+          required pricePerUnit,
+          required date,
+          required cashAccount,
+          notes,
+        }) async {
+          await service.recordSale(
+            investmentId: investment.id,
+            quantity: quantity,
+            pricePerUnit: pricePerUnit,
+            date: date,
+            cashAccount: cashAccount,
+            notes: notes,
+          );
+        },
+      ),
+    );
+    if (result == true) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l.investmentSaleRecorded),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      onRefresh();
+    }
+  }
+
+  Future<void> _showUpdateValueSheet(
+    BuildContext context,
+    InvestmentModel investment,
+    VoidCallback onRefresh,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final service = sl<IInvestmentService>();
+    final priceController = TextEditingController(
+      text: investment.currentPrice?.toStringAsFixed(2) ?? '',
+    );
+    final noteController = TextEditingController();
+    DateTime date = DateTime.now();
+    final formKey = GlobalKey<FormState>();
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.lg,
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setSheetState) {
+              return Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${l.investmentUpdateValue} — ${investment.assetName}',
+                      style: Theme.of(ctx).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l.investmentUpdateValueSubtitle,
+                      style: Theme.of(ctx).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: priceController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
+                      decoration: InputDecoration(labelText: l.investmentValuePrice),
+                      validator: (v) {
+                        final p = double.tryParse((v ?? '').trim());
+                        if (p == null || p <= 0) return l.investmentGreaterThanZero;
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: date,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) setSheetState(() => date = picked);
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(labelText: l.investmentValueDate),
+                        child: Text(
+                          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextFormField(
+                      controller: noteController,
+                      decoration: InputDecoration(labelText: l.investmentValueNote),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(l.cancel),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        FilledButton(
+                          onPressed: () async {
+                            if (!formKey.currentState!.validate()) return;
+                            final price = double.parse(priceController.text.trim());
+                            await service.addPricePoint(
+                              investmentId: investment.id,
+                              date: date,
+                              price: price,
+                              note: noteController.text.trim().isEmpty
+                                  ? null
+                                  : noteController.text.trim(),
+                            );
+                            if (ctx.mounted) Navigator.of(ctx).pop(true);
+                          },
+                          child: Text(l.save),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (saved == true) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.investmentValueSaved)),
+      );
+      onRefresh();
+    }
   }
 
   Widget _buildDetailRow(String label, String value, bool isDark) {
