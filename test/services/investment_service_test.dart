@@ -390,4 +390,187 @@ void main() {
       expect(result['irr'], 0.0);
     });
   });
+
+  group('recordSale', () {
+    Map<String, dynamic> rowFor(InvestmentModel inv) => {
+          'id': inv.id,
+          'asset_type': inv.assetType.name,
+          'asset_name': inv.assetName,
+          'quantity': inv.quantity,
+          'purchase_value': inv.purchaseValue,
+          'total_cost_basis': inv.totalCostBasis,
+          'currency': inv.currency.name,
+          'purchase_date': inv.purchaseDate.millisecondsSinceEpoch ~/ 1000,
+          'current_price': inv.currentPrice,
+          'status': inv.isClosed ? 'closed' : 'active',
+        };
+
+    setUp(() {
+      service.setUserId(1);
+      // Stub journal rebuild dependency — not exercised here.
+      when(mockDb.getTransactionsByUserId(any))
+          .thenAnswer((_) async => <Map<String, dynamic>>[]);
+      when(mockDb.getInvestmentsByUserId(any))
+          .thenAnswer((_) async => <Map<String, dynamic>>[]);
+    });
+
+    test('partial sale halves cost basis proportionally and stays active', () async {
+      final inv = createTestInvestment(
+        id: 'inv_1',
+        quantity: 10.0,
+        purchaseValue: 1000.0,
+      );
+      when(mockDb.getInvestmentById('inv_1'))
+          .thenAnswer((_) async => rowFor(inv));
+      when(mockDb.insertTransaction(any, any)).thenAnswer((_) async => 42);
+      when(mockDb.insertInvestmentSale(any)).thenAnswer((_) async => 1);
+      when(mockDb.updateInvestment(any, any)).thenAnswer((_) async {});
+
+      final result = await service.recordSale(
+        investmentId: 'inv_1',
+        quantity: 5.0,
+        pricePerUnit: 150.0,
+        date: DateTime(2025, 6, 1),
+        cashAccount: 'Assets:Cash:Bank',
+      );
+
+      // Avg cost = 100/unit, basis relieved = 500, proceeds = 750, gain = 250
+      expect(result.sale.costBasisRelieved, closeTo(500.0, 1e-9));
+      expect(result.sale.realizedGain, closeTo(250.0, 1e-9));
+      expect(result.updatedInvestment.quantity, 5.0);
+      expect(result.updatedInvestment.totalCostBasis, closeTo(500.0, 1e-9));
+      expect(result.updatedInvestment.isClosed, isFalse);
+
+      final captured = verify(mockDb.updateInvestment('inv_1', captureAny))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(captured['quantity'], 5.0);
+      expect(captured['total_cost_basis'], closeTo(500.0, 1e-9));
+      expect(captured['status'], 'active');
+      expect(captured['closed_at'], isNull);
+    });
+
+    test('full sale flips status to closed and zeros quantity', () async {
+      final inv = createTestInvestment(
+        id: 'inv_2',
+        quantity: 4.0,
+        purchaseValue: 800.0,
+      );
+      when(mockDb.getInvestmentById('inv_2'))
+          .thenAnswer((_) async => rowFor(inv));
+      when(mockDb.insertTransaction(any, any)).thenAnswer((_) async => 99);
+      when(mockDb.insertInvestmentSale(any)).thenAnswer((_) async => 1);
+      when(mockDb.updateInvestment(any, any)).thenAnswer((_) async {});
+
+      final result = await service.recordSale(
+        investmentId: 'inv_2',
+        quantity: 4.0,
+        pricePerUnit: 250.0,
+        date: DateTime(2025, 7, 1),
+        cashAccount: 'Assets:Cash:Bank',
+      );
+
+      expect(result.updatedInvestment.quantity, 0.0);
+      expect(result.updatedInvestment.totalCostBasis, 0.0);
+      expect(result.updatedInvestment.isClosed, isTrue);
+
+      final captured = verify(mockDb.updateInvestment('inv_2', captureAny))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(captured['status'], 'closed');
+      expect(captured['closed_at'], isNotNull);
+    });
+
+    test('sale transaction uses three balanced postings', () async {
+      final inv = createTestInvestment(
+        id: 'inv_3',
+        quantity: 10.0,
+        purchaseValue: 1000.0,
+        assetName: 'GOLD',
+      );
+      when(mockDb.getInvestmentById('inv_3'))
+          .thenAnswer((_) async => rowFor(inv));
+      when(mockDb.insertTransaction(any, any)).thenAnswer((_) async => 7);
+      when(mockDb.insertInvestmentSale(any)).thenAnswer((_) async => 1);
+      when(mockDb.updateInvestment(any, any)).thenAnswer((_) async {});
+
+      await service.recordSale(
+        investmentId: 'inv_3',
+        quantity: 2.0,
+        pricePerUnit: 130.0,
+        date: DateTime(2025, 8, 1),
+        cashAccount: 'Assets:Cash:USD',
+      );
+
+      final captured = verify(mockDb.insertTransaction(1, captureAny))
+          .captured
+          .single as Map<String, dynamic>;
+      final postings = (captured['postings'] as List).cast<Map<String, dynamic>>();
+      expect(postings.length, 3);
+      // Cash leg (proceeds, +ve)
+      expect(postings[0]['account'], 'Assets:Cash:USD');
+      expect(postings[0]['amount'], closeTo(260.0, 1e-9));
+      // Asset leg (qty out, -ve commodity)
+      expect(postings[1]['account'], 'Assets:investment:GOLD');
+      expect(postings[1]['amount'], closeTo(-2.0, 1e-9));
+      expect(postings[1]['commodity'], 'GOLD');
+      // Realised gain leg = -(260 - 200) = -60 (credit)
+      expect(postings[2]['account'], 'Income:RealizedGains:GOLD');
+      expect(postings[2]['amount'], closeTo(-60.0, 1e-9));
+    });
+
+    test('rejects oversell', () async {
+      final inv = createTestInvestment(id: 'inv_4', quantity: 1.0);
+      when(mockDb.getInvestmentById('inv_4'))
+          .thenAnswer((_) async => rowFor(inv));
+
+      expect(
+        () => service.recordSale(
+          investmentId: 'inv_4',
+          quantity: 5.0,
+          pricePerUnit: 100.0,
+          date: DateTime(2025, 1, 1),
+          cashAccount: 'Assets:Cash',
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  group('addPricePoint', () {
+    test('persists, mirrors latest price into investment, and notifies', () async {
+      service.setUserId(1);
+      when(mockDb.insertInvestmentPricePoint(any)).thenAnswer((_) async => 11);
+      when(mockDb.getLatestInvestmentPricePoint('inv_1'))
+          .thenAnswer((_) async => {
+                'id': 11,
+                'investment_id': 'inv_1',
+                'date': DateTime(2025, 6, 1).millisecondsSinceEpoch ~/ 1000,
+                'price': 199.5,
+              });
+      when(mockDb.updateInvestment(any, any)).thenAnswer((_) async {});
+
+      final point = await service.addPricePoint(
+        investmentId: 'inv_1',
+        date: DateTime(2025, 6, 1),
+        price: 199.5,
+        note: 'manual',
+      );
+
+      expect(point.price, 199.5);
+      verify(mockDb.updateInvestment('inv_1', argThat(predicate<Map<String, dynamic>>((m) => m['current_price'] == 199.5)))).called(1);
+    });
+
+    test('rejects non-positive prices', () {
+      service.setUserId(1);
+      expect(
+        () => service.addPricePoint(
+          investmentId: 'inv_1',
+          date: DateTime(2025, 1, 1),
+          price: 0,
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
 }
