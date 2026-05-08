@@ -1,13 +1,22 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_elevation.dart';
 import '../theme/app_radius.dart';
 
+/// Card surface used throughout the app. Despite the legacy "Glass" name,
+/// this now renders a clean, flat surface with a hairline border and
+/// subtle elevation — no backdrop blur or translucency.
+///
+/// Existing call-sites pass legacy parameters (`blur`, `opacity`,
+/// `borderOpacity`, `gradient`); they are accepted for compatibility but
+/// no longer affect rendering, so the whole app picks up the new visual
+/// language without per-call-site edits.
 class GlassContainer extends StatelessWidget {
   final Widget? child;
   final double? width;
   final double? height;
   final double borderRadius;
+  // Legacy parameters — accepted for backwards compatibility.
   final double blur;
   final double borderOpacity;
   final double opacity;
@@ -24,9 +33,9 @@ class GlassContainer extends StatelessWidget {
     this.width,
     this.height,
     this.borderRadius = AppRadius.lg,
-    this.blur = 10.0,
-    this.borderOpacity = 0.2,
-    this.opacity = 0.1,
+    this.blur = 0.0,
+    this.borderOpacity = 1.0,
+    this.opacity = 1.0,
     this.padding,
     this.margin,
     this.color,
@@ -37,63 +46,29 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Brightness brightness = Theme.of(context).brightness;
+    final Color surface = color ?? AppColors.surface(brightness);
+    final Color borderColor = AppColors.border(brightness);
+
+    final BorderRadius? radius = shape == BoxShape.circle
+        ? null
+        : BorderRadius.circular(borderRadius);
 
     return Container(
       width: width,
       height: height,
       margin: margin,
+      padding: padding,
       decoration: BoxDecoration(
+        color: surface,
+        gradient: gradient,
         shape: shape,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-            blurRadius: isDark ? 20 : 12,
-            spreadRadius: isDark ? 2 : 1,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: radius,
+        border: border ??
+            Border.all(color: borderColor, width: 1),
+        boxShadow: AppElevation.low(brightness),
       ),
-      child: ClipRRect(
-        borderRadius: shape == BoxShape.circle
-            ? BorderRadius.circular(1000)
-            : BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.surfaceDark.withValues(alpha: opacity + 0.15)
-                  : (color ?? Colors.white).withValues(alpha: opacity + 0.55),
-              shape: shape,
-              borderRadius: shape == BoxShape.circle ? null : BorderRadius.circular(borderRadius),
-              border: border ?? Border.all(
-                color: isDark
-                    ? AppColors.borderDark.withValues(alpha: borderOpacity + 0.1)
-                    : Colors.white.withValues(alpha: borderOpacity + 0.3),
-                width: 1.0,
-              ),
-              gradient: gradient ?? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark ? [
-                  AppColors.surfaceElevatedDark.withValues(alpha: opacity + 0.2),
-                  AppColors.surfaceMidDark.withValues(alpha: opacity + 0.15),
-                ] : [
-                  (color ?? Colors.white).withValues(alpha: opacity + 0.6),
-                  (color ?? Colors.white).withValues(alpha: opacity + 0.5),
-                ],
-              ),
-            ),
-            child: child == null ? null : Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) {},
-              child: child,
-            ),
-          ),
-        ),
-      ),
+      child: child,
     );
   }
 }

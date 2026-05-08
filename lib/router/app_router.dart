@@ -15,6 +15,7 @@ import '../screens/report_config_screen.dart';
 import '../screens/report_preview_screen.dart';
 import '../screens/transaction_history_page.dart';
 import '../screens/import_transaction_page.dart';
+import '../theme/app_elevation.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -48,6 +49,31 @@ class _RouterNotifier extends ChangeNotifier {
 }
 
 // ---------------------------------------------------------------------------
+// Fade-through page transition for all routes
+// ---------------------------------------------------------------------------
+
+CustomTransitionPage<T> _fadePage<T>(
+    Widget child, GoRouterState state) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: AppMotion.medium,
+    reverseTransitionDuration: AppMotion.medium,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // Fade-through: outgoing fades out, incoming fades in.
+      return FadeTransition(
+        opacity: CurvedAnimation(
+          parent: animation,
+          curve: AppMotion.emphasized,
+          reverseCurve: AppMotion.standard,
+        ),
+        child: child,
+      );
+    },
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Auth page paths (used in redirect logic)
 // ---------------------------------------------------------------------------
 
@@ -72,19 +98,15 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
       final String currentPath = state.matchedLocation;
       final bool onAuthPage = _authPaths.contains(currentPath);
 
-      // Still loading — stay on current page (or splash).
       if (authState is AuthLoading) {
         return null;
       }
 
-      // Unauthenticated or error — redirect to user selection unless already
-      // on an auth page.
       if (authState is AuthUnauthenticated || authState is AuthError) {
         if (onAuthPage) return null;
         return AppRoutes.userSelection;
       }
 
-      // Authenticated — redirect away from auth pages to dashboard.
       if (authState is AuthAuthenticated && onAuthPage) {
         return AppRoutes.dashboard;
       }
@@ -92,96 +114,79 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
       return null;
     },
     routes: [
-      // Splash
       GoRoute(
         path: AppRoutes.splash,
-        builder: (BuildContext context, GoRouterState state) {
-          return const Scaffold(
+        pageBuilder: (context, state) => _fadePage(
+          const Scaffold(
             body: Center(child: CircularProgressIndicator()),
-          );
-        },
+          ),
+          state,
+        ),
       ),
-
-      // User selection
       GoRoute(
         path: AppRoutes.userSelection,
-        builder: (BuildContext context, GoRouterState state) {
-          return const UserSelectionScreen();
-        },
+        pageBuilder: (context, state) =>
+            _fadePage(const UserSelectionScreen(), state),
       ),
-
-      // Login
       GoRoute(
         path: AppRoutes.login,
-        builder: (BuildContext context, GoRouterState state) {
-          return const LoginScreen();
-        },
+        pageBuilder: (context, state) => _fadePage(const LoginScreen(), state),
       ),
-
-      // Dashboard shell with sub-routes
       GoRoute(
         path: AppRoutes.dashboard,
-        builder: (BuildContext context, GoRouterState state) {
-          return const MainNavigationPage();
-        },
+        pageBuilder: (context, state) =>
+            _fadePage(const MainNavigationPage(), state),
         routes: [
           GoRoute(
             path: 'history',
-            builder: (BuildContext context, GoRouterState state) {
-              return const TransactionHistoryPage();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const TransactionHistoryPage(), state),
           ),
           GoRoute(
             path: 'import',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ImportTransactionPage();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ImportTransactionPage(), state),
           ),
           GoRoute(
             path: 'settings',
-            builder: (BuildContext context, GoRouterState state) {
-              return const SettingsScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const SettingsScreen(), state),
           ),
           GoRoute(
             path: 'investments',
-            builder: (BuildContext context, GoRouterState state) {
-              return const InvestmentListScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const InvestmentListScreen(), state),
             routes: [
               GoRoute(
                 path: ':id',
-                builder: (BuildContext context, GoRouterState state) {
-                  return InvestmentDetailScreen(
+                pageBuilder: (context, state) => _fadePage(
+                  InvestmentDetailScreen(
                     investmentId: state.pathParameters['id']!,
-                  );
-                },
+                  ),
+                  state,
+                ),
               ),
             ],
           ),
           GoRoute(
             path: 'backup-history',
-            builder: (BuildContext context, GoRouterState state) {
-              return const BackupHistoryScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const BackupHistoryScreen(), state),
           ),
           GoRoute(
             path: 'insights',
-            builder: (BuildContext context, GoRouterState state) {
-              return const InsightsScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const InsightsScreen(), state),
           ),
           GoRoute(
             path: 'report-config',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ReportConfigScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ReportConfigScreen(), state),
           ),
           GoRoute(
             path: 'report-preview',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ReportPreviewScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ReportPreviewScreen(), state),
           ),
         ],
       ),

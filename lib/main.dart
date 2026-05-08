@@ -19,7 +19,7 @@ import 'services/interfaces/interfaces.dart';
 import 'services/journal_initializer.dart';
 import 'widgets/glass_background.dart';
 import 'di/service_locator.dart';
-import 'theme/app_colors.dart';
+import 'theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 
 ///
@@ -145,55 +145,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         Locale('en', ''),
         Locale('vi', ''),
       ],
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.transparent,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: AppColors.textOnLight,
-        ),
-        dialogTheme: const DialogThemeData(backgroundColor: AppColors.surfaceLight),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(color: AppColors.textOnLight),
-          displayMedium: TextStyle(color: AppColors.textOnLight),
-          displaySmall: TextStyle(color: AppColors.textOnLight),
-          headlineLarge: TextStyle(color: AppColors.textOnLight),
-          headlineMedium: TextStyle(color: AppColors.textOnLight),
-          headlineSmall: TextStyle(color: AppColors.textOnLight),
-          titleLarge: TextStyle(color: AppColors.textOnLight),
-          titleMedium: TextStyle(color: AppColors.textOnLight),
-          titleSmall: TextStyle(color: AppColors.textOnLight),
-          bodyLarge: TextStyle(color: AppColors.textOnLight),
-          bodyMedium: TextStyle(color: AppColors.textOnLight),
-          bodySmall: TextStyle(color: AppColors.textOnLightSecondary),
-          labelLarge: TextStyle(color: AppColors.textOnLight),
-          labelMedium: TextStyle(color: AppColors.textOnLight),
-          labelSmall: TextStyle(color: AppColors.textOnLightSecondary),
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textOnLight),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.light,
-        ),
-      ),
-      darkTheme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.transparent,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: AppColors.textOnDark,
-        ),
-        dialogTheme: const DialogThemeData(backgroundColor: AppColors.surfaceDark),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.borderDark,
-          brightness: Brightness.dark,
-          primary: AppColors.primaryDark,
-          secondary: AppColors.accent,
-          surface: AppColors.surfaceDark,
-        ),
-      ),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode: settings.themeMode,
       builder: (BuildContext context, Widget? child) {
         return GlassBackground(child: child!);

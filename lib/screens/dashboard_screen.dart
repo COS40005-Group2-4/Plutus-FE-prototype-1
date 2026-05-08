@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:dashboard/dashboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -18,6 +18,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 
 /// On web, prevent mouse drag from scrolling so that pan gestures
 /// in edit mode can move widgets instead of scrolling the viewport.
@@ -152,10 +153,8 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                   '${alert.category.name}: $pct% '
                   '($sym${alert.spent.toStringAsFixed(0)} / '
                   '$sym${alert.budgeted.toStringAsFixed(0)})',
-                  style: const TextStyle(
-                    color: AppColors.warning,
-                    fontSize: 12,
-                  ),
+                  style: AppTextStyles.bodySmallStyle
+                      .copyWith(color: AppColors.warning),
                 );
               }).toList(),
             ),
@@ -212,15 +211,6 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         },
       ),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceDark.withValues(alpha: 0.3)
-            : AppColors.primary.withValues(alpha: 0.2),
-        flexibleSpace: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.transparent),
-          ),
-        ),
         automaticallyImplyLeading: true,
         title: PopupMenuButton<String>(
           onSelected: (value) async {
@@ -231,28 +221,23 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
             }
           },
           offset: const Offset(0, 40),
-          color: AppColors.menuBackground.withValues(alpha: 0.95),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Flexible(
                 child: Text(
-                  dashState.activeDashboard.name.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w300,
-                    letterSpacing: 2.0,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.accent
-                        : AppColors.textOnLight,
+                  dashState.activeDashboard.name,
+                  style: AppTextStyles.titleStyle.copyWith(
+                    color: AppColors.textPrimary(
+                        Theme.of(context).brightness),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Icon(
-                Icons.arrow_drop_down,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.accent
-                    : AppColors.textOnLight,
+                Icons.keyboard_arrow_down_rounded,
+                color: AppColors.textSecondary(
+                    Theme.of(context).brightness),
               ),
             ],
           ),
@@ -264,14 +249,16 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                 child: Row(
                   children: [
                     if (dash.id == dashState.activeDashboardId)
-                      const Icon(Icons.check, color: AppColors.primary, size: 18)
+                      Icon(Icons.check_rounded,
+                          color: AppColors.brand(
+                              Theme.of(context).brightness),
+                          size: 18)
                     else
                       const SizedBox(width: AppSpacing.lg),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         dash.name,
-                        style: const TextStyle(color: AppColors.textOnDark),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -285,11 +272,16 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                 value: '__new__',
                 child: Row(
                   children: [
-                    const Icon(Icons.add, color: AppColors.primary, size: 18),
+                    Icon(Icons.add_rounded,
+                        color: AppColors.brand(
+                            Theme.of(context).brightness),
+                        size: 18),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       l10n.newDashboard,
-                      style: const TextStyle(color: AppColors.primary),
+                      style: TextStyle(
+                          color: AppColors.brand(
+                              Theme.of(context).brightness)),
                     ),
                   ],
                 ),
@@ -301,7 +293,6 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            color: AppColors.menuBackground.withValues(alpha: 0.95),
             onSelected: (value) => _handleMenuAction(value),
             itemBuilder: (context) => [
               PopupMenuItem(
@@ -324,10 +315,14 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
               PopupMenuItem(
                 enabled: dashState.dashboards.length > 1,
                 value: 'delete',
-                child: _menuItem(Icons.delete_outline, l10n.deleteDashboard,
-                    color: dashState.dashboards.length > 1
-                        ? AppColors.error
-                        : AppColors.textOnDarkTertiary),
+                child: _menuItem(
+                  Icons.delete_outline,
+                  l10n.deleteDashboard,
+                  color: dashState.dashboards.length > 1
+                      ? AppColors.error
+                      : AppColors.textTertiary(
+                          Theme.of(context).brightness),
+                ),
               ),
             ],
           ),
@@ -400,10 +395,12 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                 scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
                                 slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                                   (context, item, x, y, editing) {
-                                    return const GlassContainer(
+                                    // Slot frames are visual aids while
+                                    // dragging/resizing only. Outside edit
+                                    // mode they distort small widgets.
+                                    if (!editing) return null;
+                                    return GlassContainer(
                                       borderRadius: AppRadius.md,
-                                      borderOpacity: 0.1,
-                                      opacity: 0.05,
                                     );
                                   },
                                 ),
@@ -428,14 +425,24 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                       const SizedBox(height: AppSpacing.lg),
                                       Text(
                                         AppLocalizations.of(context).noWidgetsSelected,
-                                        style: TextStyle(
-                                            fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              color: AppColors.textSecondary(
+                                                  Theme.of(context).brightness),
+                                            ),
                                       ),
                                       const SizedBox(height: AppSpacing.sm),
                                       Text(
                                         AppLocalizations.of(context).openMenuEnableWidgets,
-                                        style: TextStyle(
-                                            fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.textTertiary(
+                                                  Theme.of(context).brightness),
+                                            ),
                                       ),
                                     ],
                                     ),
@@ -529,12 +536,14 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     );
   }
 
-  Widget _menuItem(IconData icon, String label, {Color color = AppColors.textOnDark}) {
+  Widget _menuItem(IconData icon, String label, {Color? color}) {
+    final resolved =
+        color ?? AppColors.textPrimary(Theme.of(context).brightness);
     return Row(
       children: [
-        Icon(icon, color: color, size: 20),
+        Icon(icon, color: resolved, size: 20),
         const SizedBox(width: AppSpacing.md),
-        Text(label, style: TextStyle(color: color)),
+        Text(label, style: TextStyle(color: resolved)),
       ],
     );
   }
@@ -561,12 +570,15 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         ),
         child: Row(
           children: [
-            Icon(Icons.drag_indicator, color: AppColors.textOnDark.withValues(alpha: 0.38), size: 14),
+            Icon(Icons.drag_indicator,
+                color: AppColors.textOnDark.withValues(alpha: 0.7), size: 14),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
                 l10n.dragToMove,
-                style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.38), fontSize: 11),
+                style: AppTextStyles.labelSmallStyle.copyWith(
+                  color: AppColors.textOnDark.withValues(alpha: 0.7),
+                ),
               ),
             ),
             IconButton(
@@ -777,10 +789,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
               Expanded(
                 child: Text(
                   '${AppLocalizations.of(context).widgetPreview}: $widgetId',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
