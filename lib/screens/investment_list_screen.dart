@@ -156,7 +156,28 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
               
               // Content
               Expanded(
-                child: _buildContent(localizations, isDark),
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      TabBar(
+                        labelColor: isDark ? AppColors.textOnDark : AppColors.textOnLight,
+                        tabs: [
+                          Tab(text: localizations.investmentTabActive),
+                          Tab(text: localizations.investmentTabClosed),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _buildContent(localizations, isDark, closed: false),
+                            _buildContent(localizations, isDark, closed: true),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -170,7 +191,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
     );
   }
 
-  Widget _buildContent(AppLocalizations localizations, bool isDark) {
+  Widget _buildContent(AppLocalizations localizations, bool isDark, {required bool closed}) {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
@@ -204,7 +225,10 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
       );
     }
 
-    if (_investments == null || _investments!.isEmpty) {
+    final all = _investments ?? const <InvestmentModel>[];
+    final filtered = all.where((i) => i.isClosed == closed).toList();
+
+    if (filtered.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -216,17 +240,10 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              localizations.noInvestmentsYet,
+              closed ? localizations.investmentNoClosed : localizations.noInvestmentsYet,
               style: TextStyle(
                 fontSize: 18,
                 color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Tap + to start tracking your investments',
-              style: TextStyle(
-                color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
               ),
             ),
           ],
@@ -238,10 +255,9 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
       onRefresh: _loadData,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _investments!.length,
+        itemCount: filtered.length,
         itemBuilder: (context, index) {
-          final investment = _investments![index];
-          return _buildInvestmentCard(investment, isDark);
+          return _buildInvestmentCard(filtered[index], isDark);
         },
       ),
     );
@@ -313,11 +329,9 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
           Icons.chevron_right,
           color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
         ),
-        onTap: () {
-          // TODO: Navigate to detail screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Opening ${investment.assetName}')),
-          );
+        onTap: () async {
+          await context.push('/dashboard/investments/${investment.id}');
+          if (mounted) await _loadData();
         },
       ),
     );

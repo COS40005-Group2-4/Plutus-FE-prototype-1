@@ -13,16 +13,21 @@ enum Currency {
   eur,
 }
 
+enum InvestmentStatus { active, closed }
+
 class InvestmentModel extends Equatable {
   final String id;
   final AssetType assetType;
   final String assetName; // Symbol for stock/crypto, or custom name for "other"
   final double quantity;
-  final double purchaseValue; // Base purchase value
+  final double purchaseValue; // Original purchase value (immutable, for reporting)
+  final double totalCostBasis; // Running cost basis after partial sales (avg-cost method)
   final Currency currency;
   final DateTime purchaseDate;
   final double? currentPrice; // Current price per unit in original currency
   final List<PriceHistoryPoint>? priceHistory;
+  final InvestmentStatus status;
+  final DateTime? closedAt;
 
   const InvestmentModel({
     required this.id,
@@ -30,14 +35,69 @@ class InvestmentModel extends Equatable {
     required this.assetName,
     required this.quantity,
     required this.purchaseValue,
+    double? totalCostBasis,
     required this.currency,
     required this.purchaseDate,
     this.currentPrice,
     this.priceHistory,
-  });
+    this.status = InvestmentStatus.active,
+    this.closedAt,
+  }) : totalCostBasis = totalCostBasis ?? purchaseValue;
+
+  /// Average unit cost based on the current cost basis and quantity.
+  /// Returns 0 when quantity is zero (closed position).
+  double get averageUnitCost {
+    if (quantity <= 0) return 0;
+    return totalCostBasis / quantity;
+  }
+
+  bool get isClosed => status == InvestmentStatus.closed;
+
+  InvestmentModel copyWith({
+    String? id,
+    AssetType? assetType,
+    String? assetName,
+    double? quantity,
+    double? purchaseValue,
+    double? totalCostBasis,
+    Currency? currency,
+    DateTime? purchaseDate,
+    double? currentPrice,
+    List<PriceHistoryPoint>? priceHistory,
+    InvestmentStatus? status,
+    DateTime? closedAt,
+  }) {
+    return InvestmentModel(
+      id: id ?? this.id,
+      assetType: assetType ?? this.assetType,
+      assetName: assetName ?? this.assetName,
+      quantity: quantity ?? this.quantity,
+      purchaseValue: purchaseValue ?? this.purchaseValue,
+      totalCostBasis: totalCostBasis ?? this.totalCostBasis,
+      currency: currency ?? this.currency,
+      purchaseDate: purchaseDate ?? this.purchaseDate,
+      currentPrice: currentPrice ?? this.currentPrice,
+      priceHistory: priceHistory ?? this.priceHistory,
+      status: status ?? this.status,
+      closedAt: closedAt ?? this.closedAt,
+    );
+  }
 
   @override
-  List<Object?> get props => [id, assetType, assetName, quantity, purchaseValue, currency, purchaseDate, currentPrice, priceHistory];
+  List<Object?> get props => [
+        id,
+        assetType,
+        assetName,
+        quantity,
+        purchaseValue,
+        totalCostBasis,
+        currency,
+        purchaseDate,
+        currentPrice,
+        priceHistory,
+        status,
+        closedAt,
+      ];
 
   factory InvestmentModel.fromJson(Map<String, dynamic> json) {
     if (!json.containsKey('id') ||
@@ -50,12 +110,16 @@ class InvestmentModel extends Equatable {
       throw ArgumentError('Missing required fields in InvestmentModel JSON');
     }
 
+    final purchaseValue = double.parse(json['purchase_value'].toString());
     return InvestmentModel(
       id: json['id'] as String,
       assetType: _parseAssetType(json['asset_type'] as String),
       assetName: json['asset_name'] as String,
       quantity: double.parse(json['quantity'].toString()),
-      purchaseValue: double.parse(json['purchase_value'].toString()),
+      purchaseValue: purchaseValue,
+      totalCostBasis: json['total_cost_basis'] != null
+          ? double.parse(json['total_cost_basis'].toString())
+          : purchaseValue,
       currency: _parseCurrency(json['currency'] as String),
       purchaseDate: DateTime.fromMillisecondsSinceEpoch(
         (json['purchase_date'] as int) * 1000,
@@ -68,7 +132,23 @@ class InvestmentModel extends Equatable {
               .map((e) => PriceHistoryPoint.fromJson(e as Map<String, dynamic>))
               .toList()
           : null,
+      status: _parseStatus(json['status'] as String?),
+      closedAt: json['closed_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch((json['closed_at'] as int) * 1000)
+          : null,
     );
+  }
+
+  static InvestmentStatus _parseStatus(String? raw) {
+    switch (raw) {
+      case 'closed':
+        return InvestmentStatus.closed;
+      case 'active':
+      case null:
+        return InvestmentStatus.active;
+      default:
+        return InvestmentStatus.active;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -78,11 +158,14 @@ class InvestmentModel extends Equatable {
       'asset_name': assetName,
       'quantity': quantity,
       'purchase_value': purchaseValue,
+      'total_cost_basis': totalCostBasis,
       'currency': currency.name,
       'purchase_date': purchaseDate.millisecondsSinceEpoch ~/ 1000,
       if (currentPrice != null) 'current_price': currentPrice,
       if (priceHistory != null)
         'price_history': priceHistory!.map((e) => e.toJson()).toList(),
+      'status': status == InvestmentStatus.closed ? 'closed' : 'active',
+      if (closedAt != null) 'closed_at': closedAt!.millisecondsSinceEpoch ~/ 1000,
     };
   }
 
@@ -92,15 +175,15 @@ class InvestmentModel extends Equatable {
     return quantity * currentPrice!;
   }
 
-  /// Returns the gain/loss amount
+  /// Returns the gain/loss amount versus the running cost basis (avg-cost method).
   double getGainLoss() {
-    return getCurrentValue() - purchaseValue;
+    return getCurrentValue() - totalCostBasis;
   }
 
-  /// Returns the gain/loss percentage
+  /// Returns the gain/loss percentage versus the running cost basis.
   double getGainLossPercent() {
-    if (purchaseValue == 0) return 0;
-    return (getGainLoss() / purchaseValue) * 100;
+    if (totalCostBasis == 0) return 0;
+    return (getGainLoss() / totalCostBasis) * 100;
   }
 
   /// Returns true if investment has positive returns

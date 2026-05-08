@@ -16,7 +16,7 @@ import '../services/consent_service.dart';
 import '../services/budget_service.dart';
 import '../services/budget_notification_service.dart';
 import '../services/budget_migration_service.dart';
-import '../transaction_service.dart';
+import '../services/transaction_service.dart';
 import '../services/ai_service.dart';
 import '../services/ai_category_pipeline.dart';
 import '../services/ocr_service.dart';

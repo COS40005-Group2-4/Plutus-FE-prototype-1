@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/investment_model.dart';
+import '../models/investment_price_point.dart';
+import '../models/investment_sale.dart';
 import '../utils/date_format_utils.dart';
 import 'interfaces/i_backend_ffi_service.dart';
 import 'interfaces/i_price_api_service.dart';
@@ -161,9 +163,11 @@ class InvestmentService implements IInvestmentService {
           'asset_name': investmentWithPrices.assetName,
           'quantity': investmentWithPrices.quantity,
           'purchase_value': investmentWithPrices.purchaseValue,
+          'total_cost_basis': investmentWithPrices.totalCostBasis,
           'currency': investmentWithPrices.currency.name,
           'purchase_date': investmentWithPrices.purchaseDate.millisecondsSinceEpoch ~/ 1000,
           'current_price': investmentWithPrices.currentPrice,
+          'status': 'active',
         });
 
         // Also persist the double-entry transaction so the Go journal
@@ -370,6 +374,197 @@ class InvestmentService implements IInvestmentService {
   @override
   Future<void> markInvestmentAsSynced(String investmentId) async {
     await _dbService.markInvestmentAsSynced(investmentId);
+  }
+
+  @override
+  Future<List<InvestmentModel>> getActiveInvestments({bool forceRefresh = false}) async {
+    final all = await getInvestmentList(forceRefresh: forceRefresh);
+    return all.where((i) => !i.isClosed).toList();
+  }
+
+  @override
+  Future<List<InvestmentModel>> getClosedInvestments({bool forceRefresh = false}) async {
+    final all = await getInvestmentList(forceRefresh: forceRefresh);
+    return all.where((i) => i.isClosed).toList();
+  }
+
+  @override
+  Future<InvestmentPricePoint> addPricePoint({
+    required String investmentId,
+    required DateTime date,
+    required double price,
+    String? note,
+  }) async {
+    if (price <= 0) {
+      throw ArgumentError('Price must be positive');
+    }
+    final id = await _dbService.insertInvestmentPricePoint({
+      'investment_id': investmentId,
+      'date': date.millisecondsSinceEpoch ~/ 1000,
+      'price': price,
+      'note': note,
+    });
+    // Mirror the latest price into investments.current_price for fast read paths.
+    final latest = await _dbService.getLatestInvestmentPricePoint(investmentId);
+    if (latest != null) {
+      await _dbService.updateInvestment(investmentId, {
+        'current_price': (latest['price'] as num).toDouble(),
+      });
+    }
+    clearCache();
+    _changedController.add(null);
+    return InvestmentPricePoint(
+      id: id,
+      investmentId: investmentId,
+      date: date,
+      price: price,
+      note: note,
+    );
+  }
+
+  @override
+  Future<List<InvestmentPricePoint>> getPricePoints(String investmentId) async {
+    final rows = await _dbService.getInvestmentPricePoints(investmentId);
+    return rows.map(InvestmentPricePoint.fromMap).toList();
+  }
+
+  @override
+  Future<void> deletePricePoint(int pointId) async {
+    await _dbService.deleteInvestmentPricePoint(pointId);
+    clearCache();
+    _changedController.add(null);
+  }
+
+  @override
+  Future<List<InvestmentSale>> getSales(String investmentId) async {
+    final rows = await _dbService.getInvestmentSales(investmentId);
+    return rows.map(InvestmentSale.fromMap).toList();
+  }
+
+  @override
+  Future<RecordSaleResult> recordSale({
+    required String investmentId,
+    required double quantity,
+    required double pricePerUnit,
+    required DateTime date,
+    required String cashAccount,
+    String? notes,
+  }) async {
+    if (quantity <= 0) {
+      throw ArgumentError('Sale quantity must be positive');
+    }
+    if (pricePerUnit <= 0) {
+      throw ArgumentError('Sale price must be positive');
+    }
+    if (_currentUserId == null) {
+      throw StateError('No user logged in');
+    }
+
+    final invRow = await _dbService.getInvestmentById(investmentId);
+    if (invRow == null) {
+      throw StateError('Investment not found: $investmentId');
+    }
+    final investment = InvestmentModel.fromJson(invRow);
+
+    // Use a small epsilon so floating-point precision doesn't block legitimate
+    // full-sale flows where the user types the exact remaining quantity.
+    const qtyEpsilon = 1e-9;
+    if (quantity > investment.quantity + qtyEpsilon) {
+      throw ArgumentError(
+        'Cannot sell ${quantity.toStringAsFixed(8)}; only '
+        '${investment.quantity.toStringAsFixed(8)} held',
+      );
+    }
+
+    final avgUnitCost = investment.averageUnitCost;
+    final costBasisRelieved = quantity * avgUnitCost;
+    final proceeds = quantity * pricePerUnit;
+    final realizedGain = proceeds - costBasisRelieved;
+
+    final newQuantity = investment.quantity - quantity;
+    final newCostBasis = (investment.totalCostBasis - costBasisRelieved)
+        .clamp(0.0, double.infinity)
+        .toDouble();
+    final isFullSale = newQuantity <= qtyEpsilon;
+    final closedAtMs = isFullSale
+        ? DateTime.now().millisecondsSinceEpoch ~/ 1000
+        : null;
+
+    final currencyStr = investment.currency.name.toUpperCase();
+    // Build the double-entry transaction: cash inflow + asset outflow + realised P&L.
+    final txExternalId = 'inv_sale_${investmentId}_${date.millisecondsSinceEpoch}';
+    final txDescription = (notes != null && notes.isNotEmpty)
+        ? notes
+        : 'Sold ${investment.assetName}';
+    final txId = await _dbService.insertTransaction(_currentUserId!, {
+      'transaction_id': txExternalId,
+      'type': 'investment_sale',
+      'amount': proceeds,
+      'currency': currencyStr,
+      'description': txDescription,
+      'payee': '',
+      'date': date.toIso8601String(),
+      'postings': [
+        {
+          'account': cashAccount,
+          'amount': proceeds,
+          'commodity': currencyStr,
+        },
+        {
+          'account': 'Assets:investment:${investment.assetName}',
+          'amount': -quantity,
+          'commodity': investment.assetName,
+        },
+        {
+          'account': 'Income:RealizedGains:${investment.assetName}',
+          'amount': -realizedGain,
+          'commodity': currencyStr,
+        },
+      ],
+    });
+
+    await _dbService.insertInvestmentSale({
+      'investment_id': investmentId,
+      'transaction_id': txId,
+      'date': date.millisecondsSinceEpoch ~/ 1000,
+      'quantity': quantity,
+      'price_per_unit': pricePerUnit,
+      'cost_basis_relieved': costBasisRelieved,
+      'realized_gain': realizedGain,
+    });
+
+    final update = <String, dynamic>{
+      'quantity': isFullSale ? 0.0 : newQuantity,
+      'total_cost_basis': isFullSale ? 0.0 : newCostBasis,
+      'status': isFullSale ? 'closed' : 'active',
+      'closed_at': closedAtMs,
+    };
+    await _dbService.updateInvestment(investmentId, update);
+
+    await _rebuildJournal();
+    clearCache();
+    _changedController.add(null);
+
+    final updated = investment.copyWith(
+      quantity: isFullSale ? 0.0 : newQuantity,
+      totalCostBasis: isFullSale ? 0.0 : newCostBasis,
+      status: isFullSale ? InvestmentStatus.closed : InvestmentStatus.active,
+      closedAt: isFullSale ? DateTime.now() : null,
+    );
+
+    return RecordSaleResult(
+      sale: InvestmentSale(
+        investmentId: investmentId,
+        transactionId: txId,
+        date: date,
+        quantity: quantity,
+        pricePerUnit: pricePerUnit,
+        costBasisRelieved: costBasisRelieved,
+        realizedGain: realizedGain,
+      ),
+      updatedInvestment: updated,
+      transactionId: txExternalId,
+    );
   }
 
   /// Rebuild the Go journal from the full SQLite dataset.

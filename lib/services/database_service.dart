@@ -116,7 +116,7 @@ class DatabaseService implements IDatabaseService {
     
     return await openDatabase(
       dbPath,
-      version: 10,
+      version: 11,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -373,9 +373,12 @@ class DatabaseService implements IDatabaseService {
         asset_name TEXT NOT NULL,
         quantity REAL NOT NULL,
         purchase_value REAL NOT NULL,
+        total_cost_basis REAL NOT NULL,
         currency TEXT NOT NULL,
         purchase_date INTEGER NOT NULL,
         current_price REAL,
+        status TEXT NOT NULL DEFAULT 'active',
+        closed_at INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         is_synced INTEGER DEFAULT 0,
@@ -383,6 +386,39 @@ class DatabaseService implements IDatabaseService {
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id)');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS investment_price_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        investment_id TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        price REAL NOT NULL,
+        note TEXT,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (investment_id) REFERENCES investments(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_price_points_investment_date ON investment_price_points(investment_id, date)',
+    );
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS investment_sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        investment_id TEXT NOT NULL,
+        transaction_id INTEGER,
+        date INTEGER NOT NULL,
+        quantity REAL NOT NULL,
+        price_per_unit REAL NOT NULL,
+        cost_basis_relieved REAL NOT NULL,
+        realized_gain REAL NOT NULL,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (investment_id) REFERENCES investments(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sales_investment_date ON investment_sales(investment_id, date)',
+    );
 
     if (kDebugMode) {
       debugPrint('Database tables created successfully');
@@ -676,6 +712,59 @@ class DatabaseService implements IDatabaseService {
           debugPrint('avatar_blob column may already exist: $e');
         }
       }
+    }
+
+    // Upgrade from version 10 to 11: Investment price points, sales, and lifecycle
+    if (oldVersion < 11) {
+      Future<void> tryAlter(String sql) async {
+        try {
+          await db.execute(sql);
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('investments column may already exist: $e');
+          }
+        }
+      }
+
+      await tryAlter("ALTER TABLE investments ADD COLUMN total_cost_basis REAL");
+      await tryAlter("ALTER TABLE investments ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+      await tryAlter("ALTER TABLE investments ADD COLUMN closed_at INTEGER");
+      await db.execute(
+        'UPDATE investments SET total_cost_basis = purchase_value WHERE total_cost_basis IS NULL',
+      );
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS investment_price_points (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          investment_id TEXT NOT NULL,
+          date INTEGER NOT NULL,
+          price REAL NOT NULL,
+          note TEXT,
+          created_at INTEGER NOT NULL,
+          FOREIGN KEY (investment_id) REFERENCES investments(id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_price_points_investment_date ON investment_price_points(investment_id, date)',
+      );
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS investment_sales (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          investment_id TEXT NOT NULL,
+          transaction_id INTEGER,
+          date INTEGER NOT NULL,
+          quantity REAL NOT NULL,
+          price_per_unit REAL NOT NULL,
+          cost_basis_relieved REAL NOT NULL,
+          realized_gain REAL NOT NULL,
+          created_at INTEGER NOT NULL,
+          FOREIGN KEY (investment_id) REFERENCES investments(id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sales_investment_date ON investment_sales(investment_id, date)',
+      );
     }
   }
 
@@ -1239,6 +1328,82 @@ class DatabaseService implements IDatabaseService {
       'investments',
       where: 'user_id = ? AND is_synced = 0',
       whereArgs: [userId],
+    );
+  }
+
+  // Investment price points
+  @override
+  Future<int> insertInvestmentPricePoint(Map<String, dynamic> point) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return await db.insert('investment_price_points', {
+      'investment_id': point['investment_id'],
+      'date': point['date'],
+      'price': point['price'],
+      'note': point['note'],
+      'created_at': now,
+    });
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getInvestmentPricePoints(String investmentId) async {
+    final db = await database;
+    return await db.query(
+      'investment_price_points',
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+      orderBy: 'date ASC',
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getLatestInvestmentPricePoint(String investmentId) async {
+    final db = await database;
+    final rows = await db.query(
+      'investment_price_points',
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+      orderBy: 'date DESC',
+      limit: 1,
+    );
+    return rows.isNotEmpty ? rows.first : null;
+  }
+
+  @override
+  Future<void> deleteInvestmentPricePoint(int pointId) async {
+    final db = await database;
+    await db.delete(
+      'investment_price_points',
+      where: 'id = ?',
+      whereArgs: [pointId],
+    );
+  }
+
+  // Investment sales
+  @override
+  Future<int> insertInvestmentSale(Map<String, dynamic> sale) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return await db.insert('investment_sales', {
+      'investment_id': sale['investment_id'],
+      'transaction_id': sale['transaction_id'],
+      'date': sale['date'],
+      'quantity': sale['quantity'],
+      'price_per_unit': sale['price_per_unit'],
+      'cost_basis_relieved': sale['cost_basis_relieved'],
+      'realized_gain': sale['realized_gain'],
+      'created_at': now,
+    });
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getInvestmentSales(String investmentId) async {
+    final db = await database;
+    return await db.query(
+      'investment_sales',
+      where: 'investment_id = ?',
+      whereArgs: [investmentId],
+      orderBy: 'date ASC',
     );
   }
 

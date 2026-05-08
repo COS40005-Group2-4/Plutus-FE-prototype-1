@@ -8,12 +8,13 @@ import '../screens/user_selection_screen.dart';
 import '../screens/main_navigation_page.dart';
 import '../screens/settings_screen.dart';
 import '../screens/investment_list_screen.dart';
+import '../screens/investment_detail_screen.dart';
 import '../screens/backup_history_screen.dart';
 import '../screens/insights_screen.dart';
 import '../screens/report_config_screen.dart';
 import '../screens/report_preview_screen.dart';
-import '../transaction_history_page.dart';
-import '../import_transaction_page.dart';
+import '../screens/transaction_history_page.dart';
+import '../screens/import_transaction_page.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -147,6 +148,16 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
             builder: (BuildContext context, GoRouterState state) {
               return const InvestmentListScreen();
             },
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (BuildContext context, GoRouterState state) {
+                  return InvestmentDetailScreen(
+                    investmentId: state.pathParameters['id']!,
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: 'backup-history',

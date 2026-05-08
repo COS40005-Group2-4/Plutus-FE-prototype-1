@@ -56,6 +56,16 @@ abstract class IDatabaseService {
   Future<void> markInvestmentAsSynced(String investmentId);
   Future<List<Map<String, dynamic>>> getUnsyncedInvestments(int userId);
 
+  // Investment price points
+  Future<int> insertInvestmentPricePoint(Map<String, dynamic> point);
+  Future<List<Map<String, dynamic>>> getInvestmentPricePoints(String investmentId);
+  Future<Map<String, dynamic>?> getLatestInvestmentPricePoint(String investmentId);
+  Future<void> deleteInvestmentPricePoint(int pointId);
+
+  // Investment sales
+  Future<int> insertInvestmentSale(Map<String, dynamic> sale);
+  Future<List<Map<String, dynamic>>> getInvestmentSales(String investmentId);
+
   // Data consent
   Future<void> setUserDataConsent(int userId, bool consent);
 

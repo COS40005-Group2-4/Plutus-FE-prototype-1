@@ -815,6 +815,45 @@ class AppLocalizations {
       'export_end_of_report': 'End of Report',
       'export_page_of': 'Page \$page of \$total',
       'export_showing_first': 'showing first',
+
+      // Investment tracking — manual price points, sales, closed positions
+      'investment_tab_active': 'Active',
+      'investment_tab_closed': 'Closed',
+      'investment_no_closed': 'No closed positions yet.',
+      'investment_update_value': 'Update value',
+      'investment_update_value_subtitle': 'Record what this asset is worth right now.',
+      'investment_value_date': 'Date',
+      'investment_value_price': 'Price per unit',
+      'investment_value_note': 'Note (optional)',
+      'investment_value_saved': 'Value updated',
+      'investment_sell': 'Sell',
+      'investment_sell_title': 'Sell investment',
+      'investment_sell_quantity': 'Quantity to sell',
+      'investment_sell_price_per_unit': 'Sale price per unit',
+      'investment_sell_date': 'Sale date',
+      'investment_sell_destination': 'Cash account',
+      'investment_sell_notes': 'Notes (optional)',
+      'investment_sell_proceeds': 'Proceeds',
+      'investment_sell_realized_gain': 'Realised gain',
+      'investment_sell_realized_loss': 'Realised loss',
+      'investment_sell_remaining': 'Remaining quantity',
+      'investment_sell_oversell': 'You only hold {qty} of this asset.',
+      'investment_sell_confirm': 'Confirm sale',
+      'investment_sale_recorded': 'Sale recorded',
+      'investment_view_transaction': 'View transaction',
+      'investment_metric_roi': 'ROI',
+      'investment_metric_xirr': 'XIRR',
+      'investment_metric_held_under_year': 'Held under 1 year — annualised IRR not shown',
+      'investment_metric_irr_unavailable': 'IRR unavailable',
+      'investment_avg_unit_cost': 'Avg unit cost',
+      'investment_current_value': 'Current value',
+      'investment_quantity_held': 'Quantity held',
+      'investment_price_history_title': 'Manual valuations',
+      'investment_price_history_empty': 'No manual valuations yet. Add one to track this asset over time.',
+      'investment_sales_title': 'Sales history',
+      'investment_sales_empty': 'No sales yet.',
+      'investment_closed_on': 'Closed on {date}',
+      'investment_select_cash_account': 'Select cash account',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -1619,6 +1658,45 @@ class AppLocalizations {
       'export_end_of_report': 'Kết thúc báo cáo',
       'export_page_of': 'Trang \$page / \$total',
       'export_showing_first': 'hiển thị',
+
+      // Investment tracking — manual price points, sales, closed positions
+      'investment_tab_active': 'Đang nắm giữ',
+      'investment_tab_closed': 'Đã đóng',
+      'investment_no_closed': 'Chưa có vị thế đã đóng nào.',
+      'investment_update_value': 'Cập nhật giá trị',
+      'investment_update_value_subtitle': 'Ghi nhận giá trị hiện tại của tài sản này.',
+      'investment_value_date': 'Ngày',
+      'investment_value_price': 'Giá mỗi đơn vị',
+      'investment_value_note': 'Ghi chú (tùy chọn)',
+      'investment_value_saved': 'Đã cập nhật giá trị',
+      'investment_sell': 'Bán',
+      'investment_sell_title': 'Bán tài sản',
+      'investment_sell_quantity': 'Số lượng cần bán',
+      'investment_sell_price_per_unit': 'Giá bán mỗi đơn vị',
+      'investment_sell_date': 'Ngày bán',
+      'investment_sell_destination': 'Tài khoản tiền',
+      'investment_sell_notes': 'Ghi chú (tùy chọn)',
+      'investment_sell_proceeds': 'Số tiền nhận',
+      'investment_sell_realized_gain': 'Lãi đã ghi nhận',
+      'investment_sell_realized_loss': 'Lỗ đã ghi nhận',
+      'investment_sell_remaining': 'Số lượng còn lại',
+      'investment_sell_oversell': 'Bạn chỉ nắm giữ {qty} của tài sản này.',
+      'investment_sell_confirm': 'Xác nhận bán',
+      'investment_sale_recorded': 'Đã ghi nhận giao dịch bán',
+      'investment_view_transaction': 'Xem giao dịch',
+      'investment_metric_roi': 'ROI',
+      'investment_metric_xirr': 'XIRR',
+      'investment_metric_held_under_year': 'Nắm giữ dưới 1 năm — chưa hiển thị IRR năm hóa',
+      'investment_metric_irr_unavailable': 'Không tính được IRR',
+      'investment_avg_unit_cost': 'Giá vốn TB',
+      'investment_current_value': 'Giá trị hiện tại',
+      'investment_quantity_held': 'Số lượng nắm giữ',
+      'investment_price_history_title': 'Định giá thủ công',
+      'investment_price_history_empty': 'Chưa có định giá thủ công nào. Thêm một mục để theo dõi tài sản theo thời gian.',
+      'investment_sales_title': 'Lịch sử bán',
+      'investment_sales_empty': 'Chưa có giao dịch bán.',
+      'investment_closed_on': 'Đã đóng vào {date}',
+      'investment_select_cash_account': 'Chọn tài khoản tiền',
     },
   };
 
@@ -2137,6 +2215,47 @@ class AppLocalizations {
   String get insightsPeriodCustom => translate('insights_period_custom');
   String get insightsPeriodCustomActive => translate('insights_period_custom_active');
   String get insightsFontSizeLabel => translate('insights_font_size_label');
+
+  // Investment tracking
+  String get investmentTabActive => translate('investment_tab_active');
+  String get investmentTabClosed => translate('investment_tab_closed');
+  String get investmentNoClosed => translate('investment_no_closed');
+  String get investmentUpdateValue => translate('investment_update_value');
+  String get investmentUpdateValueSubtitle => translate('investment_update_value_subtitle');
+  String get investmentValueDate => translate('investment_value_date');
+  String get investmentValuePrice => translate('investment_value_price');
+  String get investmentValueNote => translate('investment_value_note');
+  String get investmentValueSaved => translate('investment_value_saved');
+  String get investmentSell => translate('investment_sell');
+  String get investmentSellTitle => translate('investment_sell_title');
+  String get investmentSellQuantity => translate('investment_sell_quantity');
+  String get investmentSellPricePerUnit => translate('investment_sell_price_per_unit');
+  String get investmentSellDate => translate('investment_sell_date');
+  String get investmentSellDestination => translate('investment_sell_destination');
+  String get investmentSellNotes => translate('investment_sell_notes');
+  String get investmentSellProceeds => translate('investment_sell_proceeds');
+  String get investmentSellRealizedGain => translate('investment_sell_realized_gain');
+  String get investmentSellRealizedLoss => translate('investment_sell_realized_loss');
+  String get investmentSellRemaining => translate('investment_sell_remaining');
+  String investmentSellOversell(String qty) =>
+      translate('investment_sell_oversell').replaceAll('{qty}', qty);
+  String get investmentSellConfirm => translate('investment_sell_confirm');
+  String get investmentSaleRecorded => translate('investment_sale_recorded');
+  String get investmentViewTransaction => translate('investment_view_transaction');
+  String get investmentMetricRoi => translate('investment_metric_roi');
+  String get investmentMetricXirr => translate('investment_metric_xirr');
+  String get investmentMetricHeldUnderYear => translate('investment_metric_held_under_year');
+  String get investmentMetricIrrUnavailable => translate('investment_metric_irr_unavailable');
+  String get investmentAvgUnitCost => translate('investment_avg_unit_cost');
+  String get investmentCurrentValue => translate('investment_current_value');
+  String get investmentQuantityHeld => translate('investment_quantity_held');
+  String get investmentPriceHistoryTitle => translate('investment_price_history_title');
+  String get investmentPriceHistoryEmpty => translate('investment_price_history_empty');
+  String get investmentSalesTitle => translate('investment_sales_title');
+  String get investmentSalesEmpty => translate('investment_sales_empty');
+  String investmentClosedOn(String date) =>
+      translate('investment_closed_on').replaceAll('{date}', date);
+  String get investmentSelectCashAccount => translate('investment_select_cash_account');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
