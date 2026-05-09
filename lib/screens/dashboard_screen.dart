@@ -234,8 +234,8 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     final l10n = AppLocalizations.of(context);
 
     final dashState = ref.watch(dashboardNotifierProvider);
-    final budgetAsync = ref.watch(budgetNotifierProvider);
-    final alerts = budgetAsync.valueOrNull?.alerts ?? [];
+    final alerts = ref.watch(budgetNotifierProvider
+        .select((async) => async.valueOrNull?.alerts ?? const <BudgetAlert>[]));
 
     return Scaffold(
       drawer: SidebarMenu(
