@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'animated_theme_scope.dart';
 
 /// App-wide background. Despite the legacy "Glass" name, this paints the
 /// canvas + a soft brand-tinted wash for ambient depth — magenta on light,
@@ -11,14 +12,23 @@ class GlassBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Brightness brightness = Theme.of(context).brightness;
-    final bool isDark = brightness == Brightness.dark;
-    final Color base = AppColors.background(brightness);
-    final Color brandWash = AppColors.brand(brightness)
-        .withValues(alpha: isDark ? 0.18 : 0.10);
-    final Color secondaryWash = isDark
-        ? AppColors.primaryStrongDark.withValues(alpha: 0.14)
-        : AppColors.accent.withValues(alpha: 0.12);
+    // When AnimatedThemeScope is mid-tween, lerp the brightness-keyed colors
+    // ourselves so the canvas doesn't snap at t=0.5. Otherwise this is
+    // equivalent to reading Theme.of(context).brightness directly.
+    final BrightnessBlend? blend = BrightnessBlend.maybeOf(context);
+    final Brightness brightness =
+        blend?.to ?? Theme.of(context).brightness;
+
+    Color paletteFor(Color Function(Brightness) keyed) =>
+        blend?.lerpColor(keyed) ?? keyed(brightness);
+
+    final Color base = paletteFor(AppColors.background);
+    final Color brandWash = paletteFor((Brightness b) => AppColors.brand(b)
+        .withValues(alpha: b == Brightness.dark ? 0.18 : 0.10));
+    final Color secondaryWash = paletteFor((Brightness b) =>
+        b == Brightness.dark
+            ? AppColors.primaryStrongDark.withValues(alpha: 0.14)
+            : AppColors.accent.withValues(alpha: 0.12));
 
     return Stack(
       children: <Widget>[

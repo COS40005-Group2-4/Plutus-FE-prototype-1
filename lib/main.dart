@@ -17,6 +17,7 @@ import 'providers/dashboard_data_provider.dart';
 import 'router/app_router.dart';
 import 'services/interfaces/interfaces.dart';
 import 'services/journal_initializer.dart';
+import 'widgets/animated_theme_scope.dart';
 import 'widgets/glass_background.dart';
 import 'di/service_locator.dart';
 import 'theme/app_theme.dart';
@@ -148,8 +149,13 @@ class _MyAppState extends ConsumerState<MyApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: settings.themeMode,
+      // Disable MaterialApp's built-in AnimatedTheme so AnimatedThemeScope
+      // owns the tween — otherwise the two animations stack and interfere.
+      themeAnimationDuration: Duration.zero,
       builder: (BuildContext context, Widget? child) {
-        return GlassBackground(child: child!);
+        return AnimatedThemeScope(
+          child: GlassBackground(child: child!),
+        );
       },
     );
   }
