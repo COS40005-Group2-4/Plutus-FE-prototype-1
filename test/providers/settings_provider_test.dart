@@ -91,7 +91,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       bool notified = false;
-      container.listen(settingsNotifierProvider, (_, __) {
+      container.listen(settingsNotifierProvider, (_, _) {
         notified = true;
       });
 

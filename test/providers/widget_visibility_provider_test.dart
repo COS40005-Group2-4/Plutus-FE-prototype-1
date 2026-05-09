@@ -54,7 +54,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       bool notified = false;
-      container.listen(widgetVisibilityNotifierProvider, (_, __) {
+      container.listen(widgetVisibilityNotifierProvider, (_, _) {
         notified = true;
       });
 
