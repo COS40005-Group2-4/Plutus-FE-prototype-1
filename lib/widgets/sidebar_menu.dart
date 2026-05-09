@@ -67,23 +67,24 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             _buildSearchBar(context, isDark, l10n),
             // ── Widget Categories ──
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.xs,
                 ),
-                children: [
-                  for (final cat in WidgetCategory.values)
-                    _buildCategory(
-                      context,
-                      cat,
-                      grouped[cat] ?? [],
-                      dashNotifier,
-                      instanceCounts,
-                      isDark,
-                      l10n,
-                    ),
-                ],
+                itemCount: WidgetCategory.values.length,
+                itemBuilder: (context, index) {
+                  final cat = WidgetCategory.values[index];
+                  return _buildCategory(
+                    context,
+                    cat,
+                    grouped[cat] ?? [],
+                    dashNotifier,
+                    instanceCounts,
+                    isDark,
+                    l10n,
+                  );
+                },
               ),
             ),
             // ── Footer ──
