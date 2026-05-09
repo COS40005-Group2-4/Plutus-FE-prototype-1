@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -237,10 +238,10 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: GlassContainer(
-        padding: const EdgeInsets.all(16),
-        borderRadius: 16,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        borderRadius: AppRadius.lg,
         opacity: 0.1,
         child: Column(
           children: [

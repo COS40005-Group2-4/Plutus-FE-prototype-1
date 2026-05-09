@@ -8,6 +8,7 @@ import '../router/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -70,8 +71,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildLoginUI(BuildContext context, AuthNotifier authNotifier) {
+    final brightness = Theme.of(context).brightness;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 400;
+    final brand = AppColors.brand(brightness);
 
     return SingleChildScrollView(
       child: Center(
@@ -79,96 +82,102 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           constraints: const BoxConstraints(maxWidth: 420),
           child: GlassContainer(
             margin: EdgeInsets.all(isSmall ? AppSpacing.lg : AppSpacing.xl),
-            padding: EdgeInsets.all(isSmall ? AppSpacing.xl : AppSpacing.xxxl),
-            borderRadius: AppRadius.xl,
-            opacity: 0.1,
-            blur: 15,
+            padding: EdgeInsets.all(isSmall ? AppSpacing.xxl : AppSpacing.xxxl),
+            borderRadius: AppRadius.surface,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            Icon(
-              Icons.account_balance_wallet,
-              size: isSmall ? 72 : 100,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              'Welcome to Plutus',
-              style: TextStyle(
-                fontSize: isSmall ? 24 : 32,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            // Show error message if present
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.15),
-                    border: Border.all(color: AppColors.error),
-                    borderRadius: AppRadius.borderSm,
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 5,
-                    style: TextStyle(
-                      color: AppColors.error,
-                      fontSize: 14,
+                Center(
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: AppColors.brandSoft(brightness),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                    ),
+                    child: Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 40,
+                      color: brand,
                     ),
                   ),
                 ),
-              ),
-            // Use sign-in button widget on web, regular button on other platforms
-            if (kIsWeb)
-              authNotifier.authService.getSignInButton() ?? const SizedBox.shrink()
-            else
-              ElevatedButton.icon(
-                onPressed: () async {
-                  setState(() => _errorMessage = null);
-                  final success = await authNotifier.signIn();
-                  if (success && context.mounted) {
-                    context.go(AppRoutes.dashboard);
-                  } else if (context.mounted) {
-                    setState(() => _errorMessage = 'Sign-in failed. Please check your Google account and try again.');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Sign-in failed. Please try again.'),
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.login),
-                label: const Text('Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xxxl,
-                    vertical: AppSpacing.lg,
+                const SizedBox(height: AppSpacing.xxl),
+                Text(
+                  'Welcome to Plutus',
+                  style: AppTextStyles.headingStyle.copyWith(
+                    color: AppColors.textPrimary(brightness),
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            const SizedBox(height: AppSpacing.xl),
-            TextButton(
-              onPressed: () async {
-                // Navigate to user selection where they can create guest account
-                if (context.mounted) {
-                  context.go(AppRoutes.userSelection);
-                }
-              },
-              child: Text(
-                'Continue as Guest',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textOnLightTertiary,
-                  decoration: TextDecoration.underline,
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Track spending, budgets, and investments in one place.',
+                  style: AppTextStyles.bodyStyle.copyWith(
+                    color: AppColors.textSecondary(brightness),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ),
+                const SizedBox(height: AppSpacing.xxxl),
+                if (_errorMessage != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 20, color: AppColors.error),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 5,
+                            style: AppTextStyles.bodyStyle
+                                .copyWith(color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                if (kIsWeb)
+                  authNotifier.authService.getSignInButton() ??
+                      const SizedBox.shrink()
+                else
+                  FilledButton.icon(
+                    onPressed: () async {
+                      setState(() => _errorMessage = null);
+                      final success = await authNotifier.signIn();
+                      if (success && context.mounted) {
+                        context.go(AppRoutes.dashboard);
+                      } else if (context.mounted) {
+                        setState(() => _errorMessage =
+                            'Sign-in failed. Please check your Google account and try again.');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Sign-in failed. Please try again.'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.login, size: 20),
+                    label: const Text('Sign in with Google'),
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                TextButton(
+                  onPressed: () async {
+                    if (context.mounted) {
+                      context.go(AppRoutes.userSelection);
+                    }
+                  },
+                  child: const Text('Continue as Guest'),
+                ),
               ],
             ),
           ),

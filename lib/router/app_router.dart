@@ -15,6 +15,7 @@ import '../screens/report_config_screen.dart';
 import '../screens/report_preview_screen.dart';
 import '../screens/transaction_history_page.dart';
 import '../screens/import_transaction_page.dart';
+import '../theme/app_elevation.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -48,6 +49,120 @@ class _RouterNotifier extends ChangeNotifier {
 }
 
 // ---------------------------------------------------------------------------
+// Fade-through page transition for all routes
+// ---------------------------------------------------------------------------
+
+// Outgoing finishes within the first 40% of the duration; incoming starts at
+// 40% and resolves over the last 60%. Pages are never both at meaningful
+// opacity at the same instant — at t = 0.4 both sit at 0 and the
+// GlassBackground reads as a single continuous surface.
+const Interval _kIncomingForward =
+    Interval(0.4, 1.0, curve: AppMotion.emphasized);
+const Interval _kIncomingReverse =
+    Interval(0.6, 1.0, curve: AppMotion.standard);
+const Interval _kOutgoingForward =
+    Interval(0.0, 0.4, curve: AppMotion.emphasized);
+const Interval _kOutgoingReverse =
+    Interval(0.0, 0.6, curve: AppMotion.standard);
+
+const double _kIncomingScaleStart = 1.04;
+const double _kOutgoingScaleEnd = 0.96;
+
+CustomTransitionPage<T> _fadePage<T>(
+    Widget child, GoRouterState state) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: AppMotion.medium,
+    reverseTransitionDuration: AppMotion.medium,
+    transitionsBuilder: _stagedFadeThrough,
+  );
+}
+
+Widget _stagedFadeThrough(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  if (MediaQuery.disableAnimationsOf(context)) {
+    return child;
+  }
+  return _StagedFade(
+    primary: animation,
+    secondary: secondaryAnimation,
+    child: child,
+  );
+}
+
+class _StagedFade extends StatelessWidget {
+  final Animation<double> primary;
+  final Animation<double> secondary;
+  final Widget child;
+
+  const _StagedFade({
+    required this.primary,
+    required this.secondary,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[primary, secondary]),
+      child: child,
+      builder: (BuildContext context, Widget? child) {
+        // Self layer: page is the one being pushed in (forward) or popped out
+        // (reverse). The role flips with direction.
+        final bool selfIsIncoming =
+            primary.status != AnimationStatus.reverse;
+        final Interval selfInterval =
+            selfIsIncoming ? _kIncomingForward : _kIncomingReverse;
+        final double selfT = selfInterval.transform(primary.value);
+
+        // Cover layer: page is the one being covered (forward) or revealed
+        // (reverse). Role also flips with direction.
+        final bool coverIsOutgoing =
+            secondary.status != AnimationStatus.reverse;
+        final Interval coverInterval =
+            coverIsOutgoing ? _kOutgoingForward : _kOutgoingReverse;
+        final double coverT = coverInterval.transform(secondary.value);
+
+        final double selfOpacity = selfT;
+        final double coverOpacity = coverIsOutgoing ? 1.0 - coverT : 1.0 - coverT;
+        final double opacity = (selfOpacity * coverOpacity).clamp(0.0, 1.0);
+
+        // Self scale: incoming slides 1.04 → 1.0; outgoing (pop) shrinks
+        // 1.0 → 0.96 over the first 40% of the reverse.
+        final double selfScale = selfIsIncoming
+            ? _kIncomingScaleStart + (1.0 - _kIncomingScaleStart) * selfT
+            : _kOutgoingScaleEnd + (1.0 - _kOutgoingScaleEnd) * selfT;
+
+        // Cover scale: covered shrinks 1.0 → 0.96; revealed re-enters
+        // 1.04 → 1.0 over the last 60% of the reverse.
+        final double coverScale = coverIsOutgoing
+            ? 1.0 + (_kOutgoingScaleEnd - 1.0) * coverT
+            : 1.0 + (_kIncomingScaleStart - 1.0) * coverT;
+
+        final double scale = selfScale * coverScale;
+
+        return IgnorePointer(
+          ignoring: opacity < 0.5,
+          child: Opacity(
+            opacity: opacity,
+            child: Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Auth page paths (used in redirect logic)
 // ---------------------------------------------------------------------------
 
@@ -72,19 +187,15 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
       final String currentPath = state.matchedLocation;
       final bool onAuthPage = _authPaths.contains(currentPath);
 
-      // Still loading — stay on current page (or splash).
       if (authState is AuthLoading) {
         return null;
       }
 
-      // Unauthenticated or error — redirect to user selection unless already
-      // on an auth page.
       if (authState is AuthUnauthenticated || authState is AuthError) {
         if (onAuthPage) return null;
         return AppRoutes.userSelection;
       }
 
-      // Authenticated — redirect away from auth pages to dashboard.
       if (authState is AuthAuthenticated && onAuthPage) {
         return AppRoutes.dashboard;
       }
@@ -92,96 +203,79 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
       return null;
     },
     routes: [
-      // Splash
       GoRoute(
         path: AppRoutes.splash,
-        builder: (BuildContext context, GoRouterState state) {
-          return const Scaffold(
+        pageBuilder: (context, state) => _fadePage(
+          const Scaffold(
             body: Center(child: CircularProgressIndicator()),
-          );
-        },
+          ),
+          state,
+        ),
       ),
-
-      // User selection
       GoRoute(
         path: AppRoutes.userSelection,
-        builder: (BuildContext context, GoRouterState state) {
-          return const UserSelectionScreen();
-        },
+        pageBuilder: (context, state) =>
+            _fadePage(const UserSelectionScreen(), state),
       ),
-
-      // Login
       GoRoute(
         path: AppRoutes.login,
-        builder: (BuildContext context, GoRouterState state) {
-          return const LoginScreen();
-        },
+        pageBuilder: (context, state) => _fadePage(const LoginScreen(), state),
       ),
-
-      // Dashboard shell with sub-routes
       GoRoute(
         path: AppRoutes.dashboard,
-        builder: (BuildContext context, GoRouterState state) {
-          return const MainNavigationPage();
-        },
+        pageBuilder: (context, state) =>
+            _fadePage(const MainNavigationPage(), state),
         routes: [
           GoRoute(
             path: 'history',
-            builder: (BuildContext context, GoRouterState state) {
-              return const TransactionHistoryPage();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const TransactionHistoryPage(), state),
           ),
           GoRoute(
             path: 'import',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ImportTransactionPage();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ImportTransactionPage(), state),
           ),
           GoRoute(
             path: 'settings',
-            builder: (BuildContext context, GoRouterState state) {
-              return const SettingsScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const SettingsScreen(), state),
           ),
           GoRoute(
             path: 'investments',
-            builder: (BuildContext context, GoRouterState state) {
-              return const InvestmentListScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const InvestmentListScreen(), state),
             routes: [
               GoRoute(
                 path: ':id',
-                builder: (BuildContext context, GoRouterState state) {
-                  return InvestmentDetailScreen(
+                pageBuilder: (context, state) => _fadePage(
+                  InvestmentDetailScreen(
                     investmentId: state.pathParameters['id']!,
-                  );
-                },
+                  ),
+                  state,
+                ),
               ),
             ],
           ),
           GoRoute(
             path: 'backup-history',
-            builder: (BuildContext context, GoRouterState state) {
-              return const BackupHistoryScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const BackupHistoryScreen(), state),
           ),
           GoRoute(
             path: 'insights',
-            builder: (BuildContext context, GoRouterState state) {
-              return const InsightsScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const InsightsScreen(), state),
           ),
           GoRoute(
             path: 'report-config',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ReportConfigScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ReportConfigScreen(), state),
           ),
           GoRoute(
             path: 'report-preview',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ReportPreviewScreen();
-            },
+            pageBuilder: (context, state) =>
+                _fadePage(const ReportPreviewScreen(), state),
           ),
         ],
       ),

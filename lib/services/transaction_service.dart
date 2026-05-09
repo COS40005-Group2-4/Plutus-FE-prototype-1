@@ -73,65 +73,6 @@ class TransactionService implements ITransactionService {
   /// Get the last cached transactions without waiting for async
   @override
   List<Transaction> getLastCachedTransactions() => _lastTransactions;
-  
-  // Helper to flatten transaction with postings into flat structure for database
-  Map<String, dynamic> _flattenTransaction(Map<String, dynamic> tx) {
-    // Extract date
-    String dateStr;
-    if (tx['date'] is int) {
-      dateStr = DateTime.fromMillisecondsSinceEpoch((tx['date'] as int) * 1000).toIso8601String();
-    } else if (tx['date'] is String) {
-      dateStr = tx['date'] as String;
-    } else {
-      dateStr = DateTime.now().toIso8601String();
-    }
-    
-    // Extract postings if available
-    String account = 'Assets:Cash';
-    String category = 'Expenses:Other';
-    double amount = 0.0;
-    String currency = 'VND';
-    String type = 'expense';
-    
-    if (tx['postings'] != null && tx['postings'] is List && (tx['postings'] as List).isNotEmpty) {
-      final postings = tx['postings'] as List;
-      final firstPosting = postings[0] as Map<String, dynamic>;
-      final secondPosting = postings.length > 1 ? postings[1] as Map<String, dynamic> : null;
-      
-      account = firstPosting['account'] as String? ?? account;
-      currency = firstPosting['commodity'] as String? ?? currency;
-      final firstAmount = (firstPosting['amount'] as num?)?.toDouble() ?? 0.0;
-      
-      if (secondPosting != null) {
-        category = secondPosting['account'] as String? ?? category;
-        amount = (secondPosting['amount'] as num?)?.toDouble().abs() ?? firstAmount.abs();
-      } else {
-        amount = firstAmount.abs();
-      }
-      
-      // Determine type based on first posting amount
-      type = firstAmount < 0 ? 'expense' : 'income';
-    } else if (tx['amount'] != null) {
-      // Already flat structure
-      amount = (tx['amount'] as num?)?.toDouble().abs() ?? 0.0;
-      account = tx['account'] as String? ?? account;
-      category = tx['category'] as String? ?? category;
-      currency = tx['currency'] as String? ?? currency;
-      type = tx['type'] as String? ?? type;
-    }
-    
-    return {
-      'transaction_id': tx['id'] ?? 'tx_${DateTime.now().millisecondsSinceEpoch}',
-      'type': type,
-      'amount': amount,
-      'currency': currency,
-      'category': category,
-      'description': tx['description'] as String? ?? '',
-      'payee': tx['payee'] as String? ?? '',
-      'date': dateStr,
-      'account': account,
-    };
-  }
 
   @override
   Future<List<Transaction>> getTransactions() async {

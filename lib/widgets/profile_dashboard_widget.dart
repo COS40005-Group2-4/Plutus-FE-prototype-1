@@ -16,26 +16,30 @@ class ProfileDashboardWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final currentUser = authState is AuthAuthenticated ? authState.user : null;
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.profileAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
 
     if (currentUser == null) {
       return GlassContainer(
-        color: AppColors.profileAccent,
+        color: accent,
         opacity: 0.2,
-        borderRadius: AppRadius.lg,
+        borderRadius: AppRadius.card,
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: const Center(
+        child: Center(
           child: Text(
             'No user logged in',
-            style: TextStyle(color: AppColors.textOnDark, fontSize: 14),
+            style: TextStyle(color: onAccent, fontSize: 14),
           ),
         ),
       );
     }
 
     return GlassContainer(
-      color: AppColors.profileAccent,
+      color: accent,
       opacity: 0.2,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,8 +48,8 @@ class ProfileDashboardWidget extends ConsumerWidget {
             children: [
               Text(
                 AppLocalizations.of(context).translate('widget_label_profile'),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: onAccent,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -56,7 +60,7 @@ class ProfileDashboardWidget extends ConsumerWidget {
                 child: Icon(
                   Icons.help_outline,
                   size: 14,
-                  color: AppColors.textTertiary(Theme.of(context).brightness),
+                  color: onAccentTertiary,
                 ),
               ),
             ],

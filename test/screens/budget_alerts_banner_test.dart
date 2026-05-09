@@ -2,25 +2,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Budget alerts banner logic', () {
+    // Routing the booleans through a parameter prevents the analyzer
+    // from constant-folding the `&&` and emitting dead_code warnings.
+    bool shouldShow({required bool alertsNonEmpty, required bool dismissed}) =>
+        alertsNonEmpty && !dismissed;
+
     test('banner shown when alerts non-empty and not dismissed', () {
-      const alertsNonEmpty = true;
-      const dismissed = false;
-      final showBanner = alertsNonEmpty && !dismissed;
-      expect(showBanner, isTrue);
+      expect(shouldShow(alertsNonEmpty: true, dismissed: false), isTrue);
     });
 
     test('banner hidden when dismissed', () {
-      const alertsNonEmpty = true;
-      const dismissed = true;
-      final showBanner = alertsNonEmpty && !dismissed;
-      expect(showBanner, isFalse);
+      expect(shouldShow(alertsNonEmpty: true, dismissed: true), isFalse);
     });
 
     test('banner hidden when no alerts', () {
-      const alertsNonEmpty = false;
-      const dismissed = false;
-      final showBanner = alertsNonEmpty && !dismissed;
-      expect(showBanner, isFalse);
+      expect(shouldShow(alertsNonEmpty: false, dismissed: false), isFalse);
     });
 
     test('alert text uses currency symbol not hardcoded dollar', () {

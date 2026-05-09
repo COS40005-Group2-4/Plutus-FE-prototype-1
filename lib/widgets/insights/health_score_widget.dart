@@ -71,7 +71,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
       onTap: () => Navigator.pushNamed(context, '/insights'),
       child: GlassContainer(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.lg,
+        borderRadius: AppRadius.card,
         opacity: 0.08,
         child: Column(
           children: [

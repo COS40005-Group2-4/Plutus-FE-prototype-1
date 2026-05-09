@@ -14,7 +14,7 @@ class ReportImportWidget extends StatelessWidget {
     return GlassContainer(
       color: AppColors.warning,
       opacity: 0.2,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: LayoutBuilder(
         builder: (context, constraints) {

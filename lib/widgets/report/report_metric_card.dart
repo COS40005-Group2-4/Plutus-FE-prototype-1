@@ -24,7 +24,7 @@ class ReportMetricCard extends StatelessWidget {
     return GlassContainer(
       color: Colors.white,
       opacity: 0.05,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,

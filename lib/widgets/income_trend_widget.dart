@@ -40,20 +40,30 @@ class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.historyAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-          color: AppColors.historyAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
               Row(
                 children: [
-                  const Icon(Icons.trending_up, color: Colors.white, size: 18),
+                  Icon(Icons.trending_up, color: onAccent, size: 18),
                   const SizedBox(width: AppSpacing.sm),
-                  const Text(
+                  Text(
                     'Income Trend',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: onAccent, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Tooltip(
@@ -72,11 +82,11 @@ class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
                   stream: _transactionService.transactionStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      return Center(child: CircularProgressIndicator(color: onAccent));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No income data', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      return Center(
+                        child: Text('No income data', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
                       );
                     }
                     return _IncomeTrendContent(
@@ -212,19 +222,27 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.historyAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     if (_isLoading) {
-      return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+      return Center(
+          child: CircularProgressIndicator(color: onAccent));
     }
 
     if (_incomeSpots.length < 2) {
-      return const Center(
+      return Center(
         child: Text('Not enough income data',
-            style: TextStyle(color: Colors.white70, fontSize: 12)),
+            style: TextStyle(color: onAccentSecondary, fontSize: 12)),
       );
     }
-
-    final brightness = Theme.of(context).brightness;
 
     // Y-axis ceiling: max of income or expense, with 20% headroom
     final rawMax = [..._incomeSpots, ..._expenseSpots]
@@ -258,8 +276,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Net this month',
-                    style: TextStyle(color: Colors.white38, fontSize: 9)),
+                Text('Net this month',
+                    style: TextStyle(color: onAccentTertiary, fontSize: 9)),
                 Text(netStr,
                     style: TextStyle(
                         color: netColor,
@@ -270,8 +288,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text('vs last month',
-                    style: TextStyle(color: Colors.white38, fontSize: 9)),
+                Text('vs last month',
+                    style: TextStyle(color: onAccentTertiary, fontSize: 9)),
                 Text(momStr,
                     style: TextStyle(
                         color: momColor,
@@ -331,8 +349,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       final prev = idx > 0 ? _displayKeys[idx - 1] : null;
                       return Text(
                         PlutusChartStyle.monthAxisLabel(_displayKeys[idx], prev),
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 9),
+                        style: TextStyle(
+                            color: onAccentSecondary, fontSize: 9),
                       );
                     },
                   ),
@@ -345,8 +363,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       if (value == 0) return const SizedBox.shrink();
                       return Text(
                         PlutusChartStyle.formatCompactCurrency(value),
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 8),
+                        style: TextStyle(
+                            color: onAccentSecondary, fontSize: 8),
                       );
                     },
                   ),
@@ -359,14 +377,14 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 horizontalLines: [
                   HorizontalLine(
                     y: _avgIncome,
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: dividerOnAccent,
                     strokeWidth: 1,
                     dashArray: [5, 5],
                     label: HorizontalLineLabel(
                       show: true,
                       alignment: Alignment.topRight,
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 8),
+                      style: TextStyle(
+                          color: onAccentTertiary, fontSize: 8),
                       labelResolver: (_) => 'avg income',
                     ),
                   ),
@@ -387,7 +405,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                         radius: 3,
                         color: AppColors.positive(brightness),
                         strokeWidth: 1,
-                        strokeColor: Colors.white,
+                        strokeColor: onAccent,
                       );
                     },
                   ),

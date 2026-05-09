@@ -41,10 +41,20 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.netWorthAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-          color: AppColors.netWorthAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -53,9 +63,9 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Net Worth Trend',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: onAccent, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Tooltip(
@@ -83,11 +93,11 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
                   stream: _transactionService.transactionStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      return Center(child: CircularProgressIndicator(color: onAccent));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No transaction data', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      return Center(
+                        child: Text('No transaction data', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
                       );
                     }
                     return _NetWorthContent(
@@ -105,18 +115,23 @@ class _NetWorthTrendWidgetState extends ConsumerState<NetWorthTrendWidget> {
   }
 
   Widget _buildToggle(String label, int mode) {
+    final brightness = Theme.of(context).brightness;
+    final onAccent =
+        AppColors.onAccentPrimary(AppColors.netWorthAccent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(AppColors.netWorthAccent, brightness);
     return GestureDetector(
       onTap: () => setState(() => _viewMode = mode),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: _viewMode == mode ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
+          color: _viewMode == mode ? onAccentTertiary : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: onAccent,
             fontSize: 12,
             fontWeight: _viewMode == mode ? FontWeight.bold : FontWeight.normal,
           ),
@@ -242,19 +257,28 @@ class _NetWorthContentState extends State<_NetWorthContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.netWorthAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return Center(child: CircularProgressIndicator(color: onAccent));
     }
 
     if (_spots.length < 2) {
-      return const Center(
-        child: Text('Not enough data for trend', style: TextStyle(color: Colors.white70, fontSize: 12)),
+      return Center(
+        child: Text('Not enough data for trend', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
       );
     }
 
-    final brightness = Theme.of(context).brightness;
     final trendUp = _spots.last.y >= _spots.first.y;
-    final lineColor = trendUp ? AppColors.positive(brightness) : AppColors.negative(brightness);
+    final lineColor = trendUp
+        ? AppColors.positive(brightness)
+        : AppColors.negative(brightness);
     final maxY = _spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     final minY = _spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
     final range = maxY - minY;
@@ -264,13 +288,13 @@ class _NetWorthContentState extends State<_NetWorthContent> {
         // Current net worth
         GlassContainer(
           padding: const EdgeInsets.all(AppSpacing.md),
-          color: Colors.white,
+          color: onAccent,
           opacity: 0.1,
           borderRadius: 8,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Net Worth:', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text('Net Worth:', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
               Text(
                 '${widget.settings.currency.symbol}${PlutusChartStyle.formatCompactCurrency(_currentNetWorth)}',
                 style: TextStyle(
@@ -315,7 +339,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                       if (_labels.length > 8 && idx % 2 != 0) return const SizedBox.shrink();
                       return Text(
                         _labels[idx],
-                        style: const TextStyle(color: Colors.white54, fontSize: 9),
+                        style: TextStyle(color: onAccentSecondary, fontSize: 9),
                       );
                     },
                   ),
@@ -327,7 +351,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                     getTitlesWidget: (value, meta) {
                       return Text(
                         PlutusChartStyle.formatCompactCurrency(value),
-                        style: const TextStyle(color: Colors.white54, fontSize: 8),
+                        style: TextStyle(color: onAccentSecondary, fontSize: 8),
                       );
                     },
                   ),
@@ -350,7 +374,7 @@ class _NetWorthContentState extends State<_NetWorthContent> {
                         radius: 3,
                         color: lineColor,
                         strokeWidth: 1,
-                        strokeColor: Colors.white,
+                        strokeColor: onAccent,
                       );
                     },
                   ),

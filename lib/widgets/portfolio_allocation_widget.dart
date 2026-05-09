@@ -66,10 +66,20 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final accent = AppColors.primary;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-      color: AppColors.primary,
+      color: accent,
       opacity: 0.2,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
@@ -78,9 +88,9 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
             children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'Portfolio Allocation',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: onAccent, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         Tooltip(
@@ -94,7 +104,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                       ],
                     ),
               IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white70, size: 18),
+                icon: Icon(Icons.refresh, color: onAccentSecondary, size: 18),
                 onPressed: _loadData,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -109,13 +119,17 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
   }
 
   Widget _buildContent() {
+    final brightness = Theme.of(context).brightness;
+    final accent = AppColors.primary;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return Center(child: CircularProgressIndicator(color: onAccent));
     }
 
     if (_investments == null || _investments!.isEmpty) {
-      return const Center(
-        child: Text('No investments yet', style: TextStyle(color: Colors.white70, fontSize: 12)),
+      return Center(
+        child: Text('No investments yet', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
       );
     }
 
@@ -128,8 +142,8 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
 
     final totalValue = allocation.values.fold(0.0, (sum, v) => sum + v);
     if (totalValue == 0) {
-      return const Center(
-        child: Text('No portfolio value', style: TextStyle(color: Colors.white70, fontSize: 12)),
+      return Center(
+        child: Text('No portfolio value', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
       );
     }
 
@@ -172,7 +186,7 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                             value: entries[i].value,
                             title: isTouched ? '${(entries[i].value / totalValue * 100).toStringAsFixed(0)}%' : '',
                             radius: isTouched ? 38 : 30,
-                            titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                            titleStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: onAccent),
                           );
                         }),
                       ),
@@ -183,9 +197,9 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                       children: [
                         Text(
                           PlutusChartStyle.formatCompactCurrency(totalValue),
-                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: onAccent, fontSize: 14, fontWeight: FontWeight.bold),
                         ),
-                        const Text('Total', style: TextStyle(color: Colors.white54, fontSize: 9)),
+                        Text('Total', style: TextStyle(color: onAccentSecondary, fontSize: 9)),
                       ],
                     ),
                   ],
@@ -209,14 +223,14 @@ class _PortfolioAllocationWidgetState extends ConsumerState<PortfolioAllocationW
                       Expanded(
                         child: Text(
                           _assetLabels[entry.key] ?? 'Other',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: TextStyle(color: onAccentSecondary, fontSize: 12),
                         ),
                       ),
-                      Text('$pct%', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                      Text('$pct%', style: TextStyle(color: onAccentSecondary, fontSize: 11)),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         PlutusChartStyle.formatCompactCurrency(entry.value),
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: onAccent, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

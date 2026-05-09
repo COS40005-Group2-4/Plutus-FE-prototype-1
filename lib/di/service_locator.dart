@@ -68,7 +68,6 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<JournalInitializer>(
     () => JournalInitializer(
       ffiService: sl<IBackendFfiService>(),
-      dbService: sl<IDatabaseService>(),
       transactionService: sl<ITransactionService>(),
       budgetService: sl<IBudgetService>(),
     ),

@@ -23,7 +23,7 @@ class _ReportExportWidgetState extends State<ReportExportWidget> {
     return GlassContainer(
       color: AppColors.error,
       opacity: 0.2,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: LayoutBuilder(
         builder: (context, constraints) {

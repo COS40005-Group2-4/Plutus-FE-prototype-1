@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'animated_theme_scope.dart';
 
+/// App-wide background. Despite the legacy "Glass" name, this paints the
+/// canvas + a soft brand-tinted wash for ambient depth — magenta on light,
+/// violet on dark.
 class GlassBackground extends StatelessWidget {
   final Widget child;
 
@@ -8,106 +12,62 @@ class GlassBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // When AnimatedThemeScope is mid-tween, lerp the brightness-keyed colors
+    // ourselves so the canvas doesn't snap at t=0.5. Otherwise this is
+    // equivalent to reading Theme.of(context).brightness directly.
+    final BrightnessBlend? blend = BrightnessBlend.maybeOf(context);
+    final Brightness brightness =
+        blend?.to ?? Theme.of(context).brightness;
+
+    Color paletteFor(Color Function(Brightness) keyed) =>
+        blend?.lerpColor(keyed) ?? keyed(brightness);
+
+    final Color base = paletteFor(AppColors.background);
+    final Color brandWash = paletteFor((Brightness b) => AppColors.brand(b)
+        .withValues(alpha: b == Brightness.dark ? 0.18 : 0.10));
+    final Color secondaryWash = paletteFor((Brightness b) =>
+        b == Brightness.dark
+            ? AppColors.primaryStrongDark.withValues(alpha: 0.14)
+            : AppColors.accent.withValues(alpha: 0.12));
 
     return Stack(
-      children: [
-        // Base gradient
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark
-                  ? [
-                      AppColors.backgroundDark,
-                      AppColors.surfaceMidDark,
-                      AppColors.surfaceDark,
-                    ]
-                  : [
-                      AppColors.backgroundLightStart,
-                      AppColors.backgroundLightEnd,
-                    ],
+      children: <Widget>[
+        Positioned.fill(child: ColoredBox(color: base)),
+        // Top-right brand wash (magenta/violet).
+        Positioned(
+          top: -260,
+          right: -180,
+          child: IgnorePointer(
+            child: Container(
+              width: 480,
+              height: 480,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: <Color>[brandWash, Colors.transparent],
+                ),
+              ),
             ),
           ),
         ),
-        // Subtle decorative elements for depth
-        if (isDark) ...[
-          Positioned(
-            top: -150,
-            right: -100,
+        // Bottom-left secondary wash (sunshine on light, deep violet on dark)
+        // for warmth without competing with widget cards.
+        Positioned(
+          bottom: -220,
+          left: -160,
+          child: IgnorePointer(
             child: Container(
-              width: 350,
-              height: 350,
+              width: 420,
+              height: 420,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    AppColors.borderDark.withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
+                  colors: <Color>[secondaryWash, Colors.transparent],
                 ),
               ),
             ),
           ),
-          Positioned(
-            bottom: -100,
-            left: -80,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.surfaceElevatedDark.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ] else ...[
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.purpleAccent.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purpleAccent.withValues(alpha: 0.3),
-                    blurRadius: 100,
-                    spreadRadius: 20,
-                  )
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.lightBlue.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.lightBlue.withValues(alpha: 0.3),
-                    blurRadius: 100,
-                    spreadRadius: 20,
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-        // Content
+        ),
         SafeArea(child: child),
       ],
     );

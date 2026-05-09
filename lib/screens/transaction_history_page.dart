@@ -5,6 +5,8 @@ import '../widgets/glass_container.dart';
 import '../widgets/export_dialog.dart';
 import '../widgets/export_preview_dialog.dart';
 import '../widgets/transaction_detail_dialog.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
@@ -171,9 +173,12 @@ class TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage>
                             );
                           },
                           child: GlassContainer(
-                            borderRadius: 10,
+                            borderRadius: AppRadius.md,
                             opacity: 0.2,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
                             child: Row(
                               children: [
                                 // Type icon

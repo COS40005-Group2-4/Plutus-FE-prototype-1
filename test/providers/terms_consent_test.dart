@@ -31,34 +31,26 @@ void main() {
   });
 
   group('handleLocalTcResult contract', () {
-    test('agreed=true records consent and marks shown', () {
+    // The bool flag flows through a parameter so the analyzer cannot
+    // constant-fold the `if (agreed)` branch and emit dead_code.
+    ({bool consentRecorded, bool shownMarked}) handle({required bool agreed}) {
       bool consentRecorded = false;
-      bool tcShownMarked = false;
+      bool shownMarked = false;
+      if (agreed) consentRecorded = true;
+      shownMarked = true;
+      return (consentRecorded: consentRecorded, shownMarked: shownMarked);
+    }
 
-      void recordConsent() => consentRecorded = true;
-      void markShown() => tcShownMarked = true;
-
-      const agreed = true;
-      if (agreed) recordConsent();
-      markShown();
-
-      expect(consentRecorded, isTrue);
-      expect(tcShownMarked, isTrue);
+    test('agreed=true records consent and marks shown', () {
+      final r = handle(agreed: true);
+      expect(r.consentRecorded, isTrue);
+      expect(r.shownMarked, isTrue);
     });
 
     test('agreed=false skips consent but still marks shown', () {
-      bool consentRecorded = false;
-      bool tcShownMarked = false;
-
-      void recordConsent() => consentRecorded = true;
-      void markShown() => tcShownMarked = true;
-
-      const agreed = false;
-      if (agreed) recordConsent();
-      markShown();
-
-      expect(consentRecorded, isFalse);
-      expect(tcShownMarked, isTrue);
+      final r = handle(agreed: false);
+      expect(r.consentRecorded, isFalse);
+      expect(r.shownMarked, isTrue);
     });
   });
 }

@@ -6,6 +6,7 @@ import '../models/backup_models.dart';
 import '../providers/backup_notifier.dart';
 import '../widgets/glass_container.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 
 class BackupHistoryScreen extends ConsumerStatefulWidget {
   const BackupHistoryScreen({super.key});
@@ -115,9 +116,9 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: GlassContainer(
-                  borderRadius: 12,
+                  borderRadius: AppRadius.md,
                   opacity: 0.1,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: InkWell(
                     onTap: () => _confirmRestore(context, version),
                     child: Row(

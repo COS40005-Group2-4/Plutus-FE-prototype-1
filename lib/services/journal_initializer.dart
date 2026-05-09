@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../utils/date_format_utils.dart';
 import 'interfaces/i_backend_ffi_service.dart';
-import 'interfaces/i_database_service.dart';
 import 'interfaces/i_transaction_service.dart';
 import 'interfaces/i_budget_service.dart';
 
@@ -12,7 +11,6 @@ import 'interfaces/i_budget_service.dart';
 /// Call [initialize] after user login to set up the Go computation engine.
 class JournalInitializer {
   final IBackendFfiService _ffiService;
-  final IDatabaseService _dbService;
   final ITransactionService _transactionService;
   final IBudgetService _budgetService;
 
@@ -21,11 +19,9 @@ class JournalInitializer {
 
   JournalInitializer({
     required IBackendFfiService ffiService,
-    required IDatabaseService dbService,
     required ITransactionService transactionService,
     required IBudgetService budgetService,
   })  : _ffiService = ffiService,
-        _dbService = dbService,
         _transactionService = transactionService,
         _budgetService = budgetService;
 
