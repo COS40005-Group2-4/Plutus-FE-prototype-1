@@ -45,7 +45,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: const Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (provider) {
         final budget = provider.activeBudget;
 

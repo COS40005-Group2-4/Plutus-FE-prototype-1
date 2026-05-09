@@ -167,7 +167,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
     final asyncBudget = ref.watch(budgetNotifierProvider);
     return asyncBudget.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (provider) {
         // No active budget — summary widget handles empty state
         if (provider.activeBudget == null) {
