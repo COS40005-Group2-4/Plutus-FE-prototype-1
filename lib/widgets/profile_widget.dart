@@ -829,7 +829,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             ],
           ),
           child: ClipOval(
-            child: _buildAvatarImage(profile),
+            child: _buildAvatarImage(profile, size: size),
           ),
         ),
         Positioned(
@@ -856,22 +856,32 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     );
   }
 
-  Widget _buildAvatarImage(Profile profile) {
+  Widget _buildAvatarImage(Profile profile, {required double size}) {
+    // Cap decoded resolution at ~3× the rendered logical size so memory
+    // stays small on retina displays without visible quality loss.
+    final cacheDim = (size * 3).round();
+
     // On web, load from DB blob since dart:io File is unavailable
     if (kIsWeb) {
       if (_avatarBytes != null) {
         return Image.memory(
           _avatarBytes!,
           fit: BoxFit.cover,
+          cacheWidth: cacheDim,
+          cacheHeight: cacheDim,
           errorBuilder: (context, error, stackTrace) => Image.asset(
             widget.defaultAvatarAsset,
             fit: BoxFit.cover,
+            cacheWidth: cacheDim,
+            cacheHeight: cacheDim,
           ),
         );
       }
       return Image.asset(
         widget.defaultAvatarAsset,
         fit: BoxFit.cover,
+        cacheWidth: cacheDim,
+        cacheHeight: cacheDim,
       );
     }
 
@@ -880,15 +890,21 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
       return Image.file(
         File(profile.avatarPath!),
         fit: BoxFit.cover,
+        cacheWidth: cacheDim,
+        cacheHeight: cacheDim,
         errorBuilder: (context, error, stackTrace) => Image.asset(
           widget.defaultAvatarAsset,
           fit: BoxFit.cover,
+          cacheWidth: cacheDim,
+          cacheHeight: cacheDim,
         ),
       );
     }
     return Image.asset(
       widget.defaultAvatarAsset,
       fit: BoxFit.cover,
+      cacheWidth: cacheDim,
+      cacheHeight: cacheDim,
     );
   }
 
