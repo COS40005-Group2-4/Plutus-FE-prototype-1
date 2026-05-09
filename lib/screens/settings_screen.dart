@@ -192,11 +192,11 @@ class SettingsScreen extends ConsumerWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: GlassContainer(
-                  borderRadius: 12,
+                  borderRadius: AppRadius.md,
                   color: AppColors.primary,
                   opacity: 0.1,
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -710,9 +710,9 @@ class SettingsScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       child: GlassContainer(
-        borderRadius: 12,
+        borderRadius: AppRadius.md,
         opacity: 0.1,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

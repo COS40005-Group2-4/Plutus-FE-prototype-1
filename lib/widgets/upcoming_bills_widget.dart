@@ -45,10 +45,20 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.billsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-          color: AppColors.billsAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -59,8 +69,8 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
                   stream: _billService.billStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                      return Center(
+                        child: CircularProgressIndicator(color: onAccent),
                       );
                     }
 
@@ -68,7 +78,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
                       return Center(
                         child: Text(
                           AppLocalizations.of(context).noBillsUpcoming,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: onAccent, fontSize: 14),
                         ),
                       );
                     }
@@ -91,6 +101,13 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final onAccent =
+        AppColors.onAccentPrimary(AppColors.billsAccent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(AppColors.billsAccent, brightness);
+    onAccent.toString();
+    onAccentTertiary.toString();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -98,8 +115,8 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
           children: [
             Text(
               AppLocalizations.of(context).upcomingBills,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: onAccent,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -118,7 +135,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
         Row(
           children: [
             PopupMenuButton<int>(
-              icon: const Icon(Icons.filter_list, color: Colors.white, size: 20),
+              icon: Icon(Icons.filter_list, color: onAccent, size: 20),
               onSelected: (value) {
                 setState(() => _daysFilter = value);
               },
@@ -129,7 +146,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
               ],
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+              icon: Icon(Icons.edit, color: onAccent, size: 20),
               onPressed: () => _showBillEditor(context),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -289,9 +306,19 @@ class _BillsContentState extends State<_BillsContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.billsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+      return Center(
+        child: CircularProgressIndicator(color: onAccent),
       );
     }
 
@@ -323,6 +350,12 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildBillsBarChart() {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.billsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
     final now = DateTime.now();
     // Group bills by week number within the filter window
     final Map<int, double> weeklyTotals = {};
@@ -356,7 +389,7 @@ class _BillsContentState extends State<_BillsContent> {
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   return BarTooltipItem(
                     '${labels[group.x]}\n${PlutusChartStyle.formatCompactCurrency(rod.toY)}',
-                    const TextStyle(color: Colors.white, fontSize: 10),
+                    TextStyle(color: onAccent, fontSize: 10),
                   );
                 },
               ),
@@ -372,7 +405,7 @@ class _BillsContentState extends State<_BillsContent> {
                     if (!weeklyTotals.containsKey(idx)) return const SizedBox.shrink();
                     return Text(
                       labels[idx],
-                      style: const TextStyle(color: Colors.white54, fontSize: 9),
+                      style: TextStyle(color: onAccentSecondary, fontSize: 9),
                     );
                   },
                 ),
@@ -407,13 +440,19 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildSummary(double totalDue) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.billsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
     final format = widget.settings.currency == AppCurrency.vnd
         ? NumberFormat("#,##0", "en_US")
         : NumberFormat("#,##0.00", "en_US");
     
     return GlassContainer(
       padding: const EdgeInsets.all(12),
-      color: Colors.white,
+      color: onAccent,
       opacity: 0.1,
       borderRadius: 8,
       child: Row(
@@ -421,12 +460,12 @@ class _BillsContentState extends State<_BillsContent> {
         children: [
           Text(
             '${AppLocalizations.of(context).totalDue} (${widget.daysFilter}d):',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(color: onAccentSecondary, fontSize: 12),
           ),
           Text(
             '${widget.settings.currency.symbol}${format.format(totalDue)}',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: onAccent,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -437,6 +476,14 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildBillItem(BuildContext context, Bill bill, double convertedAmount, bool isAnimating) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.billsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     final now = DateTime.now();
     final daysUntilDue = bill.dueDate.difference(now).inDays;
     
@@ -459,7 +506,7 @@ class _BillsContentState extends State<_BillsContent> {
         padding: const EdgeInsets.only(bottom: 8),
         child: GlassContainer(
           padding: const EdgeInsets.all(AppSpacing.md),
-          color: Colors.white,
+          color: onAccent,
           opacity: 0.05,
           borderRadius: 8,
           child: Row(
@@ -502,8 +549,8 @@ class _BillsContentState extends State<_BillsContent> {
                   children: [
                     Text(
                       bill.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: onAccent,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -514,8 +561,8 @@ class _BillsContentState extends State<_BillsContent> {
                         // Show converted amount with settings currency
                         Text(
                           '${widget.settings.currency.symbol}${_formatAmount(convertedAmount, widget.settings.currency)}',
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: onAccentSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -524,8 +571,8 @@ class _BillsContentState extends State<_BillsContent> {
                           const SizedBox(width: AppSpacing.xs),
                           Text(
                             '(${billCurrency.symbol}${_formatAmount(bill.amount, billCurrency)})',
-                            style: const TextStyle(
-                              color: Colors.white54,
+                            style: TextStyle(
+                              color: onAccentSecondary,
                               fontSize: 10,
                             ),
                           ),
@@ -574,7 +621,7 @@ class _BillsContentState extends State<_BillsContent> {
                   onPressed: () => _handlePayBill(bill),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.success.withValues(alpha:0.8),
-                    foregroundColor: Colors.white,
+                    foregroundColor: onAccent,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,

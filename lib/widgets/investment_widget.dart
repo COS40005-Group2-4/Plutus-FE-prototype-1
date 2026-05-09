@@ -103,7 +103,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
       onTap: () => _showInvestmentListDialog(),
       borderRadius: AppRadius.borderLg,
       child: GlassContainer(
-        borderRadius: AppRadius.lg,
+        borderRadius: AppRadius.card,
         blur: 10.0,
         borderOpacity: isDark ? 0.3 : 0.2,
         opacity: isDark ? 0.3 : 0.1,

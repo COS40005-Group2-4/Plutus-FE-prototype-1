@@ -12,10 +12,14 @@ import '../providers/dashboard_notifier.dart';
 import '../providers/budget_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/budget_notification_service.dart';
+import '../widgets/dashboard/edit_mode_banner.dart';
+import '../widgets/dashboard/empty_slot_tile.dart';
+import '../widgets/dashboard/widget_edit_chrome.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_elevation.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -82,6 +86,44 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
   int _controllerVersion = 0;
   int? _lastUserId;
   bool _alertsDismissed = false;
+
+  /// Mirror of [_itemController.isEditing]. The package's
+  /// [DashboardItemController] only attaches its `_layoutController` once
+  /// the [Dashboard] widget has mounted, so reading the controller's
+  /// `isEditing` getter during the first build (e.g. in the AppBar or
+  /// banner) throws. We track edit state ourselves and only push it to
+  /// the controller after the toggle press, by which point the grid is
+  /// safely mounted.
+  bool _isEditing = false;
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditing = !_isEditing;
+    });
+    // Sync to the controller so the grid library enables drag/swap/resize.
+    // Safe here because the user can only tap the toggle after the
+    // Dashboard widget has rendered at least once.
+    _itemController.isEditing = _isEditing;
+  }
+
+  /// Banner "Add" action — opens the sidebar so the user can pick a widget
+  /// to drop onto the layout. Reuses the existing drawer flow.
+  void _openSidebarForAdd() {
+    Scaffold.maybeOf(context)?.openDrawer();
+  }
+
+  /// Banner "Undo" action — reverts to the last saved layout snapshot.
+  Future<void> _undoLayoutChanges() async {
+    final notifier = ref.read(dashboardNotifierProvider.notifier);
+    _lastVisibilityKey = [];
+    await notifier.resetToSaved();
+    if (!mounted) return;
+    final dashState = ref.read(dashboardNotifierProvider);
+    _recreateStorageAndController(
+      dashState.activeDashboardId,
+      notifier.getVisibleWidgets(),
+    );
+  }
 
   @override
   void initState() {
@@ -327,11 +369,14 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
             ],
           ),
           IconButton(
-            onPressed: () {
-              _itemController.isEditing = !_itemController.isEditing;
-              setState(() {});
-            },
-            icon: const Icon(Icons.edit),
+            tooltip: _isEditing ? l10n.editModeDone : l10n.editLayout,
+            onPressed: _toggleEditMode,
+            icon: Icon(
+              _isEditing ? Icons.check_rounded : Icons.tune_rounded,
+              color: _isEditing
+                  ? AppColors.editAccent(Theme.of(context).brightness)
+                  : null,
+            ),
           ),
         ],
       ),
@@ -340,6 +385,29 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
           children: [
             if (alerts.isNotEmpty && !_alertsDismissed)
               _buildAlertsBanner(alerts),
+            // Edit-mode banner: slides + fades into view when editing.
+            AnimatedSwitcher(
+              duration: AppMotion.medium,
+              switchInCurve: AppMotion.emphasized,
+              switchOutCurve: AppMotion.standard,
+              transitionBuilder: (child, animation) {
+                final slide = Tween<Offset>(
+                  begin: const Offset(0, -0.2),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: slide, child: child),
+                );
+              },
+              child: _isEditing
+                  ? EditModeBanner(
+                      key: const ValueKey('edit-mode-banner'),
+                      onDone: _toggleEditMode,
+                      onUndo: _undoLayoutChanges,
+                    )
+                  : const SizedBox.shrink(key: ValueKey('idle-banner')),
+            ),
             Expanded(
               child: Builder(
                 builder: (context) {
@@ -395,12 +463,37 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                 scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
                                 slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
                                   (context, item, x, y, editing) {
-                                    // Slot frames are visual aids while
-                                    // dragging/resizing only. Outside edit
-                                    // mode they distort small widgets.
-                                    if (!editing) return null;
-                                    return GlassContainer(
-                                      borderRadius: AppRadius.md,
+                                    final brightness =
+                                        Theme.of(context).brightness;
+                                    // Idle: hairline outline so empty slots
+                                    // still read as structure.
+                                    // Editing: brand-tinted snap target —
+                                    // dashed outline + soft brand fill.
+                                    if (!editing) {
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.md),
+                                          border: Border.all(
+                                            color: AppColors.borderLine(
+                                                brightness),
+                                            width: 1,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.editSnapGlow(
+                                            brightness),
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.md),
+                                        border: Border.all(
+                                          color: AppColors.editOutline(
+                                              brightness),
+                                          width: 1,
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -414,40 +507,69 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                 errorPlaceholder: (e, s) {
                                   return Text("$e , $s");
                                 },
-                                emptyPlaceholder: Center(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                      Icon(Icons.dashboard_customize,
-                                          size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      Text(
-                                        AppLocalizations.of(context).noWidgetsSelected,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              color: AppColors.textSecondary(
-                                                  Theme.of(context).brightness),
+                                emptyPlaceholder: _isEditing
+                                    ? Center(
+                                        child: ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 280,
+                                            maxHeight: 220,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(
+                                                AppSpacing.lg),
+                                            child: EmptySlotTile(
+                                              onTap: _openSidebarForAdd,
                                             ),
+                                          ),
+                                        ),
+                                      )
+                                    : Center(
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.dashboard_customize,
+                                                  size: 48,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.5)),
+                                              const SizedBox(
+                                                  height: AppSpacing.lg),
+                                              Text(
+                                                AppLocalizations.of(context)
+                                                    .noWidgetsSelected,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      color: AppColors
+                                                          .textSecondary(
+                                                              Theme.of(context)
+                                                                  .brightness),
+                                                    ),
+                                              ),
+                                              const SizedBox(
+                                                  height: AppSpacing.sm),
+                                              Text(
+                                                AppLocalizations.of(context)
+                                                    .openMenuEnableWidgets,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: AppColors
+                                                          .textTertiary(
+                                                              Theme.of(context)
+                                                                  .brightness),
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                      const SizedBox(height: AppSpacing.sm),
-                                      Text(
-                                        AppLocalizations.of(context).openMenuEnableWidgets,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: AppColors.textTertiary(
-                                                  Theme.of(context).brightness),
-                                            ),
-                                      ),
-                                    ],
-                                    ),
-                                  ),
-                                ),
                                 itemStyle: ItemStyle(
                                   color: Colors.transparent,
                                   clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -462,11 +584,12 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                   paintBackgroundLines: true,
                                   autoScroll: true,
                                   resizeCursorSide: 15,
-                                  curve: Curves.easeOut,
-                                  duration: const Duration(milliseconds: 150),
+                                  curve: AppMotion.emphasized,
+                                  duration: AppMotion.medium,
                                   swapEnabled: true,
                                   backgroundStyle: EditModeBackgroundStyle(
-                                    lineColor: AppColors.textOnDark.withValues(alpha: 0.24),
+                                    lineColor: AppColors.gridLine(
+                                        Theme.of(context).brightness),
                                     lineWidth: 1,
                                     dualLineHorizontal: false,
                                     dualLineVertical: false,
@@ -474,54 +597,42 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                                 ),
                                 itemBuilder: (ColoredDashboardItem item) {
                                   var layout = item.layoutData;
+                                  final isEditing = _isEditing;
 
                                   if (item.data != null) {
-                                    return Stack(
-                                      children: [
-                                        DataWidget(item: item),
-                                        if (_itemController.isEditing)
-                                          _buildEditModeBar(item),
-                                      ],
+                                    return _wrapWithEditChrome(
+                                      isEditing: isEditing,
+                                      item: item,
+                                      child: DataWidget(item: item),
                                     );
                                   }
 
                                   return LayoutBuilder(
                                     builder: (_, c) {
-                                      return Stack(
-                                        children: [
-                                          GlassContainer(
-                                            padding: const EdgeInsets.all(AppSpacing.md),
-                                            color: item.color,
-                                            opacity: 0.3,
-                                            borderRadius: AppRadius.md,
-                                            child: SizedBox(
-                                              width: double.infinity,
-                                              height: double.infinity,
-                                              child: Text(
-                                                "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
-                                                style: const TextStyle(
-                                                  color: AppColors.textOnDark,
-                                                ),
-                                              ),
+                                      final brightness =
+                                          Theme.of(context).brightness;
+                                      final placeholder = GlassContainer(
+                                        padding: const EdgeInsets.all(
+                                            AppSpacing.md),
+                                        color: item.color,
+                                        opacity: 0.3,
+                                        borderRadius: AppRadius.md,
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          child: Text(
+                                            "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
+                                            style: TextStyle(
+                                              color: AppColors.textPrimary(
+                                                  brightness),
                                             ),
                                           ),
-                                          if (_itemController.isEditing)
-                                            Positioned(
-                                              right: AppSpacing.xs,
-                                              top: AppSpacing.xs,
-                                              child: InkResponse(
-                                                radius: 20,
-                                                onTap: () {
-                                                  _itemController.delete(item.identifier);
-                                                },
-                                                child: const Icon(
-                                                  Icons.close,
-                                                  color: AppColors.textOnDark,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
+                                        ),
+                                      );
+                                      return _wrapWithEditChrome(
+                                        isEditing: isEditing,
+                                        item: item,
+                                        child: placeholder,
                                       );
                                     },
                                   );
@@ -548,58 +659,51 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     );
   }
 
-  Widget _buildEditModeBar(ColoredDashboardItem item) {
-    final l10n = AppLocalizations.of(context);
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0x26EF4444), // edit-mode red overlay at 15% alpha
-          border: Border(
-            bottom: BorderSide(
-              color: Color(0x4DEF4444), // edit-mode red border at 30% alpha
-              width: 1,
-            ),
-          ),
+  /// Wraps a dashboard item with the edit-mode chrome (dashed outline,
+  /// drag handle, overflow menu, resize handles) when [isEditing] is true.
+  /// When idle, returns the child unchanged.
+  Widget _wrapWithEditChrome({
+    required bool isEditing,
+    required ColoredDashboardItem item,
+    required Widget child,
+  }) {
+    if (!isEditing) return child;
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        child,
+        WidgetEditChrome(
+          onAction: (action) => _handleWidgetAction(action, item),
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 4,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.drag_indicator,
-                color: AppColors.textOnDark.withValues(alpha: 0.7), size: 14),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Text(
-                l10n.dragToMove,
-                style: AppTextStyles.labelSmallStyle.copyWith(
-                  color: AppColors.textOnDark.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: () async {
-                // Both calls are needed: delete() removes the item from the in-memory grid,
-                // removeWidgetInstance() removes it from the persisted widgetVisibility map.
-                _itemController.delete(item.identifier);
-                await ref.read(dashboardNotifierProvider.notifier).removeWidgetInstance(item.identifier);
-              },
-              icon: const Icon(
-                Icons.close,
-                color: Color(0xFFEF4444), // edit-mode delete icon red
-                size: 18,
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
+  }
+
+  Future<void> _handleWidgetAction(
+      WidgetEditAction action, ColoredDashboardItem item) async {
+    final l10n = AppLocalizations.of(context);
+    switch (action) {
+      case WidgetEditAction.remove:
+        // Both calls are needed: delete() removes the item from the
+        // in-memory grid; removeWidgetInstance() removes it from the
+        // persisted widgetVisibility map.
+        _itemController.delete(item.identifier);
+        await ref
+            .read(dashboardNotifierProvider.notifier)
+            .removeWidgetInstance(item.identifier);
+        break;
+      case WidgetEditAction.rename:
+      case WidgetEditAction.duplicate:
+      case WidgetEditAction.lock:
+      case WidgetEditAction.resetSize:
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.editModeActionUnavailable)),
+          );
+        }
+        break;
+    }
   }
 
   Future<void> _handleMenuAction(String action) async {

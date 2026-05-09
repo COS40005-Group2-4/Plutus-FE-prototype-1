@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -212,8 +213,8 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: GlassContainer(
-        padding: const EdgeInsets.all(16),
-        borderRadius: 16,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        borderRadius: AppRadius.lg,
         opacity: 0.1,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

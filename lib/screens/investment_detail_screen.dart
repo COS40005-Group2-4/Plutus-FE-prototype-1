@@ -11,7 +11,10 @@ import '../models/investment_sale.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../services/investment_metrics_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_gradients.dart';
+import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/glass_background.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/sell_investment_dialog.dart';
@@ -284,7 +287,8 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                 FloatingActionButton.extended(
                   heroTag: 'inv_sell',
                   onPressed: _showSellDialog,
-                  backgroundColor: AppColors.primaryDark,
+                  backgroundColor:
+                      AppColors.brand(Theme.of(context).brightness),
                   icon: const Icon(Icons.sell, color: Colors.white),
                   label: Text(l.investmentSell, style: const TextStyle(color: Colors.white)),
                 ),
@@ -295,8 +299,11 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
   }
 
   Widget _buildBody(AppLocalizations l, bool isDark) {
+    final brightness = Theme.of(context).brightness;
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return Center(
+        child: CircularProgressIndicator(color: AppColors.brand(brightness)),
+      );
     }
     if (_error != null) {
       return Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)));
@@ -312,13 +319,74 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
       currentValue: inv.getCurrentValue(),
       costBasis: inv.totalCostBasis,
     );
+    final positive = AppColors.positive(brightness);
+    final negative = AppColors.negative(brightness);
+    final isUp = roi >= 0;
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
+        // Hero gradient card with current value + delta chip.
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            gradient: AppGradients.balanceCard(brightness),
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.investmentCurrentValue,
+                style: AppTextStyles.labelStyle.copyWith(
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                '$symbol${inv.getCurrentValue().toStringAsFixed(2)}',
+                style: AppTextStyles.numericStyle.copyWith(
+                  fontSize: 36,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isUp
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_downward_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${(roi * 100).toStringAsFixed(2)}%',
+                      style: AppTextStyles.labelStyle.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         GlassContainer(
-          borderRadius: 12,
-          opacity: isDark ? 0.3 : 0.1,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,19 +407,15 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                 value: '$symbol${inv.averageUnitCost.toStringAsFixed(4)}',
               ),
               _MetricRow(
-                label: l.investmentCurrentValue,
-                value: '$symbol${inv.getCurrentValue().toStringAsFixed(2)}',
-              ),
-              _MetricRow(
                 label: l.investmentMetricRoi,
                 value: '${(roi * 100).toStringAsFixed(2)}%',
-                color: roi >= 0 ? AppColors.success : AppColors.error,
+                color: isUp ? positive : negative,
               ),
               if (xirr != null && xirr.converged && xirr.rate != null)
                 _MetricRow(
                   label: l.investmentMetricXirr,
                   value: '${(xirr.rate! * 100).toStringAsFixed(2)}%',
-                  color: xirr.rate! >= 0 ? AppColors.success : AppColors.error,
+                  color: xirr.rate! >= 0 ? positive : negative,
                 )
               else if (!irrMeaningful)
                 _MetricRow(
@@ -377,7 +441,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             : Column(
                 children: _pricePoints.reversed
                     .map((p) => GlassContainer(
-                          borderRadius: 8,
+                          borderRadius: AppRadius.md,
                           opacity: isDark ? 0.25 : 0.08,
                           margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                           padding: const EdgeInsets.symmetric(
@@ -408,7 +472,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             : Column(
                 children: _sales.reversed
                     .map((s) => GlassContainer(
-                          borderRadius: 8,
+                          borderRadius: AppRadius.md,
                           opacity: isDark ? 0.25 : 0.08,
                           margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                           padding: const EdgeInsets.all(AppSpacing.md),

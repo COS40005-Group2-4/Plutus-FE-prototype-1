@@ -436,6 +436,12 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildCompactView(Profile profile) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.profileAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    final iconOnAccent = AppColors.iconOnAccent(accent, brightness);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -477,6 +483,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         labelSize: labelSize,
                         valueSize: valueSize,
                         isPrimary: true,
+                        valueColor: onAccent,
+                        labelColor: onAccentTertiary,
                       ),
                     if (profile.showName &&
                         (profile.showEmail ||
@@ -491,7 +499,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                                 profile.showPlaceOfEmployment)))
                       Divider(
                         height: spacing,
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: dividerOnAccent,
                         thickness: 1,
                       ),
                     if (profile.showEmail &&
@@ -502,7 +510,9 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         widget.user.email!,
                         labelSize: labelSize,
                         valueSize: valueSize,
-                                         ),
+                        valueColor: onAccent,
+                        labelColor: onAccentTertiary,
+                      ),
                     if (profile.dateOfBirth != null &&
                         profile.dateOfBirth!.isNotEmpty &&
                         profile.showDateOfBirth)
@@ -511,6 +521,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.dateOfBirth!,
                         labelSize: labelSize,
                         valueSize: valueSize,
+                        valueColor: onAccent,
+                        labelColor: onAccentTertiary,
                       ),
                     if (profile.position != null &&
                         profile.position!.isNotEmpty &&
@@ -520,6 +532,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.position!,
                         labelSize: labelSize,
                         valueSize: valueSize,
+                        valueColor: onAccent,
+                        labelColor: onAccentTertiary,
                       ),
                     if (profile.placeOfEmployment != null &&
                         profile.placeOfEmployment!.isNotEmpty &&
@@ -529,6 +543,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.placeOfEmployment!,
                         labelSize: labelSize,
                         valueSize: valueSize,
+                        valueColor: onAccent,
+                        labelColor: onAccentTertiary,
                       ),
                     SizedBox(height: spacing),
                   ],
@@ -558,7 +574,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                       child: Text(
                         AppLocalizations.of(context).myProfile,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: onAccent,
                           fontSize: titleSize,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
@@ -575,7 +591,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                           padding: const EdgeInsets.all(4),
                           child: Icon(
                             Icons.edit_outlined,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: iconOnAccent,
                             size: 20,
                           ),
                         ),
@@ -603,7 +619,12 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     required double labelSize,
     required double valueSize,
     bool isPrimary = false,
+    Color? labelColor,
+    Color? valueColor,
   }) {
+    final brightness = Theme.of(context).brightness;
+    final fallbackValue = AppColors.textPrimary(brightness);
+    final fallbackLabel = AppColors.textTertiary(brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -613,7 +634,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             label.toUpperCase(),
             style: TextStyle(
               fontSize: labelSize,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: labelColor ?? fallbackLabel,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.8,
             ),
@@ -624,7 +645,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             value,
             style: TextStyle(
               fontSize: valueSize,
-              color: Colors.white,
+              color: valueColor ?? fallbackValue,
               fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
             ),
             textAlign: TextAlign.center,

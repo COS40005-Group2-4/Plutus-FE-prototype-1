@@ -13,18 +13,20 @@ class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final Color seed = isDark ? AppColors.primaryDark : AppColors.primary;
+    final Color seed = AppColors.brand(brightness);
+    final Color secondary = AppColors.accentColor(brightness);
     final Color bg = AppColors.background(brightness);
     final Color surface = AppColors.surface(brightness);
     final Color textPrimary = AppColors.textPrimary(brightness);
     final Color textSecondary = AppColors.textSecondary(brightness);
-    final Color border = AppColors.border(brightness);
+    final Color ctaBg = AppColors.ctaButtonBackground(brightness);
+    final Color ctaFg = AppColors.ctaButtonForeground(brightness);
 
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
       primary: seed,
-      secondary: AppColors.accent,
+      secondary: secondary,
       surface: surface,
       error: AppColors.error,
     );
@@ -67,21 +69,25 @@ class AppTheme {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        titleTextStyle: AppTextStyles.titleStyle.copyWith(color: textPrimary),
-        iconTheme: IconThemeData(color: textPrimary),
+        toolbarHeight: 64,
+        titleTextStyle: AppTextStyles.headingStyle.copyWith(
+          color: textPrimary,
+          fontSize: 24,
+        ),
+        iconTheme: IconThemeData(color: textPrimary, size: 24),
       ),
       cardTheme: CardThemeData(
         color: surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderLg),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderCard),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderLg),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderCard),
         titleTextStyle: AppTextStyles.titleStyle.copyWith(color: textPrimary),
         contentTextStyle:
             AppTextStyles.bodyStyle.copyWith(color: textSecondary),
@@ -91,7 +97,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.surface)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -110,37 +116,44 @@ class AppTheme {
           return IconThemeData(color: textSecondary);
         }),
       ),
+      // Primary pill CTA: solid near-black on light, violet on dark
+      // (widget code can override with a gradient via Container+InkWell).
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: seed,
-          foregroundColor: isDark ? Colors.black : Colors.white,
-          disabledBackgroundColor: AppColors.surfaceMuted(brightness),
+          backgroundColor: ctaBg,
+          foregroundColor: ctaFg,
+          disabledBackgroundColor:
+              AppColors.surfaceMuted(brightness),
           disabledForegroundColor: AppColors.textTertiary(brightness),
-          textStyle: AppTextStyles.bodyStrongStyle,
-          minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
+          minimumSize: const Size(0, 56),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: seed,
-          foregroundColor: isDark ? Colors.black : Colors.white,
+          backgroundColor: ctaBg,
+          foregroundColor: ctaFg,
           elevation: 0,
-          textStyle: AppTextStyles.bodyStrongStyle,
-          minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
+          minimumSize: const Size(0, 56),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
         ),
       ),
+      // Secondary outlined button: brand-colored border + label on a soft
+      // surface (no fill in light, surfaceMuted in dark).
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: textPrimary,
-          textStyle: AppTextStyles.bodyStrongStyle,
-          minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          side: BorderSide(color: border, width: 1),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+          foregroundColor: seed,
+          backgroundColor:
+              isDark ? AppColors.surfaceMuted(brightness) : Colors.transparent,
+          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
+          minimumSize: const Size(0, 56),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          side: BorderSide(color: seed, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -152,6 +165,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: AppRadius.borderSm),
         ),
       ),
+      // Inputs: filled, radius 16, brand focus ring.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceMuted(brightness),
@@ -164,35 +178,38 @@ class AppTheme {
           vertical: AppSpacing.md,
         ),
         border: OutlineInputBorder(
-          borderRadius: AppRadius.borderMd,
+          borderRadius: AppRadius.borderInput,
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderMd,
-          borderSide: BorderSide(color: border, width: 1),
+          borderRadius: AppRadius.borderInput,
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderMd,
+          borderRadius: AppRadius.borderInput,
           borderSide: BorderSide(color: seed, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderMd,
+          borderRadius: AppRadius.borderInput,
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderMd,
+          borderRadius: AppRadius.borderInput,
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceMuted(brightness),
-        labelStyle: AppTextStyles.labelStyle.copyWith(color: textPrimary),
+        backgroundColor: AppColors.brandSoft(brightness),
+        labelStyle: AppTextStyles.labelStyle.copyWith(
+          color: isDark ? AppColors.accentDark : AppColors.primaryStrong,
+          fontWeight: FontWeight.w600,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
         ),
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderXl),
-        side: BorderSide(color: border, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
+        side: BorderSide.none,
       ),
       dividerTheme: DividerThemeData(
         color: AppColors.divider(brightness),
@@ -221,8 +238,10 @@ class AppTheme {
       tabBarTheme: TabBarThemeData(
         labelColor: seed,
         unselectedLabelColor: textSecondary,
-        labelStyle: AppTextStyles.bodyStrongStyle,
-        unselectedLabelStyle: AppTextStyles.bodyStyle,
+        labelStyle:
+            AppTextStyles.bodyStrongStyle.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+        unselectedLabelStyle:
+            AppTextStyles.bodyStyle.copyWith(fontSize: 15, fontWeight: FontWeight.w500),
         indicatorColor: seed,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
@@ -233,7 +252,7 @@ class AppTheme {
           color: isDark ? AppColors.textOnDark : Colors.white,
         ),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.borderInput),
       ),
       splashFactory: InkSparkle.splashFactory,
     );

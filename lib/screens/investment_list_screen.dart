@@ -322,11 +322,10 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                 children: [
                   Text(
                     '${investment.getCurrencySymbol()}${investment.getCurrentValue().toStringAsFixed(2)}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.merge(AppTextStyles.numericStyle)
-                        .copyWith(color: textPrimary),
+                    style: AppTextStyles.numericStyle.copyWith(
+                      fontSize: 18,
+                      color: textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Row(

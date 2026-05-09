@@ -35,14 +35,15 @@ class AppTextStyles {
   static const double labelMediumSize = 12;
   static const double labelSmallSize = 11;
 
-  // ── Legacy aliases (kept for previously-touched callers) ──
-  static const double display = displayMedium;       // 45
-  static const double heading = headlineMedium;       // 28
-  static const double title = titleLarge;             // 22
-  static const double subtitle = titleMedium;         // 16
-  static const double body = bodyMedium;              // 14
-  static const double label = labelMediumSize;        // 12
-  static const double caption = labelSmallSize;       // 11
+  // ── Legacy aliases used by dashboard widgets and existing callers.
+  // Tuned for confident on-card readability over the muted accent fills.
+  static const double display = 44;
+  static const double heading = 30;
+  static const double title = 22;
+  static const double subtitle = 18;
+  static const double body = 15;
+  static const double label = 13;
+  static const double caption = 12;
 
   // Default font family. Use a system-friendly stack;
   // Flutter falls back gracefully when Inter is unavailable.
@@ -156,21 +157,91 @@ class AppTextStyles {
     height: 1.3,
   );
 
-  // ── Legacy aliases for previously-touched call sites ──
-  static final TextStyle displayStyle = displayMediumStyle;
-  static final TextStyle headingStyle = headlineMediumStyle;
-  static final TextStyle titleStyle = titleLargeStyle;
-  static final TextStyle subtitleStyle = titleMediumStyle;
-  static final TextStyle bodyStyle = bodyMediumStyle;
-  static final TextStyle bodyStrongStyle =
-      bodyMediumStyle.copyWith(fontWeight: FontWeight.w600);
-  static final TextStyle labelStyle = labelMediumStyle;
-  static final TextStyle captionStyle = labelSmallStyle;
+  // ── Legacy alias styles used by dashboard widgets.
+  // Confident weights and explicit sizes so card content reads strongly
+  // over the muted accent fills.
+  static final TextStyle displayStyle = _base.copyWith(
+    fontSize: display,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -1.2,
+    height: 1.05,
+  );
+  static final TextStyle headingStyle = _base.copyWith(
+    fontSize: heading,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    height: 1.15,
+  );
+  static final TextStyle titleStyle = _base.copyWith(
+    fontSize: title,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    height: 1.25,
+  );
+  static final TextStyle subtitleStyle = _base.copyWith(
+    fontSize: subtitle,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.1,
+    height: 1.3,
+  );
+  static final TextStyle bodyStyle = _base.copyWith(
+    fontSize: body,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.05,
+    height: 1.45,
+  );
+  static final TextStyle bodyStrongStyle = _base.copyWith(
+    fontSize: body,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.05,
+    height: 1.4,
+  );
+  static final TextStyle labelStyle = _base.copyWith(
+    fontSize: label,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    height: 1.3,
+  );
+  static final TextStyle captionStyle = _base.copyWith(
+    fontSize: caption,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+    height: 1.3,
+  );
 
   /// Tabular figures for currency/numeric columns.
+  /// Bold by default — finance numbers are headline content, not body text.
   static final TextStyle numericStyle = _base.copyWith(
     fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-    fontWeight: FontWeight.w600,
-    height: 1.2,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    height: 1.15,
   );
+
+  /// Two-tone TextSpan helper for headlines like "income has increased!"
+  /// where the trailing word is rendered in [accentColor]. Returns a single
+  /// [TextSpan] that can be passed to [Text.rich].
+  ///
+  /// Pass [base] to control the base style (defaults to [headingStyle]).
+  static TextSpan twoTone({
+    required String prefix,
+    required String accent,
+    required Color baseColor,
+    required Color accentColor,
+    TextStyle? base,
+    String separator = ' ',
+  }) {
+    final TextStyle baseStyle = (base ?? headingStyle).copyWith(color: baseColor);
+    return TextSpan(
+      style: baseStyle,
+      children: <TextSpan>[
+        TextSpan(text: prefix),
+        TextSpan(text: separator),
+        TextSpan(
+          text: accent,
+          style: baseStyle.copyWith(color: accentColor),
+        ),
+      ],
+    );
+  }
 }

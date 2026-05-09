@@ -131,10 +131,20 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-      color: AppColors.borderDark,
+      color: accent,
       opacity: 0.2,
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -144,9 +154,9 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
             children: [
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Market Trending',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: onAccent, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Tooltip(
@@ -163,9 +173,9 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
               _buildHeader(),
               const SizedBox(height: AppSpacing.sm),
               if (_isLoading)
-                const Expanded(
+                Expanded(
                   child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(color: onAccent),
                   ),
                 )
               else if (_error != null)
@@ -173,7 +183,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                   child: Center(
                     child: Text(
                       _error!,
-                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(color: onAccentSecondary, fontSize: 13),
                     ),
                   ),
                 )
@@ -192,20 +202,25 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
   }
 
   Widget _buildHeader() {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
     return Row(
       children: [
         Expanded(
           child: TextField(
             controller: _symbolController,
             textCapitalization: TextCapitalization.characters,
-            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(color: onAccent, fontSize: 14, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: 'Symbol',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha:0.5), fontSize: 13),
+              hintStyle: TextStyle(color: onAccentSecondary, fontSize: 13),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               filled: true,
-              fillColor: Colors.white.withValues(alpha:0.1),
+              fillColor: dividerOnAccent,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
@@ -223,26 +238,34 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
         const SizedBox(width: AppSpacing.xs),
         GestureDetector(
           onTap: _fetchData,
-          child: const Icon(Icons.refresh, color: Colors.white70, size: 18),
+          child: Icon(Icons.refresh, color: onAccentSecondary, size: 18),
         ),
       ],
     );
   }
 
   Widget _buildDayButton(int days) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     final selected = _selectedDays == days;
     return GestureDetector(
       onTap: () => _onDaysSelected(days),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? Colors.white.withValues(alpha:0.25) : Colors.transparent,
+          color: selected ? dividerOnAccent : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           '${days}d',
           style: TextStyle(
-            color: Colors.white,
+            color: onAccent,
             fontSize: 11,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -252,6 +275,12 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
   }
 
   Widget _buildMetrics(MarketData data) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
     final isPositive = data.priceChangePercent24h >= 0;
     final changeColor = isPositive ? AppColors.success : AppColors.error;
     final changeSign = isPositive ? '+' : '';
@@ -263,8 +292,8 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
           children: [
             Text(
               '\$${_formatPrice(data.currentPrice)}',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: onAccent,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -295,7 +324,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                 padding: const EdgeInsets.only(left: 8),
                 child: Text(
                   'MCap: --',
-                  style: TextStyle(color: Colors.white.withValues(alpha:0.5), fontSize: 10),
+                  style: TextStyle(color: onAccentSecondary, fontSize: 10),
                 ),
               ),
           ],
@@ -305,22 +334,38 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
   }
 
   Widget _buildMetricChip(String label, String value) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '$label: ',
-          style: TextStyle(color: Colors.white.withValues(alpha:0.6), fontSize: 10),
+          style: TextStyle(color: onAccentSecondary, fontSize: 10),
         ),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 10)),
+        Text(value, style: TextStyle(color: onAccent, fontSize: 10)),
       ],
     );
   }
 
   Widget _buildChart() {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.marketAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     if (_chartPoints.isEmpty) {
-      return const Center(
-        child: Text('No chart data', style: TextStyle(color: Colors.white54, fontSize: 12)),
+      return Center(
+        child: Text('No chart data', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
       );
     }
 
@@ -352,7 +397,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
             getTooltipItems: (spots) => spots.map((s) {
               return LineTooltipItem(
                 '\$${_formatPrice(s.y)}',
-                const TextStyle(color: Colors.white, fontSize: 10),
+                TextStyle(color: onAccent, fontSize: 10),
               );
             }).toList(),
           ),
@@ -375,7 +420,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                   final label = _formatDate(dt);
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9)),
+                    child: Text(label, style: TextStyle(color: onAccentSecondary, fontSize: 9)),
                   );
                 }
                 return const SizedBox.shrink();
@@ -389,7 +434,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   PlutusChartStyle.formatCompactCurrency(value),
-                  style: const TextStyle(color: Colors.white54, fontSize: 9),
+                  style: TextStyle(color: onAccentSecondary, fontSize: 9),
                 );
               },
             ),

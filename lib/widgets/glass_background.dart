@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-/// App-wide background. Despite the legacy "Glass" name, this now renders a
-/// clean, adaptive surface with a single soft accent wash for depth — no
-/// heavy gradients or coloured orbs.
+/// App-wide background. Despite the legacy "Glass" name, this paints the
+/// canvas + a soft brand-tinted wash for ambient depth — magenta on light,
+/// violet on dark.
 class GlassBackground extends StatelessWidget {
   final Widget child;
 
@@ -14,16 +14,37 @@ class GlassBackground extends StatelessWidget {
     final Brightness brightness = Theme.of(context).brightness;
     final bool isDark = brightness == Brightness.dark;
     final Color base = AppColors.background(brightness);
-    final Color accent = AppColors.brand(brightness)
-        .withValues(alpha: isDark ? 0.10 : 0.06);
+    final Color brandWash = AppColors.brand(brightness)
+        .withValues(alpha: isDark ? 0.18 : 0.10);
+    final Color secondaryWash = isDark
+        ? AppColors.primaryStrongDark.withValues(alpha: 0.14)
+        : AppColors.accent.withValues(alpha: 0.12);
 
     return Stack(
       children: <Widget>[
         Positioned.fill(child: ColoredBox(color: base)),
-        // Single, calm accent wash in the upper area for visual interest.
+        // Top-right brand wash (magenta/violet).
         Positioned(
-          top: -180,
-          right: -120,
+          top: -260,
+          right: -180,
+          child: IgnorePointer(
+            child: Container(
+              width: 480,
+              height: 480,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: <Color>[brandWash, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Bottom-left secondary wash (sunshine on light, deep violet on dark)
+        // for warmth without competing with widget cards.
+        Positioned(
+          bottom: -220,
+          left: -160,
           child: IgnorePointer(
             child: Container(
               width: 420,
@@ -31,7 +52,7 @@ class GlassBackground extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: <Color>[accent, Colors.transparent],
+                  colors: <Color>[secondaryWash, Colors.transparent],
                 ),
               ),
             ),

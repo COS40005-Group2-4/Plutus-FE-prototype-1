@@ -83,27 +83,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: GlassContainer(
             margin: EdgeInsets.all(isSmall ? AppSpacing.lg : AppSpacing.xl),
             padding: EdgeInsets.all(isSmall ? AppSpacing.xxl : AppSpacing.xxxl),
-            borderRadius: AppRadius.xl,
+            borderRadius: AppRadius.surface,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
                   child: Container(
-                    width: 64,
-                    height: 64,
+                    width: 88,
+                    height: 88,
                     decoration: BoxDecoration(
-                      color: brand.withValues(alpha: 0.12),
-                      borderRadius: AppRadius.borderLg,
+                      color: AppColors.brandSoft(brightness),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
                     child: Icon(
                       Icons.account_balance_wallet_outlined,
-                      size: 32,
+                      size: 40,
                       color: brand,
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.xxl),
                 Text(
                   'Welcome to Plutus',
                   style: AppTextStyles.headingStyle.copyWith(
@@ -125,10 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.10),
-                      border: Border.all(
-                        color: AppColors.error.withValues(alpha: 0.4),
-                      ),
-                      borderRadius: AppRadius.borderMd,
+                      borderRadius: BorderRadius.circular(AppRadius.input),
                     ),
                     child: Row(
                       children: [

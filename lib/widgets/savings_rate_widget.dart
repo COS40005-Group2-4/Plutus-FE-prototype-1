@@ -37,15 +37,22 @@ class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
   }
 
   Widget _buildStreamContent(BuildContext context, SettingsState settings) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.savingsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
     return StreamBuilder<List<Transaction>>(
       stream: _transactionService.transactionStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator(color: Colors.white));
+          return Center(child: CircularProgressIndicator(color: onAccent));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(
-            child: Text(AppLocalizations.of(context).savingsNoData, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            child: Text(
+              AppLocalizations.of(context).savingsNoData,
+              style: TextStyle(color: onAccentSecondary, fontSize: 12),
+            ),
           );
         }
         return _SavingsRateContent(
@@ -66,30 +73,42 @@ class _SavingsRateWidgetState extends ConsumerState<SavingsRateWidget> {
             return GlassContainer(
               color: AppColors.savingsAccent,
               opacity: 0.2,
-              borderRadius: AppRadius.lg,
+              borderRadius: AppRadius.card,
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 mainAxisSize: hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.savings, color: Colors.white, size: 18),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        AppLocalizations.of(context).savingsRate,
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Tooltip(
-                        message: AppLocalizations.of(context).widgetHelpSavingsRate,
-                        child: Icon(
-                          Icons.help_outline,
-                          size: 14,
-                          color: AppColors.textTertiary(Theme.of(context).brightness),
+                  Builder(builder: (context) {
+                    final brightness = Theme.of(context).brightness;
+                    const accent = AppColors.savingsAccent;
+                    final onAccent =
+                        AppColors.onAccentPrimary(accent, brightness);
+                    final onAccentTertiary =
+                        AppColors.onAccentTertiary(accent, brightness);
+                    return Row(
+                      children: [
+                        Icon(Icons.savings, color: onAccent, size: 18),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          AppLocalizations.of(context).savingsRate,
+                          style: TextStyle(
+                              color: onAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Tooltip(
+                          message: AppLocalizations.of(context)
+                              .widgetHelpSavingsRate,
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 14,
+                            color: onAccentTertiary,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                   const SizedBox(height: AppSpacing.sm),
                   if (hasBoundedHeight)
                     Expanded(
@@ -227,12 +246,22 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.savingsAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary =
+        AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(accent, brightness);
+    final progressTrack =
+        AppColors.progressTrackOnAccent(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return Center(child: CircularProgressIndicator(color: onAccent));
     }
 
     final l10n = AppLocalizations.of(context);
-    final brightness = Theme.of(context).brightness;
     final rateColor = _getRateColor(_currentRate, brightness);
     final currency = widget.settings.currency;
     final symbol = currency.symbol;
@@ -258,8 +287,8 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                 ),
                 Text(
                   '= $symbol${PlutusChartStyle.formatCompactCurrency(_currentAbsoluteSavings)} ${l10n.savingsSavedThisMonth}',
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: onAccentSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -300,11 +329,14 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
               children: [
                 Text(
                   l10n.savingsProgressLabel,
-                  style: const TextStyle(fontSize: 11, color: Colors.white54),
+                  style: TextStyle(fontSize: 11, color: onAccentSecondary),
                 ),
                 Text(
                   l10n.savingsRuleLabel,
-                  style: const TextStyle(fontSize: 10, color: Colors.white38, fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: onAccentTertiary,
+                      fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -316,7 +348,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                   Container(
                     height: 8,
                     width: double.infinity,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: progressTrack,
                   ),
                   FractionallySizedBox(
                     alignment: Alignment.centerLeft,
@@ -337,7 +369,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   '+${(_currentRate - 20).toStringAsFixed(1)}% over target',
-                  style: const TextStyle(fontSize: 9, color: Colors.white54),
+                  style: TextStyle(fontSize: 9, color: onAccentTertiary),
                 ),
               ),
           ],
@@ -363,7 +395,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                     ),
                     Text(
                       l10n.savingsIncomeLabel,
-                      style: const TextStyle(fontSize: 10, color: Colors.white54),
+                      style: TextStyle(fontSize: 10, color: onAccentTertiary),
                     ),
                   ],
                 ),
@@ -371,7 +403,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
               VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: dividerOnAccent,
               ),
               Expanded(
                 child: Column(
@@ -387,7 +419,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                     ),
                     Text(
                       l10n.savingsExpensesLabel,
-                      style: const TextStyle(fontSize: 10, color: Colors.white54),
+                      style: TextStyle(fontSize: 10, color: onAccentTertiary),
                     ),
                   ],
                 ),
@@ -395,7 +427,7 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
               VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: dividerOnAccent,
               ),
               Expanded(
                 child: Column(
@@ -403,15 +435,15 @@ class _SavingsRateContentState extends State<_SavingsRateContent> {
                   children: [
                     Text(
                       '$symbol${PlutusChartStyle.formatCompactCurrency(_currentAbsoluteSavings)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.savingsAccent,
+                        color: onAccent,
                       ),
                     ),
                     Text(
                       l10n.savingsSavedLabel,
-                      style: const TextStyle(fontSize: 10, color: Colors.white54),
+                      style: TextStyle(fontSize: 10, color: onAccentTertiary),
                     ),
                   ],
                 ),

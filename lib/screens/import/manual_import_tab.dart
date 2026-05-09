@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -371,10 +372,10 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: GlassContainer(
-        padding: const EdgeInsets.all(16),
-        borderRadius: 16,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        borderRadius: AppRadius.lg,
         opacity: 0.1,
         child: Form(
         key: _formKey,

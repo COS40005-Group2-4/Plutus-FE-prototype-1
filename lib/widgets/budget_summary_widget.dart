@@ -41,7 +41,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
       loading: () => GlassContainer(
         color: AppColors.budgetAccent,
         opacity: 0.2,
-        borderRadius: AppRadius.lg,
+        borderRadius: AppRadius.card,
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: const Center(child: CircularProgressIndicator()),
       ),
@@ -54,7 +54,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
           return GlassContainer(
             color: AppColors.budgetAccent,
             opacity: 0.2,
-            borderRadius: AppRadius.lg,
+            borderRadius: AppRadius.card,
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Center(
               child: Column(
@@ -118,10 +118,17 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
 
         final periodLabel = _periodLabel(budget.periodType, periodStart);
 
+        final brightness = Theme.of(context).brightness;
+        const accent = AppColors.budgetAccent;
+        final onAccent = AppColors.onAccentPrimary(accent, brightness);
+        final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+        final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+        final progressTrack = AppColors.progressTrackOnAccent(accent, brightness);
+
         return GlassContainer(
-          color: AppColors.budgetAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -134,6 +141,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       l10n.widgetBudgetTracking,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: onAccent,
                           ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -142,7 +150,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       child: Icon(
                         Icons.help_outline,
                         size: 14,
-                        color: AppColors.textTertiary(Theme.of(context).brightness),
+                        color: onAccentTertiary,
                       ),
                     ),
                   ],
@@ -154,17 +162,20 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.chevron_left),
+                      icon: Icon(Icons.chevron_left, color: onAccentSecondary),
                       onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(-1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
                     Text(
                       periodLabel,
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: onAccent),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.chevron_right),
+                      icon: Icon(Icons.chevron_right, color: onAccentSecondary),
                       onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -181,13 +192,12 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       height: 12,
                       child: Stack(
                         children: [
-                          // Background
+                          // Background — on-accent track keeps contrast on
+                          // pastel cards regardless of theme.
                           Container(
                             height: 12,
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
+                              color: progressTrack,
                               borderRadius: AppRadius.borderSm,
                             ),
                           ),
@@ -210,9 +220,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                               child: Container(
                                 width: 2,
                                 height: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                color: onAccentSecondary,
                               ),
                             ),
                         ],
@@ -228,13 +236,14 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                     _SummaryTile(
                       label: l10n.budgetBudgeted,
                       value: fmtCurrency(totalBudgeted),
-                      valueColor:
-                          Theme.of(context).colorScheme.onSurface,
+                      valueColor: onAccent,
+                      labelColor: onAccentTertiary,
                     ),
                     _SummaryTile(
                       label: l10n.budgetSpent,
                       value: fmtCurrency(totalSpent),
                       valueColor: AppColors.error,
+                      labelColor: onAccentTertiary,
                     ),
                     _SummaryTile(
                       label: l10n.budgetLeft,
@@ -242,6 +251,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       valueColor: totalRemaining >= 0
                           ? AppColors.success
                           : AppColors.error,
+                      labelColor: onAccentTertiary,
                     ),
                   ],
                 ),
@@ -276,11 +286,13 @@ class _SummaryTile extends StatelessWidget {
   final String label;
   final String value;
   final Color valueColor;
+  final Color? labelColor;
 
   const _SummaryTile({
     required this.label,
     required this.value,
     required this.valueColor,
+    this.labelColor,
   });
 
   @override
@@ -292,7 +304,8 @@ class _SummaryTile extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: labelColor ??
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                   letterSpacing: 0.5,
                 ),
           ),

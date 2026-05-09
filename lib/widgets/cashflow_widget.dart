@@ -42,10 +42,21 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.cashflowAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    // Suppress unused — used inside helpers and scoped closures.
+    onAccent.toString();
+    onAccentSecondary.toString();
+    onAccentTertiary.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
-          color: AppColors.borderDark,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -56,8 +67,8 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                   stream: _transactionService.transactionStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                      return Center(
+                        child: CircularProgressIndicator(color: onAccent),
                       );
                     }
 
@@ -65,7 +76,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                       return Center(
                         child: Text(
                           AppLocalizations.of(context).noTransactionsFound,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: onAccent, fontSize: 14),
                         ),
                       );
                     }
@@ -90,6 +101,11 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.cashflowAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(accent, brightness);
     return Column(
       children: [
         Row(
@@ -99,8 +115,8 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
               children: [
                 Text(
                   AppLocalizations.of(context).cashflow,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: onAccent,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -123,13 +139,13 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 0 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
+                      color: _viewMode == 0 ? onAccentTertiary : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Month',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: onAccent,
                         fontSize: 12,
                         fontWeight: _viewMode == 0 ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -142,13 +158,13 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 1 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
+                      color: _viewMode == 1 ? onAccentTertiary : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Year',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: onAccent,
                         fontSize: 12,
                         fontWeight: _viewMode == 1 ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -161,13 +177,13 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _viewMode == 2 ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
+                      color: _viewMode == 2 ? onAccentTertiary : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'All',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: onAccent,
                         fontSize: 12,
                         fontWeight: _viewMode == 2 ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -178,7 +194,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                 IconButton(
                   icon: Icon(
                     _showBarChart ? Icons.bar_chart : Icons.show_chart,
-                    color: Colors.white,
+                    color: onAccent,
                     size: 20,
                   ),
                   onPressed: () => setState(() => _showBarChart = !_showBarChart),
@@ -196,7 +212,7 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left, color: Colors.white, size: 20),
+                icon: Icon(Icons.chevron_left, color: onAccent, size: 20),
                 onPressed: () {
                   setState(() {
                     if (_viewMode == 0) {
@@ -213,10 +229,10 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
                 _viewMode == 0
                     ? '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}'
                     : '${_selectedDate.year}',
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                style: TextStyle(color: onAccent, fontSize: 14, fontWeight: FontWeight.bold),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+                icon: Icon(Icons.chevron_right, color: onAccent, size: 20),
                 onPressed: () {
                   setState(() {
                     if (_viewMode == 0) {
@@ -232,9 +248,9 @@ class _CashflowWidgetState extends ConsumerState<CashflowWidget> {
             ],
           ),
         if (_viewMode == 2) // Show "All Years" label
-          const Text(
+          Text(
             'All Years',
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(color: onAccent, fontSize: 14, fontWeight: FontWeight.bold),
           ),
       ],
     );
@@ -429,9 +445,12 @@ class _CashflowContentState extends State<_CashflowContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final onAccent =
+        AppColors.onAccentPrimary(AppColors.cashflowAccent, brightness);
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+      return Center(
+        child: CircularProgressIndicator(color: onAccent),
       );
     }
 
@@ -474,6 +493,8 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildLegendItem(Color color, String label) {
+    final onAccentSecondary = AppColors.onAccentSecondary(
+        AppColors.cashflowAccent, Theme.of(context).brightness);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -488,8 +509,8 @@ class _CashflowContentState extends State<_CashflowContent> {
         const SizedBox(width: AppSpacing.sm),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: onAccentSecondary,
             fontSize: 12,
           ),
         ),
@@ -498,9 +519,15 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildSummary(double income, double expense, double netCashflow) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.cashflowAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    dividerOnAccent.toString();
     return GlassContainer(
       padding: const EdgeInsets.all(12),
-      color: Colors.white,
+      color: onAccent,
       opacity: 0.1,
       borderRadius: 8,
       child: Column(
@@ -516,7 +543,7 @@ class _CashflowContentState extends State<_CashflowContent> {
             expense,
             AppColors.negative(Theme.of(context).brightness),
           ),
-          const Divider(color: Colors.white30),
+          Divider(color: dividerOnAccent),
           _buildSummaryRow(
             AppLocalizations.of(context).netCashflow,
             netCashflow,
@@ -529,6 +556,11 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildSummaryRow(String label, double amount, Color color, {bool isBold = false}) {
+    final brightness = Theme.of(context).brightness;
+    final onAccent =
+        AppColors.onAccentPrimary(AppColors.cashflowAccent, brightness);
+    final onAccentSecondary =
+        AppColors.onAccentSecondary(AppColors.cashflowAccent, brightness);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -536,7 +568,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           child: Text(
             '$label:',
             style: TextStyle(
-              color: isBold ? Colors.white : Colors.white70,
+              color: isBold ? onAccent : onAccentSecondary,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               fontSize: 12,
             ),
@@ -563,6 +595,14 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildBarChart() {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.cashflowAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccent.toString();
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     final maxValue = [
       ..._incomeData.values,
       ..._expenseData.values,
@@ -594,7 +634,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   amount: value,
                   currencyCode: widget.settings.currency.code,
                 )}',
-                const TextStyle(color: Colors.white, fontSize: 10),
+                TextStyle(color: onAccent, fontSize: 10),
               );
             },
           ),
@@ -614,7 +654,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   if (period % 5 == 1 || period == 1) {
                     return Text(
                       '$period',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      style: TextStyle(color: onAccentSecondary, fontSize: 10),
                     );
                   }
                 } else if (widget.viewMode == 1) {
@@ -622,13 +662,13 @@ class _CashflowContentState extends State<_CashflowContent> {
                   const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
                   return Text(
                     months[period - 1],
-                    style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    style: TextStyle(color: onAccentSecondary, fontSize: 10),
                   );
                 } else {
                   // All years - show year numbers
                   return Text(
                     '$period',
-                    style: const TextStyle(color: Colors.white70, fontSize: 9),
+                    style: TextStyle(color: onAccentSecondary, fontSize: 9),
                   );
                 }
                 return const SizedBox.shrink();
@@ -646,7 +686,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                     amount: value,
                     currencyCode: widget.settings.currency.code,
                     ),
-                  style: const TextStyle(color: Colors.white70, fontSize: 8),
+                  style: TextStyle(color: onAccentSecondary, fontSize: 8),
                 );
               },
             ),
@@ -664,7 +704,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           horizontalInterval: maxValue > 0 ? maxValue / 4 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withValues(alpha:0.1),
+              color: dividerOnAccent,
               strokeWidth: 1,
             );
           },
@@ -714,6 +754,12 @@ class _CashflowContentState extends State<_CashflowContent> {
   }
 
   Widget _buildLineChart() {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.cashflowAccent;
+    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
+    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    onAccentSecondary.toString();
+    dividerOnAccent.toString();
     final maxValue = [
       ..._incomeData.values,
       ..._expenseData.values,
@@ -770,7 +816,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                   if (period % 5 == 1 || period == 1) {
                     return Text(
                       '$period',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                      style: TextStyle(color: onAccentSecondary, fontSize: 10),
                     );
                   }
                 } else if (widget.viewMode == 1) {
@@ -778,13 +824,13 @@ class _CashflowContentState extends State<_CashflowContent> {
                   const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
                   return Text(
                     months[period - 1],
-                    style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    style: TextStyle(color: onAccentSecondary, fontSize: 10),
                   );
                 } else {
                   // All years - show year numbers
                   return Text(
                     '$period',
-                    style: const TextStyle(color: Colors.white70, fontSize: 9),
+                    style: TextStyle(color: onAccentSecondary, fontSize: 9),
                   );
                 }
                 return const SizedBox.shrink();
@@ -802,7 +848,7 @@ class _CashflowContentState extends State<_CashflowContent> {
                     amount: value,
                     currencyCode: widget.settings.currency.code,
                     ),
-                  style: const TextStyle(color: Colors.white70, fontSize: 8),
+                  style: TextStyle(color: onAccentSecondary, fontSize: 8),
                 );
               },
             ),
@@ -820,7 +866,7 @@ class _CashflowContentState extends State<_CashflowContent> {
           horizontalInterval: maxValue > 0 ? maxValue / 4 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withValues(alpha:0.1),
+              color: dividerOnAccent,
               strokeWidth: 1,
             );
           },
@@ -828,8 +874,8 @@ class _CashflowContentState extends State<_CashflowContent> {
         borderData: FlBorderData(
           show: true,
           border: Border(
-            bottom: BorderSide(color: Colors.white.withValues(alpha:0.2), width: 1),
-            left: BorderSide(color: Colors.white.withValues(alpha:0.2), width: 1),
+            bottom: BorderSide(color: dividerOnAccent, width: 1),
+            left: BorderSide(color: dividerOnAccent, width: 1),
           ),
         ),
         lineBarsData: [

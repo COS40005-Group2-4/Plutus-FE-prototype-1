@@ -177,10 +177,18 @@ class CategoryBudgetWidget extends ConsumerWidget {
         final budget = provider.activeBudget!;
         final currency = budget.currencyCode;
 
+        final brightness = Theme.of(context).brightness;
+        const accent = AppColors.categoryBudgetAccent;
+        final onAccent = AppColors.onAccentPrimary(accent, brightness);
+        final onAccentTertiary =
+            AppColors.onAccentTertiary(accent, brightness);
+        final progressTrack =
+            AppColors.progressTrackOnAccent(accent, brightness);
+
         return GlassContainer(
-          color: AppColors.categoryBudgetAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -193,6 +201,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                     l10n.categoryBudgetTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: onAccent,
                         ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -201,7 +210,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                     child: Icon(
                       Icons.help_outline,
                       size: 14,
-                      color: AppColors.textTertiary(Theme.of(context).brightness),
+                      color: onAccentTertiary,
                     ),
                   ),
                 ],
@@ -372,9 +381,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                             borderRadius: AppRadius.borderXs,
                             child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
+                              backgroundColor: progressTrack,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(statusColor),
                               minHeight: 6,

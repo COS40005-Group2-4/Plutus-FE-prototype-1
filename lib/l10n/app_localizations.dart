@@ -326,6 +326,28 @@ class AppLocalizations {
       'save_layout': 'Save Layout',
       'layout_saved': 'Layout saved',
       'drag_to_move': 'drag to move',
+
+      // Dashboard edit mode (banner, chrome, menu, empty slot)
+      'edit_layout': 'Edit layout',
+      'edit_mode_banner_title': 'Editing dashboard',
+      'edit_mode_banner_subtitle': 'Drag widgets, resize edges, or use the menu.',
+      'edit_mode_done': 'Done',
+      'edit_mode_action_add': 'Add',
+      'edit_mode_action_undo': 'Undo',
+      'edit_mode_widget_drag_handle_label': 'Drag to reorder',
+      'edit_mode_widget_options_label': 'Widget options',
+      'edit_mode_widget_resize_label': 'Resize',
+      'edit_mode_widget_semantics':
+          'Editable widget. Use the drag handle to move, the corners to resize, or the menu to remove.',
+      'edit_mode_menu_rename': 'Rename',
+      'edit_mode_menu_duplicate': 'Duplicate',
+      'edit_mode_menu_lock': 'Lock position',
+      'edit_mode_menu_unlock': 'Unlock position',
+      'edit_mode_menu_reset_size': 'Reset size',
+      'edit_mode_menu_remove': 'Remove',
+      'edit_mode_empty_slot_label': 'Add widget',
+      'edit_mode_action_unavailable': 'This action is coming soon.',
+
       'reset_dashboard': 'Undo Changes',
       'hard_reset_dashboard': 'Reset to Default',
       'hard_reset_warning': 'This will restore the default layout and show all cards. This cannot be undone.',
@@ -1169,6 +1191,28 @@ class AppLocalizations {
       'save_layout': 'Lưu bố cục',
       'layout_saved': 'Đã lưu bố cục',
       'drag_to_move': 'kéo để di chuyển',
+
+      // Dashboard edit mode (banner, chrome, menu, empty slot)
+      'edit_layout': 'Chỉnh sửa bố cục',
+      'edit_mode_banner_title': 'Đang chỉnh sửa bảng điều khiển',
+      'edit_mode_banner_subtitle': 'Kéo thẻ, chỉnh kích thước cạnh, hoặc dùng menu.',
+      'edit_mode_done': 'Hoàn tất',
+      'edit_mode_action_add': 'Thêm',
+      'edit_mode_action_undo': 'Hoàn tác',
+      'edit_mode_widget_drag_handle_label': 'Kéo để sắp xếp lại',
+      'edit_mode_widget_options_label': 'Tùy chọn thẻ',
+      'edit_mode_widget_resize_label': 'Đổi kích thước',
+      'edit_mode_widget_semantics':
+          'Thẻ có thể chỉnh sửa. Dùng tay cầm để di chuyển, các góc để đổi kích thước, hoặc menu để xóa.',
+      'edit_mode_menu_rename': 'Đổi tên',
+      'edit_mode_menu_duplicate': 'Nhân bản',
+      'edit_mode_menu_lock': 'Khóa vị trí',
+      'edit_mode_menu_unlock': 'Mở khóa vị trí',
+      'edit_mode_menu_reset_size': 'Đặt lại kích thước',
+      'edit_mode_menu_remove': 'Xóa',
+      'edit_mode_empty_slot_label': 'Thêm thẻ',
+      'edit_mode_action_unavailable': 'Tính năng này sắp ra mắt.',
+
       'reset_dashboard': 'Hoàn tác thay đổi',
       'hard_reset_dashboard': 'Khôi phục mặc định',
       'hard_reset_warning': 'Bố cục mặc định sẽ được khôi phục và tất cả thẻ sẽ hiển thị. Không thể hoàn tác.',
@@ -2041,6 +2085,32 @@ class AppLocalizations {
   String get saveLayout => translate('save_layout');
   String get layoutSaved => translate('layout_saved');
   String get dragToMove => translate('drag_to_move');
+
+  // Dashboard edit mode
+  String get editLayout => translate('edit_layout');
+  String get editModeBannerTitle => translate('edit_mode_banner_title');
+  String get editModeBannerSubtitle => translate('edit_mode_banner_subtitle');
+  String get editModeDone => translate('edit_mode_done');
+  String get editModeActionAdd => translate('edit_mode_action_add');
+  String get editModeActionUndo => translate('edit_mode_action_undo');
+  String get editModeWidgetDragHandleLabel =>
+      translate('edit_mode_widget_drag_handle_label');
+  String get editModeWidgetOptionsLabel =>
+      translate('edit_mode_widget_options_label');
+  String get editModeWidgetResizeLabel =>
+      translate('edit_mode_widget_resize_label');
+  String get editModeWidgetSemantics =>
+      translate('edit_mode_widget_semantics');
+  String get editModeMenuRename => translate('edit_mode_menu_rename');
+  String get editModeMenuDuplicate => translate('edit_mode_menu_duplicate');
+  String get editModeMenuLock => translate('edit_mode_menu_lock');
+  String get editModeMenuUnlock => translate('edit_mode_menu_unlock');
+  String get editModeMenuResetSize => translate('edit_mode_menu_reset_size');
+  String get editModeMenuRemove => translate('edit_mode_menu_remove');
+  String get editModeEmptySlotLabel => translate('edit_mode_empty_slot_label');
+  String get editModeActionUnavailable =>
+      translate('edit_mode_action_unavailable');
+
   String get resetDashboard => translate('reset_dashboard');
   String get hardResetDashboard => translate('hard_reset_dashboard');
   String get hardResetWarning => translate('hard_reset_warning');

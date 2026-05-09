@@ -70,10 +70,13 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.expenseAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
     return GlassContainer(
-          color: AppColors.expenseAccent,
+          color: accent,
           opacity: 0.2,
-          borderRadius: AppRadius.lg,
+          borderRadius: AppRadius.card,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -84,13 +87,13 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
                   stream: _transactionService.transactionStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      return Center(child: CircularProgressIndicator(color: onAccent));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return Center(
                         child: Text(
                           AppLocalizations.of(context).noTransactionsFound,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: onAccent, fontSize: 14),
                         ),
                       );
                     }
@@ -110,15 +113,25 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
   }
 
   Widget _buildHeader(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.expenseAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary =
+        AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(accent, brightness);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Expense Breakdown',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: onAccent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -128,14 +141,14 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
               child: Icon(
                 Icons.help_outline,
                 size: 14,
-                color: AppColors.textTertiary(Theme.of(context).brightness),
+                color: onAccentTertiary,
               ),
             ),
             Row(
               children: [
-                _buildToggle('Month', 0),
+                _buildToggle('Month', 0, onAccent, onAccentSecondary),
                 const SizedBox(width: AppSpacing.xs),
-                _buildToggle('Year', 1),
+                _buildToggle('Year', 1, onAccent, onAccentSecondary),
               ],
             ),
           ],
@@ -145,7 +158,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: const Icon(Icons.chevron_left, color: Colors.white, size: 20),
+              icon: Icon(Icons.chevron_left, color: onAccent, size: 20),
               onPressed: () => setState(() {
                 _selectedDate = _viewMode == 0
                     ? DateTime(_selectedDate.year, _selectedDate.month - 1)
@@ -158,10 +171,13 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
               _viewMode == 0
                   ? '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}'
                   : '${_selectedDate.year}',
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: onAccent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold),
             ),
             IconButton(
-              icon: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+              icon: Icon(Icons.chevron_right, color: onAccent, size: 20),
               onPressed: () => setState(() {
                 _selectedDate = _viewMode == 0
                     ? DateTime(_selectedDate.year, _selectedDate.month + 1)
@@ -176,21 +192,26 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
     );
   }
 
-  Widget _buildToggle(String label, int mode) {
+  Widget _buildToggle(
+      String label, int mode, Color onAccent, Color onAccentSecondary) {
+    final selected = _viewMode == mode;
     return GestureDetector(
       onTap: () => setState(() => _viewMode = mode),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: _viewMode == mode ? Colors.white.withValues(alpha:0.3) : Colors.transparent,
+          color: selected
+              ? AppColors.progressTrackOnAccent(
+                  AppColors.expenseAccent, Theme.of(context).brightness)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: selected ? onAccent : onAccentSecondary,
             fontSize: 12,
-            fontWeight: _viewMode == mode ? FontWeight.bold : FontWeight.normal,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -263,13 +284,24 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    const accent = AppColors.expenseAccent;
+    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final onAccentSecondary =
+        AppColors.onAccentSecondary(accent, brightness);
+    final onAccentTertiary =
+        AppColors.onAccentTertiary(accent, brightness);
+
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return Center(child: CircularProgressIndicator(color: onAccent));
     }
 
     if (_convertedData.isEmpty) {
-      return const Center(
-        child: Text('No expenses in this period', style: TextStyle(color: Colors.white70, fontSize: 12)),
+      return Center(
+        child: Text(
+          'No expenses in this period',
+          style: TextStyle(color: onAccentSecondary, fontSize: 12),
+        ),
       );
     }
 
@@ -324,11 +356,15 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                       children: [
                         Text(
                           PlutusChartStyle.formatCompactCurrency(total),
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: onAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
                         ),
                         Text(
                           widget.settings.currency.symbol,
-                          style: const TextStyle(color: Colors.white54, fontSize: 10),
+                          style: TextStyle(
+                              color: onAccentTertiary, fontSize: 10),
                         ),
                       ],
                     ),
@@ -353,16 +389,25 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: Text(entry.key, style: const TextStyle(color: Colors.white70, fontSize: 11), overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          entry.key,
+                          style: TextStyle(
+                              color: onAccentSecondary, fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       Text(
                         '$pct%',
-                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        style:
+                            TextStyle(color: onAccentTertiary, fontSize: 11),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         _currencyService.formatCurrency(amount: entry.value, currencyCode: widget.settings.currency.code),
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: onAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

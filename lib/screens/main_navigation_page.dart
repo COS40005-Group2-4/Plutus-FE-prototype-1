@@ -7,6 +7,7 @@ import '../services/interfaces/i_transaction_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
+import '../theme/app_gradients.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -68,17 +69,19 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surface(brightness),
-              borderRadius: AppRadius.borderXl,
-              border: Border.all(
-                color: AppColors.border(brightness),
-                width: 1,
-              ),
-              boxShadow: AppElevation.medium(brightness),
+              color: AppColors.surfaceElevated(brightness),
+              borderRadius: BorderRadius.circular(AppRadius.surface),
+              border: brightness == Brightness.dark
+                  ? Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      width: 1,
+                    )
+                  : null,
+              boxShadow: AppElevation.floatingNav(brightness),
             ),
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xs,
             ),
             child: Row(
               children: [
@@ -89,7 +92,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   isSelected: _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
+                _navDivider(brightness),
                 _buildFab(brightness),
+                _navDivider(brightness),
                 _buildNavItem(
                   icon: Icons.history_outlined,
                   iconActive: Icons.history_rounded,
@@ -118,34 +123,60 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     final color = isSelected ? brand : inactive;
 
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.borderLg,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(isSelected ? iconActive : icon, color: color, size: 24),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                style: AppTextStyles.labelStyle.copyWith(
-                  color: color,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xs,
+          horizontal: AppSpacing.xs,
+        ),
+        child: Material(
+          color: isSelected
+              ? brand.withValues(alpha: 0.16)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.iconButton),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(isSelected ? iconActive : icon,
+                      color: color, size: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: AppTextStyles.labelStyle.copyWith(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w600,
+                      letterSpacing: 0.1,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  Widget _navDivider(Brightness brightness) {
+    return Container(
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      color: AppColors.divider(brightness),
+    );
+  }
+
   Widget _buildFab(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
     final brand = AppColors.brand(brightness);
+    final ctaBg = isDark ? null : AppColors.ctaButtonLight;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Material(
@@ -164,20 +195,13 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: brand,
-              boxShadow: [
-                BoxShadow(
-                  color: brand.withValues(alpha: 0.35),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              gradient: isDark ? AppGradients.ctaButtonDark : null,
+              color: ctaBg,
+              boxShadow: AppElevation.fabGlow(brand),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.add_rounded,
-              color: brightness == Brightness.dark
-                  ? Colors.black
-                  : Colors.white,
+              color: Colors.white,
               size: 26,
             ),
           ),

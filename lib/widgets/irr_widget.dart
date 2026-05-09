@@ -88,7 +88,7 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
             : Icons.trending_down;
 
     return GlassContainer(
-      borderRadius: AppRadius.lg,
+      borderRadius: AppRadius.card,
       opacity: 0.08,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(
