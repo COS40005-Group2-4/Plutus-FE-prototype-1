@@ -52,6 +52,22 @@ class _RouterNotifier extends ChangeNotifier {
 // Fade-through page transition for all routes
 // ---------------------------------------------------------------------------
 
+// Outgoing finishes within the first 40% of the duration; incoming starts at
+// 40% and resolves over the last 60%. Pages are never both at meaningful
+// opacity at the same instant — at t = 0.4 both sit at 0 and the
+// GlassBackground reads as a single continuous surface.
+const Interval _kIncomingForward =
+    Interval(0.4, 1.0, curve: AppMotion.emphasized);
+const Interval _kIncomingReverse =
+    Interval(0.6, 1.0, curve: AppMotion.standard);
+const Interval _kOutgoingForward =
+    Interval(0.0, 0.4, curve: AppMotion.emphasized);
+const Interval _kOutgoingReverse =
+    Interval(0.0, 0.6, curve: AppMotion.standard);
+
+const double _kIncomingScaleStart = 1.04;
+const double _kOutgoingScaleEnd = 0.96;
+
 CustomTransitionPage<T> _fadePage<T>(
     Widget child, GoRouterState state) {
   return CustomTransitionPage<T>(
@@ -59,18 +75,91 @@ CustomTransitionPage<T> _fadePage<T>(
     child: child,
     transitionDuration: AppMotion.medium,
     reverseTransitionDuration: AppMotion.medium,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // Fade-through: outgoing fades out, incoming fades in.
-      return FadeTransition(
-        opacity: CurvedAnimation(
-          parent: animation,
-          curve: AppMotion.emphasized,
-          reverseCurve: AppMotion.standard,
-        ),
-        child: child,
-      );
-    },
+    transitionsBuilder: _stagedFadeThrough,
   );
+}
+
+Widget _stagedFadeThrough(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  if (MediaQuery.disableAnimationsOf(context)) {
+    return child;
+  }
+  return _StagedFade(
+    primary: animation,
+    secondary: secondaryAnimation,
+    child: child,
+  );
+}
+
+class _StagedFade extends StatelessWidget {
+  final Animation<double> primary;
+  final Animation<double> secondary;
+  final Widget child;
+
+  const _StagedFade({
+    required this.primary,
+    required this.secondary,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[primary, secondary]),
+      child: child,
+      builder: (BuildContext context, Widget? child) {
+        // Self layer: page is the one being pushed in (forward) or popped out
+        // (reverse). The role flips with direction.
+        final bool selfIsIncoming =
+            primary.status != AnimationStatus.reverse;
+        final Interval selfInterval =
+            selfIsIncoming ? _kIncomingForward : _kIncomingReverse;
+        final double selfT = selfInterval.transform(primary.value);
+
+        // Cover layer: page is the one being covered (forward) or revealed
+        // (reverse). Role also flips with direction.
+        final bool coverIsOutgoing =
+            secondary.status != AnimationStatus.reverse;
+        final Interval coverInterval =
+            coverIsOutgoing ? _kOutgoingForward : _kOutgoingReverse;
+        final double coverT = coverInterval.transform(secondary.value);
+
+        final double selfOpacity = selfT;
+        final double coverOpacity = coverIsOutgoing ? 1.0 - coverT : 1.0 - coverT;
+        final double opacity = (selfOpacity * coverOpacity).clamp(0.0, 1.0);
+
+        // Self scale: incoming slides 1.04 → 1.0; outgoing (pop) shrinks
+        // 1.0 → 0.96 over the first 40% of the reverse.
+        final double selfScale = selfIsIncoming
+            ? _kIncomingScaleStart + (1.0 - _kIncomingScaleStart) * selfT
+            : _kOutgoingScaleEnd + (1.0 - _kOutgoingScaleEnd) * selfT;
+
+        // Cover scale: covered shrinks 1.0 → 0.96; revealed re-enters
+        // 1.04 → 1.0 over the last 60% of the reverse.
+        final double coverScale = coverIsOutgoing
+            ? 1.0 + (_kOutgoingScaleEnd - 1.0) * coverT
+            : 1.0 + (_kIncomingScaleStart - 1.0) * coverT;
+
+        final double scale = selfScale * coverScale;
+
+        return IgnorePointer(
+          ignoring: opacity < 0.5,
+          child: Opacity(
+            opacity: opacity,
+            child: Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
