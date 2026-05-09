@@ -9,19 +9,16 @@ import '../helpers/test_fixtures.dart';
 
 void main() {
   late MockIBackendFfiService ffi;
-  late MockIDatabaseService db;
   late MockITransactionService tx;
   late MockIBudgetService budget;
   late JournalInitializer initializer;
 
   setUp(() {
     ffi = MockIBackendFfiService();
-    db = MockIDatabaseService();
     tx = MockITransactionService();
     budget = MockIBudgetService();
     initializer = JournalInitializer(
       ffiService: ffi,
-      dbService: db,
       transactionService: tx,
       budgetService: budget,
     );
