@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
+final _transactionDateFormatter = DateFormat('HH:mm:ss dd/MM/yyyy');
+
 class Transaction extends Equatable {
   final int? id;
   final int date;
@@ -44,11 +46,7 @@ class Transaction extends Equatable {
 
   DateTime get dateTime => DateTime.fromMillisecondsSinceEpoch(date * 1000);
 
-  String get formattedDate {
-    // Format as HH:MM:SS DD/MM/YYYY
-    final formatter = DateFormat('HH:mm:ss dd/MM/yyyy');
-    return formatter.format(dateTime);
-  }
+  String get formattedDate => _transactionDateFormatter.format(dateTime);
 
   String get label {
     // Create a clear label for the transaction

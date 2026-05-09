@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
+final _dueDateFormatter = DateFormat('dd/MM/yyyy');
+
 enum BillRecurrence {
   oneTime,
   monthly,
@@ -81,10 +83,7 @@ class Bill extends Equatable {
     };
   }
 
-  String get formattedDueDate {
-    final formatter = DateFormat('dd/MM/yyyy');
-    return formatter.format(dueDate);
-  }
+  String get formattedDueDate => _dueDateFormatter.format(dueDate);
 
   bool get isOverdue {
     return !isPaid && dueDate.isBefore(DateTime.now());

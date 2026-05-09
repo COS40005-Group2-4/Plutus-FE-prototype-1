@@ -12,6 +12,8 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
+final _monthlyPeriodFormatter = DateFormat('MMMM yyyy');
+
 class BudgetSummaryWidget extends ConsumerStatefulWidget {
   const BudgetSummaryWidget({super.key});
 
@@ -274,10 +276,9 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
   String _periodLabel(BudgetPeriodType periodType, DateTime periodStart) {
     switch (periodType) {
       case BudgetPeriodType.monthly:
-        return DateFormat('MMMM yyyy').format(periodStart);
       case BudgetPeriodType.weekly:
       case BudgetPeriodType.biweekly:
-        return DateFormat('MMMM yyyy').format(periodStart);
+        return _monthlyPeriodFormatter.format(periodStart);
     }
   }
 }

@@ -9,6 +9,11 @@ import '../l10n/report_strings.dart';
 import '../models/transaction_model.dart';
 import '../models/user_model.dart';
 
+final _filenameTimestampFormatter = DateFormat('yyyy-MM-dd_HHmmss');
+final _fullTimestampFormatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+final _shortDateTimeFormatter = DateFormat('yyyy-MM-dd HH:mm');
+final _dateOnlyFormatter = DateFormat('yyyy-MM-dd');
+
 enum ExportFormat { pdf, txt }
 
 enum ExportContent { transactions, userData, both }
@@ -100,7 +105,7 @@ class ExportService {
 
     // Generate filename with timestamp
     final now = DateTime.now();
-    final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(now);
+    final timestamp = _filenameTimestampFormatter.format(now);
     final extension = options.format == ExportFormat.pdf ? 'pdf' : 'txt';
     final filename = 'plutus_report_$timestamp.$extension';
 
@@ -245,11 +250,11 @@ class ExportService {
                 _buildPdfInfoRow('${s.tr('export_oauth_provider')}:', user.oauthProvider!),
               _buildPdfInfoRow(
                 '${s.tr('export_account_created')}:',
-                DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdAt),
+                _fullTimestampFormatter.format(user.createdAt),
               ),
               _buildPdfInfoRow(
                 '${s.tr('export_last_login')}:',
-                DateFormat('yyyy-MM-dd HH:mm:ss').format(user.lastLogin),
+                _fullTimestampFormatter.format(user.lastLogin),
               ),
               _buildPdfInfoRow('${s.tr('export_status')}:', user.isActive ? s.tr('export_active') : s.tr('export_inactive')),
               pw.SizedBox(height: 30),
@@ -454,7 +459,7 @@ class ExportService {
         pw.Divider(),
         pw.SizedBox(height: 5),
         pw.Text(
-          '${s.tr('report_generated_on')}${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}',
+          '${s.tr('report_generated_on')}${_fullTimestampFormatter.format(DateTime.now())}',
           style: _getTextStyle(fontSize: 8, color: PdfColors.grey600),
         ),
       ],
@@ -473,7 +478,7 @@ class ExportService {
     // Add header
     buffer.writeln('=' * 80);
     buffer.writeln('PLUTUS ${s.tr('report_financial_report').toUpperCase()}');
-    buffer.writeln('${s.tr('report_generated_on')}${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}');
+    buffer.writeln('${s.tr('report_generated_on')}${_fullTimestampFormatter.format(DateTime.now())}');
     buffer.writeln('=' * 80);
     buffer.writeln();
 
@@ -491,8 +496,8 @@ class ExportService {
       if (user.oauthProvider != null) {
         buffer.writeln('${s.tr('export_oauth_provider')}:   ${user.oauthProvider}');
       }
-      buffer.writeln('${s.tr('export_account_created')}:  ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdAt)}');
-      buffer.writeln('${s.tr('export_last_login')}:       ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.lastLogin)}');
+      buffer.writeln('${s.tr('export_account_created')}:  ${_fullTimestampFormatter.format(user.createdAt)}');
+      buffer.writeln('${s.tr('export_last_login')}:       ${_fullTimestampFormatter.format(user.lastLogin)}');
       buffer.writeln('${s.tr('export_status')}:           ${user.isActive ? s.tr('export_active') : s.tr('export_inactive')}');
       buffer.writeln();
       buffer.writeln();
@@ -533,7 +538,7 @@ class ExportService {
       buffer.writeln('-' * 80);
 
       for (final tx in transactions) {
-        final date = DateFormat('yyyy-MM-dd HH:mm').format(tx.dateTime);
+        final date = _shortDateTimeFormatter.format(tx.dateTime);
         final description = tx.label.length > 28 ? '${tx.label.substring(0, 28)}..' : tx.label;
         final amount = '${tx.isExpense ? '-' : '+'}${_formatCurrency(tx.totalAmount)}';
         final type = tx.isExpense ? s.tr('export_expense') : s.tr('export_income');
@@ -581,7 +586,7 @@ class ExportService {
     if (startDate == null && endDate == null) {
       return 'All time';
     }
-    final format = DateFormat('yyyy-MM-dd');
+    final format = _dateOnlyFormatter;
     if (startDate != null && endDate != null) {
       return '${format.format(startDate)} to ${format.format(endDate)}';
     } else if (startDate != null) {

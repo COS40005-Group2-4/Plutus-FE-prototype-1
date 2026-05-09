@@ -13,6 +13,10 @@ import '../models/report_data.dart';
 import '../models/transaction_model.dart';
 import 'interfaces/i_report_pdf_service.dart';
 
+final _filenameTimestampFormatter = DateFormat('yyyy-MM-dd_HHmmss');
+final _bodyDateFormatter = DateFormat('MMM d, yyyy');
+final _generatedAtFormatter = DateFormat('MMMM d, yyyy \'at\' h:mm a');
+
 class ReportPdfService implements IReportPdfService {
   pw.Font? _regularFont;
   pw.Font? _boldFont;
@@ -47,7 +51,7 @@ class ReportPdfService implements IReportPdfService {
   Future<String> generatePdf({required ReportDataModel data, String locale = 'en'}) async {
     final Uint8List bytes = await generatePdfBytes(data: data, locale: locale);
     final Directory dir = await _getExportDirectory();
-    final String timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
+    final String timestamp = _filenameTimestampFormatter.format(DateTime.now());
     final String filePath = '${dir.path}${Platform.pathSeparator}plutus_report_$timestamp.pdf';
     await File(filePath).writeAsBytes(bytes);
     return filePath;
@@ -72,7 +76,7 @@ class ReportPdfService implements IReportPdfService {
     await _loadFonts();
     final ReportStrings s = ReportStrings(locale);
     final pw.Document doc = pw.Document(theme: _theme);
-    final DateFormat dateFmt = DateFormat('MMM d, yyyy');
+    final DateFormat dateFmt = _bodyDateFormatter;
     final NumberFormat pctFmt = NumberFormat('0.0');
 
     final List<ReportSection> sections = data.config.enabledSections;
@@ -211,7 +215,7 @@ class ReportPdfService implements IReportPdfService {
 
           pw.SizedBox(height: 24),
           pw.Text(
-            '${s.tr('report_generated_on')}${DateFormat('MMMM d, yyyy \'at\' h:mm a').format(data.generatedAt)}',
+            '${s.tr('report_generated_on')}${_generatedAtFormatter.format(data.generatedAt)}',
             style: _s(size: 9, color: PdfColors.grey500),
           ),
         ],

@@ -12,6 +12,9 @@ import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/widgets/glass_container.dart';
 
+final _monthlyPeriodFormatter = DateFormat('MMMM yyyy');
+final _shortDateFormatter = DateFormat('MMM d');
+
 class CategoryBudgetWidget extends ConsumerWidget {
   const CategoryBudgetWidget({super.key});
 
@@ -30,13 +33,11 @@ class CategoryBudgetWidget extends ConsumerWidget {
 
     switch (budget.periodType) {
       case BudgetPeriodType.monthly:
-        return DateFormat('MMMM yyyy').format(start);
+        return _monthlyPeriodFormatter.format(start);
       case BudgetPeriodType.weekly:
-        final end = provider.currentPeriodEnd.subtract(const Duration(days: 1));
-        return '${DateFormat('MMM d').format(start)} – ${DateFormat('MMM d').format(end)}';
       case BudgetPeriodType.biweekly:
         final end = provider.currentPeriodEnd.subtract(const Duration(days: 1));
-        return '${DateFormat('MMM d').format(start)} – ${DateFormat('MMM d').format(end)}';
+        return '${_shortDateFormatter.format(start)} – ${_shortDateFormatter.format(end)}';
     }
   }
 

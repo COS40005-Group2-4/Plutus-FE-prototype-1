@@ -6,6 +6,8 @@ import '../theme/app_colors.dart';
 import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
 
+final _dateRangeFormatter = DateFormat('MMM dd, yyyy');
+
 class ExportDialog extends StatefulWidget {
   const ExportDialog({super.key});
 
@@ -176,7 +178,7 @@ class _ExportDialogState extends State<ExportDialog> {
 
   Widget _buildDateRangeSelector() {
     final l10n = AppLocalizations.of(context);
-    final dateFormat = DateFormat('MMM dd, yyyy');
+    final dateFormat = _dateRangeFormatter;
 
     return GlassContainer(
       borderRadius: 8,
