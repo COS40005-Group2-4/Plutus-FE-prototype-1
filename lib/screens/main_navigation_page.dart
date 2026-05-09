@@ -35,28 +35,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     ];
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: AppMotion.medium,
-        switchInCurve: AppMotion.emphasized,
-        switchOutCurve: AppMotion.standard,
-        transitionBuilder: (child, animation) =>
-            FadeTransition(opacity: animation, child: child),
-        layoutBuilder: (currentChild, previousChildren) {
-          // Stack with currentChild on top — but unlike the default, give each
-          // child a non-positioned slot so the outgoing one is clipped to the
-          // same bounds and tap-events don't pass through during the fade.
-          return Stack(
-            alignment: Alignment.topCenter,
-            children: <Widget>[
-              ...previousChildren,
-              ?currentChild,
-            ],
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey<int>(_currentIndex),
-          child: tabs[_currentIndex],
-        ),
+      body: _DirectionalAxisSwitcher(
+        index: _currentIndex,
+        children: tabs,
       ),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -207,6 +188,158 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Directional shared-axis tab switcher
+// ---------------------------------------------------------------------------
+
+const double _kTabSlideDistance = 24.0;
+
+/// Swaps between two tab bodies with a directional shared-axis transition.
+///
+/// All children are kept mounted (with their tickers paused) so per-tab scroll
+/// position and widget state survive across switches. The outgoing tab fades +
+/// slides ~24 px in the direction it came from over the first 40% of the
+/// duration; the incoming tab fades + slides in from the opposite side over
+/// the last 60%. The two never sit at meaningful opacity at the same instant.
+class _DirectionalAxisSwitcher extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _DirectionalAxisSwitcher({
+    required this.index,
+    required this.children,
+  });
+
+  @override
+  State<_DirectionalAxisSwitcher> createState() =>
+      _DirectionalAxisSwitcherState();
+}
+
+class _DirectionalAxisSwitcherState extends State<_DirectionalAxisSwitcher>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late int _previousIndex;
+  bool _isAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousIndex = widget.index;
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppMotion.medium,
+      value: 1.0,
+    );
+    _controller.addStatusListener((AnimationStatus status) {
+      if (status == AnimationStatus.completed && _isAnimating) {
+        setState(() {
+          _isAnimating = false;
+          _previousIndex = widget.index;
+        });
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _DirectionalAxisSwitcher oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) {
+      // Capture the old index as the outgoing tab and start a fresh transition.
+      _previousIndex = oldWidget.index;
+      final bool reduceMotion =
+          MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      if (reduceMotion) {
+        _isAnimating = false;
+        _controller.value = 1.0;
+      } else {
+        _isAnimating = true;
+        _controller.forward(from: 0.0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return IndexedStack(
+        index: widget.index,
+        sizing: StackFit.expand,
+        children: widget.children,
+      );
+    }
+
+    final int direction = widget.index >= _previousIndex ? 1 : -1;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (BuildContext context, _) {
+        return Stack(
+          fit: StackFit.expand,
+          children: List<Widget>.generate(widget.children.length, (int i) {
+            final bool isCurrent = i == widget.index;
+            final bool isOutgoing = _isAnimating && i == _previousIndex;
+            final Widget tab = KeyedSubtree(
+              key: ValueKey<int>(i),
+              child: widget.children[i],
+            );
+
+            if (!isCurrent && !isOutgoing) {
+              // Keep the tab in the tree (state preserved) but paused and
+              // not painted/hit-tested.
+              return Offstage(
+                offstage: true,
+                child: TickerMode(enabled: false, child: tab),
+              );
+            }
+
+            final double t = _controller.value;
+
+            if (isCurrent) {
+              // Incoming: fades + slides in from `direction * slide` to 0
+              // over the last 60% of the duration.
+              final double localT = ((t - 0.4) / 0.6).clamp(0.0, 1.0);
+              final double eased = AppMotion.emphasized.transform(localT);
+              final double dx = direction * _kTabSlideDistance * (1 - eased);
+              return IgnorePointer(
+                ignoring: !_isAnimating ? false : eased < 0.5,
+                child: Opacity(
+                  opacity: eased,
+                  child: Transform.translate(
+                    offset: Offset(dx, 0),
+                    child: tab,
+                  ),
+                ),
+              );
+            } else {
+              // Outgoing: fades + slides out from 0 to `-direction * slide`
+              // over the first 40% of the duration.
+              final double localT = (t / 0.4).clamp(0.0, 1.0);
+              final double eased = AppMotion.emphasized.transform(localT);
+              final double dx = -direction * _kTabSlideDistance * eased;
+              return IgnorePointer(
+                ignoring: true,
+                child: Opacity(
+                  opacity: 1 - eased,
+                  child: Transform.translate(
+                    offset: Offset(dx, 0),
+                    child: tab,
+                  ),
+                ),
+              );
+            }
+          }),
+        );
+      },
     );
   }
 }
