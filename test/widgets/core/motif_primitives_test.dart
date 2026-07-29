@@ -51,4 +51,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(tester.hasRunningAnimations, isFalse);
   });
+
+  testWidgets('AppSkeleton animates when animations are enabled',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: const Scaffold(body: AppSkeleton(width: 120)),
+    ));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.hasRunningAnimations, isTrue);
+  });
 }

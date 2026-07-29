@@ -23,6 +23,9 @@ class _AppSkeletonState extends State<AppSkeleton>
     duration: AppMotion.slow * 2,
   );
 
+  late final Animation<double> _opacity = Tween<double>(begin: 1.0, end: 0.55)
+      .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -45,9 +48,7 @@ class _AppSkeletonState extends State<AppSkeleton>
   Widget build(BuildContext context) {
     final PlutusTokens t = context.tokens;
     return FadeTransition(
-      opacity: Tween<double>(begin: 1.0, end: 0.55).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-      ),
+      opacity: _opacity,
       child: Container(
         width: widget.width,
         height: widget.height,
