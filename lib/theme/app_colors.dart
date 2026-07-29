@@ -20,10 +20,10 @@ class AppColors {
   static const primaryStrongDark = Color(0xFFECCB5F); // gold-300
   static const primarySoftDark = Color(0x1FE0B32F);   // gold-400 @12%
 
-  /// Sunshine yellow accent for chips/badges in light mode.
+  /// Gold accent for chips/badges in light mode.
   /// Used as ColorScheme.secondary in light themes.
   static const accent = Color(0xFFFAF0CE);           // gold-100
-  /// Violet-300 accent for chips/badges in dark mode.
+  /// Gold-300 accent for chips/badges in dark mode.
   static const accentDark = Color(0xFFECCB5F);      // gold-300
 
   // ── CTA pill button ──
@@ -270,7 +270,7 @@ class AppColors {
       brand(b).withValues(alpha: b == Brightness.dark ? 0.22 : 0.16);
 
   /// Chip fill behind a resize handle. Solid on light, slightly translucent
-  /// on dark so the handle reads above the violet glow halo.
+  /// on dark so the handle reads above the gold halo.
   static Color editHandleFill(Brightness b) =>
       b == Brightness.dark ? primaryDark : primary;
 
