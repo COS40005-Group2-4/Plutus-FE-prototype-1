@@ -51,7 +51,9 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    // file_picker 11 removed the `platform` instance getter; FilePicker is now
+    // an abstract final class exposing these as statics.
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json', 'csv', 'xml', 'ledger', 'txt'],
     );

@@ -43,7 +43,7 @@ dependencies:
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
   http: ^1.1.0
-  file_picker: ^10.3.8
+  file_picker: ^11.0.2
   
   # OAuth2 & Authentication
   google_sign_in: ^7.2.0
@@ -61,7 +61,10 @@ dependencies:
   
   # Device & Network Info
   connectivity_plus: ^7.0.0
-  device_info_plus: ^12.3.0
+  # Held at 12.x: device_info_plus >=13.1.0 requires win32 ^6, but every
+  # file_picker <12.0.0-beta.1 pins win32 ^5.9.0. Revisit when file_picker 12
+  # ships stable. (No direct imports of this package today.)
+  device_info_plus: ^12.4.0
   
   # Utils
   uuid: ^4.0.0
@@ -73,7 +76,7 @@ dependencies:
   csv: ^8.0.0
   aws_common: ^0.7.12
   aws_signature_v4: ^0.6.10
-  google_mlkit_text_recognition: ^0.15.0
+  google_mlkit_text_recognition: ^0.16.0
   ffi: ^2.1.2
   flutter_dotenv: ^6.0.0
   sqflite: ^2.3.0
@@ -83,7 +86,7 @@ dependencies:
   xml: ^6.5.0
   pdf: ^3.11.1
   printing: ^5.13.4
-  open_file: ^3.5.10
+  open_file: ^4.0.0
   google_fonts: ^8.0.2
   fl_chart: ^1.2.0
 

@@ -1,2 +1,7 @@
-boto3>=1.34.0
-pydantic>=2.0.0
+# Verified on Python 3.13 against boto3 1.43.58 and pydantic 2.13.4 (top of range).
+#
+# Upper bounds are deliberate: package.sh installs whatever the constraint allows at
+# build time, so an unbounded `pydantic>=2.0.0` would silently pull v3 on a future
+# build and break shared/models.py. Bound the major, float the minor/patch.
+boto3>=1.40.0,<2.0.0
+pydantic>=2.11.0,<3.0.0

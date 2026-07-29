@@ -160,3 +160,24 @@ default.profraw
 *.dmg
 TEST.md
 config.md
+/.playwright-mcp
+# Python artifacts (covers all lambda handler dirs — never ignore the
+# source directories themselves, or new handler files silently vanish)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Terraform — state, plans, and variable files can embed live credentials
+# (e.g. api_gateway_api_key values and random_password results live in state)
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+.terraform/
+
+# Flutter-generated plugin registries (rewritten by every `flutter pub get`)
+.flutter-plugins
+.flutter-plugins-dependencies
