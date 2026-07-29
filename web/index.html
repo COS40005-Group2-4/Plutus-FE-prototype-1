@@ -18,7 +18,7 @@
 
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
-    <meta name="description" content="A new Flutter project." />
+    <meta name="description" content="Plutus — personal finance management. Track spending, budgets, and investments in one place." />
     
     <!-- Security headers for Google Sign-In -->
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
@@ -27,16 +27,55 @@
     <!-- iOS meta tags & icons -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="plutus_fe_prototype" />
+    <meta name="apple-mobile-web-app-title" content="Plutus" />
     <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png" />
 
-    <title>plutus_fe_prototype</title>
+    <title>Plutus</title>
     <link rel="manifest" href="manifest.json" />
+
+    <!-- Branded loading splash, removed once Flutter renders its first frame -->
+    <style>
+      #plutus-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fdf2f8;
+        transition: opacity 0.35s ease-out;
+      }
+      @media (prefers-color-scheme: dark) {
+        #plutus-splash {
+          background: #0b0e2a;
+        }
+      }
+      #plutus-splash img {
+        width: min(45vw, 260px);
+        height: auto;
+      }
+    </style>
   </head>
   <body>
+    <div id="plutus-splash"><img src="splash_logo.png" alt="Plutus" /></div>
+    <script>
+      (function () {
+        function hideSplash() {
+          var splash = document.getElementById("plutus-splash");
+          if (!splash) return;
+          splash.style.opacity = "0";
+          setTimeout(function () {
+            splash.remove();
+          }, 400);
+        }
+        window.addEventListener("flutter-first-frame", hideSplash);
+        // Safety net: never let the splash mask a failed boot forever.
+        setTimeout(hideSplash, 20000);
+      })();
+    </script>
     <script src="flutter_bootstrap.js" async></script>
   </body>
 </html>

@@ -74,7 +74,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final brightness = Theme.of(context).brightness;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 400;
-    final brand = AppColors.brand(brightness);
 
     return SingleChildScrollView(
       child: Center(
@@ -92,14 +91,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     width: 88,
                     height: 88,
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.brandSoft(brightness),
                       borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
-                    child: Icon(
-                      Icons.account_balance_wallet_outlined,
-                      size: 40,
-                      color: brand,
+                    child: Image.asset(
+                      'lib/assets/branding/plutus_icon.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),

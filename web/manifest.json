@@ -1,11 +1,11 @@
 {
-  "name": "plutus_fe_prototype",
-  "short_name": "plutus_fe_prototype",
+  "name": "Plutus",
+  "short_name": "Plutus",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0175C2",
-  "theme_color": "#0175C2",
-  "description": "A new Flutter project.",
+  "background_color": "#0B0E2A",
+  "theme_color": "#0B0E2A",
+  "description": "Personal finance management — track spending, budgets, and investments in one place.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
