@@ -126,6 +126,7 @@ flutter:
   assets:
     - app.env
     - lib/assets/avatar/
+    - lib/assets/branding/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

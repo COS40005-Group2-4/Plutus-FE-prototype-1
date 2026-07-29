@@ -138,10 +138,11 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
                   color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: AppRadius.borderSm,
                 ),
-                child: Icon(
-                  Icons.dashboard_customize,
-                  color: isDark ? AppColors.accent : AppColors.primary,
-                  size: 24,
+                child: Image.asset(
+                  'lib/assets/branding/plutus_icon.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
