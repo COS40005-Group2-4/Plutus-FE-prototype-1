@@ -1,54 +1,40 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 /// Reusable brand gradients. Single source of truth so screens never
 /// hand-roll their own gradient stops.
+@Deprecated('Transitional shim — use context.tokens (PlutusTokens). Removed in PR4.')
 class AppGradients {
   AppGradients._();
 
-  /// Hero balance card gradient (dark mode).
-  /// 135deg from violet-400 → violet-600.
+  /// Hero balance card (dark) — near-flat deep-navy surface.
   static const LinearGradient balanceCardDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: <Color>[
-      AppColors.primaryDark,            // violet-400 #A78BFA
-      Color(0xFF6D5BD0),                // violet-600
-    ],
+    colors: <Color>[Color(0xFF1A2340), Color(0xFF131A2E)],
   );
 
-  /// Hero balance card gradient (light mode).
-  /// Magenta-300 → magenta-500 for the soft warm hero.
+  /// Hero balance card (light) — near-flat navy-800→900.
   static const LinearGradient balanceCardLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: <Color>[
-      Color(0xFFF9A8D4), // pink-300
-      AppColors.primary, // magenta-500
-    ],
+    colors: <Color>[Color(0xFF1A2650), Color(0xFF131C3D)],
   );
 
   /// Returns the brand-appropriate hero balance gradient.
   static LinearGradient balanceCard(Brightness b) =>
       b == Brightness.dark ? balanceCardDark : balanceCardLight;
 
-  /// Hero background wash for the dark mode canvas.
+  /// Dark-canvas wash — barely-there navy fade.
   static const LinearGradient heroBackgroundDark = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: <Color>[
-      Color(0xFF1B1F4A),
-      AppColors.backgroundDark,
-    ],
+    colors: <Color>[Color(0xFF10162B), Color(0xFF0C1120)],
   );
 
-  /// CTA pill gradient (dark mode). 135deg violet-400 → violet-600.
+  /// CTA gradient (dark) — near-flat gold; solid gold fills are preferred.
   static const LinearGradient ctaButtonDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: <Color>[
-      AppColors.primaryDark,
-      Color(0xFF6D5BD0),
-    ],
+    colors: <Color>[Color(0xFFE0B32F), Color(0xFFC9970F)],
   );
 }

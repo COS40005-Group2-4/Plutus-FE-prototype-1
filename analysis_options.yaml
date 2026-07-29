@@ -9,6 +9,13 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    # PR1-PR3 of the gold/navy redesign intentionally keep deprecated
+    # AppColors/AppElevation/AppGradients shims alive while call-sites
+    # migrate to PlutusTokens. Remove this override in PR4 with the shims.
+    deprecated_member_use_from_same_package: ignore
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

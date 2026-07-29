@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 /// text and elevated surfaces.
 /// This class is a transitional shim over PlutusTokens — callers resolve
 /// colors via AppColors.* (alias) rather than directly.
+@Deprecated('Transitional shim — use context.tokens (PlutusTokens). Removed in PR4.')
 class AppColors {
   AppColors._();
 
