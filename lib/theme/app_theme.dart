@@ -21,8 +21,6 @@ class AppTheme {
     final Color surface = t.surface;
     final Color textPrimary = AppColors.textPrimary(brightness);
     final Color textSecondary = AppColors.textSecondary(brightness);
-    final Color ctaBg = AppColors.ctaButtonBackground(brightness);
-    final Color ctaFg = AppColors.ctaButtonForeground(brightness);
 
     final ColorScheme scheme = ColorScheme(
       brightness: brightness,
@@ -126,86 +124,111 @@ class AppTheme {
           return IconThemeData(color: textSecondary);
         }),
       ),
-      // Primary pill CTA: solid near-black on light, violet on dark
-      // (widget code can override with a gradient via Container+InkWell).
+      // Primary CTA: gold fill + navy ink (spec §5). 44px, radius 12.
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: ctaBg,
-          foregroundColor: ctaFg,
-          disabledBackgroundColor:
-              AppColors.surfaceMuted(brightness),
-          disabledForegroundColor: AppColors.textTertiary(brightness),
-          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
-          minimumSize: const Size(0, 56),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) {
+            if (s.contains(WidgetState.disabled)) return t.surfaceSubtle;
+            if (s.contains(WidgetState.pressed) || s.contains(WidgetState.hovered)) {
+              return t.goldHover;
+            }
+            return t.gold;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) =>
+              s.contains(WidgetState.disabled) ? t.textMuted : t.onGold),
+          textStyle: WidgetStatePropertyAll<TextStyle>(
+              AppTextStyles.bodyStrongStyle),
+          minimumSize: const WidgetStatePropertyAll<Size>(Size(64, 44)),
+          padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+              EdgeInsets.symmetric(horizontal: AppSpacing.componentXxl)),
+          shape: WidgetStatePropertyAll<OutlinedBorder>(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.button))),
+          elevation: const WidgetStatePropertyAll<double>(0),
         ),
       ),
+      // ElevatedButton mirrors FilledButton so legacy call-sites match.
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ctaBg,
-          foregroundColor: ctaFg,
-          elevation: 0,
-          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
-          minimumSize: const Size(0, 56),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) {
+            if (s.contains(WidgetState.disabled)) return t.surfaceSubtle;
+            if (s.contains(WidgetState.pressed) || s.contains(WidgetState.hovered)) {
+              return t.goldHover;
+            }
+            return t.gold;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) =>
+              s.contains(WidgetState.disabled) ? t.textMuted : t.onGold),
+          textStyle: WidgetStatePropertyAll<TextStyle>(
+              AppTextStyles.bodyStrongStyle),
+          minimumSize: const WidgetStatePropertyAll<Size>(Size(64, 44)),
+          padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+              EdgeInsets.symmetric(horizontal: AppSpacing.componentXxl)),
+          shape: WidgetStatePropertyAll<OutlinedBorder>(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.button))),
+          elevation: const WidgetStatePropertyAll<double>(0),
+          shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         ),
       ),
-      // Secondary outlined button: brand-colored border + label on a soft
-      // surface (no fill in light, surfaceMuted in dark).
+      // Ghost button: surface + strong hairline + navy text.
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: seed,
-          backgroundColor:
-              isDark ? AppColors.surfaceMuted(brightness) : Colors.transparent,
-          textStyle: AppTextStyles.bodyStrongStyle.copyWith(fontSize: 16),
-          minimumSize: const Size(0, 56),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-          side: BorderSide(color: seed, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderPill),
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) =>
+              s.contains(WidgetState.disabled) ? t.textMuted : t.text),
+          backgroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> s) =>
+              s.contains(WidgetState.hovered) ? t.surfaceSubtle : t.surface),
+          side: WidgetStatePropertyAll<BorderSide>(
+              BorderSide(color: t.borderStrong)),
+          textStyle: WidgetStatePropertyAll<TextStyle>(
+              AppTextStyles.bodyStrongStyle),
+          minimumSize: const WidgetStatePropertyAll<Size>(Size(64, 44)),
+          padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+              EdgeInsets.symmetric(horizontal: AppSpacing.componentXxl)),
+          shape: WidgetStatePropertyAll<OutlinedBorder>(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.button))),
         ),
       ),
+      // Tertiary: quiet navy text button.
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: seed,
+          foregroundColor: isDark ? t.brandNavy : const Color(0xFF33457D),
           textStyle: AppTextStyles.bodyStrongStyle,
           minimumSize: const Size(0, 44),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.borderSm),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.componentMd),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.button)),
         ),
       ),
-      // Inputs: filled, radius 16, brand focus ring.
+      // Inputs: hairline borderStrong at rest, 2px gold on focus (spec §5).
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceMuted(brightness),
-        hintStyle:
-            AppTextStyles.bodyStyle.copyWith(color: AppColors.textTertiary(brightness)),
-        labelStyle:
-            AppTextStyles.labelStyle.copyWith(color: textSecondary),
+        fillColor: t.surface,
+        focusColor: t.gold.withValues(alpha: 0.06),
+        hintStyle: AppTextStyles.bodyStyle.copyWith(color: t.textMuted),
+        labelStyle: AppTextStyles.labelStyle.copyWith(color: t.textSecondary),
+        helperStyle: AppTextStyles.captionStyle.copyWith(color: t.textMuted),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          horizontal: AppSpacing.componentLg,
+          vertical: AppSpacing.componentMd,
         ),
         border: OutlineInputBorder(
           borderRadius: AppRadius.borderInput,
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: t.borderStrong),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderInput,
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: t.borderStrong),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderInput,
-          borderSide: BorderSide(color: seed, width: 1.5),
+          borderSide: BorderSide(color: t.gold, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderInput,
-          borderSide: const BorderSide(color: AppColors.error, width: 1),
+          borderSide: BorderSide(color: t.error.dot),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderInput,
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          borderSide: BorderSide(color: t.error.dot, width: 2),
         ),
       ),
       chipTheme: ChipThemeData(
