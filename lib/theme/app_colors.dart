@@ -1,48 +1,50 @@
 import 'package:flutter/material.dart';
 
-/// Semantic color tokens for the Plutus app.
+/// Semantic color tokens for the Plutus app using a gold/navy design system.
 ///
-/// Light theme — friendly fintech magenta on a soft pink canvas, with a
-/// near-black pill CTA and sunshine-yellow accent chips.
-/// Dark theme — premium violet on a deep navy canvas with violet gradient
-/// hero cards.
+/// Light theme — warm gold accents on a clean white/blue-gray canvas with
+/// navy text and subtle shadows.
+/// Dark theme — soft gold accents on a deep navy canvas with light blue-gray
+/// text and elevated surfaces.
+/// This class is a transitional shim over PlutusTokens — callers resolve
+/// colors via AppColors.* (alias) rather than directly.
 class AppColors {
   AppColors._();
 
   // ── Brand ──
-  static const primary = Color(0xFFEC4899);          // magenta-500 (light)
-  static const primaryStrong = Color(0xFFDB2777);    // magenta-600 (light pressed)
-  static const primarySoft = Color(0xFFFCE7F3);      // magenta-100 (light tinted surfaces)
+  static const primary = Color(0xFFC9970F);          // gold-500
+  static const primaryStrong = Color(0xFFA67A0B);    // gold-600
+  static const primarySoft = Color(0xFFFDF9EC);      // gold-50
 
-  static const primaryDark = Color(0xFFA78BFA);      // violet-400 (dark)
-  static const primaryStrongDark = Color(0xFF8B5CF6); // violet-500 (dark pressed)
-  static const primarySoftDark = Color(0xFF2A2360);   // violet-900 tint (dark tinted surfaces)
+  static const primaryDark = Color(0xFFE0B32F);      // gold-400
+  static const primaryStrongDark = Color(0xFFECCB5F); // gold-300
+  static const primarySoftDark = Color(0x1FE0B32F);   // gold-400 @12%
 
   /// Sunshine yellow accent for chips/badges in light mode.
   /// Used as ColorScheme.secondary in light themes.
-  static const accent = Color(0xFFFFE66D);
+  static const accent = Color(0xFFFAF0CE);           // gold-100
   /// Violet-300 accent for chips/badges in dark mode.
-  static const accentDark = Color(0xFFC4B5FD);
+  static const accentDark = Color(0xFFECCB5F);      // gold-300
 
   // ── CTA pill button ──
-  static const ctaButtonLight = Color(0xFF0E0712);   // near-black pill (light)
-  static const ctaButtonDark = Color(0xFF8B5CF6);    // violet-500 (dark – use AppGradients.cta in widgets)
+  static const ctaButtonLight = Color(0xFFC9970F);  // gold-500
+  static const ctaButtonDark = Color(0xFFE0B32F);   // gold-400
 
   // ── Neutral surfaces (light) ──
-  static const backgroundLight = Color(0xFFFDF2F8);  // very pale pink canvas
+  static const backgroundLight = Color(0xFFF7F8FA);
   static const surfaceLight = Color(0xFFFFFFFF);     // raised card
-  static const surfaceMutedLight = Color(0xFFFBE8F1); // search field, muted card
+  static const surfaceMutedLight = Color(0xFFF1F3F6);
   static const surfaceElevatedLight = Color(0xFFFFFFFF);
-  static const borderLight = Color(0xFFF4D4E3);
-  static const dividerLight = Color(0xFFF7E1EC);
+  static const borderLight = Color(0xFFE5E8EE);
+  static const dividerLight = Color(0xFFE5E8EE);
 
   // ── Neutral surfaces (dark) ──
-  static const backgroundDark = Color(0xFF0B0E2A);   // deep navy canvas
-  static const surfaceDark = Color(0xFF141838);      // raised card
-  static const surfaceMidDark = Color(0xFF1B2046);   // muted card / input
-  static const surfaceElevatedDark = Color(0xFF222853); // overlay / nav
-  static const borderDark = Color(0xFF2A2F5C);
-  static const dividerDark = Color(0xFF1E2348);
+  static const backgroundDark = Color(0xFF0C1120);
+  static const surfaceDark = Color(0xFF131A2E);
+  static const surfaceMidDark = Color(0xFF1A2340);
+  static const surfaceElevatedDark = Color(0xFF1A2340);
+  static const borderDark = Color(0xFF232D4A);
+  static const dividerDark = Color(0xFF232D4A);
 
   // ── Legacy aliases (kept for backwards compatibility) ──
   // ignore: deprecated_member_use_from_same_package
@@ -52,65 +54,61 @@ class AppColors {
   static const menuBackground = surfaceDark;
 
   // ── Text (light) ──
-  static const textOnLight = Color(0xFF1A1224);
-  static const textOnLightSecondary = Color(0xFF6B5B72);
-  static const textOnLightTertiary = Color(0xFF9A8AA0);
+  static const textOnLight = Color(0xFF131C3D);      // navy-900
+  static const textOnLightSecondary = Color(0xFF4A5573);
+  static const textOnLightTertiary = Color(0xFF7E88A3);
 
   // ── Text (dark) ──
-  static const textOnDark = Color(0xFFFFFFFF);
-  static const textOnDarkSecondary = Color(0xFFC7C9E0);
-  static const textOnDarkTertiary = Color(0xFF8C8FB5);
+  static const textOnDark = Color(0xFFEDF0F7);
+  static const textOnDarkSecondary = Color(0xFFAAB4CE);
+  static const textOnDarkTertiary = Color(0xFF6E7A99);
 
   // ── Semantic ──
-  static const error = Color(0xFFE11D48);
-  static const success = Color(0xFF10B981);
-  static const warning = Color(0xFFF59E0B);
-  static const info = Color(0xFF3B82F6);
+  static const error = Color(0xFFD92D20);
+  static const success = Color(0xFF079455);
+  static const warning = Color(0xFFDC6803);
+  static const info = Color(0xFF52659A);
 
   // ── Chart palette (default = light theme) ──
   static const List<Color> chartPalette = chartPaletteLight;
 
   static const List<Color> chartPaletteLight = <Color>[
-    Color(0xFFEC4899), // magenta
-    Color(0xFFFFE66D), // sunshine yellow
-    Color(0xFFF472B6), // pink-300
-    Color(0xFFA855F7), // violet-500
-    Color(0xFFFB7185), // rose-400
-    Color(0xFFF59E0B), // amber
-    Color(0xFF22D3EE), // cyan
-    Color(0xFF10B981), // emerald
+    Color(0xFF24346A),
+    Color(0xFFC9970F),
+    Color(0xFF8093BC),
+    Color(0xFF35726E),
+    Color(0xFF6E4E7E),
+    Color(0xFF8A93AB),
   ];
 
   static const List<Color> chartPaletteDark = <Color>[
-    Color(0xFFA78BFA), // violet-400
-    Color(0xFFC4B5FD), // violet-300
-    Color(0xFFF472B6), // pink-300
-    Color(0xFF22D3EE), // cyan
-    Color(0xFF34D399), // emerald-400
-    Color(0xFFFBBF24), // amber-400
-    Color(0xFF60A5FA), // blue-400
-    Color(0xFFF87171), // red-400
+    Color(0xFFB3BFDB),
+    Color(0xFFE0B32F),
+    Color(0xFF8093BC),
+    Color(0xFF5FA39E),
+    Color(0xFFA886B8),
+    Color(0xFF6E7A99),
   ];
 
   // ── Widget accent colors (sidebar registry) ──
-  // Harmonized with the magenta/violet palette so colored widget cards read
+  // Harmonized with the gold/navy palette so colored widget cards read
   // as siblings, not strangers. Saturation kept low so card text stays
   // legible without heavy tints.
-  static const profileAccent = Color(0xFF8B5CF6);          // violet
-  static const budgetAccent = Color(0xFFEC4899);           // magenta
-  static const categoryBudgetAccent = Color(0xFFF472B6);   // pink-300
-  static const historyAccent = Color(0xFF10B981);          // emerald
-  static const cashflowAccent = Color(0xFF6366F1);         // indigo
-  static const expenseAccent = Color(0xFFE11D48);          // rose
-  static const incomeAccent = Color(0xFF10B981);           // emerald
-  static const savingsAccent = Color(0xFFF59E0B);          // amber
-  static const netWorthAccent = Color(0xFF22D3EE);         // cyan
-  static const heatmapAccent = Color(0xFFA78BFA);          // violet-400
-  static const marketAccent = Color(0xFFEC4899);           // magenta
-  static const billsAccent = Color(0xFFFB7185);            // rose-400
-  static const taxAccent = Color(0xFF6366F1);              // indigo
-  static const importAccent = Color(0xFFF59E0B);           // amber
-  static const exportAccent = Color(0xFFA855F7);           // violet-500
+  static const profileAccent = Color(0xFF52659A);
+  static const budgetAccent = Color(0xFF33457D);
+  static const categoryBudgetAccent = Color(0xFF52659A);
+  static const historyAccent = Color(0xFF33457D);
+  static const cashflowAccent = Color(0xFF24346A);
+  static const expenseAccent = Color(0xFFD92D20);
+  static const incomeAccent = Color(0xFF079455);
+  static const savingsAccent = Color(0xFFC9970F);
+  static const netWorthAccent = Color(0xFFC9970F);
+  static const heatmapAccent = Color(0xFFC9970F);
+  static const marketAccent = Color(0xFF52659A);
+  static const billsAccent = Color(0xFF33457D);
+  static const taxAccent = Color(0xFF52659A);
+  static const importAccent = Color(0xFF52659A);
+  static const exportAccent = Color(0xFF33457D);
 
   // ── Adaptive accessors ──
   static Color background(Brightness b) =>
@@ -157,18 +155,18 @@ class AppColors {
   static Color ctaButtonBackground(Brightness b) =>
       b == Brightness.dark ? ctaButtonDark : ctaButtonLight;
 
-  static Color ctaButtonForeground(Brightness b) => Colors.white;
+  static Color ctaButtonForeground(Brightness b) => const Color(0xFF0C122A);
 
   static List<Color> chartPaletteFor(Brightness b) =>
       b == Brightness.dark ? chartPaletteDark : chartPaletteLight;
 
   static Color gridLine(Brightness b) => b == Brightness.dark
       ? Colors.white.withValues(alpha: 0.06)
-      : Colors.black.withValues(alpha: 0.05);
+      : const Color(0xFF131C3D).withValues(alpha: 0.06);
 
   static Color borderLine(Brightness b) => b == Brightness.dark
       ? Colors.white.withValues(alpha: 0.10)
-      : Colors.black.withValues(alpha: 0.08);
+      : const Color(0xFF131C3D).withValues(alpha: 0.10);
 
   // ── On-accent foreground (dashboard widget cards) ──
   //
@@ -280,10 +278,10 @@ class AppColors {
   static Color editHandleForeground(Brightness b) => Colors.white;
 
   // ── Theme-adaptive semantic colors for data display ──
-  static const _positiveLight = Color(0xFF10B981);
-  static const _positiveDark = Color(0xFF34D399);
-  static const _negativeLight = Color(0xFFE11D48);
-  static const _negativeDark = Color(0xFFF87171);
+  static const _positiveLight = Color(0xFF067647);
+  static const _positiveDark = Color(0xFF3CCF8E);
+  static const _negativeLight = Color(0xFFB42318);
+  static const _negativeDark = Color(0xFFF49A92);
 
   static Color positive(Brightness b) =>
       b == Brightness.dark ? _positiveDark : _positiveLight;
