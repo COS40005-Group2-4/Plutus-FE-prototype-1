@@ -3,6 +3,7 @@ import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
+import 'plutus_tokens.dart';
 
 /// Builds light/dark [ThemeData] from the design tokens.
 class AppTheme {
@@ -13,22 +14,30 @@ class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
+    final PlutusTokens t = isDark ? PlutusTokens.dark : PlutusTokens.light;
     final Color seed = AppColors.brand(brightness);
     final Color secondary = AppColors.accentColor(brightness);
-    final Color bg = AppColors.background(brightness);
-    final Color surface = AppColors.surface(brightness);
+    final Color bg = t.bg;
+    final Color surface = t.surface;
     final Color textPrimary = AppColors.textPrimary(brightness);
     final Color textSecondary = AppColors.textSecondary(brightness);
     final Color ctaBg = AppColors.ctaButtonBackground(brightness);
     final Color ctaFg = AppColors.ctaButtonForeground(brightness);
 
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: seed,
+    final ColorScheme scheme = ColorScheme(
       brightness: brightness,
-      primary: seed,
-      secondary: secondary,
-      surface: surface,
-      error: AppColors.error,
+      primary: t.gold,
+      onPrimary: t.onGold,
+      secondary: t.brandNavy,
+      onSecondary: isDark ? t.bg : Colors.white,
+      surface: t.surface,
+      onSurface: t.text,
+      error: t.error.dot,
+      onError: Colors.white,
+      outline: t.borderStrong,
+      outlineVariant: t.border,
+      surfaceContainerHighest: t.surfaceSubtle,
+      shadow: Colors.black,
     );
 
     final TextTheme textTheme = TextTheme(
@@ -53,6 +62,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
+      extensions: <ThemeExtension<dynamic>>[t],
       // Scaffold is transparent because GlassBackground (in main.dart's
       // MaterialApp.builder) paints the base background and a soft accent wash.
       scaffoldBackgroundColor: Colors.transparent,
