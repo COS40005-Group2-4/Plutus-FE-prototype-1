@@ -15,6 +15,7 @@ import '../theme/app_radius.dart';
 ///   dashboard widget cards (profile, budget, etc.) get their accent color.
 /// - `color` non-null + `opacity == 1`: the accent is used as the literal
 ///   fill (rare; mainly for solid-fill banners).
+@Deprecated('Use AppCard (lib/widgets/core/app_card.dart). Removed in PR4.')
 class GlassContainer extends StatelessWidget {
   final Widget? child;
   final double? width;
