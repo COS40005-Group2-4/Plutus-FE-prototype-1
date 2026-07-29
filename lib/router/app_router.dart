@@ -166,11 +166,36 @@ class _StagedFade extends StatelessWidget {
 // Auth page paths (used in redirect logic)
 // ---------------------------------------------------------------------------
 
+// Pages an unauthenticated user may rest on. The '/' splash is deliberately
+// NOT here: it only hosts a spinner while AuthLoading resolves, and parking a
+// resolved-but-unauthenticated user there strands them on an infinite loader.
 const List<String> _authPaths = [
-  AppRoutes.splash,
   AppRoutes.userSelection,
   AppRoutes.login,
 ];
+
+/// Decides where the router should send the user for a given [authState] and
+/// [currentPath]. Returns null to stay put. Exposed for unit testing.
+@visibleForTesting
+String? authRedirect(AuthState authState, String currentPath) {
+  final bool onSplash = currentPath == AppRoutes.splash;
+  final bool onAuthPage = _authPaths.contains(currentPath);
+
+  if (authState is AuthLoading) {
+    return null;
+  }
+
+  if (authState is AuthUnauthenticated || authState is AuthError) {
+    if (onAuthPage) return null;
+    return AppRoutes.userSelection;
+  }
+
+  if (authState is AuthAuthenticated && (onAuthPage || onSplash)) {
+    return AppRoutes.dashboard;
+  }
+
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // GoRouter provider
@@ -184,23 +209,7 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
     refreshListenable: notifier,
     redirect: (BuildContext context, GoRouterState state) {
       final AuthState authState = ref.read(authNotifierProvider);
-      final String currentPath = state.matchedLocation;
-      final bool onAuthPage = _authPaths.contains(currentPath);
-
-      if (authState is AuthLoading) {
-        return null;
-      }
-
-      if (authState is AuthUnauthenticated || authState is AuthError) {
-        if (onAuthPage) return null;
-        return AppRoutes.userSelection;
-      }
-
-      if (authState is AuthAuthenticated && onAuthPage) {
-        return AppRoutes.dashboard;
-      }
-
-      return null;
+      return authRedirect(authState, state.matchedLocation);
     },
     routes: [
       GoRoute(
