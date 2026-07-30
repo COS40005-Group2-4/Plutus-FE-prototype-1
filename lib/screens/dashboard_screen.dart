@@ -19,7 +19,6 @@ import '../widgets/dashboard/empty_slot_tile.dart';
 import '../widgets/dashboard/widget_edit_chrome.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -597,10 +596,10 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                               curve: AppMotion.emphasized,
                               duration: AppMotion.medium,
                               swapEnabled: true,
+                              swapHighlightColor: t.gold,
                               backgroundStyle: EditModeBackgroundStyle(
-                                lineColor: AppColors.gridLine(
-                                  Theme.of(context).brightness,
-                                ),
+                                lineColor: t.border,
+                                fillColor: t.gold.withValues(alpha: 0.08),
                                 lineWidth: 1,
                                 dualLineHorizontal: false,
                                 dualLineVertical: false,

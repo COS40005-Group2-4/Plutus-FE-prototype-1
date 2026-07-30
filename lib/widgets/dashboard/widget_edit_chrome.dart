@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/plutus_tokens.dart';
 
 /// Action emitted by the per-widget overflow menu.
 enum WidgetEditAction { rename, duplicate, lock, resetSize, remove }
@@ -13,7 +13,7 @@ enum WidgetEditAction { rename, duplicate, lock, resetSize, remove }
 /// active.
 ///
 /// Visual elements:
-/// - dashed brand-tinted outline around the widget
+/// - dashed gold-tinted outline around the widget
 /// - top-left "drag" handle pill (icon + tooltip)
 /// - top-right overflow menu pill
 /// - 8 resize handles (4 corners + 4 edge midpoints)
@@ -38,10 +38,9 @@ class WidgetEditChrome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    final PlutusTokens t = context.tokens;
     final l10n = AppLocalizations.of(context);
-    final accent = AppColors.editAccent(brightness);
-    final outlineColor = AppColors.editOutline(brightness);
+    final outlineColor = t.gold.withValues(alpha: 0.45);
 
     return IgnorePointer(
       ignoring: false,
@@ -52,7 +51,7 @@ class WidgetEditChrome extends StatelessWidget {
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: <Widget>[
-            // Dashed brand outline.
+            // Dashed gold outline.
             Positioned.fill(
               child: IgnorePointer(
                 child: CustomPaint(
@@ -77,11 +76,13 @@ class WidgetEditChrome extends StatelessWidget {
                   _ChromePill(
                     icon: Icons.drag_indicator_rounded,
                     tooltip: l10n.editModeWidgetDragHandleLabel,
-                    accent: accent,
+                    fill: t.gold,
+                    glyphColor: t.onGold,
                   ),
                   const Spacer(),
                   _OverflowMenuButton(
-                    accent: accent,
+                    fill: t.gold,
+                    glyphColor: t.onGold,
                     isLocked: isLocked,
                     tooltip: l10n.editModeWidgetOptionsLabel,
                     onAction: onAction,
@@ -91,14 +92,17 @@ class WidgetEditChrome extends StatelessWidget {
             ),
 
             // 8 resize handles.
-            ..._buildResizeHandles(brightness, accent),
+            ..._buildResizeHandles(fill: t.gold, borderColor: t.onGold),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildResizeHandles(Brightness brightness, Color accent) {
+  List<Widget> _buildResizeHandles({
+    required Color fill,
+    required Color borderColor,
+  }) {
     const positions = <_HandlePosition>[
       _HandlePosition(top: -6, left: -6, kind: _HandleKind.corner),
       _HandlePosition(top: -6, right: -6, kind: _HandleKind.corner),
@@ -110,7 +114,11 @@ class WidgetEditChrome extends StatelessWidget {
       _HandlePosition(right: -6, kind: _HandleKind.edgeVertical),
     ];
     return positions
-        .map((p) => _ResizeHandle(position: p, accent: accent))
+        .map((p) => _ResizeHandle(
+              position: p,
+              fill: fill,
+              borderColor: borderColor,
+            ))
         .toList(growable: false);
   }
 }
@@ -120,12 +128,14 @@ class WidgetEditChrome extends StatelessWidget {
 class _ChromePill extends StatelessWidget {
   final IconData icon;
   final String tooltip;
-  final Color accent;
+  final Color fill;
+  final Color glyphColor;
 
   const _ChromePill({
     required this.icon,
     required this.tooltip,
-    required this.accent,
+    required this.fill,
+    required this.glyphColor,
   });
 
   @override
@@ -143,17 +153,17 @@ class _ChromePill extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: accent,
+              color: fill,
               borderRadius: BorderRadius.circular(AppRadius.iconButton),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: accent.withValues(alpha: 0.35),
+                  color: fill.withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
               ],
             ),
-            child: Icon(icon, size: 16, color: Colors.white),
+            child: Icon(icon, size: 16, color: glyphColor),
           ),
         ),
       ),
@@ -162,13 +172,15 @@ class _ChromePill extends StatelessWidget {
 }
 
 class _OverflowMenuButton extends StatelessWidget {
-  final Color accent;
+  final Color fill;
+  final Color glyphColor;
   final bool isLocked;
   final String tooltip;
   final ValueChanged<WidgetEditAction> onAction;
 
   const _OverflowMenuButton({
-    required this.accent,
+    required this.fill,
+    required this.glyphColor,
     required this.isLocked,
     required this.tooltip,
     required this.onAction,
@@ -177,8 +189,7 @@ class _OverflowMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final brightness = Theme.of(context).brightness;
-    final menuTextColor = AppColors.textPrimary(brightness);
+    final PlutusTokens t = context.tokens;
 
     return Tooltip(
       message: tooltip,
@@ -196,33 +207,33 @@ class _OverflowMenuButton extends StatelessWidget {
               value: WidgetEditAction.rename,
               icon: Icons.edit_rounded,
               label: l10n.editModeMenuRename,
-              color: menuTextColor,
+              color: t.text,
             ),
             _menuItem(
               value: WidgetEditAction.duplicate,
               icon: Icons.copy_rounded,
               label: l10n.editModeMenuDuplicate,
-              color: menuTextColor,
+              color: t.text,
             ),
             _menuItem(
               value: WidgetEditAction.lock,
               icon:
                   isLocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
               label: isLocked ? l10n.editModeMenuUnlock : l10n.editModeMenuLock,
-              color: menuTextColor,
+              color: t.text,
             ),
             _menuItem(
               value: WidgetEditAction.resetSize,
               icon: Icons.aspect_ratio_rounded,
               label: l10n.editModeMenuResetSize,
-              color: menuTextColor,
+              color: t.text,
             ),
             const PopupMenuDivider(),
             _menuItem(
               value: WidgetEditAction.remove,
               icon: Icons.delete_outline_rounded,
               label: l10n.editModeMenuRemove,
-              color: AppColors.error,
+              color: t.error.text,
             ),
           ];
         },
@@ -234,18 +245,17 @@ class _OverflowMenuButton extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: accent,
+              color: fill,
               borderRadius: BorderRadius.circular(AppRadius.iconButton),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: accent.withValues(alpha: 0.35),
+                  color: fill.withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
               ],
             ),
-            child: const Icon(Icons.more_horiz_rounded,
-                size: 16, color: Colors.white),
+            child: Icon(Icons.more_horiz_rounded, size: 16, color: glyphColor),
           ),
         ),
       ),
@@ -294,8 +304,13 @@ class _HandlePosition {
 
 class _ResizeHandle extends StatelessWidget {
   final _HandlePosition position;
-  final Color accent;
-  const _ResizeHandle({required this.position, required this.accent});
+  final Color fill;
+  final Color borderColor;
+  const _ResizeHandle({
+    required this.position,
+    required this.fill,
+    required this.borderColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -314,11 +329,11 @@ class _ResizeHandle extends StatelessWidget {
         decoration: BoxDecoration(
           shape: shape,
           borderRadius: radius,
-          color: accent,
-          border: Border.all(color: Colors.white, width: 1.5),
+          color: fill,
+          border: Border.all(color: borderColor, width: 1.5),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: accent.withValues(alpha: 0.45),
+              color: fill.withValues(alpha: 0.45),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

@@ -214,12 +214,14 @@ class _DashboardItemWidgetState extends State<_DashboardItemWidget>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF4CAF50).withOpacity(0.8),
+              color: widget.editModeSettings.swapHighlightColor
+                  .withOpacity(0.8),
               width: 2.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4CAF50).withOpacity(0.25),
+                color: widget.editModeSettings.swapHighlightColor
+                    .withOpacity(0.25),
                 blurRadius: 12,
                 spreadRadius: 2,
               ),
