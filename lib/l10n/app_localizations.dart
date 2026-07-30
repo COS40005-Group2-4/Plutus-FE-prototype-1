@@ -173,6 +173,7 @@ class AppLocalizations {
       'expense_breakdown': 'Expense Breakdown',
       'portfolio_allocation': 'Portfolio Allocation',
       'net_worth_trend': 'Net Worth Trend',
+      'net_worth': 'Net worth',
       'spending_by_day': 'Spending by Day',
       'income_trend': 'Income Trend',
       'savings_rate': 'Savings Rate',
@@ -1038,6 +1039,7 @@ class AppLocalizations {
       'expense_breakdown': 'Phân tích chi tiêu',
       'portfolio_allocation': 'Phân bổ danh mục',
       'net_worth_trend': 'Xu hướng tài sản ròng',
+      'net_worth': 'Tài sản ròng',
       'spending_by_day': 'Chi tiêu theo ngày',
       'income_trend': 'Xu hướng thu nhập',
       'savings_rate': 'Tỷ lệ tiết kiệm',
@@ -1907,6 +1909,7 @@ class AppLocalizations {
   String get expenseBreakdown => translate('expense_breakdown');
   String get portfolioAllocation => translate('portfolio_allocation');
   String get netWorthTrend => translate('net_worth_trend');
+  String get netWorth => translate('net_worth');
   String get spendingByDay => translate('spending_by_day');
   String get incomeTrend => translate('income_trend');
   String get savingsRate => translate('savings_rate');
