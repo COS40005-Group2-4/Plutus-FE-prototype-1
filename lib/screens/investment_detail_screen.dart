@@ -600,8 +600,9 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             isCurved: false,
             color: lineColor,
             barWidth: 1.5,
+            // dots only on sparse series (<30 points); dense lines stay clean
             dotData: FlDotData(
-              show: spots.length >= 30,
+              show: spots.length < 30,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 2.5,

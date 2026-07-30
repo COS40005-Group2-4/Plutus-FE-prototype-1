@@ -195,8 +195,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 selected: selected,
                 onSelected: (_) => insightsNotifier.setSelectedPeriod(preset.months),
                 selectedColor: t.goldSelectedFill,
+                backgroundColor: t.surfaceSubtle,
+                side: BorderSide(color: selected ? t.gold : t.border),
                 labelStyle: TextStyle(
-                  color: t.text,
+                  color: selected ? t.goldText : t.textSecondary,
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
@@ -218,8 +220,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
               selected: provider.hasCustomDateRange,
               onSelected: (_) => _pickCustomRange(context, provider, insightsNotifier),
               selectedColor: t.goldSelectedFill,
+              backgroundColor: t.surfaceSubtle,
+              side: BorderSide(color: provider.hasCustomDateRange ? t.gold : t.border),
               labelStyle: TextStyle(
-                color: t.text,
+                color: provider.hasCustomDateRange ? t.goldText : t.textSecondary,
                 fontSize: 12,
                 fontWeight: provider.hasCustomDateRange ? FontWeight.w600 : FontWeight.normal,
               ),
