@@ -304,7 +304,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           onPressed: () => _loadData(forceRefresh: true),
           style: ElevatedButton.styleFrom(
             backgroundColor: t.error.dot,
-            foregroundColor: Colors.white,
+            foregroundColor: t.onStatus,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             minimumSize: Size.zero,
           ),

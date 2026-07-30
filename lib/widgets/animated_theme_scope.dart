@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/app_elevation.dart';
+import '../theme/app_motion.dart';
 
 /// Tweens the active [ThemeData] over time when the resolved [Brightness]
 /// changes, instead of letting Material snap to the new theme in a single
@@ -17,7 +17,7 @@ import '../theme/app_elevation.dart';
 /// Also republishes a [SystemUiOverlayStyle] that follows the lerped theme so
 /// the status bar / system nav don't snap mid-tween, and exposes a
 /// [BrightnessBlend] inherited so that descendants painting brightness-keyed
-/// colors (such as `GlassBackground`) can lerp their own palette in lockstep.
+/// colors (such as `AppCanvas`) can lerp their own palette in lockstep.
 class AnimatedThemeScope extends StatefulWidget {
   final Widget child;
   final Duration duration;
@@ -147,7 +147,7 @@ class _AnimatedThemeScopeState extends State<AnimatedThemeScope>
 
 /// Inherited descriptor of the in-flight brightness crossfade.
 ///
-/// Widgets that paint with brightness-keyed tokens (e.g. `GlassBackground`)
+/// Widgets that paint with brightness-keyed tokens (e.g. `AppCanvas`)
 /// can read this to lerp their own colors in lockstep with the theme tween,
 /// instead of snapping when `Theme.of(context).brightness` flips at midpoint.
 ///

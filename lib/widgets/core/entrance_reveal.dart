@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_elevation.dart';
+import '../../theme/app_motion.dart';
 
 /// One orchestrated entrance (spec §8): the child rises 10px and fades in
 /// over [AppMotion.slow], delayed 40ms per [index] so sibling blocks

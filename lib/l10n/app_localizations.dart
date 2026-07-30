@@ -124,6 +124,11 @@ class AppLocalizations {
       'new_category': 'New Category',
       'category_name_hint': 'Category name',
       'invalid_number': 'Invalid number',
+      'categorizing': 'Categorizing...',
+      'transactions_found': 'transactions found,',
+      'selected_count': 'selected',
+      'select': 'Select',
+      'category': 'Category',
 
       // Transaction History Page
       'transaction_history': 'Transaction History',
@@ -259,6 +264,7 @@ class AppLocalizations {
       'cost_basis': 'Amount Invested',
       'gain_loss': 'Gain/Loss',
       'quantity': 'Quantity',
+      'units_suffix': 'units',
       'performance_chart': 'Growth Chart',
       'total_portfolio_value': 'Total Investment Value',
       'no_investments_yet': 'No investments yet. Tap + to start tracking one.',
@@ -1048,6 +1054,11 @@ class AppLocalizations {
       'new_category': 'Danh mục mới',
       'category_name_hint': 'Tên danh mục',
       'invalid_number': 'Số không hợp lệ',
+      'categorizing': 'Đang phân loại...',
+      'transactions_found': 'giao dịch được tìm thấy,',
+      'selected_count': 'đã chọn',
+      'select': 'Chọn',
+      'category': 'Danh mục',
 
       // Transaction History Page
       'transaction_history': 'Lịch sử giao dịch',
@@ -1183,6 +1194,7 @@ class AppLocalizations {
       'cost_basis': 'Số tiền đã đầu tư',
       'gain_loss': 'Lãi/Lỗ',
       'quantity': 'Số lượng',
+      'units_suffix': 'đơn vị',
       'performance_chart': 'Biểu đồ tăng trưởng',
       'total_portfolio_value': 'Tổng giá trị đầu tư',
       'no_investments_yet': 'Chưa có đầu tư. Nhấn + để bắt đầu theo dõi.',
@@ -1976,6 +1988,11 @@ class AppLocalizations {
   String get newCategory => translate('new_category');
   String get categoryNameHint => translate('category_name_hint');
   String get invalidNumber => translate('invalid_number');
+  String get categorizing => translate('categorizing');
+  String get transactionsFound => translate('transactions_found');
+  String get selectedCount => translate('selected_count');
+  String get select => translate('select');
+  String get category => translate('category');
 
   // Transaction History Page
   String get transactionHistory => translate('transaction_history');
@@ -2139,6 +2156,7 @@ class AppLocalizations {
   String get costBasis => translate('cost_basis');
   String get gainLoss => translate('gain_loss');
   String get quantity => translate('quantity');
+  String get unitsSuffix => translate('units_suffix');
   String get performanceChart => translate('performance_chart');
   String get totalPortfolioValue => translate('total_portfolio_value');
   String get noInvestmentsYet => translate('no_investments_yet');

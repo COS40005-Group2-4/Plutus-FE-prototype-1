@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/ai/category_suggestion.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/plutus_tokens.dart';
 
@@ -35,7 +36,7 @@ class AiCategoryField extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: categories.contains(selectedCategory) ? selectedCategory : null,
           decoration: InputDecoration(
-            labelText: 'Category',
+            labelText: AppLocalizations.of(context).category,
             filled: isAiSuggested ? true : null,
             fillColor: isAiSuggested ? t.goldSelectedFill : null,
             border: OutlineInputBorder(

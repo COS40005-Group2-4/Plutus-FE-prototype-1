@@ -69,7 +69,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     _employmentController.text = profile.placeOfEmployment ?? '';
   }
 
-  void _showAvatarPicker(Profile profile) {
+  void _showAvatarPicker() {
     showDialog(
       context: context,
       builder: (context) => AvatarPickerDialog(
@@ -385,7 +385,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: t.error.dot,
-                  foregroundColor: Colors.white,
+                  foregroundColor: t.onStatus,
                 ),
                 onPressed: () {
                   ref.read(profileNotifierProvider.notifier).resetState();
@@ -442,7 +442,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                     SizedBox(height: isCompact ? 28 : 36),
                     Center(
                       child: GestureDetector(
-                        onTap: () => _showAvatarPicker(profile),
+                        onTap: _showAvatarPicker,
                         child: _buildAvatarCircle(profile, size: avatarSize),
                       ),
                     ),
@@ -656,7 +656,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             // Avatar section
             Center(
               child: GestureDetector(
-                onTap: () => _showAvatarPicker(profile),
+                onTap: _showAvatarPicker,
                 child: _buildAvatarCircle(profile, size: avatarSize),
               ),
             ),

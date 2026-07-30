@@ -227,13 +227,13 @@ class ReportPreviewScreen extends ConsumerWidget {
         SnackBar(
           content: Text(
             '${l10n.translate('report_pdf_saved')} $path',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: t.onStatus),
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: t.success.dot,
           action: SnackBarAction(
             label: l10n.translate('ok'),
-            textColor: Colors.white,
+            textColor: t.onStatus,
             onPressed: () {},
           ),
         ),
@@ -245,7 +245,7 @@ class ReportPreviewScreen extends ConsumerWidget {
         SnackBar(
           content: Text(
             '${l10n.translate('report_pdf_failed')}: $errorMsg',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: t.onStatus),
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: t.error.dot,

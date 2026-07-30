@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/theme/app_theme.dart';
 import 'package:plutus_fe_prototype/widgets/import/file_preview_table.dart';
 
@@ -13,6 +14,8 @@ void main() {
     testWidgets('displays all transactions', (tester) async {
       await tester.pumpWidget(MaterialApp(
         theme: AppTheme.light(),
+        localizationsDelegates: const [AppLocalizations.delegate],
+        supportedLocales: const [Locale('en')],
         home: Scaffold(
           body: SizedBox(
             height: 500,
@@ -28,6 +31,7 @@ void main() {
           ),
         ),
       ));
+      await tester.pump();
       expect(find.text('Starbucks'), findsOneWidget);
       expect(find.text('Grab'), findsOneWidget);
     });
@@ -35,6 +39,8 @@ void main() {
     testWidgets('shows transaction count summary', (tester) async {
       await tester.pumpWidget(MaterialApp(
         theme: AppTheme.light(),
+        localizationsDelegates: const [AppLocalizations.delegate],
+        supportedLocales: const [Locale('en')],
         home: Scaffold(
           body: SizedBox(
             height: 500,
@@ -50,12 +56,15 @@ void main() {
           ),
         ),
       ));
+      await tester.pump();
       expect(find.textContaining('2 transactions'), findsOneWidget);
     });
 
     testWidgets('has select-all and per-row checkboxes', (tester) async {
       await tester.pumpWidget(MaterialApp(
         theme: AppTheme.light(),
+        localizationsDelegates: const [AppLocalizations.delegate],
+        supportedLocales: const [Locale('en')],
         home: Scaffold(
           body: SizedBox(
             height: 500,
@@ -71,6 +80,7 @@ void main() {
           ),
         ),
       ));
+      await tester.pump();
       final checkboxes = find.byType(Checkbox);
       expect(checkboxes, findsNWidgets(3)); // 1 select-all + 2 rows
     });

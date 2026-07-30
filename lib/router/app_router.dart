@@ -15,7 +15,7 @@ import '../screens/report_config_screen.dart';
 import '../screens/report_preview_screen.dart';
 import '../screens/transaction_history_page.dart';
 import '../screens/import_transaction_page.dart';
-import '../theme/app_elevation.dart';
+import '../theme/app_motion.dart';
 
 // ---------------------------------------------------------------------------
 // Route path constants
@@ -55,7 +55,7 @@ class _RouterNotifier extends ChangeNotifier {
 // Outgoing finishes within the first 40% of the duration; incoming starts at
 // 40% and resolves over the last 60%. Pages are never both at meaningful
 // opacity at the same instant — at t = 0.4 both sit at 0 and the
-// GlassBackground reads as a single continuous surface.
+// AppCanvas reads as a single continuous surface.
 const Interval _kIncomingForward =
     Interval(0.4, 1.0, curve: AppMotion.emphasized);
 const Interval _kIncomingReverse =

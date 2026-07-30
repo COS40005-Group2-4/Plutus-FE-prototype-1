@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_elevation.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/plutus_tokens.dart';
 
 /// Neutral loading placeholder (spec §5): a surfaceSubtle slab pulsing
