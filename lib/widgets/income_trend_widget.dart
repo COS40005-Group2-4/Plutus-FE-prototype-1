@@ -7,10 +7,9 @@ import '../services/interfaces/interfaces.dart';
 import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
-import 'glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 import 'chart_theme.dart';
 import '../l10n/app_localizations.dart';
 
@@ -40,66 +39,54 @@ class _IncomeTrendWidgetState extends ConsumerState<IncomeTrendWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.historyAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    onAccentTertiary.toString();
-    dividerOnAccent.toString();
-    return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
+    final PlutusTokens t = context.tokens;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(Icons.trending_up, color: onAccent, size: 18),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Income Trend',
-                    style: TextStyle(color: onAccent, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Tooltip(
-                    message: AppLocalizations.of(context).widgetHelpIncomeTrend,
-                    child: Icon(
-                      Icons.help_outline,
-                      size: 14,
-                      color: AppColors.textTertiary(Theme.of(context).brightness),
-                    ),
-                  ),
-                ],
+              Icon(Icons.trending_up, color: t.text, size: 18),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Income Trend',
+                style: TextStyle(color: t.text, fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: StreamBuilder<List<Transaction>>(
-                  stream: _transactionService.transactionStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator(color: onAccent));
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Text('No income data', style: TextStyle(color: onAccentSecondary, fontSize: 12)),
-                      );
-                    }
-                    return _IncomeTrendContent(
-                      key: ValueKey('incometrend_${settings.currency.code}'),
-                      transactions: snapshot.data!,
-                      settings: settings,
-                    );
-                  },
+              const SizedBox(width: AppSpacing.xs),
+              Tooltip(
+                message: AppLocalizations.of(context).widgetHelpIncomeTrend,
+                child: Icon(
+                  Icons.help_outline,
+                  size: 14,
+                  color: t.textMuted,
                 ),
               ),
             ],
           ),
-        );
+          const SizedBox(height: AppSpacing.sm),
+          Expanded(
+            child: StreamBuilder<List<Transaction>>(
+              stream: _transactionService.transactionStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator(color: t.text));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text('No income data', style: TextStyle(color: t.textSecondary, fontSize: 12)),
+                  );
+                }
+                return _IncomeTrendContent(
+                  key: ValueKey('incometrend_${settings.currency.code}'),
+                  transactions: snapshot.data!,
+                  settings: settings,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -222,25 +209,17 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final brightness = Theme.of(context).brightness;
-    const accent = AppColors.historyAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    onAccentTertiary.toString();
-    dividerOnAccent.toString();
     if (_isLoading) {
       return Center(
-          child: CircularProgressIndicator(color: onAccent));
+          child: CircularProgressIndicator(color: t.text));
     }
 
     if (_incomeSpots.length < 2) {
       return Center(
         child: Text('Not enough income data',
-            style: TextStyle(color: onAccentSecondary, fontSize: 12)),
+            style: TextStyle(color: t.textSecondary, fontSize: 12)),
       );
     }
 
@@ -256,16 +235,12 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
     final netStr =
         '$netSign${widget.settings.currency.symbol}'
         '${PlutusChartStyle.formatCompactCurrency(net.abs())}';
-    final netColor = net >= 0
-        ? AppColors.positive(brightness)
-        : AppColors.negative(brightness);
+    final netColor = net >= 0 ? t.success.text : t.error.text;
 
     final momAbs = _incomeMoMChange.abs();
     final momArrow = _incomeMoMChange >= 0 ? '↑' : '↓';
     final momStr = '$momArrow ${momAbs.toStringAsFixed(1)}% income';
-    final momColor = _incomeMoMChange >= 0
-        ? AppColors.positive(brightness)
-        : AppColors.negative(brightness);
+    final momColor = _incomeMoMChange >= 0 ? t.success.text : t.error.text;
 
     return Column(
       children: [
@@ -277,7 +252,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Net this month',
-                    style: TextStyle(color: onAccentTertiary, fontSize: 9)),
+                    style: TextStyle(color: t.textMuted, fontSize: 9)),
                 Text(netStr,
                     style: TextStyle(
                         color: netColor,
@@ -289,7 +264,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('vs last month',
-                    style: TextStyle(color: onAccentTertiary, fontSize: 9)),
+                    style: TextStyle(color: t.textMuted, fontSize: 9)),
                 Text(momStr,
                     style: TextStyle(
                         color: momColor,
@@ -315,8 +290,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       final isIncome = spot.barIndex == 0;
                       final label = isIncome ? 'Income' : 'Expenses';
                       final color = isIncome
-                          ? AppColors.positive(brightness)
-                          : AppColors.negative(brightness);
+                          ? t.chartCategorical.first
+                          : t.chartCategorical[3];
                       return LineTooltipItem(
                         '$label: ${_currencyService.formatCurrency(amount: spot.y, currencyCode: widget.settings.currency.code)}',
                         TextStyle(
@@ -350,7 +325,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       return Text(
                         PlutusChartStyle.monthAxisLabel(_displayKeys[idx], prev),
                         style: TextStyle(
-                            color: onAccentSecondary, fontSize: 9),
+                            color: t.textMuted, fontSize: 9),
                       );
                     },
                   ),
@@ -364,7 +339,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       return Text(
                         PlutusChartStyle.formatCompactCurrency(value),
                         style: TextStyle(
-                            color: onAccentSecondary, fontSize: 8),
+                            color: t.textMuted, fontSize: 8),
                       );
                     },
                   ),
@@ -377,14 +352,14 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 horizontalLines: [
                   HorizontalLine(
                     y: _avgIncome,
-                    color: dividerOnAccent,
+                    color: t.border,
                     strokeWidth: 1,
                     dashArray: [5, 5],
                     label: HorizontalLineLabel(
                       show: true,
                       alignment: Alignment.topRight,
                       style: TextStyle(
-                          color: onAccentTertiary, fontSize: 8),
+                          color: t.textMuted, fontSize: 8),
                       labelResolver: (_) => 'avg income',
                     ),
                   ),
@@ -395,7 +370,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 LineChartBarData(
                   spots: _incomeSpots,
                   isCurved: true,
-                  color: AppColors.positive(brightness),
+                  color: t.chartCategorical.first,
                   barWidth: 2.5,
                   isStrokeCapRound: true,
                   dotData: FlDotData(
@@ -403,9 +378,9 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                     getDotPainter: (spot, percent, barData, index) {
                       return FlDotCirclePainter(
                         radius: 3,
-                        color: AppColors.positive(brightness),
+                        color: t.chartCategorical.first,
                         strokeWidth: 1,
-                        strokeColor: onAccent,
+                        strokeColor: t.text,
                       );
                     },
                   ),
@@ -415,8 +390,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.positive(brightness).withValues(alpha: 0.2),
-                        AppColors.positive(brightness).withValues(alpha: 0.02),
+                        t.chartCategorical.first.withValues(alpha: 0.2),
+                        t.chartCategorical.first.withValues(alpha: 0.02),
                       ],
                     ),
                   ),
@@ -425,7 +400,7 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                 LineChartBarData(
                   spots: _expenseSpots,
                   isCurved: true,
-                  color: AppColors.negative(brightness),
+                  color: t.chartCategorical[3],
                   barWidth: 2.5,
                   isStrokeCapRound: true,
                   dotData: const FlDotData(show: false),
@@ -435,8 +410,8 @@ class _IncomeTrendContentState extends State<_IncomeTrendContent> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.negative(brightness).withValues(alpha: 0.2),
-                        AppColors.negative(brightness).withValues(alpha: 0.02),
+                        t.chartCategorical[3].withValues(alpha: 0.2),
+                        t.chartCategorical[3].withValues(alpha: 0.02),
                       ],
                     ),
                   ),
