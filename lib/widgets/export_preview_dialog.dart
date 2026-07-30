@@ -267,8 +267,11 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n.couldNotOpenFile}${result.message}'),
-            backgroundColor: t.warning.text,
+            content: Text(
+              '${l10n.couldNotOpenFile}${result.message}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: t.warning.dot,
           ),
         );
       }
@@ -278,8 +281,11 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
       final PlutusTokens t = context.tokens;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.errorOpeningFile}$e'),
-          backgroundColor: t.error.text,
+          content: Text(
+            '${l10n.errorOpeningFile}$e',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: t.error.dot,
         ),
       );
     } finally {

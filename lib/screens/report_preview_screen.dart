@@ -225,12 +225,15 @@ class ReportPreviewScreen extends ConsumerWidget {
     if (path != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.translate('report_pdf_saved')} $path'),
+          content: Text(
+            '${l10n.translate('report_pdf_saved')} $path',
+            style: const TextStyle(color: Colors.white),
+          ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: t.success.text,
+          backgroundColor: t.success.dot,
           action: SnackBarAction(
             label: l10n.translate('ok'),
-            textColor: t.text,
+            textColor: Colors.white,
             onPressed: () {},
           ),
         ),
@@ -240,9 +243,12 @@ class ReportPreviewScreen extends ConsumerWidget {
       final String errorMsg = reportState.error ?? 'Unknown error';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.translate('report_pdf_failed')}: $errorMsg'),
+          content: Text(
+            '${l10n.translate('report_pdf_failed')}: $errorMsg',
+            style: const TextStyle(color: Colors.white),
+          ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: t.error.text,
+          backgroundColor: t.error.dot,
           duration: const Duration(seconds: 8),
         ),
       );

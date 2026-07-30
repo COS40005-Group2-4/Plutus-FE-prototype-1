@@ -418,8 +418,11 @@ class _ExportDialogState extends State<ExportDialog> {
       final PlutusTokens t = context.tokens;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.translate('export_error')}: $e'),
-          backgroundColor: t.error.text,
+          content: Text(
+            '${l10n.translate('export_error')}: $e',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: t.error.dot,
         ),
       );
       setState(() => _isExporting = false);

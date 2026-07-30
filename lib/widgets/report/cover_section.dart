@@ -38,7 +38,7 @@ class CoverSection extends StatelessWidget {
                 width: 4,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: doc.gold,
+                  color: doc.heroLabel,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
