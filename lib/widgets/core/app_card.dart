@@ -4,7 +4,7 @@ import '../../theme/app_spacing.dart';
 import '../../theme/plutus_tokens.dart';
 
 /// Calm card surface (spec §5): opaque surface, hairline border,
-/// radius 16, low shadow. Replaces the legacy [GlassContainer].
+/// radius 16, low shadow. Replaces the legacy glass container surface.
 class AppCard extends StatelessWidget {
   final Widget? child;
   final EdgeInsetsGeometry? padding;

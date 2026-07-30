@@ -3,7 +3,7 @@ import '../../theme/plutus_tokens.dart';
 
 /// App-wide canvas (spec §5): neutral background plus one very faint
 /// radial gold wash bleeding from the top — the only decorative gradient
-/// in the app. Replaces the legacy [GlassBackground].
+/// in the app. Replaces the legacy glass background surface.
 class AppCanvas extends StatelessWidget {
   final Widget child;
 

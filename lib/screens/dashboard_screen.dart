@@ -19,7 +19,7 @@ import '../widgets/dashboard/empty_slot_tile.dart';
 import '../widgets/dashboard/widget_edit_chrome.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_elevation.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
