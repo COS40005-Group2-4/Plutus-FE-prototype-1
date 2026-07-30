@@ -3,16 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/glass_container.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/meander_divider.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../providers/backup_notifier.dart';
 import '../providers/profile_notifier.dart';
 import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 import '../models/ai/insight.dart';
 import '../services/ocr_service.dart';
 
@@ -29,7 +31,6 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings),
-        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
       body: isAuthenticated
         ? _buildAuthenticatedSettings(context, ref, authNotifier, l10n)
@@ -38,22 +39,24 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildAuthenticatedSettings(BuildContext context, WidgetRef ref, AuthNotifier authNotifier, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     final currentUser = authNotifier.currentUser;
     final settings = ref.watch(settingsNotifierProvider);
     final settingsNotifier = ref.read(settingsNotifierProvider.notifier);
     final profileState = ref.watch(profileNotifierProvider);
     final avatarPath = profileState.profile?.avatarPath;
+    final Color avatarLetterColor = currentUser?.hasOAuth == true
+        ? t.info.text
+        : currentUser?.isGuest == true
+            ? t.textSecondary
+            : t.success.text;
 
     return ListView(
       children: [
         const SizedBox(height: AppSpacing.xl),
         CircleAvatar(
           radius: 50,
-          backgroundColor: currentUser?.hasOAuth == true
-              ? AppColors.primary
-              : currentUser?.isGuest == true
-                  ? AppColors.textOnLightSecondary
-                  : AppColors.success,
+          backgroundColor: t.surfaceSubtle,
           backgroundImage: avatarPath != null
               ? FileImage(File(avatarPath))
               : null,
@@ -62,7 +65,7 @@ class SettingsScreen extends ConsumerWidget {
                   authNotifier.userName.isNotEmpty
                       ? authNotifier.userName[0].toUpperCase()
                       : 'U',
-                  style: const TextStyle(fontSize: 40, color: AppColors.textOnDark),
+                  style: TextStyle(fontSize: 40, color: avatarLetterColor),
                 )
               : null,
         ),
@@ -116,19 +119,20 @@ class SettingsScreen extends ConsumerWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.2),
+                    color: t.info.surface,
                     borderRadius: AppRadius.borderMd,
+                    border: Border.all(color: t.info.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cloud, size: 14, color: AppColors.primary),
+                      Icon(Icons.cloud, size: 14, color: t.info.text),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         l10n.googleLinked,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.primary,
+                          color: t.info.text,
                         ),
                       ),
                     ],
@@ -141,15 +145,16 @@ class SettingsScreen extends ConsumerWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.textOnLightSecondary.withValues(alpha: 0.2),
+                    color: t.surfaceSubtle,
                     borderRadius: AppRadius.borderMd,
+                    border: Border.all(color: t.border),
                   ),
                   child: Text(
                     l10n.guestMode,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textOnLightSecondary,
+                      color: t.textSecondary,
                     ),
                   ),
                 ),
@@ -160,15 +165,16 @@ class SettingsScreen extends ConsumerWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.2),
+                    color: t.success.surface,
                     borderRadius: AppRadius.borderMd,
+                    border: Border.all(color: t.success.border),
                   ),
                   child: Text(
                     l10n.localAccount,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.success,
+                      color: t.success.text,
                     ),
                   ),
                 ),
@@ -191,10 +197,12 @@ class SettingsScreen extends ConsumerWidget {
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                child: GlassContainer(
-                  borderRadius: AppRadius.md,
-                  color: AppColors.primary,
-                  opacity: 0.1,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: t.info.surface,
+                    borderRadius: AppRadius.borderMd,
+                    border: Border.all(color: t.info.border),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
@@ -202,7 +210,7 @@ class SettingsScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.offline_bolt, color: AppColors.primary),
+                            Icon(Icons.offline_bolt, color: t.info.text),
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               l10n.translate('settings_offline_access'),
@@ -238,25 +246,19 @@ class SettingsScreen extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
-            l10n.appearance,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            l10n.appearance.toUpperCase(),
+            style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
           ),
         ),
         _buildThemeModeSelector(context, settings, settingsNotifier, l10n),
-        const Divider(),
+        const MeanderDivider(),
 
         // Preferences Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
-            l10n.preferences,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            l10n.preferences.toUpperCase(),
+            style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
           ),
         ),
         _buildLanguageSelector(context, settings, settingsNotifier, l10n),
@@ -264,37 +266,31 @@ class SettingsScreen extends ConsumerWidget {
         _buildDateFormatSelector(context, settings, settingsNotifier, l10n),
         _buildTimeFormatSelector(context, settings, settingsNotifier, l10n),
         _buildBackupCard(context, ref, l10n),
-        const Divider(),
+        const MeanderDivider(),
 
         // AI & OCR Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
-            l10n.translate('settings_ai_ocr'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            l10n.translate('settings_ai_ocr').toUpperCase(),
+            style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
           ),
         ),
         _buildOcrModeSelector(context, settings, settingsNotifier),
         _buildAiPrivacySelector(context, settings, settingsNotifier),
-        const Divider(),
+        const MeanderDivider(),
 
         // Account Settings Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
           child: Text(
-            l10n.accountSettings,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            l10n.accountSettings.toUpperCase(),
+            style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
           ),
         ),
         if (currentUser?.hasOAuth == false && currentUser?.isGuest == false)
           ListTile(
-            leading: const Icon(Icons.link, color: AppColors.primary),
+            leading: Icon(Icons.link, color: t.brandNavy),
             title: Text(l10n.linkGoogle),
             subtitle: Text(l10n.translate('settings_backup_subtitle')),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -337,7 +333,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
         if (currentUser?.hasOAuth == true)
           ListTile(
-            leading: const Icon(Icons.link_off, color: AppColors.warning),
+            leading: Icon(Icons.link_off, color: t.warning.text),
             title: Text(l10n.unlinkGoogle),
             subtitle: Text(l10n.translate('settings_local_subtitle')),
             trailing: const Icon(Icons.arrow_forward_ios),
@@ -356,7 +352,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+                      style: TextButton.styleFrom(foregroundColor: t.warning.text),
                       child: Text(l10n.translate('settings_unlink')),
                     ),
                   ],
@@ -377,7 +373,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
         const Divider(),
         ListTile(
-          leading: const Icon(Icons.switch_account, color: AppColors.primary),
+          leading: Icon(Icons.switch_account, color: t.brandNavy),
           title: Text(l10n.switchUser),
           trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () {
@@ -385,17 +381,17 @@ class SettingsScreen extends ConsumerWidget {
           },
         ),
         ListTile(
-          leading: const Icon(Icons.logout, color: AppColors.error),
+          leading: Icon(Icons.logout, color: t.error.text),
           title: Text(
             l10n.signOut,
-            style: const TextStyle(color: AppColors.error),
+            style: TextStyle(color: t.error.text),
           ),
           onTap: () async {
             final confirm = await showDialog<bool>(
               context: context,
               builder: (context) => AlertDialog(
                 title: Text(l10n.signOut),
-                content: const Text('Are you sure you want to sign out?'),
+                content: Text(l10n.areYouSureSignOut),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -465,8 +461,6 @@ class SettingsScreen extends ConsumerWidget {
             label: Text(l10n.signIn),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
             ),
           ),
         ),
@@ -609,10 +603,8 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.lg,
-        opacity: 0.08,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -658,10 +650,8 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.lg,
-        opacity: 0.08,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -704,21 +694,20 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildBackupCard(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     final backupState = ref.watch(backupNotifierProvider);
     final backupNotifier = ref.read(backupNotifierProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-      child: GlassContainer(
-        borderRadius: AppRadius.md,
-        opacity: 0.1,
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.cloud_upload, color: AppColors.primary),
+                Icon(Icons.cloud_upload, color: t.brandNavy),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   l10n.backupSettings,
@@ -771,12 +760,12 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 l10n.translate(backupState.errorMessage!),
-                style: const TextStyle(fontSize: 12, color: AppColors.error),
+                style: TextStyle(fontSize: 12, color: t.error.text),
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
             ListTile(
-              leading: const Icon(Icons.history, color: AppColors.primary),
+              leading: Icon(Icons.history, color: t.brandNavy),
               title: Text(l10n.backupHistory),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => context.push(AppRoutes.backupHistory),
