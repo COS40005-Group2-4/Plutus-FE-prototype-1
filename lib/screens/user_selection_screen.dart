@@ -8,6 +8,7 @@ import '../widgets/core/app_card.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import '../theme/plutus_tokens.dart';
 
 class UserSelectionScreen extends ConsumerStatefulWidget {
@@ -149,11 +150,7 @@ class _UserSelectionScreenState extends ConsumerState<UserSelectionScreen> {
                   const SizedBox(height: AppSpacing.xl),
                   Text(
                     l10n.whosUsingPlutus,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: t.text,
-                    ),
+                    style: AppTextStyles.headingStyle.copyWith(color: t.text),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xxxl),
@@ -262,6 +259,9 @@ class _UserRowState extends State<_UserRow> {
           vertical: AppSpacing.sm,
         ),
         leading: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
