@@ -15,7 +15,6 @@ import '../theme/app_gradients.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
-import '../widgets/glass_background.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/sell_investment_dialog.dart';
 
@@ -244,33 +243,31 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: GlassBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => context.pop(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.pop(),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      inv?.assetName ?? '',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        inv?.assetName ?? '',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Expanded(child: _buildBody(l, isDark)),
-            ],
-          ),
+            ),
+            Expanded(child: _buildBody(l, isDark)),
+          ],
         ),
       ),
       floatingActionButton: (inv != null && !inv.isClosed)
