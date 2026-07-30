@@ -9,8 +9,9 @@ import '../models/profile_model.dart';
 import '../providers/profile_notifier.dart';
 import '../services/database_service.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 import 'avatar_editor_widget.dart';
 
 /// Main Profile Widget for displaying and editing user profile
@@ -108,6 +109,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildEditDialog(Profile profile, WidgetRef dialogRef) {
+    final PlutusTokens t = context.tokens;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
@@ -119,10 +121,10 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.menuBackground.withValues(alpha: 0.95),
+          color: t.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: t.border,
             width: 1,
           ),
         ),
@@ -140,13 +142,13 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                       style: TextStyle(
                         fontSize: isSmallScreen ? 18 : 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: t.text,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: t.textSecondary),
                     onPressed: () => Navigator.pop(context),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -178,7 +180,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                 style: TextStyle(
                   fontSize: isSmallScreen ? 14 : 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: t.text,
                 ),
               ),
               const SizedBox(height: 12),
@@ -224,19 +226,12 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                   Expanded(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textOnDarkTertiary,
-                      ),
                       child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                      ),
                       onPressed: () async {
                         final hasDob = _dobController.text.isNotEmpty;
                         final hasPosition = _positionController.text.isNotEmpty;
@@ -284,30 +279,14 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     required IconData icon,
     VoidCallback? onTap,
   }) {
+    final PlutusTokens t = context.tokens;
     return TextField(
       controller: controller,
       readOnly: onTap != null,
       onTap: onTap,
-      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: AppColors.textOnDarkTertiary),
-        prefixIcon: Icon(icon, color: AppColors.primary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        prefixIcon: Icon(icon, color: t.textSecondary),
       ),
     );
   }
@@ -318,6 +297,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     String fieldName,
     WidgetRef dialogRef,
   ) {
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -329,15 +309,11 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                 await dialogRef.read(profileNotifierProvider.notifier).toggleFieldVisibility(fieldName);
               }
             },
-            fillColor: WidgetStateProperty.resolveWith<Color>(
-              (states) => AppColors.primary,
-            ),
-            checkColor: Colors.white,
           ),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: t.text, fontSize: 14),
             ),
           ),
         ],
@@ -350,6 +326,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     bool value,
     String fieldName,
   ) {
+    final PlutusTokens t = context.tokens;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
@@ -364,17 +341,13 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                 await ref.read(profileNotifierProvider.notifier).toggleFieldVisibility(fieldName);
               }
             },
-            fillColor: WidgetStateProperty.resolveWith<Color>(
-              (states) => AppColors.primary,
-            ),
-            checkColor: Colors.white,
           ),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
                 fontSize: isSmallScreen ? 13 : 14,
-                color: Colors.white,
+                color: t.text,
               ),
             ),
           ),
@@ -385,6 +358,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final profileState = ref.watch(profileNotifierProvider);
     final profile = profileState.profile;
 
@@ -400,17 +374,21 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              Icon(Icons.error_outline, size: 48, color: t.error.text),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 profileState.errorMessage,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: t.text),
                 textAlign: TextAlign.center,
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: t.error.dot,
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () {
                   ref.read(profileNotifierProvider.notifier).resetState();
                   ref.read(profileNotifierProvider.notifier).loadProfile(widget.user.id);
@@ -436,12 +414,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildCompactView(Profile profile) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.profileAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    final iconOnAccent = AppColors.iconOnAccent(accent, brightness);
+    final PlutusTokens t = context.tokens;
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -483,8 +456,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         labelSize: labelSize,
                         valueSize: valueSize,
                         isPrimary: true,
-                        valueColor: onAccent,
-                        labelColor: onAccentTertiary,
+                        valueColor: t.text,
+                        labelColor: t.textMuted,
                       ),
                     if (profile.showName &&
                         (profile.showEmail ||
@@ -499,7 +472,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                                 profile.showPlaceOfEmployment)))
                       Divider(
                         height: spacing,
-                        color: dividerOnAccent,
+                        color: t.border,
                         thickness: 1,
                       ),
                     if (profile.showEmail &&
@@ -510,8 +483,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         widget.user.email!,
                         labelSize: labelSize,
                         valueSize: valueSize,
-                        valueColor: onAccent,
-                        labelColor: onAccentTertiary,
+                        valueColor: t.text,
+                        labelColor: t.textMuted,
                       ),
                     if (profile.dateOfBirth != null &&
                         profile.dateOfBirth!.isNotEmpty &&
@@ -521,8 +494,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.dateOfBirth!,
                         labelSize: labelSize,
                         valueSize: valueSize,
-                        valueColor: onAccent,
-                        labelColor: onAccentTertiary,
+                        valueColor: t.text,
+                        labelColor: t.textMuted,
                       ),
                     if (profile.position != null &&
                         profile.position!.isNotEmpty &&
@@ -532,8 +505,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.position!,
                         labelSize: labelSize,
                         valueSize: valueSize,
-                        valueColor: onAccent,
-                        labelColor: onAccentTertiary,
+                        valueColor: t.text,
+                        labelColor: t.textMuted,
                       ),
                     if (profile.placeOfEmployment != null &&
                         profile.placeOfEmployment!.isNotEmpty &&
@@ -543,8 +516,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                         profile.placeOfEmployment!,
                         labelSize: labelSize,
                         valueSize: valueSize,
-                        valueColor: onAccent,
-                        labelColor: onAccentTertiary,
+                        valueColor: t.text,
+                        labelColor: t.textMuted,
                       ),
                     SizedBox(height: spacing),
                   ],
@@ -555,18 +528,8 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
               top: 0,
               left: 0,
               right: 0,
-              child: Container(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.2),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -574,7 +537,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                       child: Text(
                         AppLocalizations.of(context).myProfile,
                         style: TextStyle(
-                          color: onAccent,
+                          color: t.text,
                           fontSize: titleSize,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
@@ -591,7 +554,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                           padding: const EdgeInsets.all(4),
                           child: Icon(
                             Icons.edit_outlined,
-                            color: iconOnAccent,
+                            color: t.textSecondary,
                             size: 20,
                           ),
                         ),
@@ -622,9 +585,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     Color? labelColor,
     Color? valueColor,
   }) {
-    final brightness = Theme.of(context).brightness;
-    final fallbackValue = AppColors.textPrimary(brightness);
-    final fallbackLabel = AppColors.textTertiary(brightness);
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -632,11 +593,9 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: AppTextStyles.overlineStyle.copyWith(
               fontSize: labelSize,
-              color: labelColor ?? fallbackLabel,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.8,
+              color: labelColor ?? t.textMuted,
             ),
             textAlign: TextAlign.center,
           ),
@@ -645,7 +604,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
             value,
             style: TextStyle(
               fontSize: valueSize,
-              color: valueColor ?? fallbackValue,
+              color: valueColor ?? t.text,
               fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w400,
             ),
             textAlign: TextAlign.center,
@@ -658,6 +617,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildFullView(Profile profile) {
+    final PlutusTokens t = context.tokens;
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
     final avatarSize = isSmallScreen ? 100.0 : 120.0;
@@ -680,12 +640,12 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                     style: TextStyle(
                       fontSize: isSmallScreen ? 20 : 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: t.text,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.primary),
+                  icon: Icon(Icons.edit, color: t.textSecondary),
                   onPressed: () => _showEditDialog(profile),
                   tooltip: 'Edit Profile',
                   constraints: const BoxConstraints(),
@@ -715,7 +675,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                     value: widget.user.displayName,
                     isVisible: profile.showName,
                   ),
-                  const Divider(color: Colors.white24),
+                  const Divider(),
                   _buildInfoRow(
                     icon: Icons.email,
                     label: 'Email',
@@ -723,7 +683,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                     isVisible: profile.showEmail,
                   ),
                   if (profile.dateOfBirth != null && profile.dateOfBirth!.isNotEmpty) ...[
-                    const Divider(color: Colors.white24),
+                    const Divider(),
                     _buildInfoRow(
                       icon: Icons.calendar_today,
                       label: 'Date of Birth',
@@ -732,7 +692,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                     ),
                   ],
                   if (profile.position != null && profile.position!.isNotEmpty) ...[
-                    const Divider(color: Colors.white24),
+                    const Divider(),
                     _buildInfoRow(
                       icon: Icons.work,
                       label: 'Position',
@@ -742,7 +702,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                   ],
                   if (profile.placeOfEmployment != null &&
                       profile.placeOfEmployment!.isNotEmpty) ...[
-                    const Divider(color: Colors.white24),
+                    const Divider(),
                     _buildInfoRow(
                       icon: Icons.business,
                       label: 'Place of Employment',
@@ -761,7 +721,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
               style: TextStyle(
                 fontSize: isSmallScreen ? 14 : 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: t.text,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -808,6 +768,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildAvatarCircle(Profile profile, {required double size}) {
+    final PlutusTokens t = context.tokens;
     final ringWidth = (size * 0.06).clamp(2.0, 4.0);
     return Stack(
       children: [
@@ -817,16 +778,10 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: t.border,
               width: ringWidth,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: t.shadowLow,
           ),
           child: ClipOval(
             child: _buildAvatarImage(profile, size: size),
@@ -838,16 +793,16 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
           child: Container(
             padding: EdgeInsets.all((size * 0.12).clamp(4.0, 8.0)),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.25),
+              color: t.surface,
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: t.border,
                 width: 1.5,
               ),
             ),
             child: Icon(
               Icons.camera_alt_outlined,
-              color: Colors.white,
+              color: t.textSecondary,
               size: (size * 0.2).clamp(12.0, 18.0),
             ),
           ),
@@ -909,13 +864,14 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
   }
 
   Widget _buildInfoCard({required Widget child}) {
+    final PlutusTokens t = context.tokens;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withValues(alpha: 0.05),
+        color: t.surfaceSubtle,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: t.border,
           width: 1,
         ),
       ),
@@ -929,6 +885,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     required String value,
     required bool isVisible,
   }) {
+    final PlutusTokens t = context.tokens;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
@@ -936,7 +893,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
       opacity: isVisible ? 1.0 : 0.5,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: isSmallScreen ? 18 : 20),
+          Icon(icon, color: t.textSecondary, size: isSmallScreen ? 18 : 20),
           SizedBox(width: isSmallScreen ? 10 : 12),
           Expanded(
             child: Column(
@@ -946,7 +903,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                   label,
                   style: TextStyle(
                     fontSize: isSmallScreen ? 11 : 12,
-                    color: AppColors.textOnDarkTertiary,
+                    color: t.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -956,7 +913,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
                   style: TextStyle(
                     fontSize: isSmallScreen ? 13 : 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: t.text,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
