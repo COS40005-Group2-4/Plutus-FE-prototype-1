@@ -269,7 +269,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
           SnackBar(
             content: Text(
               '${l10n.couldNotOpenFile}${result.message}',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: t.onStatus),
             ),
             backgroundColor: t.warning.dot,
           ),
@@ -283,7 +283,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
         SnackBar(
           content: Text(
             '${l10n.errorOpeningFile}$e',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: t.onStatus),
           ),
           backgroundColor: t.error.dot,
         ),

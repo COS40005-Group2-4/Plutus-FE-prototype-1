@@ -241,6 +241,10 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final inv = _investment;
+    final PlutusTokens t = context.tokens;
+    // t.brandNavy inverts brightness role between themes (dark navy in light
+    // mode, pale blue-grey in dark mode) — the FAB ink must invert with it.
+    final Color sellInk = Theme.of(context).brightness == Brightness.dark ? t.onGold : Colors.white;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -285,9 +289,9 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                 FloatingActionButton.extended(
                   heroTag: 'inv_sell',
                   onPressed: _showSellDialog,
-                  backgroundColor: context.tokens.brandNavy,
-                  icon: const Icon(Icons.sell, color: Colors.white),
-                  label: Text(l.investmentSell, style: const TextStyle(color: Colors.white)),
+                  backgroundColor: t.brandNavy,
+                  icon: Icon(Icons.sell, color: sellInk),
+                  label: Text(l.investmentSell, style: TextStyle(color: sellInk)),
                 ),
               ],
             )

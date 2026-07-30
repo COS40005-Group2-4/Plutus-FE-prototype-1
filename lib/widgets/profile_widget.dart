@@ -385,7 +385,7 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: t.error.dot,
-                  foregroundColor: Colors.white,
+                  foregroundColor: t.onStatus,
                 ),
                 onPressed: () {
                   ref.read(profileNotifierProvider.notifier).resetState();

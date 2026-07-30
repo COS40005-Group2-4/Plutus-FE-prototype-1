@@ -356,6 +356,10 @@ class PlutusTokens extends ThemeExtension<PlutusTokens> {
   /// Selected-state fill: goldWeak composited over the surface so the dark
   /// low-alpha goldWeak reads as a solid chip.
   Color get goldSelectedFill => Color.alphaBlend(goldWeak, surface);
+
+  /// Fixed white ink for content on saturated status fills (.dot arms):
+  /// snackbars, count badges. Pairs with .dot the way onGold pairs with gold.
+  Color get onStatus => const Color(0xFFFFFFFF);
 }
 
 /// `context.tokens` — the single access point for brightness-dependent

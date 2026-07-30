@@ -420,7 +420,7 @@ class _ExportDialogState extends State<ExportDialog> {
         SnackBar(
           content: Text(
             '${l10n.translate('export_error')}: $e',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: t.onStatus),
           ),
           backgroundColor: t.error.dot,
         ),

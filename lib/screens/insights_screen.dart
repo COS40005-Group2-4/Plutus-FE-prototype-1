@@ -74,7 +74,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                       ),
                       child: Text(
                         '${provider.unreadAlertCount}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                        style: TextStyle(color: t.onStatus, fontSize: 10),
                       ),
                     ),
                   ],
