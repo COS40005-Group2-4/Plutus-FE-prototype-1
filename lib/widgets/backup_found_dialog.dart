@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_spacing.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Shows a dialog when a cloud backup is found on a new device.
 /// Returns true if user wants to restore, false if they want to start fresh.
@@ -11,24 +12,17 @@ Future<bool?> showBackupFoundDialog(BuildContext context) {
     barrierDismissible: false,
     builder: (context) {
       final l10n = AppLocalizations.of(context);
-      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final t = context.tokens;
 
       return AlertDialog(
-        backgroundColor: isDark
-            ? AppColors.surfaceDark.withValues(alpha: 0.9)
-            : Colors.white.withValues(alpha: 0.9),
+        backgroundColor: t.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: isDark
-                ? AppColors.borderDark.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.08),
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
+          side: BorderSide(color: t.border),
         ),
         title: Row(
           children: [
-            Icon(Icons.cloud_download,
-                color: isDark ? AppColors.accent : AppColors.primary),
+            Icon(Icons.cloud_download, color: t.goldText),
             const SizedBox(width: AppSpacing.sm),
             Expanded(child: Text(l10n.backupFoundTitle)),
           ],
