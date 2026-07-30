@@ -241,6 +241,8 @@ class _ScoreArcPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ScoreArcPainter oldDelegate) {
-    return oldDelegate.score != score;
+    return oldDelegate.score != score ||
+        oldDelegate.scoreColor != scoreColor ||
+        oldDelegate.backgroundColor != backgroundColor;
   }
 }

@@ -41,6 +41,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
     final insightsNotifier = ref.read(insightsNotifierProvider.notifier);
     final AppLocalizations l10n = AppLocalizations.of(context);
     final PlutusTokens t = context.tokens;
+    // t.brandNavy inverts brightness role between themes (dark navy in light
+    // mode, pale blue-grey in dark mode) — the FAB ink must invert with it.
+    final Color fabInk = Theme.of(context).brightness == Brightness.dark ? t.onGold : Colors.white;
 
     return Scaffold(
       appBar: AppBar(
@@ -92,7 +95,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 ? t.brandNavy
                 : t.brandNavy.withValues(alpha: 0.3),
             tooltip: l10n.textSizeIncrease,
-            child: const Text('A+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            child: Text('A+', style: TextStyle(color: fabInk, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           const SizedBox(height: AppSpacing.sm),
           FloatingActionButton.small(
@@ -102,7 +105,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 ? t.brandNavy
                 : t.brandNavy.withValues(alpha: 0.3),
             tooltip: l10n.textSizeDecrease,
-            child: const Text('A−', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            child: Text('A−', style: TextStyle(color: fabInk, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
         ],
       ),
@@ -191,9 +194,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 label: Text(preset.label),
                 selected: selected,
                 onSelected: (_) => insightsNotifier.setSelectedPeriod(preset.months),
-                selectedColor: t.gold,
+                selectedColor: t.goldSelectedFill,
                 labelStyle: TextStyle(
-                  color: selected ? t.onGold : t.text,
+                  color: t.text,
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
@@ -214,9 +217,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
               ),
               selected: provider.hasCustomDateRange,
               onSelected: (_) => _pickCustomRange(context, provider, insightsNotifier),
-              selectedColor: t.gold,
+              selectedColor: t.goldSelectedFill,
               labelStyle: TextStyle(
-                color: provider.hasCustomDateRange ? t.onGold : t.text,
+                color: t.text,
                 fontSize: 12,
                 fontWeight: provider.hasCustomDateRange ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -267,6 +270,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.auto_awesome),
               label: Text(provider.isGenerating ? l10n.insightsGenerating : l10n.insightsGenerate),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
           if (provider.lastGenerated != null) ...[
