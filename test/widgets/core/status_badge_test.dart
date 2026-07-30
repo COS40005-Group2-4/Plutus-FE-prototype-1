@@ -39,4 +39,40 @@ void main() {
     txt = tester.widget<Text>(find.text('▼ 1.85%'));
     expect(txt.style!.color, PlutusTokens.light.error.text);
   });
+
+  testWidgets('StatusBadge renders every quartet arm from tokens',
+      (WidgetTester tester) async {
+    const Map<StatusKind, String> labels = <StatusKind, String>{
+      StatusKind.success: 'ok',
+      StatusKind.warning: 'careful',
+      StatusKind.info: 'fyi',
+      StatusKind.error: 'bad',
+    };
+    for (final MapEntry<StatusKind, String> e in labels.entries) {
+      await pump(tester, StatusBadge(kind: e.key, label: e.value));
+      final StatusColors s = switch (e.key) {
+        StatusKind.success => PlutusTokens.light.success,
+        StatusKind.warning => PlutusTokens.light.warning,
+        StatusKind.info => PlutusTokens.light.info,
+        StatusKind.error => PlutusTokens.light.error,
+      };
+      final Text label = tester.widget<Text>(find.text(e.value));
+      expect(label.style!.color, s.text, reason: '${e.key} text');
+      final Container pill = tester.widget<Container>(find
+          .descendant(
+              of: find.byType(StatusBadge), matching: find.byType(Container))
+          .first);
+      expect((pill.decoration! as BoxDecoration).color, s.surface,
+          reason: '${e.key} surface');
+    }
+  });
+
+  testWidgets('MetricDelta renders exact zero as neutral, no arrow',
+      (WidgetTester tester) async {
+    await pump(tester, const MetricDelta(percent: 0));
+    final Text txt = tester.widget<Text>(find.text('0.0%'));
+    expect(txt.style!.color, PlutusTokens.light.textSecondary);
+    expect(find.textContaining('▲'), findsNothing);
+    expect(find.textContaining('▼'), findsNothing);
+  });
 }

@@ -41,6 +41,10 @@ class PlutusTokens extends ThemeExtension<PlutusTokens> {
   // ── Text ──
   final Color text;
   final Color textSecondary;
+
+  /// Muted text — 3:1 floor, NOT full AA. Use only for non-essential text
+  /// (placeholders, timestamps, decorative captions); never for content the
+  /// user must read to operate the app.
   final Color textMuted;
 
   // ── Brand ──
