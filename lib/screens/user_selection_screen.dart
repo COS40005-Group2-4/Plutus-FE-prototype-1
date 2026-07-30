@@ -249,100 +249,103 @@ class _UserRowState extends State<_UserRow> {
     final l10n = AppLocalizations.of(context);
     final user = widget.user;
 
-    return InkWell(
-      onTap: widget.onTap,
-      onHover: (value) => setState(() => _hovered = value),
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xl,
-          vertical: AppSpacing.sm,
-        ),
-        leading: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: _hovered ? t.gold : t.border,
-              width: _hovered ? 2 : 1,
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
+        onHover: (value) => setState(() => _hovered = value),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.sm,
           ),
-          child: CircleAvatar(
-            backgroundColor: t.surfaceSubtle,
-            child: Text(
-              user.displayName[0].toUpperCase(),
-              style: TextStyle(
-                color: t.brandNavy,
-                fontWeight: FontWeight.bold,
+          leading: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _hovered ? t.gold : t.border,
+                width: _hovered ? 2 : 1,
+              ),
+            ),
+            child: CircleAvatar(
+              backgroundColor: t.surfaceSubtle,
+              child: Text(
+                user.displayName[0].toUpperCase(),
+                style: TextStyle(
+                  color: t.brandNavy,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-        title: Text(
-          user.displayName,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: t.text,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('@${user.username}', overflow: TextOverflow.ellipsis, style: TextStyle(color: t.textSecondary)),
-            if (user.email != null)
-              Text(
-                user.email!,
-                style: TextStyle(fontSize: 12, color: t.textSecondary),
-                overflow: TextOverflow.ellipsis,
-              ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                if (user.hasOAuth)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: t.surfaceSubtle,
-                      borderRadius: AppRadius.borderPill,
-                    ),
-                    child: Text(
-                      l10n.googleBadge,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: t.textSecondary,
-                      ),
-                    ),
-                  ),
-                if (user.isGuest)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: t.surfaceSubtle,
-                      borderRadius: AppRadius.borderPill,
-                    ),
-                    child: Text(
-                      l10n.guestBadge,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: t.textSecondary,
-                      ),
-                    ),
-                  ),
-              ],
+          title: Text(
+            user.displayName,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: t.text,
             ),
-          ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('@${user.username}', overflow: TextOverflow.ellipsis, style: TextStyle(color: t.textSecondary)),
+              if (user.email != null)
+                Text(
+                  user.email!,
+                  style: TextStyle(fontSize: 12, color: t.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  if (user.hasOAuth)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: t.surfaceSubtle,
+                        borderRadius: AppRadius.borderPill,
+                      ),
+                      child: Text(
+                        l10n.googleBadge,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: t.textSecondary,
+                        ),
+                      ),
+                    ),
+                  if (user.isGuest)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: t.surfaceSubtle,
+                        borderRadius: AppRadius.borderPill,
+                      ),
+                      child: Text(
+                        l10n.guestBadge,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: t.textSecondary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          trailing: Icon(Icons.arrow_forward_ios, color: t.textSecondary),
         ),
-        trailing: Icon(Icons.arrow_forward_ios, color: t.textSecondary),
       ),
     );
   }
