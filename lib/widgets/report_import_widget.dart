@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/glass_container.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 // Report Import Button Widget
 class ReportImportWidget extends StatelessWidget {
@@ -11,10 +10,8 @@ class ReportImportWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      color: AppColors.warning,
-      opacity: 0.2,
-      borderRadius: AppRadius.card,
+    final PlutusTokens t = context.tokens;
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -25,7 +22,7 @@ class ReportImportWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.upload_file, size: isCompact ? 28 : 40, color: Colors.white),
+                Icon(Icons.upload_file, size: isCompact ? 28 : 40, color: t.text),
                 SizedBox(height: isCompact ? 6 : 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -33,7 +30,7 @@ class ReportImportWidget extends StatelessWidget {
                     Text(
                       AppLocalizations.of(context).widgetImportReport,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: t.text,
                         fontSize: isCompact ? 13 : 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -45,7 +42,7 @@ class ReportImportWidget extends StatelessWidget {
                       child: Icon(
                         Icons.help_outline,
                         size: 14,
-                        color: AppColors.textTertiary(Theme.of(context).brightness),
+                        color: t.textMuted,
                       ),
                     ),
                   ],
@@ -54,7 +51,7 @@ class ReportImportWidget extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     AppLocalizations.of(context).clickImportTransactions,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    style: TextStyle(color: t.textSecondary, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -66,8 +63,6 @@ class ReportImportWidget extends StatelessWidget {
                   icon: const Icon(Icons.add, size: 18),
                   label: Text(AppLocalizations.of(context).import),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.warning,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                   ),
