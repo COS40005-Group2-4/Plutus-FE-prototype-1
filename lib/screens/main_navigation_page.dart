@@ -5,12 +5,11 @@ import 'package:get_it/get_it.dart';
 import 'transaction_history_page.dart';
 import '../services/interfaces/i_transaction_service.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
-import '../theme/app_gradients.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 import 'dashboard_screen.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -26,7 +25,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    final PlutusTokens t = context.tokens;
     final l10n = AppLocalizations.of(context);
 
     final List<Widget> tabs = <Widget>[
@@ -50,15 +49,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceElevated(brightness),
-              borderRadius: BorderRadius.circular(AppRadius.surface),
-              border: brightness == Brightness.dark
-                  ? Border.all(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      width: 1,
-                    )
-                  : null,
-              boxShadow: AppElevation.floatingNav(brightness),
+              color: t.surface,
+              borderRadius: AppRadius.borderSurface,
+              border: Border.all(color: t.border),
+              boxShadow: t.shadowMedium,
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.xs,
@@ -73,9 +67,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   isSelected: _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
-                _navDivider(brightness),
-                _buildFab(brightness),
-                _navDivider(brightness),
+                _navDivider(t),
+                _buildFab(t),
+                _navDivider(t),
                 _buildNavItem(
                   icon: Icons.history_outlined,
                   iconActive: Icons.history_rounded,
@@ -98,10 +92,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final brightness = Theme.of(context).brightness;
-    final brand = AppColors.brand(brightness);
-    final inactive = AppColors.textSecondary(brightness);
-    final color = isSelected ? brand : inactive;
+    final PlutusTokens t = context.tokens;
+    final Color fg = isSelected ? t.text : t.textSecondary;
 
     return Expanded(
       child: Padding(
@@ -110,9 +102,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           horizontal: AppSpacing.xs,
         ),
         child: Material(
-          color: isSelected
-              ? brand.withValues(alpha: 0.16)
-              : Colors.transparent,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.iconButton),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -122,20 +112,27 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(isSelected ? iconActive : icon,
-                      color: color, size: 24),
-                  const SizedBox(height: 4),
-                  Text(
-                    label,
-                    style: AppTextStyles.labelStyle.copyWith(
-                      color: color,
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w600,
-                      letterSpacing: 0.1,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.componentLg,
+                      vertical: AppSpacing.componentXs,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? (Theme.of(context).brightness == Brightness.dark
+                              ? Color.alphaBlend(t.goldWeak, t.surface)
+                              : t.goldWeak)
+                          : Colors.transparent,
+                      borderRadius: AppRadius.borderPill,
+                    ),
+                    child: Icon(
+                      isSelected ? iconActive : icon,
+                      color: fg,
+                      size: 24,
+                    ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(label, style: AppTextStyles.labelStyle.copyWith(color: fg)),
                 ],
               ),
             ),
@@ -145,19 +142,16 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     );
   }
 
-  Widget _navDivider(Brightness brightness) {
+  Widget _navDivider(PlutusTokens t) {
     return Container(
       width: 1,
       height: 28,
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      color: AppColors.divider(brightness),
+      color: t.border,
     );
   }
 
-  Widget _buildFab(Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
-    final brand = AppColors.brand(brightness);
-    final ctaBg = isDark ? null : AppColors.ctaButtonLight;
+  Widget _buildFab(PlutusTokens t) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Material(
@@ -175,14 +169,13 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
+              color: t.gold,
               shape: BoxShape.circle,
-              gradient: isDark ? AppGradients.ctaButtonDark : null,
-              color: ctaBg,
-              boxShadow: AppElevation.fabGlow(brand),
+              boxShadow: t.shadowMedium,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.add_rounded,
-              color: Colors.white,
+              color: t.onGold,
               size: 26,
             ),
           ),
