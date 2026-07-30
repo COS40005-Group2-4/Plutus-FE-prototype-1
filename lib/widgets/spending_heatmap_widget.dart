@@ -336,10 +336,10 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                               decoration: BoxDecoration(
                                 color: _cellColor(date, t),
                                 borderRadius: BorderRadius.circular(2),
-                                border: isSelected
-                                    ? Border.all(
-                                        color: t.border, width: 1)
-                                    : null,
+                                border: Border.all(
+                                  color: isSelected ? t.borderStrong : t.border,
+                                  width: isSelected ? 1.5 : 1,
+                                ),
                               ),
                             ),
                           ),
