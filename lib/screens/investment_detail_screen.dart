@@ -524,13 +524,15 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
     }
     final double range = maxY - minY;
     final double pad = range > 0 ? range * 0.1 : (maxY.abs() * 0.1 + 1);
+    final double lowY = minY >= 0 ? (minY - pad).clamp(0.0, double.infinity) : minY - pad;
+    final double highY = maxY + pad;
 
     final Color lineColor = t.chartCategorical.first;
 
     return LineChart(
       LineChartData(
-        minY: minY - pad,
-        maxY: maxY + pad,
+        minY: lowY,
+        maxY: highY,
         lineTouchData: const LineTouchData(enabled: false),
         titlesData: FlTitlesData(
           show: true,
@@ -572,7 +574,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             ),
           ),
         ),
-        gridData: PlutusChartStyle.defaultGridData(maxValue: maxY - minY, brightness: brightness),
+        gridData: PlutusChartStyle.defaultGridData(maxValue: highY - lowY, brightness: brightness),
         borderData: PlutusChartStyle.lineBorderData(brightness: brightness),
         extraLinesData: avgUnitCost == null
             ? null
@@ -593,7 +595,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             color: lineColor,
             barWidth: 1.5,
             dotData: FlDotData(
-              show: spots.length < 30,
+              show: spots.length >= 30,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 2.5,
