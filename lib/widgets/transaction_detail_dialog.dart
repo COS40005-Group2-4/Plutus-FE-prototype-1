@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/transaction_model.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
-import 'glass_container.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 class TransactionDetailDialog extends ConsumerWidget {
   final Transaction transaction;
@@ -18,13 +19,11 @@ class TransactionDetailDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsNotifierProvider);
     final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: GlassContainer(
-        borderRadius: 16,
-        opacity: 0.25,
-        padding: const EdgeInsets.all(16),
+      child: AppCard(
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -37,8 +36,8 @@ class TransactionDetailDialog extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       l10n.transactionDetails,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: t.text,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -46,7 +45,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: t.text),
                     onPressed: () => Navigator.of(context).pop(),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -86,8 +85,8 @@ class TransactionDetailDialog extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Text(
                   l10n.postings,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: t.text,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -110,7 +109,7 @@ class TransactionDetailDialog extends ConsumerWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(
                     l10n.close,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: t.text),
                   ),
                 ),
               ),
@@ -131,6 +130,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (value.isEmpty) return const SizedBox.shrink();
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -140,13 +140,13 @@ class _InfoRow extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: TextStyle(color: t.textSecondary, fontSize: 13),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: t.text, fontSize: 13),
             ),
           ),
         ],
@@ -236,10 +236,12 @@ class _DetailAmountState extends State<_DetailAmount> {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     if (_isLoading) {
-      return const SizedBox(
-        width: 20, height: 20,
-        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+      return SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2, color: t.text),
       );
     }
 
@@ -260,13 +262,13 @@ class _DetailAmountState extends State<_DetailAmount> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: widget.transaction.isExpense ? AppColors.negative(Theme.of(context).brightness) : AppColors.positive(Theme.of(context).brightness),
+            color: widget.transaction.isExpense ? t.error.text : t.success.text,
           ),
         ),
         if (!isOriginal && widget.transaction.currency != widget.settings.currency.code)
           Text(
             '(${widget.transaction.currency})',
-            style: const TextStyle(fontSize: 11, color: Colors.white70),
+            style: TextStyle(fontSize: 11, color: t.textSecondary),
           ),
       ],
     );
@@ -358,6 +360,7 @@ class _PostingDetailRowState extends State<_PostingDetailRow> {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final isOriginal = widget.settings.currency.isOriginal;
     final displayCurrency = isOriginal
         ? widget.posting.commodity
@@ -372,25 +375,28 @@ class _PostingDetailRowState extends State<_PostingDetailRow> {
     final isNegative = (widget.posting.amount < 0);
     final sign = isNegative ? '-' : '+';
 
-    return GlassContainer(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(8),
-      opacity: 0.1,
-      borderRadius: 8,
+      decoration: BoxDecoration(
+        color: t.surfaceSubtle,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: t.border),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Text(
               widget.posting.account,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: t.text, fontSize: 12),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             '$sign$formatted',
             style: TextStyle(
-              color: isNegative ? AppColors.negative(Theme.of(context).brightness) : AppColors.positive(Theme.of(context).brightness),
+              color: isNegative ? t.error.text : t.success.text,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),

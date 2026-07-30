@@ -89,6 +89,7 @@ class AppLocalizations {
       'vnd': 'VND',
       'usd': 'USD',
       'eur': 'EUR',
+      'all': 'All',
       'income': 'Income',
       'expense': 'Expense',
       'items_splits': 'Split Between Accounts',
@@ -993,6 +994,7 @@ class AppLocalizations {
       'vnd': 'VND',
       'usd': 'USD',
       'eur': 'EUR',
+      'all': 'Tất cả',
       'income': 'Thu nhập',
       'expense': 'Chi tiêu',
       'items_splits': 'Phân chia theo tài khoản',
@@ -1901,6 +1903,7 @@ class AppLocalizations {
   String get vnd => translate('vnd');
   String get usd => translate('usd');
   String get eur => translate('eur');
+  String get all => translate('all');
   String get income => translate('income');
   String get expense => translate('expense');
   String get itemsSplits => translate('items_splits');
