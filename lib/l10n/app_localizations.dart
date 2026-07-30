@@ -621,6 +621,8 @@ class AppLocalizations {
       'insights_period_custom': 'Custom',
       'insights_period_custom_active': 'Custom Range',
       'insights_font_size_label': 'Text Size',
+      'textSizeIncrease': 'Increase text size',
+      'textSizeDecrease': 'Decrease text size',
 
       // Report Export
       'report_config_title': 'Generate Report',
@@ -1533,6 +1535,8 @@ class AppLocalizations {
       'insights_period_custom': 'Tùy chỉnh',
       'insights_period_custom_active': 'Khoảng tùy chỉnh',
       'insights_font_size_label': 'Cỡ chữ',
+      'textSizeIncrease': 'Tăng cỡ chữ',
+      'textSizeDecrease': 'Giảm cỡ chữ',
 
       // Report Export
       'report_config_title': 'Tạo Báo Cáo',
@@ -2406,6 +2410,8 @@ class AppLocalizations {
   String get insightsPeriodCustom => translate('insights_period_custom');
   String get insightsPeriodCustomActive => translate('insights_period_custom_active');
   String get insightsFontSizeLabel => translate('insights_font_size_label');
+  String get textSizeIncrease => translate('textSizeIncrease');
+  String get textSizeDecrease => translate('textSizeDecrease');
 
   // Investment tracking
   String get investmentTabActive => translate('investment_tab_active');

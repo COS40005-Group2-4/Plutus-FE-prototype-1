@@ -5,11 +5,12 @@ import '../providers/insights_notifier.dart';
 import '../router/app_router.dart';
 import '../models/ai/insight.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
 import '../widgets/chart_theme.dart';
-import '../widgets/glass_container.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/status_badge.dart';
 import '../widgets/insights/cash_flow_forecast_widget.dart';
 
 class InsightsScreen extends ConsumerStatefulWidget {
@@ -39,11 +40,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
     final InsightsState provider = ref.watch(insightsNotifierProvider);
     final insightsNotifier = ref.read(insightsNotifierProvider.notifier);
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.insightsTitle),
-        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -65,12 +66,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.error,
+                        color: t.error.dot,
                         borderRadius: AppRadius.borderMd,
                       ),
                       child: Text(
                         '${provider.unreadAlertCount}',
-                        style: const TextStyle(color: AppColors.textOnDark, fontSize: 10),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),
                   ],
@@ -79,8 +80,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
             ),
             Tab(text: l10n.insightsTabCoaching),
           ],
-          labelColor: AppColors.primary,
-          indicatorColor: AppColors.primary,
         ),
       ),
       floatingActionButton: Column(
@@ -90,9 +89,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
             heroTag: 'font_increase',
             onPressed: provider.canIncreaseFontSize ? insightsNotifier.increaseFontSize : null,
             backgroundColor: provider.canIncreaseFontSize
-                ? AppColors.primary
-                : AppColors.primary.withValues(alpha: 0.3),
-            tooltip: 'Increase text size',
+                ? t.brandNavy
+                : t.brandNavy.withValues(alpha: 0.3),
+            tooltip: l10n.textSizeIncrease,
             child: const Text('A+', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -100,9 +99,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
             heroTag: 'font_decrease',
             onPressed: provider.canDecreaseFontSize ? insightsNotifier.decreaseFontSize : null,
             backgroundColor: provider.canDecreaseFontSize
-                ? AppColors.primary
-                : AppColors.primary.withValues(alpha: 0.3),
-            tooltip: 'Decrease text size',
+                ? t.brandNavy
+                : t.brandNavy.withValues(alpha: 0.3),
+            tooltip: l10n.textSizeDecrease,
             child: const Text('A−', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
         ],
@@ -134,13 +133,17 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
   }
 
   Widget _buildImportBanner(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      color: AppColors.primary.withValues(alpha: 0.1),
+      decoration: BoxDecoration(
+        color: t.info.surface,
+        border: Border(bottom: BorderSide(color: t.info.border)),
+      ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+          Icon(Icons.info_outline, color: t.info.text, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -164,6 +167,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
   }
 
   Widget _buildPeriodBar(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     final List<({int months, String label})> presets = <({int months, String label})>[
       (months: 1, label: l10n.insightsPeriod1m),
       (months: 3, label: l10n.insightsPeriod3m),
@@ -187,9 +191,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                 label: Text(preset.label),
                 selected: selected,
                 onSelected: (_) => insightsNotifier.setSelectedPeriod(preset.months),
-                selectedColor: AppColors.primary,
+                selectedColor: t.gold,
                 labelStyle: TextStyle(
-                  color: selected ? Colors.white : null,
+                  color: selected ? t.onGold : t.text,
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
@@ -210,9 +214,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
               ),
               selected: provider.hasCustomDateRange,
               onSelected: (_) => _pickCustomRange(context, provider, insightsNotifier),
-              selectedColor: AppColors.primary,
+              selectedColor: t.gold,
               labelStyle: TextStyle(
-                color: provider.hasCustomDateRange ? Colors.white : null,
+                color: provider.hasCustomDateRange ? t.onGold : t.text,
                 fontSize: 12,
                 fontWeight: provider.hasCustomDateRange ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -242,14 +246,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
               start: DateTime.now().subtract(const Duration(days: 90)),
               end: DateTime.now(),
             ),
-      builder: (BuildContext ctx, Widget? child) {
-        return Theme(
-          data: Theme.of(ctx).copyWith(
-            colorScheme: Theme.of(ctx).colorScheme.copyWith(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
     );
     if (range != null) {
       insightsNotifier.setCustomDateRange(range.start, range.end);
@@ -257,6 +253,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
   }
 
   Widget _buildGenerateButton(BuildContext context, InsightsState provider, InsightsNotifier insightsNotifier, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -270,12 +267,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.auto_awesome),
               label: Text(provider.isGenerating ? l10n.insightsGenerating : l10n.insightsGenerate),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
-              ),
             ),
           ),
           if (provider.lastGenerated != null) ...[
@@ -292,7 +283,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> with SingleTick
             const SizedBox(height: AppSpacing.xs),
             Text(
               l10n.insightsError,
-              style: const TextStyle(fontSize: 12, color: AppColors.error),
+              style: TextStyle(fontSize: 12, color: t.error.text),
             ),
           ],
         ],
@@ -353,6 +344,7 @@ class _ForecastTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final Forecast? forecast = provider.forecast;
     if (forecast == null) {
       return _EmptyState(
@@ -368,10 +360,8 @@ class _ForecastTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Summary card
-          GlassContainer(
+          AppCard(
             padding: const EdgeInsets.all(AppSpacing.md),
-            borderRadius: AppRadius.lg,
-            opacity: 0.08,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -382,33 +372,33 @@ class _ForecastTab extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(forecast.summary, style: TextStyle(fontSize: provider.insightsFontSize)),
                 const SizedBox(height: AppSpacing.md),
-                // Projected balance breakdown
+                // Projected balance breakdown — colors mirror the 3-scenario
+                // forecast chart palette (chartCategorical roles), not status
+                // severity: these are chart series, not warnings/errors.
                 _ForecastRow(
                   label: l10n.insightsForecastOptimistic,
                   value: forecast.projectedBalance['optimistic'] ?? 0,
-                  color: AppColors.success,
+                  color: t.chartCategorical[1],
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _ForecastRow(
                   label: l10n.insightsForecastLikely,
                   value: forecast.projectedBalance['likely'] ?? 0,
-                  color: AppColors.primary,
+                  color: t.chartCategorical[0],
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _ForecastRow(
                   label: l10n.insightsForecastPessimistic,
                   value: forecast.projectedBalance['pessimistic'] ?? 0,
-                  color: AppColors.error,
+                  color: t.chartCategorical[3],
                 ),
               ],
             ),
           ),
           if (forecast.dailyProjection.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            GlassContainer(
+            AppCard(
               padding: const EdgeInsets.all(AppSpacing.md),
-              borderRadius: AppRadius.lg,
-              opacity: 0.08,
               child: SizedBox(
                 height: 200,
                 child: CashFlowForecastWidget.buildForecastChart(context, forecast),
@@ -509,21 +499,28 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color severityColor = alert.severity == Severity.warning
-        ? AppColors.warning
+    final PlutusTokens t = context.tokens;
+    // Alert.severity has no "error" level (info/warning/positive) — map the
+    // real three values onto the matching quartet arms.
+    final StatusColors severity = alert.severity == Severity.warning
+        ? t.warning
         : alert.severity == Severity.positive
-            ? AppColors.success
-            : AppColors.primary;
+            ? t.success
+            : t.info;
+    final Color cardColor = alert.isRead ? t.surfaceSubtle : severity.surface;
+    final Color cardBorder = alert.isRead ? t.border : severity.border;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: GestureDetector(
         onTap: onTap,
-        child: GlassContainer(
+        child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
-          borderRadius: AppRadius.lg,
-          opacity: alert.isRead ? 0.04 : 0.1,
-          color: severityColor,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: AppRadius.borderLg,
+            border: Border.all(color: cardBorder),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -533,7 +530,7 @@ class _AlertCard extends StatelessWidget {
                     : alert.severity == Severity.positive
                         ? Icons.thumb_up_alt_outlined
                         : Icons.info_outline,
-                color: severityColor,
+                color: severity.text,
                 size: 20,
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -546,6 +543,7 @@ class _AlertCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold,
                         fontSize: fontSize + 1,
+                        color: t.text,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -553,7 +551,7 @@ class _AlertCard extends StatelessWidget {
                       alert.body,
                       style: TextStyle(
                         fontSize: fontSize,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: t.textSecondary,
                       ),
                     ),
                   ],
@@ -563,7 +561,7 @@ class _AlertCard extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: severityColor, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: severity.dot, shape: BoxShape.circle),
                 ),
             ],
           ),
@@ -626,12 +624,18 @@ class _CoachingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
+    // Locked design call #2: coaching cards are always the info quartet
+    // (card surface, not the difficulty badge below).
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: GlassContainer(
+      child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.lg,
-        opacity: 0.08,
+        decoration: BoxDecoration(
+          color: t.info.surface,
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: t.info.border),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -640,23 +644,27 @@ class _CoachingCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     tip.title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize + 1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: fontSize + 1,
+                      color: t.info.text,
+                    ),
                   ),
                 ),
                 _DifficultyBadge(difficulty: tip.difficulty, l10n: l10n),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(tip.body, style: TextStyle(fontSize: fontSize)),
+            Text(tip.body, style: TextStyle(fontSize: fontSize, color: t.text)),
             if (tip.savingsEstimate != null && tip.savingsEstimate! > 0) ...[
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
-                  const Icon(Icons.savings_outlined, size: 16, color: AppColors.success),
+                  Icon(Icons.savings_outlined, size: 16, color: t.success.text),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${l10n.insightsCoachingPotentialSavings}: ${PlutusChartStyle.formatCompactCurrency(tip.savingsEstimate!)}',
-                    style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 12, color: t.success.text, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -676,14 +684,12 @@ class _CoachingCard extends StatelessWidget {
                     icon: const Icon(Icons.bookmark_border, size: 16),
                     label: Text(l10n.insightsCoachingSave),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       textStyle: const TextStyle(fontSize: 12),
                     ),
                   )
                 else
-                  const Icon(Icons.bookmark, color: AppColors.primary, size: 20),
+                  Icon(Icons.bookmark, color: t.goldText, size: 20),
               ],
             ),
           ],
@@ -702,28 +708,21 @@ class _DifficultyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color;
+    final StatusKind kind;
     final String label;
     switch (difficulty) {
       case CoachingDifficulty.easy:
-        color = AppColors.success;
+        kind = StatusKind.success;
         label = l10n.translate('insights_coaching_difficulty_easy');
       case CoachingDifficulty.medium:
-        color = AppColors.warning;
+        kind = StatusKind.warning;
         label = l10n.translate('insights_coaching_difficulty_medium');
       case CoachingDifficulty.hard:
-        color = AppColors.error;
+        kind = StatusKind.error;
         label = l10n.translate('insights_coaching_difficulty_hard');
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: AppRadius.borderMd,
-      ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-    );
+    return StatusBadge(kind: kind, label: label);
   }
 }
 
@@ -746,12 +745,11 @@ class _InsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.lg,
-        opacity: 0.08,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -761,12 +759,12 @@ class _InsightCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: t.brandNavy.withValues(alpha: 0.12),
                       borderRadius: AppRadius.borderMd,
                     ),
                     child: Text(
                       category!,
-                      style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                      style: TextStyle(fontSize: 11, color: t.brandNavy),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -782,7 +780,7 @@ class _InsightCard extends StatelessWidget {
               body,
               style: TextStyle(
                 fontSize: fontSize,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: t.textSecondary,
               ),
             ),
           ],
@@ -799,11 +797,14 @@ class _MetricBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = metric.severity == Severity.warning
-        ? AppColors.warning
+    final PlutusTokens t = context.tokens;
+    // InsightMetric.severity has no "error" level (info/warning/positive) —
+    // map the real three values onto the matching quartet arms.
+    final StatusColors severity = metric.severity == Severity.warning
+        ? t.warning
         : metric.severity == Severity.positive
-            ? AppColors.success
-            : AppColors.primary;
+            ? t.success
+            : t.info;
 
     final IconData icon = metric.direction == 'up'
         ? Icons.trending_up
@@ -814,15 +815,16 @@ class _MetricBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: severity.surface,
         borderRadius: AppRadius.borderMd,
+        border: Border.all(color: severity.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 14, color: severity.text),
           const SizedBox(width: 2),
-          Text(metric.label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          Text(metric.label, style: TextStyle(fontSize: 11, color: severity.text, fontWeight: FontWeight.w600)),
         ],
       ),
     );
