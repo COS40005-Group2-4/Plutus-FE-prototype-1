@@ -5,6 +5,7 @@ import 'animated_theme_scope.dart';
 /// App-wide background. Despite the legacy "Glass" name, this paints the
 /// canvas + a soft brand-tinted wash for ambient depth — magenta on light,
 /// violet on dark.
+@Deprecated('Use AppCanvas (lib/widgets/core/app_canvas.dart). Removed in PR4.')
 class GlassBackground extends StatelessWidget {
   final Widget child;
 

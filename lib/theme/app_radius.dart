@@ -15,17 +15,21 @@ class AppRadius {
   static const double lg = 16;
   static const double xl = 24;
 
-  // ── Component-named tokens ──
-  /// Fully-rounded pill (e.g. primary CTA, chips).
+  // ── Component-named tokens (spec §2.2) ──
+  /// Fully-rounded pill — chips and badges ONLY (buttons are `button`).
   static const double pill = 999;
+  /// Button radius.
+  static const double button = 12;
   /// Card radius (`Card`, list cards, balance card).
-  static const double card = 24;
-  /// Surface / sheet radius (bottom sheets, dialogs).
-  static const double surface = 28;
+  static const double card = 16;
+  /// Sheet / dialog radius.
+  static const double sheet = 20;
+  /// Surface radius — legacy alias of [sheet].
+  static const double surface = sheet;
   /// Input field radius.
-  static const double input = 16;
+  static const double input = 10;
   /// Small icon-button radius.
-  static const double iconButton = 14;
+  static const double iconButton = 10;
 
   static BorderRadius borderXs = BorderRadius.circular(xs);
   static BorderRadius borderSm = BorderRadius.circular(sm);
@@ -34,6 +38,7 @@ class AppRadius {
   static BorderRadius borderXl = BorderRadius.circular(xl);
 
   static BorderRadius borderPill = BorderRadius.circular(pill);
+  static BorderRadius borderButton = BorderRadius.circular(button);
   static BorderRadius borderCard = BorderRadius.circular(card);
   static BorderRadius borderSurface = BorderRadius.circular(surface);
   static BorderRadius borderInput = BorderRadius.circular(input);

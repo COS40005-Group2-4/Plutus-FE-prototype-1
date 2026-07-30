@@ -11,6 +11,21 @@ import 'package:flutter/material.dart';
 ///   title    L 22 / M 16 / S 14   section / card headings
 ///   body     L 16 / M 14 / S 12   readable text
 ///   label    L 14 / M 12 / S 11   buttons, badges, captions
+///
+/// Legacy/semantic role styles (calm gold/navy re-skin, spec §4) — used by
+/// dashboard widgets and other existing callers:
+///
+///   display  32/w700   hero figures
+///   heading  24/w600   page/section headings
+///   title    18/w600   card/section titles
+///   subtitle 16/w600   card subtitles
+///   body     15/w400   readable text (bodyStrong: w600 for emphasis/buttons)
+///   label    13/w500   buttons, badges
+///   caption  12/w400   captions, meta text
+///   overline 11/w600   uppercase micro-labels (table headers, eyebrows)
+///   numeric  tabular figures, w700 — currency/numeric columns
+///   heroSerif  CormorantGaramond 600, 40/1.1 — hero net-worth figure,
+///     auth tagline only
 class AppTextStyles {
   AppTextStyles._();
 
@@ -37,10 +52,10 @@ class AppTextStyles {
 
   // ── Legacy aliases used by dashboard widgets and existing callers.
   // Tuned for confident on-card readability over the muted accent fills.
-  static const double display = 44;
-  static const double heading = 30;
-  static const double title = 22;
-  static const double subtitle = 18;
+  static const double display = 32;
+  static const double heading = 24;
+  static const double title = 18;
+  static const double subtitle = 16;
   static const double body = 15;
   static const double label = 13;
   static const double caption = 12;
@@ -162,51 +177,51 @@ class AppTextStyles {
   // over the muted accent fills.
   static final TextStyle displayStyle = _base.copyWith(
     fontSize: display,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -1.2,
-    height: 1.05,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.64,
+    height: 1.15,
   );
   static final TextStyle headingStyle = _base.copyWith(
     fontSize: heading,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -0.5,
-    height: 1.15,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.3,
+    height: 1.3,
   );
   static final TextStyle titleStyle = _base.copyWith(
     fontSize: title,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.2,
-    height: 1.25,
-  );
-  static final TextStyle subtitleStyle = _base.copyWith(
-    fontSize: subtitle,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
     height: 1.3,
   );
+  static final TextStyle subtitleStyle = _base.copyWith(
+    fontSize: subtitle,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.4,
+  );
   static final TextStyle bodyStyle = _base.copyWith(
     fontSize: body,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
     letterSpacing: 0.05,
-    height: 1.45,
+    height: 1.5,
   );
   static final TextStyle bodyStrongStyle = _base.copyWith(
     fontSize: body,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: 0.05,
     height: 1.4,
   );
   static final TextStyle labelStyle = _base.copyWith(
     fontSize: label,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     letterSpacing: 0.2,
-    height: 1.3,
+    height: 1.4,
   );
   static final TextStyle captionStyle = _base.copyWith(
     fontSize: caption,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
     letterSpacing: 0.2,
-    height: 1.3,
+    height: 1.4,
   );
 
   /// Tabular figures for currency/numeric columns.
@@ -216,6 +231,30 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     letterSpacing: -0.2,
     height: 1.15,
+  );
+
+  /// Uppercase micro-label — table headers, group labels, hero-card
+  /// eyebrows. Style does not transform case — call-sites uppercase their
+  /// text (see HeroCard).
+  static final TextStyle overlineStyle = _base.copyWith(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.66,
+    height: 1.3,
+  );
+
+  /// Classical serif accent (spec §4): Cormorant Garamond 600. Used in
+  /// exactly two places — the dashboard hero net-worth figure and the
+  /// auth tagline. Everywhere else is Inter.
+  static final TextStyle heroSerifStyle = const TextStyle(
+    fontFamily: 'CormorantGaramond',
+    fontFamilyFallback: <String>['Georgia', 'Times New Roman', 'serif'],
+    fontVariations: <FontVariation>[FontVariation('wght', 600)],
+  ).copyWith(
+    fontSize: 40,
+    fontWeight: FontWeight.w600,
+    height: 1.1,
+    letterSpacing: 0,
   );
 
   /// Two-tone TextSpan helper for headlines like "income has increased!"
