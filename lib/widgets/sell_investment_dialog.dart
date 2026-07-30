@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/investment_model.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
 
 typedef OnConfirmSale = Future<void> Function({
   required double quantity,
@@ -102,10 +102,11 @@ class _SellInvestmentDialogState extends State<SellInvestmentDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
+        final PlutusTokens t = context.tokens;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppColors.error,
+            backgroundColor: t.error.dot,
           ),
         );
       }
@@ -115,6 +116,7 @@ class _SellInvestmentDialogState extends State<SellInvestmentDialog> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     final inv = widget.investment;
     final symbol = inv.getCurrencySymbol();
 
@@ -202,7 +204,7 @@ class _SellInvestmentDialogState extends State<SellInvestmentDialog> {
                       ? l.investmentSellRealizedGain
                       : l.investmentSellRealizedLoss,
                   value: '$symbol${_realizedGain!.abs().toStringAsFixed(2)}',
-                  color: _realizedGain! >= 0 ? AppColors.success : AppColors.error,
+                  color: _realizedGain! >= 0 ? t.success.text : t.error.text,
                 ),
                 _PreviewRow(
                   label: l.investmentSellRemaining,

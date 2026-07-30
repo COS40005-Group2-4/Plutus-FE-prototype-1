@@ -54,7 +54,8 @@ class AppLocalizations {
       'cancel': 'Cancel',
       'confirm': 'Confirm',
       'save': 'Save',
-      
+      'add': 'Add',
+
       // Messages
       'guest_mode': 'Guest Mode',
       'local_account': 'Personal Account',
@@ -244,6 +245,7 @@ class AppLocalizations {
       // Investment Tracking Widget
       'investments': 'Investments',
       'portfolio': 'Portfolio',
+      'portfolio_total': 'Portfolio total',
       'add_investment': 'Add Investment',
       'edit_investment': 'Edit Investment',
       'delete_investment': 'Delete Investment',
@@ -290,7 +292,8 @@ class AppLocalizations {
       'invalid_exchange_rate': 'Please enter a valid exchange rate (must be greater than 0)',
       'invalid_date': "Please choose a date that isn't in the future",
       'required_field': 'This field is required',
-      'investment_added': 'Investment added successfully',
+      'investment_added': 'added to your portfolio',
+      'investment_add_failed': "Couldn't add investment. Please try again.",
       'investment_updated': 'Investment updated successfully',
       'investment_deleted': 'Investment deleted successfully',
       'error_adding_investment': 'Error adding investment',
@@ -963,7 +966,8 @@ class AppLocalizations {
       'cancel': 'Hủy',
       'confirm': 'Xác nhận',
       'save': 'Lưu',
-      
+      'add': 'Thêm',
+
       // Messages
       'guest_mode': 'Chế độ khách',
       'local_account': 'Tài khoản cá nhân',
@@ -1153,6 +1157,7 @@ class AppLocalizations {
       // Investment Tracking Widget
       'investments': 'Đầu tư',
       'portfolio': 'Danh mục đầu tư',
+      'portfolio_total': 'Tổng danh mục',
       'add_investment': 'Thêm đầu tư',
       'edit_investment': 'Chỉnh sửa đầu tư',
       'delete_investment': 'Xóa đầu tư',
@@ -1199,7 +1204,8 @@ class AppLocalizations {
       'invalid_exchange_rate': 'Vui lòng nhập tỷ giá hợp lệ (phải lớn hơn 0)',
       'invalid_date': 'Vui lòng chọn ngày không phải là ngày trong tương lai',
       'required_field': 'Trường này là bắt buộc',
-      'investment_added': 'Đã thêm đầu tư thành công',
+      'investment_added': 'đã thêm vào danh mục của bạn',
+      'investment_add_failed': 'Không thể thêm khoản đầu tư. Vui lòng thử lại.',
       'investment_updated': 'Đã cập nhật đầu tư thành công',
       'investment_deleted': 'Đã xóa đầu tư thành công',
       'error_adding_investment': 'Lỗi thêm đầu tư',
@@ -1877,7 +1883,8 @@ class AppLocalizations {
   String get cancel => translate('cancel');
   String get confirm => translate('confirm');
   String get save => translate('save');
-  
+  String get add => translate('add');
+
   String get guestMode => translate('guest_mode');
   String get localAccount => translate('local_account');
   String get googleLinked => translate('google_linked');
@@ -2091,6 +2098,7 @@ class AppLocalizations {
   // Investment Tracking Widget
   String get investments => translate('investments');
   String get portfolio => translate('portfolio');
+  String get portfolioTotal => translate('portfolio_total');
   String get addInvestment => translate('add_investment');
   String get editInvestment => translate('edit_investment');
   String get deleteInvestment => translate('delete_investment');
@@ -2138,6 +2146,7 @@ class AppLocalizations {
   String get invalidDate => translate('invalid_date');
   String get requiredField => translate('required_field');
   String get investmentAdded => translate('investment_added');
+  String get investmentAddFailed => translate('investment_add_failed');
   String get investmentUpdated => translate('investment_updated');
   String get investmentDeleted => translate('investment_deleted');
   String get errorAddingInvestment => translate('error_adding_investment');

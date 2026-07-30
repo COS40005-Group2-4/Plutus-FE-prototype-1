@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_spacing.dart';
 import 'package:flutter/services.dart';
-import 'glass_container.dart';
+import 'core/app_card.dart';
 import '../l10n/app_localizations.dart';
 import '../models/investment_model.dart';
-import '../theme/app_colors.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Dialog for adding a new investment
 class AddInvestmentDialog extends StatefulWidget {
@@ -79,19 +79,14 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final PlutusTokens t = context.tokens;
 
     return Dialog(
       backgroundColor: Colors.transparent,
       child: SingleChildScrollView(
-        child: GlassContainer(
-          borderRadius: 16,
-          blur: 15.0,
-          opacity: isDark ? 0.35 : 0.1,
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
+        child: AppCard(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -101,7 +96,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     localizations.addInvestment,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: t.text,
                         ),
                   ),
                   const SizedBox(height: 24),
@@ -235,15 +230,15 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     items: [
                       DropdownMenuItem(
                         value: Currency.vnd,
-                        child: Text('VND (₫)'),
+                        child: Text('${localizations.vnd} (₫)'),
                       ),
                       DropdownMenuItem(
                         value: Currency.usd,
-                        child: Text('USD (\$)'),
+                        child: Text('${localizations.usd} (\$)'),
                       ),
                       DropdownMenuItem(
                         value: Currency.eur,
-                        child: Text('EUR (€)'),
+                        child: Text('${localizations.eur} (€)'),
                       ),
                     ],
                     onChanged: (value) {
@@ -285,12 +280,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                         child: Text(localizations.cancel),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      ElevatedButton(
+                      FilledButton(
                         onPressed: _handleSave,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryDark,
-                          foregroundColor: Colors.white,
-                        ),
                         child: Text(localizations.save),
                       ),
                     ],
@@ -298,7 +289,6 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                 ],
               ),
             ),
-          ),
         ),
       ),
     );
