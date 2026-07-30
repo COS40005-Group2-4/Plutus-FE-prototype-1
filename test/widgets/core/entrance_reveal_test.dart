@@ -42,11 +42,11 @@ void main() {
     ));
     final Transform transform = tester.widget<Transform>(find.ancestor(
         of: find.text('hello'), matching: find.byType(Transform)).first);
-    expect((transform.transform as Matrix4).getTranslation().y, 10.0);
+    expect(transform.transform.getTranslation().y, 10.0);
     await tester.pumpAndSettle();
     final Transform finalTransform = tester.widget<Transform>(find.ancestor(
         of: find.text('hello'), matching: find.byType(Transform)).first);
-    expect((finalTransform.transform as Matrix4).getTranslation().y, 0.0);
+    expect(finalTransform.transform.getTranslation().y, 0.0);
   });
 
   testWidgets('EntranceReveal staggers animation by 40ms per index',
