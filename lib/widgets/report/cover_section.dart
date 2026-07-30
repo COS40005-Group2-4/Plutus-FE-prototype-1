@@ -115,7 +115,7 @@ class CoverSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
-            '${l10n.translate('report_generated_prefix')}${DateFormat('MMM d, yyyy • h:mm a').format(data.generatedAt)}',
+            '${l10n.reportGeneratedPrefix}${DateFormat('MMM d, yyyy • h:mm a').format(data.generatedAt)}',
             style: TextStyle(
               fontSize: 11,
               color: doc.textMuted,

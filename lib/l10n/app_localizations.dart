@@ -2475,6 +2475,8 @@ class AppLocalizations {
   String get createProfileToStart => translate('createProfileToStart');
   String get googleBadge => translate('googleBadge');
   String get guestBadge => translate('guestBadge');
+
+  String get reportGeneratedPrefix => translate('report_generated_prefix');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

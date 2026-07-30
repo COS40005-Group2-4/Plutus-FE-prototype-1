@@ -58,7 +58,7 @@ class ReportMetricCard extends StatelessWidget {
               changeText!,
               style: TextStyle(
                 fontSize: 11,
-                color: changeColor ?? doc.textMuted,
+                color: changeColor ?? doc.textSecondary,
               ),
             ),
           ],
