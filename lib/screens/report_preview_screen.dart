@@ -227,10 +227,10 @@ class ReportPreviewScreen extends ConsumerWidget {
         SnackBar(
           content: Text('${l10n.translate('report_pdf_saved')} $path'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: PlutusTokens.dark.success.text,
+          backgroundColor: t.success.text,
           action: SnackBarAction(
             label: l10n.translate('ok'),
-            textColor: PlutusTokens.dark.text,
+            textColor: t.text,
             onPressed: () {},
           ),
         ),
