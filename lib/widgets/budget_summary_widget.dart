@@ -9,8 +9,8 @@ import 'package:plutus_fe_prototype/theme/app_radius.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
-import '../widgets/glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 final _monthlyPeriodFormatter = DateFormat('MMMM yyyy');
 
@@ -38,14 +38,11 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
   Widget build(BuildContext context) {
     final asyncBudget = ref.watch(budgetNotifierProvider);
     final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     return asyncBudget.when(
-      loading: () => GlassContainer(
-        color: AppColors.budgetAccent,
-        opacity: 0.2,
-        borderRadius: AppRadius.card,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: const Center(child: CircularProgressIndicator()),
+      loading: () => const AppCard(
+        child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => const SizedBox.shrink(),
       data: (provider) {
@@ -53,11 +50,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
 
         // Empty state — no active budget
         if (budget == null) {
-          return GlassContainer(
-            color: AppColors.budgetAccent,
-            opacity: 0.2,
-            borderRadius: AppRadius.card,
-            padding: const EdgeInsets.all(AppSpacing.lg),
+          return AppCard(
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -104,11 +97,11 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
 
         Color progressColor;
         if (provider.overallProgress >= 1.0) {
-          progressColor = AppColors.error;
+          progressColor = t.error.dot;
         } else if (provider.overallProgress >= 0.7) {
-          progressColor = AppColors.warning;
+          progressColor = t.warning.dot;
         } else {
-          progressColor = AppColors.success;
+          progressColor = t.success.dot;
         }
 
         final totalBudgeted = provider.totalBudgeted;
@@ -120,18 +113,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
 
         final periodLabel = _periodLabel(budget.periodType, periodStart);
 
-        final brightness = Theme.of(context).brightness;
-        const accent = AppColors.budgetAccent;
-        final onAccent = AppColors.onAccentPrimary(accent, brightness);
-        final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-        final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-        final progressTrack = AppColors.progressTrackOnAccent(accent, brightness);
-
-        return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+        return AppCard(
           child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,7 +125,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       l10n.widgetBudgetTracking,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: onAccent,
+                            color: t.text,
                           ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -152,7 +134,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       child: Icon(
                         Icons.help_outline,
                         size: 14,
-                        color: onAccentTertiary,
+                        color: t.textMuted,
                       ),
                     ),
                   ],
@@ -164,7 +146,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.chevron_left, color: onAccentSecondary),
+                      icon: Icon(Icons.chevron_left, color: t.textSecondary),
                       onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(-1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -174,10 +156,10 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       style: Theme.of(context)
                           .textTheme
                           .titleSmall
-                          ?.copyWith(color: onAccent),
+                          ?.copyWith(color: t.text),
                     ),
                     IconButton(
-                      icon: Icon(Icons.chevron_right, color: onAccentSecondary),
+                      icon: Icon(Icons.chevron_right, color: t.textSecondary),
                       onPressed: () => ref.read(budgetNotifierProvider.notifier).navigatePeriod(1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -194,12 +176,11 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                       height: 12,
                       child: Stack(
                         children: [
-                          // Background — on-accent track keeps contrast on
-                          // pastel cards regardless of theme.
+                          // Background — calm surface track.
                           Container(
                             height: 12,
                             decoration: BoxDecoration(
-                              color: progressTrack,
+                              color: t.surfaceSubtle,
                               borderRadius: AppRadius.borderSm,
                             ),
                           ),
@@ -222,7 +203,7 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                               child: Container(
                                 width: 2,
                                 height: 16,
-                                color: onAccentSecondary,
+                                color: t.textSecondary,
                               ),
                             ),
                         ],
@@ -238,22 +219,22 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                     _SummaryTile(
                       label: l10n.budgetBudgeted,
                       value: fmtCurrency(totalBudgeted),
-                      valueColor: onAccent,
-                      labelColor: onAccentTertiary,
+                      valueColor: t.text,
+                      labelColor: t.textMuted,
                     ),
                     _SummaryTile(
                       label: l10n.budgetSpent,
                       value: fmtCurrency(totalSpent),
-                      valueColor: AppColors.error,
-                      labelColor: onAccentTertiary,
+                      valueColor: t.error.text,
+                      labelColor: t.textMuted,
                     ),
                     _SummaryTile(
                       label: l10n.budgetLeft,
                       value: fmtCurrency(totalRemaining.abs()),
                       valueColor: totalRemaining >= 0
-                          ? AppColors.success
-                          : AppColors.error,
-                      labelColor: onAccentTertiary,
+                          ? t.success.text
+                          : t.error.text,
+                      labelColor: t.textMuted,
                     ),
                   ],
                 ),
@@ -337,6 +318,7 @@ class _AlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final parts = <String>[];
     if (overBudgetCount > 0) {
       parts.add('$overBudgetCount ${AppLocalizations.of(context).budgetOver}');
@@ -352,20 +334,20 @@ class _AlertBanner extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.12),
+        color: t.error.surface,
         borderRadius: AppRadius.borderSm,
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        border: Border.all(color: t.error.border),
       ),
       child: Row(
         children: [
           Icon(Icons.warning_amber_rounded,
-              color: AppColors.error, size: 16),
+              color: t.error.dot, size: 16),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.error,
+                    color: t.error.text,
                   ),
             ),
           ),
