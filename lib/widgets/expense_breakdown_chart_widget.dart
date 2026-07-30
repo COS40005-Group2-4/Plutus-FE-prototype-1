@@ -8,10 +8,9 @@ import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
-import 'glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 import 'chart_theme.dart';
 
 class ExpenseBreakdownChartWidget extends ConsumerStatefulWidget {
@@ -70,13 +69,8 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.expenseAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
+    final PlutusTokens t = context.tokens;
+    return AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -87,13 +81,13 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
                   stream: _transactionService.transactionStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator(color: onAccent));
+                      return Center(child: CircularProgressIndicator(color: t.text));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return Center(
                         child: Text(
                           AppLocalizations.of(context).noTransactionsFound,
-                          style: TextStyle(color: onAccent, fontSize: 14),
+                          style: TextStyle(color: t.text, fontSize: 14),
                         ),
                       );
                     }
@@ -113,13 +107,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
   }
 
   Widget _buildHeader(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.expenseAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(accent, brightness);
+    final PlutusTokens t = context.tokens;
     return Column(
       children: [
         Row(
@@ -129,7 +117,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
               child: Text(
                 'Expense Breakdown',
                 style: TextStyle(
-                    color: onAccent,
+                    color: t.text,
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
@@ -141,14 +129,14 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
               child: Icon(
                 Icons.help_outline,
                 size: 14,
-                color: onAccentTertiary,
+                color: t.textMuted,
               ),
             ),
             Row(
               children: [
-                _buildToggle('Month', 0, onAccent, onAccentSecondary),
+                _buildToggle('Month', 0),
                 const SizedBox(width: AppSpacing.xs),
-                _buildToggle('Year', 1, onAccent, onAccentSecondary),
+                _buildToggle('Year', 1),
               ],
             ),
           ],
@@ -158,7 +146,7 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: Icon(Icons.chevron_left, color: onAccent, size: 20),
+              icon: Icon(Icons.chevron_left, color: t.text, size: 20),
               onPressed: () => setState(() {
                 _selectedDate = _viewMode == 0
                     ? DateTime(_selectedDate.year, _selectedDate.month - 1)
@@ -172,12 +160,12 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
                   ? '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}'
                   : '${_selectedDate.year}',
               style: TextStyle(
-                  color: onAccent,
+                  color: t.text,
                   fontSize: 14,
                   fontWeight: FontWeight.bold),
             ),
             IconButton(
-              icon: Icon(Icons.chevron_right, color: onAccent, size: 20),
+              icon: Icon(Icons.chevron_right, color: t.text, size: 20),
               onPressed: () => setState(() {
                 _selectedDate = _viewMode == 0
                     ? DateTime(_selectedDate.year, _selectedDate.month + 1)
@@ -192,24 +180,21 @@ class _ExpenseBreakdownChartWidgetState extends ConsumerState<ExpenseBreakdownCh
     );
   }
 
-  Widget _buildToggle(
-      String label, int mode, Color onAccent, Color onAccentSecondary) {
+  Widget _buildToggle(String label, int mode) {
+    final PlutusTokens t = context.tokens;
     final selected = _viewMode == mode;
     return GestureDetector(
       onTap: () => setState(() => _viewMode = mode),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.progressTrackOnAccent(
-                  AppColors.expenseAccent, Theme.of(context).brightness)
-              : Colors.transparent,
+          color: selected ? t.surfaceSubtle : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? onAccent : onAccentSecondary,
+            color: selected ? t.text : t.textMuted,
             fontSize: 12,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -284,23 +269,17 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.expenseAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(accent, brightness);
+    final PlutusTokens t = context.tokens;
 
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: onAccent));
+      return Center(child: CircularProgressIndicator(color: t.text));
     }
 
     if (_convertedData.isEmpty) {
       return Center(
         child: Text(
           'No expenses in this period',
-          style: TextStyle(color: onAccentSecondary, fontSize: 12),
+          style: TextStyle(color: t.textSecondary, fontSize: 12),
         ),
       );
     }
@@ -341,7 +320,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                         sections: List.generate(sorted.length, (i) {
                           final isTouched = i == _touchedIndex;
                           return PieChartSectionData(
-                            color: PlutusChartColors.get(i).withValues(alpha:0.8),
+                            color: t.chartCategorical[i % 6].withValues(alpha:0.8),
                             value: sorted[i].value,
                             title: isTouched ? '${(sorted[i].value / total * 100).toStringAsFixed(0)}%' : '',
                             radius: isTouched ? 40 : 32,
@@ -357,14 +336,14 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                         Text(
                           PlutusChartStyle.formatCompactCurrency(total),
                           style: TextStyle(
-                              color: onAccent,
+                              color: t.text,
                               fontSize: 16,
                               fontWeight: FontWeight.bold),
                         ),
                         Text(
                           widget.settings.currency.symbol,
                           style: TextStyle(
-                              color: onAccentTertiary, fontSize: 10),
+                              color: t.textMuted, fontSize: 10),
                         ),
                       ],
                     ),
@@ -383,7 +362,7 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                       Container(
                         width: 10, height: 10,
                         decoration: BoxDecoration(
-                          color: PlutusChartColors.get(i),
+                          color: t.chartCategorical[i % 6],
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -392,20 +371,20 @@ class _ExpenseBreakdownContentState extends State<_ExpenseBreakdownContent> {
                         child: Text(
                           entry.key,
                           style: TextStyle(
-                              color: onAccentSecondary, fontSize: 11),
+                              color: t.textSecondary, fontSize: 11),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
                         '$pct%',
                         style:
-                            TextStyle(color: onAccentTertiary, fontSize: 11),
+                            TextStyle(color: t.textMuted, fontSize: 11),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         _currencyService.formatCurrency(amount: entry.value, currencyCode: widget.settings.currency.code),
                         style: TextStyle(
-                            color: onAccent,
+                            color: t.text,
                             fontSize: 11,
                             fontWeight: FontWeight.bold),
                       ),

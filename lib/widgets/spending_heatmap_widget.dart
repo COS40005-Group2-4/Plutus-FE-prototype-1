@@ -6,10 +6,9 @@ import '../services/interfaces/interfaces.dart';
 import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
-import 'glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 import '../l10n/app_localizations.dart';
 
 class SpendingHeatmapWidget extends ConsumerStatefulWidget {
@@ -38,29 +37,20 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.heatmapAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(accent, brightness);
-    return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
+    final PlutusTokens t = context.tokens;
+    return AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.calendar_view_week, color: onAccent, size: 18),
+                  Icon(Icons.calendar_view_week, color: t.text, size: 18),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     'Spending Heatmap',
                     style: TextStyle(
-                        color: onAccent,
+                        color: t.text,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
@@ -70,7 +60,7 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
                     child: Icon(
                       Icons.help_outline,
                       size: 14,
-                      color: onAccentTertiary,
+                      color: t.textMuted,
                     ),
                   ),
                 ],
@@ -78,7 +68,7 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
               const SizedBox(height: 2),
               Text(
                 'Last 12 weeks · tap a day to inspect',
-                style: TextStyle(color: onAccentSecondary, fontSize: 10),
+                style: TextStyle(color: t.textSecondary, fontSize: 10),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -88,13 +78,13 @@ class _SpendingHeatmapWidgetState extends ConsumerState<SpendingHeatmapWidget> {
                     if (snapshot.connectionState == ConnectionState.waiting &&
                         !snapshot.hasData) {
                       return Center(
-                          child: CircularProgressIndicator(color: onAccent));
+                          child: CircularProgressIndicator(color: t.text));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return Center(
                         child: Text('No spending data',
                             style: TextStyle(
-                                color: onAccentSecondary, fontSize: 12)),
+                                color: t.textSecondary, fontSize: 12)),
                       );
                     }
                     return _HeatmapContent(
@@ -233,17 +223,16 @@ class _HeatmapContentState extends State<_HeatmapContent> {
   // Colour helpers
   // -------------------------------------------------------------------------
 
-  static const Color _emptyCell = Color(0xFF111827); // future / no-data
-  static const Color _zeroCell = Color(0xFF1E2D3D);  // had data, zero spend
-  static const Color _peakCell = Color(0xFFE74C3C);  // highest-spend day
-
-  Color _cellColor(DateTime date) {
-    if (date.isAfter(_today)) return _emptyCell;
+  /// Maps daily spend intensity onto the 5-step gold heatmap ramp
+  /// (bucket 0 = no/lowest spend, bucket 4 = at-or-near peak spend).
+  Color _cellColor(DateTime date, PlutusTokens t) {
+    final ramp = t.heatmapRamp;
+    if (date.isAfter(_today)) return ramp[0];
     final amount = _dailyTotals[date];
-    if (amount == null) return _emptyCell;
-    if (amount == 0 || _peakAmount == 0) return _zeroCell;
+    if (amount == null || _peakAmount == 0) return ramp[0];
     final intensity = (amount / _peakAmount).clamp(0.0, 1.0);
-    return Color.lerp(_zeroCell, _peakCell, intensity)!;
+    final bucket = (intensity * (ramp.length - 1)).round().clamp(0, ramp.length - 1);
+    return ramp[bucket];
   }
 
   // -------------------------------------------------------------------------
@@ -273,32 +262,25 @@ class _HeatmapContentState extends State<_HeatmapContent> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.heatmapAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
+    final PlutusTokens t = context.tokens;
 
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: onAccent));
+      return Center(child: CircularProgressIndicator(color: t.text));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildGrid(brightness),
+        _buildGrid(t),
         if (_selectedDate != null) ...[
           const SizedBox(height: AppSpacing.sm),
-          _buildTooltip(_selectedDate!, brightness),
+          _buildTooltip(_selectedDate!, t),
         ],
       ],
     );
   }
 
-  Widget _buildGrid(Brightness brightness) {
-    const accent = AppColors.heatmapAccent;
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(accent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(accent, brightness);
+  Widget _buildGrid(PlutusTokens t) {
     return Expanded(
       child: Column(
         children: [
@@ -310,7 +292,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                 return Expanded(
                   child: Text(
                     _columnHeader(col),
-                    style: TextStyle(color: onAccentTertiary, fontSize: 7),
+                    style: TextStyle(color: t.textMuted, fontSize: 7),
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.visible,
                     softWrap: false,
@@ -333,7 +315,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                         child: Text(
                           rowLabel,
                           style: TextStyle(
-                              color: onAccentTertiary, fontSize: 8),
+                              color: t.textMuted, fontSize: 8),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -352,11 +334,11 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                             child: Container(
                               margin: const EdgeInsets.all(1.5),
                               decoration: BoxDecoration(
-                                color: _cellColor(date),
+                                color: _cellColor(date, t),
                                 borderRadius: BorderRadius.circular(2),
                                 border: isSelected
                                     ? Border.all(
-                                        color: onAccentSecondary, width: 1)
+                                        color: t.border, width: 1)
                                     : null,
                               ),
                             ),
@@ -374,15 +356,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
     );
   }
 
-  Widget _buildTooltip(DateTime date, Brightness brightness) {
-    const accent = AppColors.heatmapAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(accent, brightness);
-    final progressTrack =
-        AppColors.progressTrackOnAccent(accent, brightness);
+  Widget _buildTooltip(DateTime date, PlutusTokens t) {
     final txList = _dailyTransactions[date] ?? [];
     final total = _dailyTotals[date] ?? 0;
     final dateStr =
@@ -392,7 +366,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
       width: double.infinity,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: progressTrack,
+        color: t.surfaceSubtle,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -403,7 +377,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
             children: [
               Text(dateStr,
                   style: TextStyle(
-                      color: onAccentSecondary,
+                      color: t.textSecondary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold)),
               Text(
@@ -411,7 +385,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                     amount: total,
                     currencyCode: widget.settings.currency.code),
                 style: TextStyle(
-                    color: onAccent,
+                    color: t.text,
                     fontSize: 11,
                     fontWeight: FontWeight.bold),
               ),
@@ -419,7 +393,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
           ),
           if (txList.isEmpty)
             Text('No expenses',
-                style: TextStyle(color: onAccentTertiary, fontSize: 10))
+                style: TextStyle(color: t.textMuted, fontSize: 10))
           else
             ...txList.take(4).map((entry) {
               final (tx, convertedAmount) = entry;
@@ -432,7 +406,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                       child: Text(
                         tx.description,
                         style: TextStyle(
-                            color: onAccentSecondary, fontSize: 10),
+                            color: t.textSecondary, fontSize: 10),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -441,7 +415,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
                           amount: convertedAmount,
                           currencyCode: widget.settings.currency.code),
                       style: TextStyle(
-                          color: onAccentSecondary, fontSize: 10),
+                          color: t.textSecondary, fontSize: 10),
                     ),
                   ],
                 ),
@@ -450,7 +424,7 @@ class _HeatmapContentState extends State<_HeatmapContent> {
           if (txList.length > 4)
             Text(
               '+${txList.length - 4} more',
-              style: TextStyle(color: onAccentTertiary, fontSize: 9),
+              style: TextStyle(color: t.textMuted, fontSize: 9),
             ),
         ],
       ),
