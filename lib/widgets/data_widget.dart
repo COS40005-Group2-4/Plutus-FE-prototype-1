@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
-import '../theme/app_colors.dart';
 import 'roi_widget.dart';
 import 'irr_widget.dart';
 import 'cashflow_widget.dart';
@@ -24,11 +23,6 @@ import 'insights/insights_feed_widget.dart';
 import 'insights/health_score_widget.dart';
 import 'insights/cash_flow_forecast_widget.dart';
 import 'insights/coaching_tips_widget.dart';
-
-const Color blue = AppColors.primary;
-const Color red = AppColors.error;
-const Color yellow = AppColors.warning;
-const Color green = AppColors.success;
 
 class DataWidget extends StatelessWidget {
   DataWidget({super.key, required this.item});

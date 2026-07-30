@@ -6,11 +6,12 @@ import 'package:plutus_fe_prototype/models/budget_model.dart';
 import 'package:plutus_fe_prototype/providers/budget_notifier.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
-import 'package:plutus_fe_prototype/theme/app_colors.dart';
+import 'package:plutus_fe_prototype/theme/app_text_styles.dart';
+import 'package:plutus_fe_prototype/theme/plutus_tokens.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/widgets/budget_settings_sheet.dart';
 import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
-import 'package:plutus_fe_prototype/widgets/glass_container.dart';
+import 'package:plutus_fe_prototype/widgets/core/app_card.dart';
 
 final _monthlyPeriodFormatter = DateFormat('MMMM yyyy');
 final _shortDateFormatter = DateFormat('MMM d');
@@ -41,15 +42,14 @@ class CategoryBudgetWidget extends ConsumerWidget {
     }
   }
 
-  Color _statusColor(BudgetStatus status, BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  StatusColors _statusColors(BudgetStatus status, PlutusTokens t) {
     switch (status) {
       case BudgetStatus.overBudget:
-        return cs.error;
+        return t.error;
       case BudgetStatus.warning:
-        return AppColors.warning;
+        return t.warning;
       case BudgetStatus.onTrack:
-        return AppColors.success;
+        return t.success;
     }
   }
 
@@ -166,6 +166,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final asyncBudget = ref.watch(budgetNotifierProvider);
+    final PlutusTokens t = context.tokens;
     return asyncBudget.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => const SizedBox.shrink(),
@@ -178,19 +179,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
         final budget = provider.activeBudget!;
         final currency = budget.currencyCode;
 
-        final brightness = Theme.of(context).brightness;
-        const accent = AppColors.categoryBudgetAccent;
-        final onAccent = AppColors.onAccentPrimary(accent, brightness);
-        final onAccentTertiary =
-            AppColors.onAccentTertiary(accent, brightness);
-        final progressTrack =
-            AppColors.progressTrackOnAccent(accent, brightness);
-
-        return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+        return AppCard(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,7 +191,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                     l10n.categoryBudgetTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: onAccent,
+                          color: t.text,
                         ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -211,7 +200,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                     child: Icon(
                       Icons.help_outline,
                       size: 14,
-                      color: onAccentTertiary,
+                      color: t.textMuted,
                     ),
                   ),
                 ],
@@ -255,8 +244,11 @@ class CategoryBudgetWidget extends ConsumerWidget {
                 ),
 
               // ── Category rows ─────────────────────────────────────────────
-              ...provider.categorySpending.map((cs) {
-                final statusColor = _statusColor(cs.status, context);
+              ...provider.categorySpending.asMap().entries.map((entry) {
+                final cs = entry.value;
+                final isLastRow =
+                    entry.key == provider.categorySpending.length - 1;
+                final statusColors = _statusColors(cs.status, t);
                 final progress =
                     cs.budgetedAmount > 0
                         ? (cs.spent / cs.budgetedAmount).clamp(0.0, 1.0)
@@ -264,10 +256,15 @@ class CategoryBudgetWidget extends ConsumerWidget {
                 final rolloverAmount = cs.period?.rolloverAmount ?? 0;
                 final hasRollover = rolloverAmount != 0;
 
-                return Padding(
+                return Container(
                   padding: const EdgeInsets.symmetric(
                     vertical: AppSpacing.xs,
                   ),
+                  decoration: isLastRow
+                      ? null
+                      : BoxDecoration(
+                          border: Border(bottom: BorderSide(color: t.border)),
+                        ),
                   child: InkWell(
                     borderRadius: AppRadius.borderSm,
                     onTap: () => _showInlineEdit(context, ref, provider, cs),
@@ -351,13 +348,10 @@ class CategoryBudgetWidget extends ConsumerWidget {
                                           cs.remaining.abs(),
                                           currency,
                                         ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: statusColor,
-                                              fontWeight: FontWeight.w700,
-                                            ),
+                                        style: AppTextStyles.numericStyle.copyWith(
+                                          color: t.text,
+                                          fontSize: AppTextStyles.bodyMedium,
+                                        ),
                                       ),
                                       TextSpan(
                                         text: cs.remaining < 0
@@ -366,7 +360,10 @@ class CategoryBudgetWidget extends ConsumerWidget {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
-                                            ?.copyWith(color: statusColor),
+                                            ?.copyWith(
+                                              color: statusColors.text,
+                                              height: 1.15,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -382,9 +379,9 @@ class CategoryBudgetWidget extends ConsumerWidget {
                             borderRadius: AppRadius.borderXs,
                             child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor: progressTrack,
+                              backgroundColor: t.surfaceSubtle,
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(statusColor),
+                                  AlwaysStoppedAnimation<Color>(statusColors.dot),
                               minHeight: 6,
                             ),
                           ),
@@ -418,8 +415,7 @@ class CategoryBudgetWidget extends ConsumerWidget {
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                              color:
-                                                  AppColors.warning,
+                                              color: t.warning.text,
                                             ),
                                       ),
                                   ],

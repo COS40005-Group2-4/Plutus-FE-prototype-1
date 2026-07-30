@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'glass_container.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 import '../services/tax_calculation_service.dart';
 import '../services/currency_service.dart';
 import '../providers/auth_notifier.dart';
@@ -162,24 +163,26 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
 
   void _showYearPicker() async {
     final currentYear = DateTime.now().year;
-    final brightness = Theme.of(context).brightness;
-    final onAccent = AppColors.onAccentPrimary(AppColors.taxAccent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(AppColors.taxAccent, brightness);
+    final PlutusTokens t = context.tokens;
     final result = await showDialog<int>(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: GlassContainer(
+        child: Container(
           padding: const EdgeInsets.all(24),
-          borderRadius: 16,
+          decoration: BoxDecoration(
+            color: t.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: t.border),
+            boxShadow: t.shadowLow,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Select Year',
                 style: TextStyle(
-                  color: onAccent,
+                  color: t.text,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -193,16 +196,22 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                   itemBuilder: (context, index) {
                     final year = currentYear - index;
                     final isSelected = year == _selectedYear;
-                    return GlassContainer(
+                    return Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: isSelected ? AppColors.taxAccent : Colors.transparent,
-                      opacity: isSelected ? 0.3 : 0,
-                      borderRadius: 8,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? (Theme.of(context).brightness == Brightness.dark
+                                ? Color.alphaBlend(t.goldWeak, t.surface)
+                                : t.goldWeak)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: isSelected ? Border.all(color: t.gold) : null,
+                      ),
                       child: ListTile(
                         title: Text(
                           year.toString(),
                           style: TextStyle(
-                            color: isSelected ? onAccent : onAccentSecondary,
+                            color: isSelected ? t.goldText : t.textSecondary,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                           textAlign: TextAlign.center,
@@ -218,7 +227,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'Cancel',
-                  style: TextStyle(color: onAccentSecondary),
+                  style: TextStyle(color: t.textSecondary),
                 ),
               ),
             ],
@@ -226,7 +235,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
         ),
       ),
     );
-    
+
     if (result != null && result != _selectedYear) {
       setState(() {
         _selectedYear = result;
@@ -238,13 +247,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   void _showTaxDetails() {
     final settingsState = ref.read(settingsNotifierProvider);
     final userCurrency = settingsState.currency.code;
-    final brightness = Theme.of(context).brightness;
-    final onAccent =
-        AppColors.onAccentPrimary(AppColors.taxAccent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(AppColors.taxAccent, brightness);
-    final dividerOnAccent =
-        AppColors.dividerOnAccent(AppColors.taxAccent, brightness);
+    final PlutusTokens t = context.tokens;
     final taxResult = TaxCalculationService.calculateAnnualTax(
       annualIncome: CurrencyService.toVND(_annualIncome, userCurrency),
       numberOfDependents: 0,
@@ -257,9 +260,14 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: GlassContainer(
+        child: Container(
           padding: const EdgeInsets.all(24),
-          borderRadius: 16,
+          decoration: BoxDecoration(
+            color: t.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: t.border),
+            boxShadow: t.shadowLow,
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -274,7 +282,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                         Text(
                           AppLocalizations.of(context).taxBreakdown,
                           style: TextStyle(
-                            color: onAccent,
+                            color: t.text,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -283,31 +291,33 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                         Text(
                           '${AppLocalizations.of(context).financialYear} $_selectedYear',
                           style: TextStyle(
-                            color: onAccentSecondary,
+                            color: t.textSecondary,
                             fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: onAccentSecondary),
+                      icon: Icon(Icons.close, color: t.textSecondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Tax Bracket Table
                 _buildSectionTitle(AppLocalizations.of(context).vietnameseTaxBrackets),
-                GlassContainer(
+                Container(
                   padding: const EdgeInsets.all(12),
-                  color: onAccent,
-                  opacity: 0.05,
-                  borderRadius: 8,
+                  decoration: BoxDecoration(
+                    color: t.surfaceSubtle,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: t.border),
+                  ),
                   child: Column(
                     children: [
                       _buildTableHeader(),
-                      Divider(color: dividerOnAccent, height: 8),
+                      Divider(color: t.border, height: 8),
                       _buildTableRow('0 - 5M', '5%', '0'),
                       _buildTableRow('5M - 10M', '10%', '250K'),
                       _buildTableRow('10M - 18M', '15%', '750K'),
@@ -318,53 +328,55 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                Divider(color: dividerOnAccent),
+                Divider(color: t.border),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Income Section
                 _buildSectionTitle(AppLocalizations.of(context).incomeSection),
                 _buildDetailRow(AppLocalizations.of(context).annualIncome, taxResult['annualIncome']!),
                 _buildDetailRow(AppLocalizations.of(context).monthlyIncome, taxResult['monthlyIncome']!),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                Divider(color: dividerOnAccent),
+                Divider(color: t.border),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Deductions Section
                 _buildSectionTitle(AppLocalizations.of(context).deductionsSection),
                 _buildDetailRow(AppLocalizations.of(context).personalDeduction, 11000000 * 12),
                 _buildDetailRow(AppLocalizations.of(context).totalDeductions, taxResult['annualDeductions']!),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                Divider(color: dividerOnAccent),
+                Divider(color: t.border),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Taxable Income Section
                 _buildSectionTitle(AppLocalizations.of(context).taxableIncomeSection),
                 _buildDetailRow(AppLocalizations.of(context).annualTaxable, taxResult['annualTaxableIncome']!),
                 _buildDetailRow(AppLocalizations.of(context).monthlyTaxable, taxResult['monthlyTaxableIncome']!),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                Divider(color: dividerOnAccent),
+                Divider(color: t.border),
                 const SizedBox(height: AppSpacing.lg),
-                
-                // Tax Bracket
+
+                // Tax Bracket — the card's one gold moment: the active bracket.
                 if (bracket != null) ...[
                   _buildSectionTitle(AppLocalizations.of(context).taxBracket),
-                  GlassContainer(
+                  Container(
                     padding: const EdgeInsets.all(12),
-                    color: onAccent,
-                    opacity: 0.1,
-                    borderRadius: 8,
+                    decoration: BoxDecoration(
+                      color: t.goldWeak,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: t.gold),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '${AppLocalizations.of(context).rate}: ${((bracket['rate'] as double) * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
-                            color: onAccent,
+                            color: t.goldText,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -373,7 +385,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                         Text(
                           '${AppLocalizations.of(context).range}: ${_currencyFormat.format(bracket['min'])} - ${bracket['max'] == double.infinity ? '∞' : _currencyFormat.format(bracket['max'])} ₫/month',
                           style: TextStyle(
-                            color: onAccentSecondary,
+                            color: t.goldText,
                             fontSize: 12,
                           ),
                         ),
@@ -381,43 +393,43 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Divider(color: dividerOnAccent),
+                  Divider(color: t.border),
                   const SizedBox(height: AppSpacing.lg),
                 ],
-                
+
                 // Tax Calculation
                 _buildSectionTitle(AppLocalizations.of(context).taxCalculation),
                 _buildDetailRow(AppLocalizations.of(context).monthlyTax, taxResult['monthlyTax']!, highlight: true),
                 _buildDetailRow(AppLocalizations.of(context).annualTax, taxResult['annualTax']!, highlight: true),
                 _buildDetailRow(AppLocalizations.of(context).effectiveRate, _effectiveRate, isPercentage: true),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                Divider(color: dividerOnAccent),
+                Divider(color: t.border),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Net Income
                 _buildSectionTitle(AppLocalizations.of(context).netIncomeSection),
                 _buildDetailRow(AppLocalizations.of(context).afterTax, taxResult['netIncome']!, highlight: true),
-                
+
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Note
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha:0.1),
+                    color: t.info.surface,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.primary.withValues(alpha:0.3)),
+                    border: Border.all(color: t.info.border),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.primary, size: 16),
+                      Icon(Icons.info_outline, color: t.info.dot, size: 16),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           AppLocalizations.of(context).basedOnVietnameseTaxLaw,
                           style: TextStyle(
-                            color: onAccentSecondary,
+                            color: t.info.text,
                             fontSize: 11,
                           ),
                         ),
@@ -434,14 +446,13 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   }
 
   Widget _buildSectionTitle(String title) {
-    final onAccent = AppColors.onAccentPrimary(
-        AppColors.taxAccent, Theme.of(context).brightness);
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
         style: TextStyle(
-          color: onAccent,
+          color: t.text,
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
@@ -450,8 +461,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   }
 
   Widget _buildTableHeader() {
-    final onAccent = AppColors.onAccentPrimary(
-        AppColors.taxAccent, Theme.of(context).brightness);
+    final PlutusTokens t = context.tokens;
     return Row(
       children: [
         Expanded(
@@ -459,7 +469,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
           child: Text(
             AppLocalizations.of(context).monthlyIncomeRange,
             style: TextStyle(
-              color: onAccent,
+              color: t.text,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -470,7 +480,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
           child: Text(
             AppLocalizations.of(context).rate,
             style: TextStyle(
-              color: onAccent,
+              color: t.text,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -482,7 +492,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
           child: Text(
             AppLocalizations.of(context).deduction,
             style: TextStyle(
-              color: onAccent,
+              color: t.text,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -494,8 +504,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   }
 
   Widget _buildTableRow(String range, String rate, String deduction) {
-    final onAccentSecondary = AppColors.onAccentSecondary(
-        AppColors.taxAccent, Theme.of(context).brightness);
+    final PlutusTokens t = context.tokens;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -505,7 +514,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
             child: Text(
               range,
               style: TextStyle(
-                color: onAccentSecondary,
+                color: t.textSecondary,
                 fontSize: 10,
               ),
             ),
@@ -515,7 +524,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
             child: Text(
               rate,
               style: TextStyle(
-                color: onAccentSecondary,
+                color: t.textSecondary,
                 fontSize: 10,
               ),
               textAlign: TextAlign.center,
@@ -526,7 +535,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
             child: Text(
               deduction,
               style: TextStyle(
-                color: onAccentSecondary,
+                color: t.textSecondary,
                 fontSize: 10,
               ),
               textAlign: TextAlign.right,
@@ -541,11 +550,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
     final settingsState = ref.read(settingsNotifierProvider);
     final currencySymbol = settingsState.currency.symbol;
     final userCurrency = settingsState.currency.code;
-    final brightness = Theme.of(context).brightness;
-    final onAccent =
-        AppColors.onAccentPrimary(AppColors.taxAccent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(AppColors.taxAccent, brightness);
+    final PlutusTokens t = context.tokens;
 
     // Convert VND values to user currency for display
     final displayValue = isPercentage ? value : CurrencyService.fromVND(value, userCurrency);
@@ -558,17 +563,17 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
           Text(
             label,
             style: TextStyle(
-              color: highlight ? onAccent : onAccentSecondary,
+              color: highlight ? t.text : t.textSecondary,
               fontSize: highlight ? 14 : 13,
               fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           Text(
-            isPercentage 
+            isPercentage
                 ? '${displayValue.toStringAsFixed(2)}%'
                 : '${_currencyFormat.format(displayValue)} $currencySymbol',
             style: TextStyle(
-              color: highlight ? onAccent : onAccentSecondary,
+              color: highlight ? t.text : t.textSecondary,
               fontSize: highlight ? 14 : 13,
               fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
             ),
@@ -582,16 +587,9 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   Widget build(BuildContext context) {
     final settingsState = ref.watch(settingsNotifierProvider);
     final currencySymbol = settingsState.currency.symbol;
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.taxAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
+    final PlutusTokens t = context.tokens;
 
-    return GlassContainer(
-      color: accent,
-      opacity: 0.2,
-      borderRadius: AppRadius.card,
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: SingleChildScrollView(
         child: Column(
@@ -601,9 +599,9 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.account_balance, size: 32, color: onAccent),
+                Icon(Icons.account_balance, size: 32, color: t.text),
                 IconButton(
-                  icon: Icon(Icons.refresh, color: onAccentSecondary, size: 20),
+                  icon: Icon(Icons.refresh, color: t.textSecondary, size: 20),
                   onPressed: _calculateTax,
                   tooltip: 'Refresh',
                   padding: EdgeInsets.zero,
@@ -618,7 +616,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                 Text(
                   AppLocalizations.of(context).taxEstimation,
                   style: TextStyle(
-                    color: onAccent,
+                    color: t.text,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -629,7 +627,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                   child: Icon(
                     Icons.help_outline,
                     size: 14,
-                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                    color: t.textMuted,
                   ),
                 ),
               ],
@@ -637,7 +635,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
             const SizedBox(height: AppSpacing.xs),
             Text(
               AppLocalizations.of(context).vietnamesePersonalIncomeTax,
-              style: TextStyle(color: onAccentSecondary, fontSize: 11),
+              style: TextStyle(color: t.textSecondary, fontSize: 11),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -647,24 +645,24 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  border: Border.all(color: dividerOnAccent),
+                  border: Border.all(color: t.border),
                   borderRadius: AppRadius.borderSm,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.calendar_today, color: onAccentSecondary, size: 14),
+                    Icon(Icons.calendar_today, color: t.textSecondary, size: 14),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       'FY $_selectedYear',
                       style: TextStyle(
-                        color: onAccent,
+                        color: t.text,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Icon(Icons.arrow_drop_down, color: onAccentSecondary, size: 18),
+                    Icon(Icons.arrow_drop_down, color: t.textSecondary, size: 18),
                   ],
                 ),
               ),
@@ -675,7 +673,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  color: onAccent,
+                  color: t.text,
                   strokeWidth: 2,
                 ),
               )
@@ -694,12 +692,12 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                             children: [
                               Expanded(
                                 flex: ((_annualIncome - _estimatedTax) * 100 / _annualIncome).round().clamp(1, 99),
-                                child: Container(color: AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.7)),
+                                child: Container(color: t.success.text.withValues(alpha:0.7)),
                               ),
                               if (_estimatedTax > 0)
                                 Expanded(
                                   flex: (_estimatedTax * 100 / _annualIncome).round().clamp(1, 99),
-                                  child: Container(color: AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.7)),
+                                  child: Container(color: t.error.text.withValues(alpha:0.7)),
                                 ),
                             ],
                           ),
@@ -712,17 +710,17 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.positive(Theme.of(context).brightness).withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.success.text.withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: AppSpacing.xs),
-                              Text('Net', style: TextStyle(color: onAccentSecondary, fontSize: 9)),
+                              Text('Net', style: TextStyle(color: t.textSecondary, fontSize: 9)),
                             ],
                           ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: AppColors.negative(Theme.of(context).brightness).withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.error.text.withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: AppSpacing.xs),
-                              Text('Tax', style: TextStyle(color: onAccentSecondary, fontSize: 9)),
+                              Text('Tax', style: TextStyle(color: t.textSecondary, fontSize: 9)),
                             ],
                           ),
                         ],
@@ -731,27 +729,28 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                   ),
                 ),
               // Tax Amount Display
-              GlassContainer(
+              Container(
                 padding: const EdgeInsets.all(12),
-                color: onAccent,
-                opacity: 0.1,
-                borderRadius: 8,
+                decoration: BoxDecoration(
+                  color: t.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: t.border),
+                ),
                 child: Column(
                   children: [
                     Text(
                       AppLocalizations.of(context).estimatedTaxLabel,
                       style: TextStyle(
-                        color: onAccentSecondary,
+                        color: t.textSecondary,
                         fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${_currencyFormat.format(_estimatedTax)} $currencySymbol',
-                      style: TextStyle(
-                        color: onAccent,
+                      style: AppTextStyles.numericStyle.copyWith(
+                        color: t.text,
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -759,7 +758,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                     Text(
                       '${AppLocalizations.of(context).rate}: ${_effectiveRate.toStringAsFixed(1)}%',
                       style: TextStyle(
-                        color: onAccentSecondary,
+                        color: t.textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -771,7 +770,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  border: Border.all(color: dividerOnAccent, width: 1),
+                  border: Border.all(color: t.border, width: 1),
                   borderRadius: AppRadius.borderSm,
                 ),
                 child: Column(
@@ -786,10 +785,10 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
               // Details Button
               TextButton.icon(
                 onPressed: _showTaxDetails,
-                icon: Icon(Icons.info_outline, color: onAccentSecondary, size: 16),
+                icon: Icon(Icons.info_outline, color: t.textSecondary, size: 16),
                 label: Text(
                   AppLocalizations.of(context).clickForDetails,
-                  style: TextStyle(color: onAccentSecondary, fontSize: 12),
+                  style: TextStyle(color: t.textSecondary, fontSize: 12),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -807,11 +806,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
   Widget _buildInfoRow(String label, double value) {
     final settingsState = ref.read(settingsNotifierProvider);
     final currencySymbol = settingsState.currency.symbol;
-    final brightness = Theme.of(context).brightness;
-    final onAccent =
-        AppColors.onAccentPrimary(AppColors.taxAccent, brightness);
-    final onAccentSecondary =
-        AppColors.onAccentSecondary(AppColors.taxAccent, brightness);
+    final PlutusTokens t = context.tokens;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -819,14 +814,14 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
         Text(
           label,
           style: TextStyle(
-            color: onAccentSecondary,
+            color: t.textSecondary,
             fontSize: 11,
           ),
         ),
         Text(
           '${_currencyFormat.format(value)} $currencySymbol',
           style: TextStyle(
-            color: onAccent,
+            color: t.text,
             fontSize: 11,
             fontWeight: FontWeight.w500,
           ),

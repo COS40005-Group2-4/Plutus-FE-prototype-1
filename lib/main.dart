@@ -18,7 +18,7 @@ import 'router/app_router.dart';
 import 'services/interfaces/interfaces.dart';
 import 'services/journal_initializer.dart';
 import 'widgets/animated_theme_scope.dart';
-import 'widgets/glass_background.dart';
+import 'widgets/core/app_canvas.dart';
 import 'di/service_locator.dart';
 import 'theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
@@ -154,7 +154,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       themeAnimationDuration: Duration.zero,
       builder: (BuildContext context, Widget? child) {
         return AnimatedThemeScope(
-          child: GlassBackground(child: child!),
+          child: AppCanvas(child: child!),
         );
       },
     );

@@ -18,6 +18,7 @@ class EditModeSettings {
     this.draggableOutside = true,
     this.autoScroll = true,
     this.swapEnabled = true,
+    this.swapHighlightColor = const Color(0xFF4CAF50),
   }) : duration = duration ?? kThemeAnimationDuration;
 
   /// If [draggableOutside] is true, items can be dragged outside the viewport.
@@ -64,4 +65,7 @@ class EditModeSettings {
 
   /// Background style
   final EditModeBackgroundStyle backgroundStyle;
+
+  /// Highlight for the item a drag would swap with.
+  final Color swapHighlightColor;
 }

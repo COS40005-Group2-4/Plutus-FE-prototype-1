@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/transaction_model.dart';
-import '../widgets/glass_container.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/currency_service.dart';
@@ -10,11 +9,10 @@ import '../services/interfaces/interfaces.dart';
 import '../di/service_locator.dart';
 import '../utils/date_time_formatter.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
-
-// Color(0xFF34A853) is AppColors.success
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 class TransactionHistoryWidget extends ConsumerStatefulWidget {
   const TransactionHistoryWidget({super.key});
@@ -81,7 +79,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to delete transaction: $e'),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.tokens.error.dot,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -164,26 +162,15 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
     final brightness = Theme.of(context).brightness;
-    final accent = AppColors.success;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    onAccentTertiary.toString();
-    dividerOnAccent.toString();
-    return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
+    final PlutusTokens t = context.tokens;
+    return AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: StreamBuilder<List<Transaction>>(
             stream: _transactionService.transactionStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                 return Center(
-                  child: CircularProgressIndicator(color: onAccent),
+                  child: CircularProgressIndicator(color: t.text),
                 );
               }
 
@@ -191,7 +178,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                 return Center(
                   child: Text(
                     AppLocalizations.of(context).noTransactionHistory,
-                    style: TextStyle(color: onAccent, fontSize: 14),
+                    style: TextStyle(color: t.text, fontSize: 14),
                   ),
                 );
               }
@@ -214,7 +201,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                         child: Text(
                           AppLocalizations.of(context).widgetRecentTransactions,
                           style: TextStyle(
-                          color: onAccent,
+                          color: t.text,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -227,14 +214,14 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                       child: Icon(
                         Icons.help_outline,
                         size: 14,
-                        color: AppColors.textTertiary(Theme.of(context).brightness),
+                        color: t.textMuted,
                       ),
                     ),
                       if (_isEditMode)
                         Row(
                           children: [
                             IconButton(
-                              icon: Icon(Icons.close, color: onAccent, size: 20),
+                              icon: Icon(Icons.close, color: t.text, size: 20),
                               onPressed: () {
                                 setState(() {
                                   _isEditMode = false;
@@ -247,7 +234,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                             const SizedBox(width: AppSpacing.sm),
                             if (_selectedTransactionIds.isNotEmpty)
                               IconButton(
-                                icon: Icon(Icons.delete, color: AppColors.error, size: 20),
+                                icon: Icon(Icons.delete, color: t.error.text, size: 20),
                                 onPressed: _deleteSelectedTransactions,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
@@ -258,7 +245,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                         Row(
                           children: [
                             PopupMenuButton<String>(
-                              icon: Icon(Icons.filter_list, color: onAccent, size: 20),
+                              icon: Icon(Icons.filter_list, color: t.text, size: 20),
                               onSelected: (value) {
                                 setState(() {
                                   _dateFilter = value;
@@ -279,7 +266,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                               ],
                             ),
                             IconButton(
-                              icon: Icon(Icons.edit, color: onAccent, size: 20),
+                              icon: Icon(Icons.edit, color: t.text, size: 20),
                               onPressed: () {
                                 setState(() {
                                   _isEditMode = true;
@@ -294,10 +281,11 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                     ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                  ListView.builder(
+                  ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: transactions.length,
+                      separatorBuilder: (context, index) => Divider(height: 1, color: t.border),
                       itemBuilder: (context, index) {
                         final transaction = transactions[index];
                         final txId = transaction.id ?? transaction.hashCode;
@@ -315,12 +303,17 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                                   });
                                 }
                               : null,
-                          child: GlassContainer(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Container(
                             padding: const EdgeInsets.all(8),
-                            color: isSelected ? AppColors.primary : onAccent,
-                            opacity: isSelected ? 0.3 : 0.1,
-                            borderRadius: 6,
+                            decoration: isSelected
+                                ? BoxDecoration(
+                                    color: brightness == Brightness.dark
+                                        ? Color.alphaBlend(t.goldWeak, t.surface)
+                                        : t.goldWeak,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: t.gold),
+                                  )
+                                : null,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -337,7 +330,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                                       });
                                     },
                                     fillColor: WidgetStateProperty.resolveWith<Color>(
-                                      (states) => onAccent,
+                                      (states) => t.text,
                                     ),
                                   ),
                                 Expanded(
@@ -347,7 +340,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                                       Text(
                                         transaction.label,
                                         style: TextStyle(
-                                          color: onAccent,
+                                          color: t.text,
                                           fontWeight: FontWeight.w500,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -359,7 +352,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                                           settings.timeFormat,
                                         ),
                                         style: TextStyle(
-                                          color: onAccentSecondary,
+                                          color: t.textSecondary,
                                           fontSize: 12,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -476,14 +469,12 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final onAccent =
-        AppColors.onAccentPrimary(AppColors.success, brightness);
+    final PlutusTokens t = context.tokens;
     if (_isLoading) {
       return SizedBox(
         width: 12,
         height: 12,
-        child: CircularProgressIndicator(strokeWidth: 1, color: onAccent),
+        child: CircularProgressIndicator(strokeWidth: 1, color: t.text),
       );
     }
 
@@ -499,9 +490,9 @@ class _DashboardTransactionAmountState extends State<_DashboardTransactionAmount
 
     return Text(
       '${widget.transaction.isExpense ? '-' : '+'}$formatted',
-      style: TextStyle(
-        color: widget.transaction.isExpense ? AppColors.negative(brightness) : AppColors.positive(brightness),
-        fontWeight: FontWeight.bold,
+      textAlign: TextAlign.right,
+      style: AppTextStyles.numericStyle.copyWith(
+        color: widget.transaction.isExpense ? t.error.text : t.success.text,
         fontSize: 14,
       ),
       overflow: TextOverflow.ellipsis,

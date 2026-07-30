@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/glass_container.dart';
 import '../widgets/profile_widget.dart';
 import '../providers/auth_notifier.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'core/app_card.dart';
 
 // Profile Display Widget for Dashboard
 class ProfileDashboardWidget extends ConsumerWidget {
@@ -16,30 +15,21 @@ class ProfileDashboardWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final currentUser = authState is AuthAuthenticated ? authState.user : null;
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.profileAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
+    final PlutusTokens t = context.tokens;
 
     if (currentUser == null) {
-      return GlassContainer(
-        color: accent,
-        opacity: 0.2,
-        borderRadius: AppRadius.card,
+      return AppCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(
           child: Text(
             'No user logged in',
-            style: TextStyle(color: onAccent, fontSize: 14),
+            style: TextStyle(color: t.text, fontSize: 14),
           ),
         ),
       );
     }
 
-    return GlassContainer(
-      color: accent,
-      opacity: 0.2,
-      borderRadius: AppRadius.card,
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +39,7 @@ class ProfileDashboardWidget extends ConsumerWidget {
               Text(
                 AppLocalizations.of(context).translate('widget_label_profile'),
                 style: TextStyle(
-                  color: onAccent,
+                  color: t.text,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -60,7 +50,7 @@ class ProfileDashboardWidget extends ConsumerWidget {
                 child: Icon(
                   Icons.help_outline,
                   size: 14,
-                  color: onAccentTertiary,
+                  color: t.textMuted,
                 ),
               ),
             ],

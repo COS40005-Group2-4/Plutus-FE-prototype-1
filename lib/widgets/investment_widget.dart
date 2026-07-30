@@ -6,16 +6,17 @@ import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_notifier.dart';
-import 'glass_container.dart';
+import 'core/app_card.dart';
+import 'core/metric_delta.dart';
 import 'add_investment_dialog.dart';
 import 'sell_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Investment Dashboard Widget
-/// 
+///
 /// Displays portfolio summary with line chart showing price history
 class InvestmentWidget extends ConsumerStatefulWidget {
   const InvestmentWidget({super.key});
@@ -51,14 +52,14 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
       debugPrint('InvestmentWidget: Loading investment data (forceRefresh: $forceRefresh)...');
       final investments = await _service.getInvestmentList(forceRefresh: forceRefresh);
       debugPrint('InvestmentWidget: Loaded ${investments.length} investments');
-      
+
       // Refresh price data for crypto/stock investments if forcing refresh
       if (forceRefresh && investments.isNotEmpty) {
         debugPrint('InvestmentWidget: Refreshing price data for investments...');
         final updatedInvestments = <InvestmentModel>[];
-        
+
         for (final investment in investments) {
-          if (investment.assetType == AssetType.crypto || 
+          if (investment.assetType == AssetType.crypto ||
               investment.assetType == AssetType.stock) {
             final updated = await _service.refreshPriceData(investment);
             updatedInvestments.add(updated);
@@ -66,7 +67,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
             updatedInvestments.add(investment);
           }
         }
-        
+
         if (mounted) {
           setState(() {
             _investments = updatedInvestments;
@@ -97,21 +98,16 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
       onTap: () => _showInvestmentListDialog(),
       borderRadius: AppRadius.borderLg,
-      child: GlassContainer(
-        borderRadius: AppRadius.card,
-        blur: 10.0,
-        borderOpacity: isDark ? 0.3 : 0.2,
-        opacity: isDark ? 0.3 : 0.1,
-        color: isDark ? AppColors.surfaceDark : Colors.white,
+      child: AppCard(
+        padding: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: SingleChildScrollView(
-            child: _buildContent(localizations, isDark),
+            child: _buildContent(localizations),
           ),
         ),
       ),
@@ -129,7 +125,8 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
     );
   }
 
-  Widget _buildContent(AppLocalizations localizations, bool isDark) {
+  Widget _buildContent(AppLocalizations localizations) {
+    final PlutusTokens t = context.tokens;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -138,14 +135,14 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.account_balance_wallet, size: 32, color: Colors.white),
+            Icon(Icons.account_balance_wallet, size: 32, color: t.text),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.add, size: 20),
                   onPressed: () => _showAddDialog(),
-                  color: Colors.white70,
+                  color: t.textSecondary,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   tooltip: 'Add Investment',
@@ -154,7 +151,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 20),
                   onPressed: () => _loadData(forceRefresh: true),
-                  color: Colors.white70,
+                  color: t.textSecondary,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   tooltip: 'Refresh',
@@ -169,8 +166,8 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           children: [
             Text(
               localizations.investments,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: t.text,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -181,7 +178,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
               child: Icon(
                 Icons.help_outline,
                 size: 14,
-                color: AppColors.textTertiary(Theme.of(context).brightness),
+                color: t.textMuted,
               ),
             ),
           ],
@@ -189,58 +186,59 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Portfolio Overview',
-          style: const TextStyle(color: Colors.white70, fontSize: 11),
+          style: TextStyle(color: t.textSecondary, fontSize: 11),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
-        
+
         // Content - Changes based on state
         if (_isLoading)
-          const SizedBox(
+          SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
-              color: Colors.white,
+              color: t.text,
               strokeWidth: 2,
             ),
           )
         else if (_error != null)
           _buildErrorContent(localizations)
         else if (_investments == null || _investments!.isEmpty)
-          _buildEmptyContent(localizations, isDark)
+          _buildEmptyContent(localizations)
         else
-          _buildInvestmentContent(isDark),
+          _buildInvestmentContent(),
       ],
     );
   }
 
-  Widget _buildInvestmentContent(bool isDark) {
+  Widget _buildInvestmentContent() {
+    final PlutusTokens t = context.tokens;
     return Column(
       children: [
         // Show first investment details
         if (_investments!.isNotEmpty)
-          _buildCompactInvestmentCard(_investments!.first, isDark),
-        
+          _buildCompactInvestmentCard(_investments!.first),
+
         // Show count if there are more investments
         if (_investments!.length > 1) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             '+${_investments!.length - 1} more investment${_investments!.length - 1 > 1 ? 's' : ''}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: Colors.white60,
+              color: t.textMuted,
             ),
           ),
         ],
-        
+
         const SizedBox(height: AppSpacing.sm),
         // View All Button
         TextButton.icon(
           onPressed: _showInvestmentListDialog,
-          icon: const Icon(Icons.list, color: Colors.white70, size: 16),
-          label: const Text(
+          icon: Icon(Icons.list, color: t.textSecondary, size: 16),
+          label: Text(
             'View All',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(color: t.textSecondary, fontSize: 12),
           ),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -252,20 +250,21 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
     );
   }
 
-  Widget _buildEmptyContent(AppLocalizations localizations, bool isDark) {
+  Widget _buildEmptyContent(AppLocalizations localizations) {
+    final PlutusTokens t = context.tokens;
     return Column(
       children: [
         Icon(
           Icons.account_balance_wallet_outlined,
           size: 40,
-          color: isDark ? Colors.white54 : Colors.white38,
+          color: t.textMuted,
         ),
         const SizedBox(height: 12),
         Text(
           localizations.noInvestmentsYet,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Colors.white70,
+            color: t.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -275,8 +274,6 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Add Investment'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryDark,
-            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -288,24 +285,25 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
   }
 
   Widget _buildErrorContent(AppLocalizations localizations) {
+    final PlutusTokens t = context.tokens;
     return Column(
       children: [
-        const Icon(
+        Icon(
           Icons.error_outline,
           size: 32,
-          color: AppColors.error,
+          color: t.error.text,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           localizations.errorLoadingData,
-          style: const TextStyle(color: AppColors.error, fontSize: 11),
+          style: TextStyle(color: t.error.text, fontSize: 11),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.sm),
         ElevatedButton(
           onPressed: () => _loadData(forceRefresh: true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error.withValues(alpha: 0.8),
+            backgroundColor: t.error.dot,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             minimumSize: Size.zero,
@@ -316,10 +314,9 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
     );
   }
 
-  Widget _buildCompactInvestmentCard(InvestmentModel investment, bool isDark) {
-    final color = investment.isPositiveReturn()
-        ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? AppColors.error : AppColors.error);
+  Widget _buildCompactInvestmentCard(InvestmentModel investment) {
+    final PlutusTokens t = context.tokens;
+    final deltaColor = investment.isPositiveReturn() ? t.success.text : t.error.text;
 
     final currentValue = investment.getCurrentValue();
     final gainLoss = investment.getGainLoss();
@@ -328,15 +325,9 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark 
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.03),
+        color: t.surfaceSubtle,
         borderRadius: AppRadius.borderMd,
-        border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
+        border: Border.all(color: t.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +345,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: t.text,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -362,36 +353,14 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                       investment.assetType.name.toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        color: t.textSecondary,
                         letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        investment.isPositiveReturn() ? Icons.trending_up : Icons.trending_down,
-                        size: 14,
-                        color: color,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        '${gainLossPercent >= 0 ? '+' : ''}${gainLossPercent.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              MetricDelta(percent: gainLossPercent, decimals: 2),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -403,7 +372,6 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 child: _buildCompactDetail(
                   'Quantity',
                   '${investment.quantity}',
-                  isDark,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -411,7 +379,6 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 child: _buildCompactDetail(
                   'Purchase',
                   '${investment.getCurrencySymbol()}${investment.purchaseValue.toStringAsFixed(0)}',
-                  isDark,
                 ),
               ),
             ],
@@ -423,7 +390,6 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 child: _buildCompactDetail(
                   'Current',
                   '${investment.getCurrencySymbol()}${currentValue.toStringAsFixed(0)}',
-                  isDark,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -431,8 +397,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
                 child: _buildCompactDetail(
                   'Gain/Loss',
                   '${gainLoss >= 0 ? '+' : ''}${investment.getCurrencySymbol()}${gainLoss.abs().toStringAsFixed(0)}',
-                  isDark,
-                  valueColor: color,
+                  valueColor: deltaColor,
                 ),
               ),
             ],
@@ -442,7 +407,8 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
     );
   }
 
-  Widget _buildCompactDetail(String label, String value, bool isDark, {Color? valueColor}) {
+  Widget _buildCompactDetail(String label, String value, {Color? valueColor}) {
+    final PlutusTokens t = context.tokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -450,7 +416,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: t.textSecondary,
           ),
         ),
         const SizedBox(height: 2),
@@ -459,7 +425,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? (isDark ? Colors.white : Colors.black87),
+            color: valueColor ?? t.text,
           ),
           overflow: TextOverflow.ellipsis,
         ),
@@ -470,6 +436,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
   void _showAddDialog() {
     // Capture messenger before dialog opens to avoid deactivated widget lookup
     final messenger = ScaffoldMessenger.of(context);
+    final PlutusTokens t = context.tokens;
 
     showDialog(
       context: context,
@@ -502,7 +469,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Added $assetName'),
-                  backgroundColor: AppColors.success,
+                  backgroundColor: t.success.dot,
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -520,7 +487,7 @@ class _InvestmentWidgetState extends ConsumerState<InvestmentWidget> {
               messenger.showSnackBar(
                 SnackBar(
                   content: Text('Failed to add investment: $e'),
-                  backgroundColor: AppColors.error,
+                  backgroundColor: t.error.dot,
                 ),
               );
             }
@@ -548,15 +515,12 @@ class _InvestmentListDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final PlutusTokens t = context.tokens;
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: GlassContainer(
-        borderRadius: 16,
-        blur: 15.0,
-        opacity: isDark ? 0.35 : 0.1,
-        color: isDark ? AppColors.surfaceDark : Colors.white,
+      child: AppCard(
+        padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -570,7 +534,7 @@ class _InvestmentListDialog extends StatelessWidget {
                       localizations.investments,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: t.text,
                           ),
                     ),
                   ),
@@ -580,22 +544,22 @@ class _InvestmentListDialog extends StatelessWidget {
                       Navigator.pop(context);
                       onAdd();
                     },
-                    color: isDark ? Colors.white70 : Colors.black54,
+                    color: t.textSecondary,
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
-                    color: isDark ? Colors.white70 : Colors.black54,
+                    color: t.textSecondary,
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-            
+            Divider(height: 1, color: t.border),
+
             // Investment List
             Expanded(
               child: investments.isEmpty
-                  ? _buildEmptyState(localizations, isDark)
+                  ? _buildEmptyState(context, localizations)
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: investments.length,
@@ -603,7 +567,6 @@ class _InvestmentListDialog extends StatelessWidget {
                         return _buildInvestmentCard(
                           context,
                           investments[index],
-                          isDark,
                           onRefresh,
                         );
                       },
@@ -615,7 +578,8 @@ class _InvestmentListDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations localizations, bool isDark) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations localizations) {
+    final PlutusTokens t = context.tokens;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -623,14 +587,14 @@ class _InvestmentListDialog extends StatelessWidget {
           Icon(
             Icons.account_balance_wallet_outlined,
             size: 64,
-            color: isDark ? Colors.white54 : Colors.black38,
+            color: t.textMuted,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             localizations.noInvestmentsYet,
             style: TextStyle(
               fontSize: 16,
-              color: isDark ? Colors.white70 : Colors.black54,
+              color: t.textSecondary,
             ),
           ),
         ],
@@ -641,21 +605,22 @@ class _InvestmentListDialog extends StatelessWidget {
   Widget _buildInvestmentCard(
     BuildContext context,
     InvestmentModel investment,
-    bool isDark,
     VoidCallback onRefresh,
   ) {
-    final color = investment.isPositiveReturn()
-        ? (isDark ? AppColors.accent : AppColors.primaryDark)
-        : (isDark ? AppColors.error : AppColors.error);
+    final PlutusTokens t = context.tokens;
+    final deltaColor = investment.isPositiveReturn() ? t.success.text : t.error.text;
 
     final currentValue = investment.getCurrentValue();
     final gainLoss = investment.getGainLoss();
     final gainLossPercent = investment.getGainLossPercent();
 
-    return GlassContainer(
-      borderRadius: 12,
-      opacity: isDark ? 0.2 : 0.05,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: t.surfaceSubtle,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: t.border),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -680,7 +645,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: t.text,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -688,7 +653,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         investment.assetType.name.toUpperCase(),
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.white60 : Colors.black54,
+                          color: t.textSecondary,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -704,7 +669,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         onPressed: () {
                           _showUpdateValueSheet(context, investment, onRefresh);
                         },
-                        color: isDark ? Colors.white70 : Colors.black54,
+                        color: t.textSecondary,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         tooltip: AppLocalizations.of(context).investmentUpdateValue,
@@ -715,7 +680,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         onPressed: () {
                           _showSellDialog(context, investment, onRefresh);
                         },
-                        color: AppColors.success,
+                        color: t.success.text,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         tooltip: AppLocalizations.of(context).investmentSell,
@@ -728,7 +693,7 @@ class _InvestmentListDialog extends StatelessWidget {
                         Navigator.pop(context);
                         _showEditDialog(context, investment, onRefresh);
                       },
-                      color: isDark ? Colors.white70 : Colors.black54,
+                      color: t.textSecondary,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -738,7 +703,7 @@ class _InvestmentListDialog extends StatelessWidget {
                       onPressed: () {
                         _showDeleteConfirmation(context, investment, onRefresh);
                       },
-                      color: AppColors.error,
+                      color: t.error.text,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -747,39 +712,39 @@ class _InvestmentListDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Investment details
             _buildDetailRow(
+              context,
               'Quantity',
               '${investment.quantity} units',
-              isDark,
             ),
             const SizedBox(height: AppSpacing.sm),
             _buildDetailRow(
+              context,
               'Purchase Value',
               '${investment.getCurrencySymbol()}${investment.purchaseValue.toStringAsFixed(2)}',
-              isDark,
             ),
             const SizedBox(height: AppSpacing.sm),
             _buildDetailRow(
+              context,
               'Purchase Date',
               '${investment.purchaseDate.day}/${investment.purchaseDate.month}/${investment.purchaseDate.year}',
-              isDark,
             ),
-            
+
             if (investment.currentPrice != null) ...[
               const SizedBox(height: AppSpacing.sm),
               _buildDetailRow(
+                context,
                 'Current Price',
                 '${investment.getCurrencySymbol()}${investment.currentPrice!.toStringAsFixed(2)}',
-                isDark,
               ),
             ],
-            
+
             const SizedBox(height: AppSpacing.lg),
-            Divider(color: isDark ? Colors.white24 : Colors.black12),
+            Divider(color: t.border),
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Current value and gain/loss
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -791,7 +756,7 @@ class _InvestmentListDialog extends StatelessWidget {
                       'Current Value',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.white60 : Colors.black54,
+                        color: t.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -800,7 +765,7 @@ class _InvestmentListDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: t.text,
                       ),
                     ),
                   ],
@@ -808,30 +773,13 @@ class _InvestmentListDialog extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          investment.isPositiveReturn() ? Icons.trending_up : Icons.trending_down,
-                          size: 16,
-                          color: color,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          '${gainLossPercent >= 0 ? '+' : ''}${gainLossPercent.toStringAsFixed(2)}%',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
+                    MetricDelta(percent: gainLossPercent, decimals: 2),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '${gainLoss >= 0 ? '+' : ''}${investment.getCurrencySymbol()}${gainLoss.abs().toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: color,
+                        color: deltaColor,
                       ),
                     ),
                   ],
@@ -852,6 +800,7 @@ class _InvestmentListDialog extends StatelessWidget {
   ) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final PlutusTokens t = context.tokens;
     final service = sl<IInvestmentService>();
     final result = await showDialog<bool>(
       context: context,
@@ -879,7 +828,7 @@ class _InvestmentListDialog extends StatelessWidget {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l.investmentSaleRecorded),
-          backgroundColor: AppColors.success,
+          backgroundColor: t.success.dot,
         ),
       );
       onRefresh();
@@ -1011,7 +960,8 @@ class _InvestmentListDialog extends StatelessWidget {
     }
   }
 
-  Widget _buildDetailRow(String label, String value, bool isDark) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
+    final PlutusTokens t = context.tokens;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1019,7 +969,7 @@ class _InvestmentListDialog extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 13,
-            color: isDark ? Colors.white60 : Colors.black54,
+            color: t.textSecondary,
           ),
         ),
         Text(
@@ -1027,7 +977,7 @@ class _InvestmentListDialog extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white : Colors.black87,
+            color: t.text,
           ),
         ),
       ],
@@ -1039,6 +989,7 @@ class _InvestmentListDialog extends StatelessWidget {
     InvestmentModel investment,
     VoidCallback onRefresh,
   ) {
+    final PlutusTokens t = context.tokens;
     showDialog(
       context: context,
       builder: (context) => _EditInvestmentDialog(
@@ -1048,7 +999,7 @@ class _InvestmentListDialog extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Updated $assetName'),
-              backgroundColor: AppColors.success,
+              backgroundColor: t.success.dot,
             ),
           );
           onRefresh();
@@ -1062,12 +1013,12 @@ class _InvestmentListDialog extends StatelessWidget {
     InvestmentModel investment,
     VoidCallback onRefresh,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final PlutusTokens t = context.tokens;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        backgroundColor: t.surface,
         title: const Text('Delete Investment'),
         content: Text('Are you sure you want to delete ${investment.assetName}?'),
         actions: [
@@ -1078,34 +1029,34 @@ class _InvestmentListDialog extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext); // Close confirmation dialog
-              
+
               try {
                 debugPrint('Widget: Starting delete for ${investment.id}');
-                
+
                 // Delete from backend
                 final service = sl<IInvestmentService>();
                 await service.deleteInvestment(investment.id);
-                
+
                 debugPrint('Widget: Delete completed, closing dialog');
-                
+
                 // Close the investment list dialog too
                 if (context.mounted) {
                   Navigator.pop(context); // Close the investment list dialog
                 }
-                
+
                 // Wait a bit for dialogs to close
                 await Future.delayed(const Duration(milliseconds: 150));
-                
+
                 debugPrint('Widget: Calling onRefresh');
-                
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Deleted ${investment.assetName}'),
-                      backgroundColor: AppColors.success,
+                      backgroundColor: t.success.dot,
                     ),
                   );
-                  
+
                   // Refresh the data
                   onRefresh();
                 }
@@ -1115,13 +1066,13 @@ class _InvestmentListDialog extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete: $e'),
-                      backgroundColor: AppColors.error,
+                      backgroundColor: t.error.dot,
                     ),
                   );
                 }
               }
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: t.error.text),
             child: const Text('Delete'),
           ),
         ],
@@ -1156,7 +1107,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
   late TextEditingController _assetNameController;
   late TextEditingController _quantityController;
   late TextEditingController _purchaseValueController;
-  
+
   late AssetType _assetType;
   late Currency _currency;
   late DateTime _purchaseDate;
@@ -1203,16 +1154,13 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final PlutusTokens t = context.tokens;
 
     return Dialog(
       backgroundColor: Colors.transparent,
       child: SingleChildScrollView(
-        child: GlassContainer(
-          borderRadius: 16,
-          blur: 15.0,
-          opacity: isDark ? 0.35 : 0.1,
-          color: isDark ? AppColors.surfaceDark : Colors.white,
+        child: AppCard(
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -1225,11 +1173,11 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                     'Edit Investment',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: t.text,
                         ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Asset Name field
                   TextFormField(
                     controller: _assetNameController,
@@ -1247,7 +1195,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  
+
                   // Quantity field
                   TextFormField(
                     controller: _quantityController,
@@ -1270,7 +1218,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  
+
                   // Purchase Value field
                   TextFormField(
                     controller: _purchaseValueController,
@@ -1293,7 +1241,7 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -1305,10 +1253,6 @@ class _EditInvestmentDialogState extends State<_EditInvestmentDialog> {
                       const SizedBox(width: AppSpacing.sm),
                       ElevatedButton(
                         onPressed: _handleSave,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryDark,
-                          foregroundColor: Colors.white,
-                        ),
                         child: Text(localizations.save),
                       ),
                     ],

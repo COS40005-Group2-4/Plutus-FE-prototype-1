@@ -9,10 +9,11 @@ import '../services/interfaces/interfaces.dart';
 import '../di/service_locator.dart';
 import '../providers/settings_notifier.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
-import 'glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
+import 'core/status_badge.dart';
 import 'chart_theme.dart';
 
 class UpcomingBillsWidget extends ConsumerStatefulWidget {
@@ -45,20 +46,8 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.billsAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    onAccentTertiary.toString();
-    dividerOnAccent.toString();
-    return GlassContainer(
-          color: accent,
-          opacity: 0.2,
-          borderRadius: AppRadius.card,
+    final PlutusTokens t = context.tokens;
+    return AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -70,7 +59,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                       return Center(
-                        child: CircularProgressIndicator(color: onAccent),
+                        child: CircularProgressIndicator(color: t.text),
                       );
                     }
 
@@ -78,7 +67,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
                       return Center(
                         child: Text(
                           AppLocalizations.of(context).noBillsUpcoming,
-                          style: TextStyle(color: onAccent, fontSize: 14),
+                          style: TextStyle(color: t.text, fontSize: 14),
                         ),
                       );
                     }
@@ -101,13 +90,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final onAccent =
-        AppColors.onAccentPrimary(AppColors.billsAccent, brightness);
-    final onAccentTertiary =
-        AppColors.onAccentTertiary(AppColors.billsAccent, brightness);
-    onAccent.toString();
-    onAccentTertiary.toString();
+    final PlutusTokens t = context.tokens;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -116,7 +99,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
             Text(
               AppLocalizations.of(context).upcomingBills,
               style: TextStyle(
-                color: onAccent,
+                color: t.text,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -127,7 +110,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
               child: Icon(
                 Icons.help_outline,
                 size: 14,
-                color: AppColors.textTertiary(Theme.of(context).brightness),
+                color: t.textMuted,
               ),
             ),
           ],
@@ -135,7 +118,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
         Row(
           children: [
             PopupMenuButton<int>(
-              icon: Icon(Icons.filter_list, color: onAccent, size: 20),
+              icon: Icon(Icons.filter_list, color: t.text, size: 20),
               onSelected: (value) {
                 setState(() => _daysFilter = value);
               },
@@ -146,7 +129,7 @@ class _UpcomingBillsWidgetState extends ConsumerState<UpcomingBillsWidget> {
               ],
             ),
             IconButton(
-              icon: Icon(Icons.edit, color: onAccent, size: 20),
+              icon: Icon(Icons.edit, color: t.text, size: 20),
               onPressed: () => _showBillEditor(context),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -306,19 +289,10 @@ class _BillsContentState extends State<_BillsContent> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.billsAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final onAccentTertiary = AppColors.onAccentTertiary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    onAccentTertiary.toString();
-    dividerOnAccent.toString();
+    final PlutusTokens t = context.tokens;
     if (_isLoading) {
       return Center(
-        child: CircularProgressIndicator(color: onAccent),
+        child: CircularProgressIndicator(color: t.text),
       );
     }
 
@@ -350,12 +324,7 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildBillsBarChart() {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.billsAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
+    final PlutusTokens t = context.tokens;
     final now = DateTime.now();
     // Group bills by week number within the filter window
     final Map<int, double> weeklyTotals = {};
@@ -371,7 +340,13 @@ class _BillsContentState extends State<_BillsContent> {
 
     final maxVal = weeklyTotals.values.fold(0.0, (a, b) => a > b ? a : b);
     final labels = ['Overdue', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'];
-    final colors = [AppColors.error, AppColors.warning, AppColors.primary, AppColors.primary, AppColors.primary];
+    final colors = [
+      t.error.dot,
+      t.warning.dot,
+      t.chartCategorical.first,
+      t.chartCategorical.first,
+      t.chartCategorical.first,
+    ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -389,7 +364,7 @@ class _BillsContentState extends State<_BillsContent> {
                 getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   return BarTooltipItem(
                     '${labels[group.x]}\n${PlutusChartStyle.formatCompactCurrency(rod.toY)}',
-                    TextStyle(color: onAccent, fontSize: 10),
+                    TextStyle(color: t.text, fontSize: 10),
                   );
                 },
               ),
@@ -405,7 +380,7 @@ class _BillsContentState extends State<_BillsContent> {
                     if (!weeklyTotals.containsKey(idx)) return const SizedBox.shrink();
                     return Text(
                       labels[idx],
-                      style: TextStyle(color: onAccentSecondary, fontSize: 9),
+                      style: TextStyle(color: t.textSecondary, fontSize: 9),
                     );
                   },
                 ),
@@ -440,32 +415,29 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildSummary(double totalDue) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.billsAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
+    final PlutusTokens t = context.tokens;
     final format = widget.settings.currency == AppCurrency.vnd
         ? NumberFormat("#,##0", "en_US")
         : NumberFormat("#,##0.00", "en_US");
-    
-    return GlassContainer(
+
+    return Container(
       padding: const EdgeInsets.all(12),
-      color: onAccent,
-      opacity: 0.1,
-      borderRadius: 8,
+      decoration: BoxDecoration(
+        color: t.surfaceSubtle,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: t.border),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             '${AppLocalizations.of(context).totalDue} (${widget.daysFilter}d):',
-            style: TextStyle(color: onAccentSecondary, fontSize: 12),
+            style: TextStyle(color: t.textSecondary, fontSize: 12),
           ),
           Text(
             '${widget.settings.currency.symbol}${format.format(totalDue)}',
             style: TextStyle(
-              color: onAccent,
+              color: t.text,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -476,24 +448,17 @@ class _BillsContentState extends State<_BillsContent> {
   }
 
   Widget _buildBillItem(BuildContext context, Bill bill, double convertedAmount, bool isAnimating) {
-    final brightness = Theme.of(context).brightness;
-    const accent = AppColors.billsAccent;
-    final onAccent = AppColors.onAccentPrimary(accent, brightness);
-    final onAccentSecondary = AppColors.onAccentSecondary(accent, brightness);
-    final dividerOnAccent = AppColors.dividerOnAccent(accent, brightness);
-    onAccent.toString();
-    onAccentSecondary.toString();
-    dividerOnAccent.toString();
+    final PlutusTokens t = context.tokens;
     final now = DateTime.now();
     final daysUntilDue = bill.dueDate.difference(now).inDays;
-    
+
     Color dateColor;
     if (bill.isOverdue) {
-      dateColor = AppColors.error;
+      dateColor = t.error.text;
     } else if (daysUntilDue <= 3) {
-      dateColor = AppColors.error;
+      dateColor = t.error.text;
     } else {
-      dateColor = const Color(0xFF6050dc);
+      dateColor = t.brandNavy;
     }
 
     // Get currency symbol for the bill's original currency
@@ -504,11 +469,13 @@ class _BillsContentState extends State<_BillsContent> {
       duration: const Duration(milliseconds: 300),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 8),
-        child: GlassContainer(
+        child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
-          color: onAccent,
-          opacity: 0.05,
-          borderRadius: 8,
+          decoration: BoxDecoration(
+            color: t.surfaceSubtle,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: t.border),
+          ),
           child: Row(
             children: [
               // Date indicator
@@ -550,7 +517,7 @@ class _BillsContentState extends State<_BillsContent> {
                     Text(
                       bill.name,
                       style: TextStyle(
-                        color: onAccent,
+                        color: t.text,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -562,7 +529,7 @@ class _BillsContentState extends State<_BillsContent> {
                         Text(
                           '${widget.settings.currency.symbol}${_formatAmount(convertedAmount, widget.settings.currency)}',
                           style: TextStyle(
-                            color: onAccentSecondary,
+                            color: t.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -572,40 +539,26 @@ class _BillsContentState extends State<_BillsContent> {
                           Text(
                             '(${billCurrency.symbol}${_formatAmount(bill.amount, billCurrency)})',
                             style: TextStyle(
-                              color: onAccentSecondary,
+                              color: t.textSecondary,
                               fontSize: 10,
                             ),
                           ),
                         ],
                         const SizedBox(width: AppSpacing.sm),
                         if (bill.isOverdue)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha:0.25),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: AppColors.error.withValues(alpha:0.6)),
-                            ),
-                            child: const Text(
-                              'OVERDUE',
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
+                          const StatusBadge(kind: StatusKind.error, label: 'OVERDUE')
                         else if (bill.recurrence != BillRecurrence.oneTime)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha:0.2),
+                              color: t.surfaceSubtle,
                               borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: t.border),
                             ),
                             child: Text(
                               _getRecurrenceLabel(bill.recurrence),
-                              style: const TextStyle(
-                                color: AppColors.accent,
+                              style: TextStyle(
+                                color: t.textSecondary,
                                 fontSize: 9,
                               ),
                             ),
@@ -620,8 +573,8 @@ class _BillsContentState extends State<_BillsContent> {
                 ElevatedButton(
                   onPressed: () => _handlePayBill(bill),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success.withValues(alpha:0.8),
-                    foregroundColor: onAccent,
+                    backgroundColor: t.success.dot.withValues(alpha:0.8),
+                    foregroundColor: t.text,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -637,7 +590,7 @@ class _BillsContentState extends State<_BillsContent> {
                       scale: value,
                       child: Icon(
                         Icons.check_circle,
-                        color: AppColors.success.withValues(alpha:value),
+                        color: t.success.dot.withValues(alpha:value),
                         size: 20,
                       ),
                     );
@@ -907,20 +860,21 @@ class _BillSelectorDialog extends StatelessWidget {
                 shrinkWrap: true,
                 itemCount: bills.length,
                 itemBuilder: (context, index) {
+                  final PlutusTokens t = context.tokens;
                   final bill = bills[index];
                   final billCurrency = AppCurrency.fromCode(bill.currency);
                   final format = billCurrency == AppCurrency.vnd
                       ? NumberFormat("#,##0", "en_US")
                       : NumberFormat("#,##0.00", "en_US");
-                  
+
                   return ListTile(
                     leading: Icon(
                       bill.isPaid ? Icons.check_circle : Icons.receipt_long,
                       color: bill.isPaid
-                          ? AppColors.success
+                          ? t.success.text
                           : bill.isOverdue
-                              ? AppColors.error
-                              : AppColors.warning,
+                              ? t.error.text
+                              : t.warning.text,
                     ),
                     title: Text(bill.name),
                     subtitle: Text(
@@ -943,7 +897,7 @@ class _BillSelectorDialog extends StatelessWidget {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, size: 20, color: AppColors.error),
+                          icon: Icon(Icons.delete, size: 20, color: t.error.text),
                           onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
@@ -957,7 +911,7 @@ class _BillSelectorDialog extends StatelessWidget {
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.of(context).pop(true),
-                                    child: Text('Delete', style: TextStyle(color: AppColors.error)),
+                                    child: Text('Delete', style: TextStyle(color: t.error.text)),
                                   ),
                                 ],
                               ),

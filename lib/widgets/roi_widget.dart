@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'glass_container.dart';
-import '../theme/app_colors.dart';
+import 'core/app_card.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_radius.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../services/settings_service.dart';
 import '../di/service_locator.dart';
@@ -74,22 +74,20 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context);
-    final brightness = Theme.of(context).brightness;
+    final PlutusTokens t = context.tokens;
     final isPositive = _roiValue >= 0;
     final valueColor = _roiValue == 0
-        ? AppColors.textSecondary(brightness)
+        ? t.text
         : isPositive
-            ? AppColors.positive(brightness)
-            : AppColors.negative(brightness);
+            ? t.success.text
+            : t.error.text;
     final trendIcon = _roiValue == 0
         ? Icons.trending_flat
         : isPositive
             ? Icons.trending_up
             : Icons.trending_down;
 
-    return GlassContainer(
-      borderRadius: AppRadius.card,
-      opacity: 0.08,
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -102,12 +100,12 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
               Row(
                 children: [
                   Icon(Icons.show_chart, size: 16,
-                      color: AppColors.textSecondary(brightness)),
+                      color: t.textSecondary),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     l10n.roi,
                     style: TextStyle(
-                      color: AppColors.textSecondary(brightness),
+                      color: t.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
@@ -117,7 +115,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
                   Tooltip(
                     message: l10n.widgetHelpRoi,
                     child: Icon(Icons.help_outline, size: 14,
-                        color: AppColors.textTertiary(brightness)),
+                        color: t.textMuted),
                   ),
                 ],
               ),
@@ -144,11 +142,9 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
                         Expanded(
                           child: Text(
                             '${isPositive && _roiValue != 0 ? '+' : ''}${_roiValue.toStringAsFixed(2)}%',
-                            style: TextStyle(
+                            style: AppTextStyles.numericStyle.copyWith(
                               color: valueColor,
                               fontSize: isCompact ? 22 : 28,
-                              fontWeight: FontWeight.w700,
-                              height: 1.1,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -161,7 +157,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
               Text(
                 l10n.currentRoi,
                 style: TextStyle(
-                  color: AppColors.textTertiary(brightness),
+                  color: t.textMuted,
                   fontSize: 11,
                 ),
                 maxLines: 1,

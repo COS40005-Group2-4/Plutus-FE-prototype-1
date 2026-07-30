@@ -12,50 +12,29 @@ import '../providers/dashboard_notifier.dart';
 import '../providers/budget_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../services/budget_notification_service.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/entrance_reveal.dart';
 import '../widgets/dashboard/edit_mode_banner.dart';
 import '../widgets/dashboard/empty_slot_tile.dart';
 import '../widgets/dashboard/widget_edit_chrome.dart';
-import '../widgets/glass_container.dart';
 import '../widgets/create_dashboard_dialog.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 
 /// On web, prevent mouse drag from scrolling so that pan gestures
 /// in edit mode can move widgets instead of scrolling the viewport.
 class _WebDragScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-        // Exclude PointerDeviceKind.mouse so mouse drag goes to GestureDetector
-      };
-}
-
-class MySlotBackground extends SlotBackgroundBuilder<ColoredDashboardItem> {
-  @override
-  Widget? buildBackground(
-    BuildContext context,
-    ColoredDashboardItem? item,
-    int x,
-    int y,
-    bool editing,
-    bool isSwapTarget,
-  ) {
-    if (item != null) {
-      return GlassContainer(
-        color: isSwapTarget ? AppColors.success : AppColors.error,
-        opacity: isSwapTarget ? 0.3 : 0.2,
-        borderRadius: AppRadius.md,
-      );
-    }
-
-    return null;
-  }
+    PointerDeviceKind.touch,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.invertedStylus,
+    // Exclude PointerDeviceKind.mouse so mouse drag goes to GestureDetector
+  };
 }
 
 class DashboardWidget extends ConsumerStatefulWidget {
@@ -135,9 +114,10 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
       dashboardId: dashState.activeDashboardId,
       userId: ref.read(dashboardNotifierProvider.notifier).currentUserId,
     );
-    _itemController = DashboardItemController<ColoredDashboardItem>.withDelegate(
-      itemStorageDelegate: storage,
-    );
+    _itemController =
+        DashboardItemController<ColoredDashboardItem>.withDelegate(
+          itemStorageDelegate: storage,
+        );
   }
 
   void setSlot() {
@@ -151,7 +131,10 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     });
   }
 
-  void _recreateStorageAndController(String dashboardId, List<String> visibleWidgets) {
+  void _recreateStorageAndController(
+    String dashboardId,
+    List<String> visibleWidgets,
+  ) {
     storage = MyItemStorage(
       dashboardId: dashboardId,
       userId: ref.read(dashboardNotifierProvider.notifier).currentUserId,
@@ -170,9 +153,13 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
 
   Widget _buildAlertsBanner(List<BudgetAlert> alerts) {
     final currency = ref.read(settingsNotifierProvider).currency;
+    final PlutusTokens t = context.tokens;
     return Container(
       width: double.infinity,
-      color: AppColors.warning.withValues(alpha: 0.15),
+      decoration: BoxDecoration(
+        color: t.warning.surface,
+        border: Border.all(color: t.warning.border),
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -180,9 +167,13 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.warning_amber_outlined, color: AppColors.warning, size: 18),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              Icons.warning_amber_outlined,
+              color: t.warning.text,
+              size: 18,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -195,15 +186,16 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                   '${alert.category.name}: $pct% '
                   '($sym${alert.spent.toStringAsFixed(0)} / '
                   '$sym${alert.budgeted.toStringAsFixed(0)})',
-                  style: AppTextStyles.bodySmallStyle
-                      .copyWith(color: AppColors.warning),
+                  style: AppTextStyles.bodySmallStyle.copyWith(
+                    color: t.warning.text,
+                  ),
                 );
               }).toList(),
             ),
           ),
           GestureDetector(
             onTap: () => setState(() => _alertsDismissed = true),
-            child: const Icon(Icons.close, color: AppColors.warning, size: 16),
+            child: Icon(Icons.close, color: t.warning.text, size: 16),
           ),
         ],
       ),
@@ -232,10 +224,14 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         : 2;
     final aspectRatio = _getAspectRatio(w);
     final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     final dashState = ref.watch(dashboardNotifierProvider);
-    final alerts = ref.watch(budgetNotifierProvider
-        .select((async) => async.valueOrNull?.alerts ?? const <BudgetAlert>[]));
+    final alerts = ref.watch(
+      budgetNotifierProvider.select(
+        (async) => async.valueOrNull?.alerts ?? const <BudgetAlert>[],
+      ),
+    );
 
     return Scaffold(
       drawer: SidebarMenu(
@@ -245,7 +241,11 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
           });
         },
         onWidgetAdded: (instanceId, widgetType) {
-          final item = storage.createDefaultItem(instanceId, widgetType, slot ?? 2);
+          final item = storage.createDefaultItem(
+            instanceId,
+            widgetType,
+            slot ?? 2,
+          );
           _itemController.add(item);
         },
         onWidgetRemoved: (instanceId) {
@@ -259,7 +259,9 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
             if (value == '__new__') {
               await _showCreateDashboardDialog();
             } else {
-              ref.read(dashboardNotifierProvider.notifier).setActiveDashboard(value);
+              ref
+                  .read(dashboardNotifierProvider.notifier)
+                  .setActiveDashboard(value);
             }
           },
           offset: const Offset(0, 40),
@@ -269,65 +271,51 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
               Flexible(
                 child: Text(
                   dashState.activeDashboard.name,
-                  style: AppTextStyles.titleStyle.copyWith(
-                    color: AppColors.textPrimary(
-                        Theme.of(context).brightness),
-                  ),
+                  style: AppTextStyles.titleStyle.copyWith(color: t.text),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: AppColors.textSecondary(
-                    Theme.of(context).brightness),
-              ),
+              Icon(Icons.keyboard_arrow_down_rounded, color: t.textSecondary),
             ],
           ),
           itemBuilder: (context) {
             final items = <PopupMenuEntry<String>>[];
             for (final dash in dashState.dashboards) {
-              items.add(PopupMenuItem<String>(
-                value: dash.id,
-                child: Row(
-                  children: [
-                    if (dash.id == dashState.activeDashboardId)
-                      Icon(Icons.check_rounded,
-                          color: AppColors.brand(
-                              Theme.of(context).brightness),
-                          size: 18)
-                    else
-                      const SizedBox(width: AppSpacing.lg),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        dash.name,
-                        overflow: TextOverflow.ellipsis,
+              items.add(
+                PopupMenuItem<String>(
+                  value: dash.id,
+                  child: Row(
+                    children: [
+                      if (dash.id == dashState.activeDashboardId)
+                        Icon(Icons.check_rounded, color: t.goldText, size: 18)
+                      else
+                        const SizedBox(width: AppSpacing.lg),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(dash.name, overflow: TextOverflow.ellipsis),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ));
+              );
             }
             if (dashState.canCreateDashboard) {
               items.add(const PopupMenuDivider());
-              items.add(PopupMenuItem<String>(
-                value: '__new__',
-                child: Row(
-                  children: [
-                    Icon(Icons.add_rounded,
-                        color: AppColors.brand(
-                            Theme.of(context).brightness),
-                        size: 18),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      l10n.newDashboard,
-                      style: TextStyle(
-                          color: AppColors.brand(
-                              Theme.of(context).brightness)),
-                    ),
-                  ],
+              items.add(
+                PopupMenuItem<String>(
+                  value: '__new__',
+                  child: Row(
+                    children: [
+                      Icon(Icons.add_rounded, color: t.goldText, size: 18),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        l10n.newDashboard,
+                        style: TextStyle(color: t.goldText),
+                      ),
+                    ],
+                  ),
                 ),
-              ));
+              );
             }
             return items;
           },
@@ -361,9 +349,8 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                   Icons.delete_outline,
                   l10n.deleteDashboard,
                   color: dashState.dashboards.length > 1
-                      ? AppColors.error
-                      : AppColors.textTertiary(
-                          Theme.of(context).brightness),
+                      ? t.error.text
+                      : t.textMuted,
                 ),
               ),
             ],
@@ -373,9 +360,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
             onPressed: _toggleEditMode,
             icon: Icon(
               _isEditing ? Icons.check_rounded : Icons.tune_rounded,
-              color: _isEditing
-                  ? AppColors.editAccent(Theme.of(context).brightness)
-                  : null,
+              color: _isEditing ? t.goldText : null,
             ),
           ),
         ],
@@ -384,7 +369,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
         child: Column(
           children: [
             if (alerts.isNotEmpty && !_alertsDismissed)
-              _buildAlertsBanner(alerts),
+              EntranceReveal(index: 0, child: _buildAlertsBanner(alerts)),
             // Edit-mode banner: slides + fades into view when editing.
             AnimatedSwitcher(
               duration: AppMotion.medium,
@@ -418,13 +403,17 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       _recreateStorageAndController(
                         dashState.activeDashboardId,
-                        ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets(),
+                        ref
+                            .read(dashboardNotifierProvider.notifier)
+                            .getVisibleWidgets(),
                       );
                     });
                   }
 
                   // Detect user switch (safety net for in-session switches)
-                  final currentUserId = ref.read(dashboardNotifierProvider.notifier).currentUserId;
+                  final currentUserId = ref
+                      .read(dashboardNotifierProvider.notifier)
+                      .currentUserId;
                   if (_lastUserId != currentUserId) {
                     _lastUserId = currentUserId;
                     _lastVisibilityKey = [];
@@ -433,16 +422,22 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
                       if (mounted) {
                         _recreateStorageAndController(
                           dashState.activeDashboardId,
-                          ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets(),
+                          ref
+                              .read(dashboardNotifierProvider.notifier)
+                              .getVisibleWidgets(),
                         );
                       }
                     });
                   }
 
-                  final visibleWidgets = ref.read(dashboardNotifierProvider.notifier).getVisibleWidgets();
+                  final visibleWidgets = ref
+                      .read(dashboardNotifierProvider.notifier)
+                      .getVisibleWidgets();
                   final visibilityKey = visibleWidgets.join(',');
 
-                  final oldKey = _lastVisibilityKey.isNotEmpty ? _lastVisibilityKey.first : '';
+                  final oldKey = _lastVisibilityKey.isNotEmpty
+                      ? _lastVisibilityKey.first
+                      : '';
                   if (oldKey != visibilityKey) {
                     _lastVisibilityKey = [visibilityKey];
 
@@ -455,189 +450,198 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
 
                   return _selectedWidget != null
                       ? _buildWidgetPreview(_selectedWidget!)
-                      : Dashboard<ColoredDashboardItem>(
-                                key: ValueKey('${dashState.activeDashboardId}_${visibleWidgets.join(',')}_$_controllerVersion'),
-                                shrinkToPlace: true,
-                                slideToTop: true,
-                                absorbPointer: false,
-                                scrollBehavior: kIsWeb ? _WebDragScrollBehavior() : null,
-                                slotBackgroundBuilder: SlotBackgroundBuilder.withFunction(
-                                  (context, item, x, y, editing) {
-                                    final brightness =
-                                        Theme.of(context).brightness;
-                                    // Idle: hairline outline so empty slots
-                                    // still read as structure.
-                                    // Editing: brand-tinted snap target —
-                                    // dashed outline + soft brand fill.
-                                    if (!editing) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                              AppRadius.md),
-                                          border: Border.all(
-                                            color: AppColors.borderLine(
-                                                brightness),
-                                            width: 1,
-                                          ),
-                                        ),
-                                      );
-                                    }
+                      : EntranceReveal(
+                          index: 1,
+                          child: Dashboard<ColoredDashboardItem>(
+                            key: ValueKey(
+                              '${dashState.activeDashboardId}_${visibleWidgets.join(',')}_$_controllerVersion',
+                            ),
+                            shrinkToPlace: true,
+                            slideToTop: true,
+                            absorbPointer: false,
+                            scrollBehavior: kIsWeb
+                                ? _WebDragScrollBehavior()
+                                : null,
+                            slotBackgroundBuilder:
+                                SlotBackgroundBuilder.withFunction((
+                                  context,
+                                  item,
+                                  x,
+                                  y,
+                                  editing,
+                                ) {
+                                  final PlutusTokens slotTokens =
+                                      context.tokens;
+                                  final bool isDark =
+                                      Theme.of(context).brightness ==
+                                      Brightness.dark;
+                                  // Idle: hairline outline so empty slots
+                                  // still read as structure.
+                                  // Editing: gold-tinted snap target —
+                                  // outline + soft gold fill.
+                                  if (!editing) {
                                     return Container(
                                       decoration: BoxDecoration(
-                                        color: AppColors.editSnapGlow(
-                                            brightness),
                                         borderRadius: BorderRadius.circular(
-                                            AppRadius.md),
+                                          AppRadius.md,
+                                        ),
                                         border: Border.all(
-                                          color: AppColors.editOutline(
-                                              brightness),
+                                          color: slotTokens.border,
                                           width: 1,
                                         ),
                                       ),
                                     );
-                                  },
-                                ),
-                                padding: const EdgeInsets.all(6.0),
-                                horizontalSpace: 6.0,
-                                verticalSpace: 6.0,
-                                slotAspectRatio: aspectRatio,
-                                animateEverytime: false,
-                                dashboardItemController: itemController,
-                                slotCount: slot ?? 2,
-                                errorPlaceholder: (e, s) {
-                                  return Text("$e , $s");
-                                },
-                                emptyPlaceholder: _isEditing
-                                    ? Center(
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 280,
-                                            maxHeight: 220,
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(
-                                                AppSpacing.lg),
-                                            child: EmptySlotTile(
-                                              onTap: _openSidebarForAdd,
-                                            ),
-                                          ),
+                                  }
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: slotTokens.gold.withValues(
+                                        alpha: isDark ? 0.22 : 0.16,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.md,
+                                      ),
+                                      border: Border.all(
+                                        color: slotTokens.gold.withValues(
+                                          alpha: isDark ? 0.55 : 0.45,
                                         ),
-                                      )
-                                    : Center(
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.dashboard_customize,
-                                                  size: 48,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.5)),
-                                              const SizedBox(
-                                                  height: AppSpacing.lg),
-                                              Text(
-                                                AppLocalizations.of(context)
-                                                    .noWidgetsSelected,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleMedium
-                                                    ?.copyWith(
-                                                      color: AppColors
-                                                          .textSecondary(
-                                                              Theme.of(context)
-                                                                  .brightness),
-                                                    ),
-                                              ),
-                                              const SizedBox(
-                                                  height: AppSpacing.sm),
-                                              Text(
-                                                AppLocalizations.of(context)
-                                                    .openMenuEnableWidgets,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: AppColors
-                                                          .textTertiary(
-                                                              Theme.of(context)
-                                                                  .brightness),
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
+                                        width: 1,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                            padding: const EdgeInsets.all(6.0),
+                            horizontalSpace: 6.0,
+                            verticalSpace: 6.0,
+                            slotAspectRatio: aspectRatio,
+                            animateEverytime: false,
+                            dashboardItemController: itemController,
+                            slotCount: slot ?? 2,
+                            errorPlaceholder: (e, s) {
+                              return Text("$e , $s");
+                            },
+                            emptyPlaceholder: _isEditing
+                                ? Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 280,
+                                        maxHeight: 220,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.lg,
+                                        ),
+                                        child: EmptySlotTile(
+                                          onTap: _openSidebarForAdd,
                                         ),
                                       ),
-                                itemStyle: ItemStyle(
-                                  color: Colors.transparent,
-                                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                                  elevation: 5,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                                  ),
-                                ),
-                                physics: const RangeMaintainingScrollPhysics(),
-                                editModeSettings: EditModeSettings(
-                                  draggableOutside: false,
-                                  paintBackgroundLines: true,
-                                  autoScroll: true,
-                                  resizeCursorSide: 15,
-                                  curve: AppMotion.emphasized,
-                                  duration: AppMotion.medium,
-                                  swapEnabled: true,
-                                  backgroundStyle: EditModeBackgroundStyle(
-                                    lineColor: AppColors.gridLine(
-                                        Theme.of(context).brightness),
-                                    lineWidth: 1,
-                                    dualLineHorizontal: false,
-                                    dualLineVertical: false,
-                                  ),
-                                ),
-                                itemBuilder: (ColoredDashboardItem item) {
-                                  var layout = item.layoutData;
-                                  final isEditing = _isEditing;
-
-                                  if (item.data != null) {
-                                    return _wrapWithEditChrome(
-                                      isEditing: isEditing,
-                                      item: item,
-                                      child: DataWidget(item: item),
-                                    );
-                                  }
-
-                                  return LayoutBuilder(
-                                    builder: (_, c) {
-                                      final brightness =
-                                          Theme.of(context).brightness;
-                                      final placeholder = GlassContainer(
-                                        padding: const EdgeInsets.all(
-                                            AppSpacing.md),
-                                        color: item.color,
-                                        opacity: 0.3,
-                                        borderRadius: AppRadius.md,
-                                        child: SizedBox(
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                          child: Text(
-                                            "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
-                                            style: TextStyle(
-                                              color: AppColors.textPrimary(
-                                                  brightness),
-                                            ),
+                                    ),
+                                  )
+                                : Center(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.dashboard_customize,
+                                            size: 48,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.5),
                                           ),
-                                        ),
-                                      );
-                                      return _wrapWithEditChrome(
-                                        isEditing: isEditing,
-                                        item: item,
-                                        child: placeholder,
-                                      );
-                                    },
+                                          const SizedBox(height: AppSpacing.lg),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            ).noWidgetsSelected,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color: t.textSecondary,
+                                                ),
+                                          ),
+                                          const SizedBox(height: AppSpacing.sm),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            ).openMenuEnableWidgets,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(color: t.textMuted),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                            itemStyle: ItemStyle(
+                              color: Colors.transparent,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.card,
+                                ),
+                              ),
+                            ),
+                            physics: const RangeMaintainingScrollPhysics(),
+                            editModeSettings: EditModeSettings(
+                              draggableOutside: false,
+                              paintBackgroundLines: true,
+                              autoScroll: true,
+                              resizeCursorSide: 15,
+                              curve: AppMotion.emphasized,
+                              duration: AppMotion.medium,
+                              swapEnabled: true,
+                              swapHighlightColor: t.gold,
+                              backgroundStyle: EditModeBackgroundStyle(
+                                lineColor: t.border,
+                                fillColor: t.gold.withValues(alpha: 0.08),
+                                lineWidth: 1,
+                                dualLineHorizontal: false,
+                                dualLineVertical: false,
+                              ),
+                            ),
+                            itemBuilder: (ColoredDashboardItem item) {
+                              var layout = item.layoutData;
+                              final isEditing = _isEditing;
+
+                              if (item.data != null) {
+                                return _wrapWithEditChrome(
+                                  isEditing: isEditing,
+                                  item: item,
+                                  child: DataWidget(item: item),
+                                );
+                              }
+
+                              return LayoutBuilder(
+                                builder: (_, c) {
+                                  final placeholder = AppCard(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      child: Text(
+                                        "ID: ${item.identifier}\n${["x: ${layout.startX}", "y: ${layout.startY}", "w: ${layout.width}", "h: ${layout.height}"].join("\n")}",
+                                        style: TextStyle(color: t.text),
+                                      ),
+                                    ),
+                                  );
+                                  return _wrapWithEditChrome(
+                                    isEditing: isEditing,
+                                    item: item,
+                                    child: placeholder,
                                   );
                                 },
                               );
+                            },
+                          ),
+                        );
                 },
               ),
             ),
@@ -648,8 +652,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
   }
 
   Widget _menuItem(IconData icon, String label, {Color? color}) {
-    final resolved =
-        color ?? AppColors.textPrimary(Theme.of(context).brightness);
+    final resolved = color ?? context.tokens.text;
     return Row(
       children: [
         Icon(icon, color: resolved, size: 20),
@@ -681,7 +684,9 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
   }
 
   Future<void> _handleWidgetAction(
-      WidgetEditAction action, ColoredDashboardItem item) async {
+    WidgetEditAction action,
+    ColoredDashboardItem item,
+  ) async {
     final l10n = AppLocalizations.of(context);
     switch (action) {
       case WidgetEditAction.remove:
@@ -713,9 +718,9 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
       case 'save':
         await notifier.saveLayout();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.layoutSaved)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.layoutSaved)));
         }
         break;
       case 'reset':
@@ -742,7 +747,10 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.confirm, style: const TextStyle(color: AppColors.error)),
+                child: Text(
+                  l10n.confirm,
+                  style: TextStyle(color: ctx.tokens.error.text),
+                ),
               ),
             ],
           ),
@@ -784,7 +792,10 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.delete, style: const TextStyle(color: AppColors.error)),
+                child: Text(
+                  l10n.delete,
+                  style: TextStyle(color: ctx.tokens.error.text),
+                ),
               ),
             ],
           ),
@@ -874,7 +885,7 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
 
   Widget _buildWidgetPreview(String widgetId) {
     final dummyItem = ColoredDashboardItem(
-      color: AppColors.primary,
+      color: context.tokens.brandNavy,
       width: 2,
       height: 2,
       startX: 0,
@@ -912,7 +923,11 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
           child: Container(
             margin: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: DataWidget(item: dummyItem),

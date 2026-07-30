@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'glass_container.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/dashboard_notifier.dart';
 import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 import '../models/widget_catalog.dart';
 
+/// Fixed light ink used on the drawer header's fixed-navy surface (matches
+/// HeroCard's pattern: the header does not flip with theme, so its text
+/// cannot use theme-dependent tokens either). Gold is reserved for figures.
+const Color _kHeaderInk = Color(0xFFEDF0F7);
 
 class SidebarMenu extends ConsumerStatefulWidget {
   final Function(String)? onMenuItemSelected;
@@ -45,52 +49,47 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final PlutusTokens t = context.tokens;
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dashNotifier = ref.read(dashboardNotifierProvider.notifier);
 
     final instanceCounts = dashNotifier.getInstanceCounts();
     final grouped = WidgetCatalog.grouped;
 
     return Drawer(
-      backgroundColor: Colors.transparent,
-      child: GlassContainer(
-        borderRadius: 0,
-        color: isDark ? AppColors.menuBackground : Colors.white,
-        opacity: isDark ? 0.6 : 0.85,
-        blur: 15,
-        child: Column(
-          children: [
-            // ── Header ──
-            _buildHeader(context, isDark),
-            // ── Search ──
-            _buildSearchBar(context, isDark, l10n),
-            // ── Widget Categories ──
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
-                itemCount: WidgetCategory.values.length,
-                itemBuilder: (context, index) {
-                  final cat = WidgetCategory.values[index];
-                  return _buildCategory(
-                    context,
-                    cat,
-                    grouped[cat] ?? [],
-                    dashNotifier,
-                    instanceCounts,
-                    isDark,
-                    l10n,
-                  );
-                },
+      backgroundColor: t.surface,
+      shape: Border(right: BorderSide(color: t.border)),
+      child: Column(
+        children: [
+          // ── Header ──
+          _buildHeader(context, t),
+          // ── Search ──
+          _buildSearchBar(context, t, l10n),
+          // ── Widget Categories ──
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
               ),
+              itemCount: WidgetCategory.values.length,
+              itemBuilder: (context, index) {
+                final cat = WidgetCategory.values[index];
+                return _buildCategory(
+                  context,
+                  cat,
+                  grouped[cat] ?? [],
+                  dashNotifier,
+                  instanceCounts,
+                  t,
+                  l10n,
+                );
+              },
             ),
-            // ── Footer ──
-            _buildFooter(context, dashNotifier, isDark, l10n),
-          ],
-        ),
+          ),
+          // ── Footer ──
+          _buildFooter(context, dashNotifier, t, l10n),
+        ],
       ),
     );
   }
@@ -99,7 +98,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
   // Header
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildHeader(BuildContext context, bool isDark) {
+  Widget _buildHeader(BuildContext context, PlutusTokens t) {
     ref.watch(authNotifierProvider); // watch for rebuilds on auth changes
     final authNotifier = ref.read(authNotifierProvider.notifier);
     final bool isAuthenticated = authNotifier.isAuthenticated;
@@ -112,21 +111,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
         right: AppSpacing.xl,
         bottom: AppSpacing.md,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  AppColors.primary.withValues(alpha: 0.25),
-                  AppColors.accent.withValues(alpha: 0.1),
-                ]
-              : [
-                  AppColors.primary.withValues(alpha: 0.12),
-                  AppColors.accent.withValues(alpha: 0.06),
-                ],
-        ),
-      ),
+      color: t.heroSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,8 +120,9 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.borderSm,
+                  color: _kHeaderInk,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: t.heroBorder),
                 ),
                 child: Image.asset(
                   'lib/assets/branding/plutus_icon.png',
@@ -149,12 +135,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
               Expanded(
                 child: Text(
                   isAuthenticated ? 'Plutus' : 'Plutus (Guest)',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.textOnLight,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
+                  style: AppTextStyles.titleStyle.copyWith(color: _kHeaderInk),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -164,10 +145,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Welcome, $userName',
-              style: TextStyle(
-                color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
-                fontSize: 13,
-              ),
+              style: AppTextStyles.overlineStyle.copyWith(color: t.heroLabel),
               overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -180,62 +158,56 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
   // Search Bar
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildSearchBar(BuildContext context, bool isDark, AppLocalizations l10n) {
+  Widget _buildSearchBar(BuildContext context, PlutusTokens t, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.04),
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.black.withValues(alpha: 0.06),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        style: TextStyle(color: t.text, fontSize: 14),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: t.surfaceSubtle,
+          hintText: l10n.searchWidgets,
+          hintStyle: TextStyle(color: t.textMuted, fontSize: 14),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: t.textSecondary,
+            size: 20,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: t.textSecondary,
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: AppRadius.borderInput,
+            borderSide: BorderSide(color: t.borderStrong),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: AppRadius.borderInput,
+            borderSide: BorderSide(color: t.borderStrong),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppRadius.borderInput,
+            borderSide: BorderSide(color: t.gold, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.md,
+            horizontal: AppSpacing.sm,
           ),
         ),
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          style: TextStyle(
-            color: isDark ? Colors.white : AppColors.textOnLight,
-            fontSize: 14,
-          ),
-          decoration: InputDecoration(
-            hintText: l10n.searchWidgets,
-            hintStyle: TextStyle(
-              color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
-              fontSize: 14,
-            ),
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
-              size: 20,
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
-                      size: 18,
-                    ),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.md,
-              horizontal: AppSpacing.sm,
-            ),
-          ),
-          onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-        ),
+        onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
       ),
     );
   }
@@ -250,7 +222,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
     List<WidgetMeta> widgets,
     DashboardNotifier dashNotifier,
     Map<String, int> instanceCounts,
-    bool isDark,
+    PlutusTokens t,
     AppLocalizations l10n,
   ) {
     // Filter widgets by search
@@ -285,32 +257,18 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-              decoration: BoxDecoration(
-                borderRadius: AppRadius.borderSm,
-                gradient: LinearGradient(
-                  colors: [
-                    _getCategoryColor(category).withValues(alpha: isDark ? 0.15 : 0.08),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
               child: Row(
                 children: [
                   Icon(
                     WidgetCatalog.categoryIcon(category),
                     size: 18,
-                    color: _getCategoryColor(category).withValues(alpha: isDark ? 0.9 : 0.8),
+                    color: t.textSecondary,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      categoryLabel,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.textOnLight,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                      ),
+                      categoryLabel.toUpperCase(),
+                      style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
                     ),
                   ),
                   if (activeCount > 0)
@@ -320,13 +278,13 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: _getCategoryColor(category).withValues(alpha: 0.2),
+                        color: t.surfaceSubtle,
                         borderRadius: AppRadius.borderSm,
                       ),
                       child: Text(
                         '$activeCount',
-                        style: TextStyle(
-                          color: _getCategoryColor(category),
+                        style: AppTextStyles.captionStyle.copyWith(
+                          color: t.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -339,7 +297,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
                     child: Icon(
                       Icons.expand_more_rounded,
                       size: 20,
-                      color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
+                      color: t.textMuted,
                     ),
                   ),
                 ],
@@ -360,7 +318,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
                           meta,
                           dashNotifier,
                           instanceCounts[meta.widgetType] ?? 0,
-                          isDark,
+                          t,
                           l10n,
                         ),
                     ],
@@ -381,7 +339,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
     WidgetMeta meta,
     DashboardNotifier dashNotifier,
     int instanceCount,
-    bool isDark,
+    PlutusTokens t,
     AppLocalizations l10n,
   ) {
     final isActive = instanceCount > 0;
@@ -395,70 +353,51 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
         top: 2,
         bottom: 2,
       ),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.borderSm,
-          color: isActive
-              ? meta.color.withValues(alpha: isDark ? 0.12 : 0.08)
-              : Colors.transparent,
-          border: Border(
-            left: BorderSide(
-              color: isActive ? meta.color : Colors.transparent,
-              width: 3,
-            ),
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            children: [
-              // Icon
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: meta.color.withValues(alpha: isActive ? 0.2 : 0.1),
-                  borderRadius: AppRadius.borderSm,
-                ),
-                child: Icon(
-                  meta.icon,
-                  size: 18,
-                  color: isActive
-                      ? meta.color
-                      : (isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary),
-                ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: t.surfaceSubtle,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              // Label
-              Expanded(
-                child: Text(
-                  AppLocalizations.of(context).translate(meta.label),
-                  style: TextStyle(
-                    color: isActive
-                        ? (isDark ? Colors.white : AppColors.textOnLight)
-                        : (isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary),
-                    fontSize: 13,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              child: Icon(
+                meta.icon,
+                size: 18,
+                color: t.brandNavy,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            // Label
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context).translate(meta.label),
+                style: TextStyle(
+                  color: t.text,
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              // Controls
-              _buildTileControls(
-                context,
-                meta,
-                dashNotifier,
-                instanceCount,
-                canAdd,
-                isDark,
-                l10n,
-              ),
-            ],
-          ),
+            ),
+            // Controls
+            _buildTileControls(
+              context,
+              meta,
+              dashNotifier,
+              instanceCount,
+              canAdd,
+              t,
+              l10n,
+            ),
+          ],
         ),
       ),
     );
@@ -470,23 +409,24 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
     DashboardNotifier dashNotifier,
     int instanceCount,
     bool canAdd,
-    bool isDark,
+    PlutusTokens t,
     AppLocalizations l10n,
   ) {
-    // No instances — show "Add" button
+    // No instances — show "Add" affordance
     if (instanceCount == 0) {
-      return _buildActionChip(
-        label: l10n.addWidget,
-        icon: Icons.add_rounded,
-        color: meta.color,
-        isDark: isDark,
-        onTap: () => _addInstance(dashNotifier, meta),
+      return Tooltip(
+        message: l10n.addWidget,
+        child: _buildIconBtn(
+          icon: Icons.add_circle_outline,
+          color: t.goldText,
+          onTap: () => _addInstance(dashNotifier, meta),
+        ),
       );
     }
 
     // Single instance (no duplicates allowed) — show toggle
     if (!meta.allowDuplicates) {
-      return _buildToggle(dashNotifier, meta, isDark);
+      return _buildToggle(dashNotifier, meta);
     }
 
     // Has instances — show count + add/remove
@@ -496,7 +436,7 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
         // Remove button
         _buildIconBtn(
           icon: Icons.remove_rounded,
-          color: isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary,
+          color: t.error.text,
           onTap: () => _removeLastInstance(dashNotifier, meta),
         ),
         // Count badge
@@ -510,13 +450,13 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             key: ValueKey(instanceCount),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: meta.color.withValues(alpha: 0.2),
+              color: t.goldWeak,
               borderRadius: AppRadius.borderSm,
             ),
             child: Text(
               '${instanceCount}x',
               style: TextStyle(
-                color: meta.color,
+                color: t.goldText,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -526,14 +466,14 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
         // Add button
         _buildIconBtn(
           icon: Icons.add_rounded,
-          color: canAdd ? meta.color : (isDark ? Colors.white24 : Colors.black12),
+          color: canAdd ? t.goldText : t.textMuted,
           onTap: canAdd ? () => _addInstance(dashNotifier, meta) : null,
         ),
       ],
     );
   }
 
-  Widget _buildToggle(DashboardNotifier dashNotifier, WidgetMeta meta, bool isDark) {
+  Widget _buildToggle(DashboardNotifier dashNotifier, WidgetMeta meta) {
     final dashState = ref.watch(dashboardNotifierProvider);
     final instances = dashState.activeDashboard.instancesOfType(meta.widgetType);
     final instanceId = instances.isNotEmpty ? instances.first : null;
@@ -552,48 +492,6 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             }
           }
         },
-        activeTrackColor: meta.color,
-      ),
-    );
-  }
-
-  Widget _buildActionChip({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: AppRadius.borderSm,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.2 : 0.12),
-          borderRadius: AppRadius.borderSm,
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -620,12 +518,10 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
   Widget _buildFooter(
     BuildContext context,
     DashboardNotifier dashNotifier,
-    bool isDark,
+    PlutusTokens t,
     AppLocalizations l10n,
   ) {
     final totalActive = dashNotifier.getVisibleWidgets().length;
-    final textColor = isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary;
-    final primaryTextColor = isDark ? Colors.white : AppColors.textOnLight;
     ref.watch(authNotifierProvider); // watch for rebuilds on auth changes
     final authNotifier = ref.read(authNotifierProvider.notifier);
     final bool isAuthenticated = authNotifier.isAuthenticated;
@@ -633,34 +529,34 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Divider(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
+        Divider(color: t.border),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
           child: Row(
             children: [
-              Icon(Icons.widgets_outlined, size: 16, color: textColor),
+              Icon(Icons.widgets_outlined, size: 16, color: t.textMuted),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 '$totalActive ${l10n.widgetsOnDashboard}',
-                style: TextStyle(color: textColor, fontSize: 12),
+                style: TextStyle(color: t.textMuted, fontSize: 12),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-        Divider(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
+        Divider(color: t.border),
         // Settings
         ListTile(
           dense: true,
           leading: Icon(
             Icons.settings_outlined,
-            color: isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary,
+            color: t.textSecondary,
             size: 20,
           ),
           title: Text(
             l10n.settings,
             style: TextStyle(
-              color: primaryTextColor,
+              color: t.text,
               fontSize: 14,
             ),
             overflow: TextOverflow.ellipsis,
@@ -669,21 +565,21 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             context.pop();
             context.push(AppRoutes.settings);
           },
-          hoverColor: AppColors.primary.withValues(alpha: 0.1),
+          hoverColor: t.gold.withValues(alpha: 0.08),
         ),
         // Sign in/out
         ListTile(
           dense: true,
           leading: Icon(
             isAuthenticated ? Icons.logout_rounded : Icons.login_rounded,
-            color: isAuthenticated ? AppColors.error : AppColors.success,
+            color: isAuthenticated ? t.error.text : t.goldText,
             size: 20,
           ),
           title: Text(
             isAuthenticated ? l10n.signOut : l10n.signIn,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isAuthenticated ? AppColors.error : AppColors.success,
+              color: isAuthenticated ? t.error.text : t.goldText,
               fontSize: 14,
             ),
           ),
@@ -696,8 +592,8 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
             }
           },
           hoverColor: isAuthenticated
-              ? AppColors.error.withValues(alpha: 0.1)
-              : AppColors.success.withValues(alpha: 0.1),
+              ? t.error.dot.withValues(alpha: 0.1)
+              : t.gold.withValues(alpha: 0.08),
         ),
         SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.xs),
       ],
@@ -757,34 +653,4 @@ class _SidebarMenuState extends ConsumerState<SidebarMenu> {
   String _getCategoryLabel(WidgetCategory cat, AppLocalizations l10n) {
     return l10n.translate(WidgetCatalog.categoryLabelKey(cat));
   }
-
-  Color _getCategoryColor(WidgetCategory cat) {
-    switch (cat) {
-      case WidgetCategory.overview:
-        return AppColors.primary;
-      case WidgetCategory.analytics:
-        return AppColors.incomeAccent;
-      case WidgetCategory.investments:
-        return AppColors.accent;
-      case WidgetCategory.tools:
-        return AppColors.savingsAccent;
-      case WidgetCategory.insights:
-        return AppColors.accent;
-    }
-  }
-}
-
-// Keep MenuItemData for any external usage
-class MenuItemData {
-  final String id;
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  MenuItemData({
-    required this.id,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
 }
