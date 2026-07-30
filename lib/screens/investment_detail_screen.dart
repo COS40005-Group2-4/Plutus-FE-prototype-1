@@ -514,11 +514,13 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
       if (s.y > maxY) maxY = s.y;
     }
 
-    // Average unit cost — guard against a zero/negative quantity (fully
-    // closed positions) so this never divides by zero.
-    final double? avgUnitCost =
-        inv.quantity > 0 ? inv.purchaseValue / inv.quantity : null;
-    if (avgUnitCost != null) {
+    // Average unit cost — matches the metrics card above (totalCostBasis /
+    // quantity, partial-sale-adjusted). The getter itself returns 0 when
+    // quantity <= 0 (fully closed positions), so the reference line is
+    // simply hidden in that case rather than dividing by zero.
+    final double avgUnitCost = inv.averageUnitCost;
+    final bool hasAvgUnitCost = avgUnitCost > 0;
+    if (hasAvgUnitCost) {
       if (avgUnitCost < minY) minY = avgUnitCost;
       if (avgUnitCost > maxY) maxY = avgUnitCost;
     }
@@ -576,7 +578,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
         ),
         gridData: PlutusChartStyle.defaultGridData(maxValue: highY - lowY, brightness: brightness),
         borderData: PlutusChartStyle.lineBorderData(brightness: brightness),
-        extraLinesData: avgUnitCost == null
+        extraLinesData: !hasAvgUnitCost
             ? null
             : ExtraLinesData(
                 horizontalLines: [
