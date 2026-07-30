@@ -3,6 +3,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/plutus_tokens.dart';
 import '../../models/ai/category_suggestion.dart';
+import '../../l10n/app_localizations.dart';
 import 'ai_category_field.dart';
 
 class FilePreviewTable extends StatelessWidget {
@@ -37,6 +38,7 @@ class FilePreviewTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final allSelected = selectedIndices.length == transactions.length;
 
     return Column(
@@ -59,7 +61,7 @@ class FilePreviewTable extends StatelessWidget {
                 },
               ),
               Text(
-                '${transactions.length} transactions found, ${selectedIndices.length} selected',
+                '${transactions.length} ${l10n.transactionsFound} ${selectedIndices.length} ${l10n.selectedCount}',
                 style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
               ),
             ],
@@ -72,7 +74,7 @@ class FilePreviewTable extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Categorizing... $aiProgress/$aiTotal', style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
+                Text('${l10n.categorizing} $aiProgress/$aiTotal', style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
                 const SizedBox(height: AppSpacing.xs),
                 LinearProgressIndicator(value: aiTotal > 0 ? aiProgress / aiTotal : 0),
               ],
@@ -153,14 +155,15 @@ class FilePreviewTable extends StatelessWidget {
   }
 
   Widget _buildDataTable(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       child: DataTable(
-        columns: const [
-          DataColumn(label: Text('')),
-          DataColumn(label: Text('Date')),
-          DataColumn(label: Text('Payee')),
-          DataColumn(label: Text('Amount'), numeric: true),
-          DataColumn(label: Text('Category')),
+        columns: [
+          const DataColumn(label: Text('')),
+          DataColumn(label: Text(l10n.date)),
+          DataColumn(label: Text(l10n.payee)),
+          DataColumn(label: Text(l10n.amount), numeric: true),
+          DataColumn(label: Text(l10n.category)),
         ],
         rows: List.generate(transactions.length, (index) {
           final txn = transactions[index];
@@ -197,12 +200,13 @@ class FilePreviewTable extends StatelessWidget {
   /// its own compact `DropdownButton` rather than that widget.
   Widget _buildCategoryCell(BuildContext context, int index, String? txnCategory, bool isAiSuggested) {
     final PlutusTokens t = context.tokens;
+    final l10n = AppLocalizations.of(context);
 
     final dropdown = DropdownButton<String>(
       value: _expenseCategories.contains(txnCategory) ? txnCategory : null,
       isExpanded: true,
       underline: const SizedBox(),
-      hint: Text(txnCategory ?? 'Select'),
+      hint: Text(txnCategory ?? l10n.select),
       items: _expenseCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
       onChanged: (val) { if (val != null) onCategoryChanged(index, val); },
     );

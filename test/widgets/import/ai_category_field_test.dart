@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plutus_fe_prototype/l10n/app_localizations.dart';
 import 'package:plutus_fe_prototype/models/ai/category_suggestion.dart';
 import 'package:plutus_fe_prototype/theme/app_theme.dart';
 import 'package:plutus_fe_prototype/widgets/import/ai_category_field.dart';
 
 void main() {
-  Future<void> pump(WidgetTester tester, Widget child) {
-    return tester.pumpWidget(MaterialApp(
+  Future<void> pump(WidgetTester tester, Widget child) async {
+    await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light(),
+      localizationsDelegates: const [AppLocalizations.delegate],
+      supportedLocales: const [Locale('en')],
       home: Scaffold(body: child),
     ));
+    await tester.pump();
   }
 
   group('AiCategoryField', () {

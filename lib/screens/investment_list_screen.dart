@@ -298,7 +298,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${investment.assetType.name.toUpperCase()} · ${investment.quantity} units',
+                  '${investment.assetType.name.toUpperCase()} · ${investment.quantity} ${AppLocalizations.of(context).unitsSuffix}',
                   style: AppTextStyles.captionStyle.copyWith(color: t.textSecondary),
                 ),
               ],
