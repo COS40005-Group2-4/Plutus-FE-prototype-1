@@ -151,7 +151,11 @@ class AppLocalizations {
       'open_in_external_app': 'Open in External App',
       'pdf_not_available': 'PDF document not available for preview',
       'text_not_available': 'Text content not available for preview',
-      
+
+      // Export Preview Dialog
+      'export_preview': 'Export Preview',
+      'file_location': 'File Location',
+
       // Data Widget
       'import': 'Import',
       'no_widgets_selected': 'Your dashboard is empty',
@@ -741,6 +745,7 @@ class AppLocalizations {
       'report_no_data_subtitle': 'Configure and generate a report first.',
       'report_pdf_saved': 'PDF saved to',
       'report_pdf_failed': 'PDF export failed',
+      'error_prefix': 'Error: ',
 
       // Report Content — Cover & Summary
       'report_financial_report': 'Financial Report',
@@ -1066,7 +1071,11 @@ class AppLocalizations {
       'open_in_external_app': 'Mở trong ứng dụng bên ngoài',
       'pdf_not_available': 'Tài liệu PDF không có sẵn để xem trước',
       'text_not_available': 'Nội dung văn bản không có sẵn để xem trước',
-      
+
+      // Export Preview Dialog
+      'export_preview': 'Xem trước bản xuất',
+      'file_location': 'Vị trí tệp',
+
       // Data Widget
       'import': 'Nhập',
       'no_widgets_selected': 'Bảng điều khiển của bạn trống',
@@ -1656,6 +1665,7 @@ class AppLocalizations {
       'report_no_data_subtitle': 'Cấu hình và tạo báo cáo trước.',
       'report_pdf_saved': 'PDF đã lưu tại',
       'report_pdf_failed': 'Xuất PDF thất bại',
+      'error_prefix': 'Lỗi: ',
 
       // Report Content — Cover & Summary
       'report_financial_report': 'Báo Cáo Tài Chính',
@@ -1985,6 +1995,13 @@ class AppLocalizations {
   String get openInExternalApp => translate('open_in_external_app');
   String get pdfNotAvailable => translate('pdf_not_available');
   String get textNotAvailable => translate('text_not_available');
+
+  // Export Preview Dialog
+  String get exportPreview => translate('export_preview');
+  String get fileLocation => translate('file_location');
+
+  // Report Preview
+  String get errorPrefix => translate('error_prefix');
 
   // Data Widget
   String get import => translate('import');

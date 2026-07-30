@@ -5,8 +5,8 @@ import '../l10n/app_localizations.dart';
 import '../providers/report_notifier.dart';
 import '../models/report_config.dart';
 import '../models/report_data.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
 import '../widgets/report/cover_section.dart';
 import '../widgets/report/executive_summary_section.dart';
 import '../widgets/report/spending_breakdown_section.dart';
@@ -27,29 +27,21 @@ class ReportPreviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     final ReportState reportState = ref.watch(reportNotifierProvider);
     final ReportDataModel? data = reportState.reportData;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: t.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceDark,
-        elevation: 0,
-        title: Text(
-          l10n.translate('report_preview'),
-          style: const TextStyle(
-            color: AppColors.textOnDark,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text(l10n.translate('report_preview')),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textOnDarkSecondary),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () => context.pop(),
         ),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: AppColors.textOnDarkSecondary),
+            icon: const Icon(Icons.share_outlined),
             tooltip: l10n.translate('report_share'),
             onPressed: data == null
                 ? null
@@ -72,11 +64,11 @@ class ReportPreviewScreen extends ConsumerWidget {
           ? null
           : FloatingActionButton.extended(
               onPressed: () => _exportPdf(context, ref),
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.textOnDark),
+              backgroundColor: t.gold,
+              icon: Icon(Icons.picture_as_pdf_outlined, color: t.onGold),
               label: Text(
                 l10n.translate('report_export_pdf'),
-                style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w600),
+                style: TextStyle(color: t.onGold, fontWeight: FontWeight.w600),
               ),
             ),
     );
@@ -84,17 +76,18 @@ class ReportPreviewScreen extends ConsumerWidget {
 
   Widget _buildEmpty(BuildContext context, ReportState reportState) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     if (reportState.isGenerating) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const CircularProgressIndicator(color: AppColors.primary),
+            CircularProgressIndicator(color: t.gold),
             const SizedBox(height: AppSpacing.lg),
             Text(
               l10n.translate('report_generating_loading'),
-              style: const TextStyle(color: AppColors.textOnDarkTertiary, fontSize: 14),
+              style: TextStyle(color: t.textSecondary, fontSize: 14),
             ),
             if (reportState.progress > 0) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
@@ -102,9 +95,8 @@ class ReportPreviewScreen extends ConsumerWidget {
                 width: 200,
                 child: LinearProgressIndicator(
                   value: reportState.progress,
-                  backgroundColor: const Color(0x1FFFFFFF),
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  backgroundColor: PlutusTokens.dark.surfaceSubtle,
+                  valueColor: AlwaysStoppedAnimation<Color>(PlutusTokens.dark.goldText),
                 ),
               ),
             ],
@@ -120,11 +112,11 @@ class ReportPreviewScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+              Icon(Icons.error_outline, color: t.error.text, size: 48),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Error: ${reportState.error}',
-                style: const TextStyle(color: AppColors.textOnDarkTertiary, fontSize: 14),
+                '${l10n.translate('error_prefix')}${reportState.error}',
+                style: TextStyle(color: t.textSecondary, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -137,12 +129,12 @@ class ReportPreviewScreen extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.description_outlined, color: AppColors.textOnDark.withValues(alpha: 0.24), size: 64),
+          Icon(Icons.description_outlined, color: t.textMuted, size: 64),
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.translate('report_no_data'),
             style: TextStyle(
-              color: AppColors.textOnDark.withValues(alpha: 0.38),
+              color: t.textMuted,
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
@@ -150,7 +142,7 @@ class ReportPreviewScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.translate('report_no_data_subtitle'),
-            style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.24), fontSize: 13),
+            style: TextStyle(color: t.textMuted, fontSize: 13),
           ),
         ],
       ),
@@ -158,16 +150,33 @@ class ReportPreviewScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, ReportDataModel data) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xl,
+    // Task 14/15 idiom: the report DOCUMENT canvas is fixed dark regardless
+    // of app theme. Wrap in a Theme override carrying the dark PlutusTokens
+    // extension so every context-reading primitive inside (MeanderDivider,
+    // ReportSectionHeader, etc.) resolves dark tokens too — otherwise a
+    // light app theme leaks light-theme colors onto the navy document
+    // (carried finding from Task 14). SizedBox.expand guarantees the navy
+    // canvas fills the full viewport even for a short report.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        extensions: <ThemeExtension<dynamic>>[PlutusTokens.dark],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: data.config.enabledSections
-            .map((ReportSection section) => _buildSection(section, data))
-            .toList(),
+      child: SizedBox.expand(
+        child: ColoredBox(
+          color: PlutusTokens.dark.bg,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: data.config.enabledSections
+                  .map((ReportSection section) => _buildSection(section, data))
+                  .toList(),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -211,16 +220,17 @@ class ReportPreviewScreen extends ConsumerWidget {
     if (!context.mounted) return;
 
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
 
     if (path != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${l10n.translate('report_pdf_saved')} $path'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.success,
+          backgroundColor: PlutusTokens.dark.success.text,
           action: SnackBarAction(
             label: l10n.translate('ok'),
-            textColor: AppColors.textOnDark,
+            textColor: PlutusTokens.dark.text,
             onPressed: () {},
           ),
         ),
@@ -232,7 +242,7 @@ class ReportPreviewScreen extends ConsumerWidget {
         SnackBar(
           content: Text('${l10n.translate('report_pdf_failed')}: $errorMsg'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.error,
+          backgroundColor: t.error.text,
           duration: const Duration(seconds: 8),
         ),
       );

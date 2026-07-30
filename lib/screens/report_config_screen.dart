@@ -9,10 +9,10 @@ import '../providers/auth_notifier.dart';
 import '../providers/report_notifier.dart';
 import '../providers/settings_notifier.dart';
 import '../router/app_router.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import '../widgets/core/app_card.dart';
 
 class ReportConfigScreen extends ConsumerStatefulWidget {
   const ReportConfigScreen({super.key});
@@ -85,17 +85,11 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
-    final Brightness brightness = Theme.of(context).brightness;
-    final Color textPrimary = AppColors.textPrimary(brightness);
-    final Color textSecondary = AppColors.textSecondary(brightness);
+    final PlutusTokens t = context.tokens;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          l10n.translate('report_config_title'),
-          style: TextStyle(color: textPrimary),
-        ),
-        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+        title: Text(l10n.translate('report_config_title')),
       ),
       body: Consumer(
         builder: (BuildContext ctx, WidgetRef innerRef, Widget? _) {
@@ -105,34 +99,34 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
               ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
-                  _buildSectionHeader(l10n.translate('report_section_template'), textPrimary),
+                  _buildSectionHeader(l10n.translate('report_section_template'), t),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildTemplatePicker(brightness, textPrimary, textSecondary, l10n),
+                  _buildTemplatePicker(t, l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildSectionHeader(l10n.translate('report_section_date_range'), textPrimary),
+                  _buildSectionHeader(l10n.translate('report_section_date_range'), t),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildDateRangeChips(brightness, l10n),
+                  _buildDateRangeChips(t, l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildSectionHeader(l10n.translate('report_section_sections'), textPrimary),
+                  _buildSectionHeader(l10n.translate('report_section_sections'), t),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildSectionToggles(brightness, textPrimary, textSecondary, l10n),
+                  _buildSectionToggles(t, l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildSectionHeader(l10n.translate('report_section_audience'), textPrimary),
+                  _buildSectionHeader(l10n.translate('report_section_audience'), t),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildAudienceSegment(brightness, textPrimary, l10n),
+                  _buildAudienceSegment(l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildSectionHeader(l10n.translate('report_language'), textPrimary),
+                  _buildSectionHeader(l10n.translate('report_language'), t),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildLanguagePicker(brightness, textPrimary, l10n),
+                  _buildLanguagePicker(l10n),
                   const SizedBox(height: AppSpacing.xl),
-                  _buildAiToggle(brightness, textPrimary, textSecondary, l10n),
+                  _buildAiToggle(t, l10n),
                   const SizedBox(height: AppSpacing.xxxl),
                   _buildGenerateButton(context, reportState, l10n),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
               if (reportState.isGenerating)
-                _buildLoadingOverlay(brightness, reportState, l10n),
+                _buildLoadingOverlay(t, reportState, l10n),
             ],
           );
         },
@@ -140,24 +134,19 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color textColor) {
+  Widget _buildSectionHeader(String title, PlutusTokens t) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: textColor,
+        color: t.text,
         letterSpacing: 0.8,
       ),
     );
   }
 
-  Widget _buildTemplatePicker(
-    Brightness brightness,
-    Color textPrimary,
-    Color textSecondary,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildTemplatePicker(PlutusTokens t, AppLocalizations l10n) {
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
@@ -165,14 +154,16 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
         final bool isSelected = _selectedTemplate.id == template.id;
         return GestureDetector(
           onTap: () => _applyTemplate(template),
-          child: GlassContainer(
-            borderRadius: AppRadius.md,
+          child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            color: isSelected ? AppColors.primary : null,
-            opacity: isSelected ? 0.3 : 0.05,
+            decoration: BoxDecoration(
+              color: isSelected ? t.goldSelectedFill : t.surfaceSubtle,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: isSelected ? Border.all(color: t.gold) : null,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -183,7 +174,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
                     Icon(
                       _templateIcon(template.id),
                       size: 16,
-                      color: isSelected ? AppColors.primary : textSecondary,
+                      color: isSelected ? t.goldText : t.textSecondary,
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
@@ -191,7 +182,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                        color: isSelected ? AppColors.primary : textPrimary,
+                        color: isSelected ? t.goldText : t.text,
                       ),
                     ),
                   ],
@@ -238,7 +229,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
     }
   }
 
-  Widget _buildDateRangeChips(Brightness brightness, AppLocalizations l10n) {
+  Widget _buildDateRangeChips(PlutusTokens t, AppLocalizations l10n) {
     const List<DateRangePreset> presets = <DateRangePreset>[
       DateRangePreset.thisMonth,
       DateRangePreset.lastQuarter,
@@ -250,30 +241,25 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: presets.map((DateRangePreset preset) {
+        final bool isSelected = _selectedPreset == preset;
         return ChoiceChip(
           label: Text(_presetLabel(preset, l10n)),
-          selected: _selectedPreset == preset,
+          selected: isSelected,
           onSelected: (bool selected) {
             if (selected) {
               setState(() => _selectedPreset = preset);
             }
           },
-          selectedColor: AppColors.primary.withValues(alpha: 0.25),
-          backgroundColor: brightness == Brightness.dark
-              ? AppColors.surfaceDark.withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.5),
+          selectedColor: t.goldSelectedFill,
+          backgroundColor: t.surfaceSubtle,
           labelStyle: TextStyle(
-            color: _selectedPreset == preset
-                ? AppColors.primary
-                : AppColors.textSecondary(brightness),
+            color: isSelected ? t.goldText : t.textSecondary,
             fontSize: 12,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.sm),
             side: BorderSide(
-              color: _selectedPreset == preset
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : AppColors.borderLine(brightness),
+              color: isSelected ? t.gold : t.border,
             ),
           ),
         );
@@ -296,12 +282,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
     }
   }
 
-  Widget _buildSectionToggles(
-    Brightness brightness,
-    Color textPrimary,
-    Color textSecondary,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildSectionToggles(PlutusTokens t, AppLocalizations l10n) {
     final List<(ReportSection, String, IconData)> sectionMeta =
         <(ReportSection, String, IconData)>[
       (ReportSection.coverPage, l10n.translate('report_sec_cover'), Icons.bookmark_outline),
@@ -319,8 +300,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
       (ReportSection.transactionLog, l10n.translate('report_sec_transactions'), Icons.list_alt_outlined),
     ];
 
-    return GlassContainer(
-      borderRadius: AppRadius.lg,
+    return AppCard(
       padding: EdgeInsets.zero,
       child: Column(
         children: sectionMeta.asMap().entries.map((MapEntry<int, (ReportSection, String, IconData)> entry) {
@@ -332,16 +312,15 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
             children: [
               SwitchListTile(
                 dense: true,
-                secondary: Icon(icon, size: 20, color: isEnabled ? AppColors.primary : textSecondary),
+                secondary: Icon(icon, size: 20, color: isEnabled ? t.goldText : t.textSecondary),
                 title: Text(
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isEnabled ? textPrimary : textSecondary,
+                    color: isEnabled ? t.goldText : t.textSecondary,
                   ),
                 ),
                 value: isEnabled,
-                activeThumbColor: AppColors.primary,
                 onChanged: (bool value) {
                   setState(() {
                     if (value) {
@@ -355,7 +334,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
               if (idx < sectionMeta.length - 1)
                 Divider(
                   height: 1,
-                  color: AppColors.borderLine(brightness),
+                  color: t.border,
                   indent: AppSpacing.lg,
                   endIndent: AppSpacing.lg,
                 ),
@@ -366,9 +345,8 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
     );
   }
 
-  Widget _buildAudienceSegment(Brightness brightness, Color textPrimary, AppLocalizations l10n) {
-    return GlassContainer(
-      borderRadius: AppRadius.lg,
+  Widget _buildAudienceSegment(AppLocalizations l10n) {
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: SegmentedButton<AudienceMode>(
         segments: <ButtonSegment<AudienceMode>>[
@@ -389,31 +367,12 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
             setState(() => _audienceMode = selection.first);
           }
         },
-        style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-            (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.primary.withValues(alpha: 0.25);
-              }
-              return Colors.transparent;
-            },
-          ),
-          foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-            (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.primary;
-              }
-              return AppColors.textSecondary(brightness);
-            },
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildLanguagePicker(Brightness brightness, Color textPrimary, AppLocalizations l10n) {
-    return GlassContainer(
-      borderRadius: AppRadius.lg,
+  Widget _buildLanguagePicker(AppLocalizations l10n) {
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: SegmentedButton<String>(
         segments: <ButtonSegment<String>>[
@@ -432,53 +391,28 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
             setState(() => _reportLocale = selection.first);
           }
         },
-        style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-            (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.primary.withValues(alpha: 0.25);
-              }
-              return Colors.transparent;
-            },
-          ),
-          foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-            (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return AppColors.primary;
-              }
-              return AppColors.textSecondary(brightness);
-            },
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildAiToggle(
-    Brightness brightness,
-    Color textPrimary,
-    Color textSecondary,
-    AppLocalizations l10n,
-  ) {
-    return GlassContainer(
-      borderRadius: AppRadius.lg,
+  Widget _buildAiToggle(PlutusTokens t, AppLocalizations l10n) {
+    return AppCard(
       padding: EdgeInsets.zero,
       child: SwitchListTile(
         secondary: Icon(
           Icons.auto_awesome_outlined,
           size: 20,
-          color: _aiEnabled ? AppColors.primary : textSecondary,
+          color: _aiEnabled ? t.gold : t.textSecondary,
         ),
         title: Text(
           l10n.translate('report_ai_title'),
-          style: TextStyle(fontSize: 14, color: textPrimary),
+          style: TextStyle(fontSize: 14, color: t.text),
         ),
         subtitle: Text(
           l10n.translate('report_ai_subtitle'),
-          style: TextStyle(fontSize: 12, color: textSecondary),
+          style: TextStyle(fontSize: 12, color: t.textSecondary),
         ),
         value: _aiEnabled,
-        activeThumbColor: AppColors.primary,
         onChanged: (bool value) {
           setState(() => _aiEnabled = value);
         },
@@ -502,8 +436,6 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
         icon: const Icon(Icons.auto_awesome),
         label: Text(l10n.translate('report_generate')),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
@@ -520,21 +452,21 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
     );
   }
 
-  Widget _buildLoadingOverlay(Brightness brightness, ReportState reportState, AppLocalizations l10n) {
+  Widget _buildLoadingOverlay(PlutusTokens t, ReportState reportState, AppLocalizations l10n) {
     return Positioned.fill(
       child: Container(
-        color: brightness == Brightness.dark
-            ? Colors.black.withValues(alpha: 0.6)
-            : Colors.white.withValues(alpha: 0.7),
+        // Brightness-independent scrim (matches Flutter's own ModalBarrier
+        // convention) rather than a themed token — a light-theme t.bg tint
+        // would barely dim the content behind it.
+        color: Colors.black.withValues(alpha: 0.45),
         child: Center(
-          child: GlassContainer(
-            borderRadius: AppRadius.xl,
+          child: AppCard(
             padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(
-                  color: AppColors.primary,
+                CircularProgressIndicator(
+                  color: t.gold,
                   strokeWidth: 3,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -542,7 +474,7 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
                   l10n.translate('report_generating_loading'),
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary(brightness),
+                    color: t.text,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -550,8 +482,8 @@ class _ReportConfigScreenState extends ConsumerState<ReportConfigScreen> {
                   width: 180,
                   child: LinearProgressIndicator(
                     value: reportState.progress,
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                    color: t.gold,
+                    backgroundColor: t.surfaceSubtle,
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                 ),
