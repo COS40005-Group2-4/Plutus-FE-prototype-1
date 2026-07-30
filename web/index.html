@@ -19,7 +19,8 @@
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
     <meta name="description" content="Plutus — personal finance management. Track spending, budgets, and investments in one place." />
-    
+    <meta name="theme-color" content="#0B0E2A" />
+
     <!-- Security headers for Google Sign-In -->
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -43,24 +44,39 @@
         inset: 0;
         z-index: 9999;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: #fdf2f8;
+        background: #0B0E2A;
         transition: opacity 0.35s ease-out;
-      }
-      @media (prefers-color-scheme: dark) {
-        #plutus-splash {
-          background: #0b0e2a;
-        }
       }
       #plutus-splash img {
         width: min(45vw, 260px);
         height: auto;
       }
+      #plutus-splash-bar {
+        width: 160px;
+        height: 2px;
+        margin-top: 24px;
+        background: rgba(201, 151, 15, 0.25);
+        overflow: hidden;
+        border-radius: 1px;
+      }
+      #plutus-splash-bar > div {
+        width: 40%;
+        height: 100%;
+        background: #C9970F;
+        border-radius: 1px;
+        animation: plutus-splash-sweep 1.2s ease-in-out infinite;
+      }
+      @keyframes plutus-splash-sweep {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(350%); }
+      }
     </style>
   </head>
   <body>
-    <div id="plutus-splash"><img src="splash_logo.png" alt="Plutus" /></div>
+    <div id="plutus-splash"><img src="splash_logo.png" alt="Plutus" /><div id="plutus-splash-bar"><div></div></div></div>
     <script>
       (function () {
         function hideSplash() {
