@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 
 class AiCategoryField extends StatelessWidget {
   final List<String> categories;
@@ -24,7 +25,7 @@ class AiCategoryField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final PlutusTokens t = context.tokens;
     final topConfidence = aiSuggestions.isNotEmpty ? aiSuggestions.first.confidence : 0.0;
     final showRunnerUps = isAiSuggested && topConfidence < 0.9 && aiSuggestions.length > 1;
 
@@ -35,14 +36,16 @@ class AiCategoryField extends StatelessWidget {
           initialValue: categories.contains(selectedCategory) ? selectedCategory : null,
           decoration: InputDecoration(
             labelText: 'Category',
+            filled: isAiSuggested ? true : null,
+            fillColor: isAiSuggested ? t.goldSelectedFill : null,
             border: OutlineInputBorder(
               borderSide: isAiSuggested
-                  ? BorderSide(color: theme.colorScheme.primary, width: 1.5)
+                  ? BorderSide(color: t.gold, width: 1.5)
                   : const BorderSide(),
             ),
             enabledBorder: isAiSuggested
                 ? OutlineInputBorder(
-                    borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                    borderSide: BorderSide(color: t.gold, width: 1.5),
                   )
                 : null,
             suffixIcon: isAiLoading
@@ -51,7 +54,21 @@ class AiCategoryField extends StatelessWidget {
                     child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                   )
                 : isAiSuggested
-                    ? Icon(Icons.auto_awesome, color: theme.colorScheme.primary, size: 18)
+                    ? Align(
+                        // DropdownButtonFormField forces its own minimum on
+                        // suffixIconConstraints to fit the dropdown arrow;
+                        // Align/shrink-wrap keeps the dot itself at 8x8
+                        // rather than being stretched to fill that box.
+                        alignment: Alignment.centerRight,
+                        widthFactor: 1.0,
+                        heightFactor: 1.0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(right: AppSpacing.componentSm),
+                          decoration: BoxDecoration(color: t.gold, shape: BoxShape.circle),
+                        ),
+                      )
                     : null,
           ),
           items: categories.map((category) => DropdownMenuItem(
@@ -69,9 +86,9 @@ class AiCategoryField extends StatelessWidget {
               return ActionChip(
                 label: Text(
                   '${suggestion.displayName} $pct%',
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 12, color: t.textSecondary),
                 ),
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                backgroundColor: t.surfaceSubtle,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 onPressed: () => onCategoryChanged(suggestion.displayName),

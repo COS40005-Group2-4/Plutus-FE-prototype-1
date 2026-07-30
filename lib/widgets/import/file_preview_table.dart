@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 import '../../models/ai/category_suggestion.dart';
 import 'ai_category_field.dart';
 
@@ -181,20 +183,51 @@ class FilePreviewTable extends StatelessWidget {
               DataCell(Text(txn['date'] as String? ?? '')),
               DataCell(Text(txn['payee'] as String? ?? '')),
               DataCell(Text('${txn['amount']} ${txn['currency'] ?? 'VND'}')),
-              DataCell(SizedBox(
-                width: 200,
-                child: DropdownButton<String>(
-                  value: _expenseCategories.contains(txnCategory) ? txnCategory : null,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  hint: Text(txnCategory ?? 'Select'),
-                  items: _expenseCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
-                  onChanged: (val) { if (val != null) onCategoryChanged(index, val); },
-                ),
-              )),
+              DataCell(_buildCategoryCell(context, index, txnCategory, suggestions.isNotEmpty)),
             ],
           );
         }),
+      ),
+    );
+  }
+
+  /// Category dropdown cell (spec §7): goldWeak wash + leading gold dot
+  /// when this row still carries an unedited AI suggestion. Mirrors the
+  /// gold-dot treatment in [AiCategoryField] since the desktop table uses
+  /// its own compact `DropdownButton` rather than that widget.
+  Widget _buildCategoryCell(BuildContext context, int index, String? txnCategory, bool isAiSuggested) {
+    final PlutusTokens t = context.tokens;
+
+    final dropdown = DropdownButton<String>(
+      value: _expenseCategories.contains(txnCategory) ? txnCategory : null,
+      isExpanded: true,
+      underline: const SizedBox(),
+      hint: Text(txnCategory ?? 'Select'),
+      items: _expenseCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
+      onChanged: (val) { if (val != null) onCategoryChanged(index, val); },
+    );
+
+    if (!isAiSuggested) {
+      return SizedBox(width: 200, child: dropdown);
+    }
+
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.componentSm),
+      decoration: BoxDecoration(
+        color: t.goldSelectedFill,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(right: AppSpacing.componentSm),
+            decoration: BoxDecoration(color: t.gold, shape: BoxShape.circle),
+          ),
+          Expanded(child: dropdown),
+        ],
       ),
     );
   }

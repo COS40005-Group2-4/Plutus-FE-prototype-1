@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plutus_fe_prototype/theme/app_theme.dart';
 import 'package:plutus_fe_prototype/widgets/import/file_preview_table.dart';
 
 void main() {
@@ -11,6 +12,7 @@ void main() {
   group('FilePreviewTable', () {
     testWidgets('displays all transactions', (tester) async {
       await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
             height: 500,
@@ -32,6 +34,7 @@ void main() {
 
     testWidgets('shows transaction count summary', (tester) async {
       await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
             height: 500,
@@ -52,6 +55,7 @@ void main() {
 
     testWidgets('has select-all and per-row checkboxes', (tester) async {
       await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
         home: Scaffold(
           body: SizedBox(
             height: 500,

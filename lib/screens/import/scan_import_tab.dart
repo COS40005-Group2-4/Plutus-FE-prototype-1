@@ -1,6 +1,6 @@
 import 'dart:io';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,11 +14,11 @@ import '../../services/ocr_service.dart';
 import '../../providers/auth_notifier.dart';
 import '../../providers/insights_notifier.dart';
 import '../../providers/settings_notifier.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/core/app_card.dart';
 import '../../widgets/import/ai_category_field.dart';
+import '../../widgets/import/import_feedback.dart';
 import '../../widgets/import/zoomable_image_viewer.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 
 class ScanImportTab extends ConsumerStatefulWidget {
   const ScanImportTab({super.key});
@@ -130,19 +130,13 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
 
         // Run AI categorization in parallel
         _categorizeScannedData(details);
-      } else {
-        final error = details?['error'] ?? 'Could not read text from image';
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error), backgroundColor: AppColors.error),
-          );
-        }
+      } else if (mounted) {
+        final error = details?['error'] ?? AppLocalizations.of(context).couldNotReadImage;
+        showResultSnackBar(context, error, isError: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('OCR error: $e'), backgroundColor: AppColors.error),
-        );
+        showResultSnackBar(context, '${AppLocalizations.of(context).ocrErrorPrefix}$e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _scanning = false);
@@ -211,12 +205,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
       await _service.importTransaction(transaction);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        showResultSnackBar(context, AppLocalizations.of(context).transactionSavedSuccessfully, isError: false);
         if (context.mounted) {
           ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
         }
@@ -226,9 +215,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-        );
+        showResultSnackBar(context, '${AppLocalizations.of(context).errorSaving}$e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -237,12 +224,11 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        borderRadius: AppRadius.lg,
-        opacity: 0.1,
         child: Column(
           children: [
             // Pick image buttons
@@ -252,12 +238,12 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
                 ElevatedButton.icon(
                   onPressed: _scanning ? null : () => _pickImage(ImageSource.gallery),
                   icon: const Icon(Icons.image),
-                  label: Text(AppLocalizations.of(context).selectInvoiceImage),
+                  label: Text(l10n.selectInvoiceImage),
                 ),
                 ElevatedButton.icon(
                   onPressed: _scanning ? null : () => _pickImage(ImageSource.camera),
                   icon: const Icon(Icons.camera_alt),
-                  label: const Text('Camera'),
+                  label: Text(l10n.camera),
                 ),
               ],
             ),
@@ -324,18 +310,21 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
   }
 
   Widget _buildExtractedFields() {
+    final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
+
     if (_scannedData == null && !_scanning) {
-      return const Center(child: Text('Processing image...'));
+      return Center(child: Text(l10n.processingImage));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Extracted Fields', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+        Text(l10n.extractedFields, style: TextStyle(fontSize: 12, color: t.textSecondary)),
         const SizedBox(height: AppSpacing.sm),
         TextFormField(
           controller: _payeeController,
-          decoration: const InputDecoration(labelText: 'Payee', border: OutlineInputBorder(), isDense: true),
+          decoration: InputDecoration(labelText: l10n.payee, border: const OutlineInputBorder(), isDense: true),
         ),
         const SizedBox(height: 12),
         Row(
@@ -344,7 +333,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
               flex: 2,
               child: TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder(), isDense: true),
+                decoration: InputDecoration(labelText: l10n.amount, border: const OutlineInputBorder(), isDense: true),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
             ),
@@ -353,10 +342,10 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
               child: DropdownButtonFormField<String>(
                 initialValue: _currency,
                 decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
-                items: const [
-                  DropdownMenuItem(value: 'VND', child: Text('VND')),
-                  DropdownMenuItem(value: 'USD', child: Text('USD')),
-                  DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                items: [
+                  DropdownMenuItem(value: 'VND', child: Text(l10n.vnd)),
+                  DropdownMenuItem(value: 'USD', child: Text(l10n.usd)),
+                  DropdownMenuItem(value: 'EUR', child: Text(l10n.eur)),
                 ],
                 onChanged: (val) => setState(() => _currency = val!),
               ),
@@ -375,11 +364,11 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
             if (picked != null) setState(() => _selectedDate = picked);
           },
           child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Date',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.date,
+              border: const OutlineInputBorder(),
               isDense: true,
-              suffixIcon: Icon(Icons.calendar_today, size: 18),
+              suffixIcon: const Icon(Icons.calendar_today, size: 18),
             ),
             child: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}'),
           ),
@@ -401,7 +390,7 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
         ),
         const SizedBox(height: 12),
         if (_scannedData != null && _scannedData!['items'] != null) ...[
-          Text('Items', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+          Text(l10n.items, style: TextStyle(fontSize: 12, color: t.textSecondary)),
           const SizedBox(height: AppSpacing.xs),
           ...(_scannedData!['items'] as List).map((item) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -417,18 +406,17 @@ class _ScanImportTabState extends ConsumerState<ScanImportTab> {
         ],
         TextFormField(
           controller: _descController,
-          decoration: const InputDecoration(labelText: 'Note', border: OutlineInputBorder(), isDense: true),
+          decoration: InputDecoration(labelText: l10n.note, border: const OutlineInputBorder(), isDense: true),
         ),
         const SizedBox(height: AppSpacing.lg),
         ElevatedButton(
           onPressed: _saving || _scanning ? null : _saveTransaction,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
           child: _saving
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('Confirm & Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text(l10n.confirmAndSave, style: const TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     );

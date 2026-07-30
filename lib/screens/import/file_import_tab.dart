@@ -1,5 +1,4 @@
 import 'dart:io';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,12 +9,12 @@ import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/interfaces/i_transaction_service.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/core/app_card.dart';
 import '../../widgets/import/file_preview_table.dart';
+import '../../widgets/import/import_feedback.dart';
 import '../../providers/auth_notifier.dart';
 import '../../providers/insights_notifier.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 
 class FileImportTab extends ConsumerStatefulWidget {
   const FileImportTab({super.key});
@@ -115,9 +114,8 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Parse error: $e'), backgroundColor: AppColors.error),
-        );
+        final l10n = AppLocalizations.of(context);
+        showResultSnackBar(context, '${l10n.parseError}$e', isError: true);
       }
     }
   }
@@ -182,12 +180,9 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Imported $imported transactions. $skipped skipped.'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        final l10n = AppLocalizations.of(context);
+        final message = '${l10n.importedCount} $imported ${l10n.transactions}. $skipped ${l10n.skippedCount}.';
+        showResultSnackBar(context, message, isError: false);
         if (context.mounted) {
           ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
         }
@@ -197,9 +192,8 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import error: $e'), backgroundColor: AppColors.error),
-        );
+        final l10n = AppLocalizations.of(context);
+        showResultSnackBar(context, '${l10n.errorImportingFile}$e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -214,16 +208,14 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
     // Wrap in a Column with Expanded for the preview table.
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        borderRadius: AppRadius.lg,
-        opacity: 0.1,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Import from File',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              l10n.importFromFile,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -237,7 +229,7 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
             ),
             if (_fileName != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text('File: $_fileName', style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+              Text('${l10n.filePrefix}$_fileName', style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
             ],
             if (_loading)
               const Padding(
@@ -257,7 +249,12 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
                     setState(() => _parsedTransactions![index] = updated);
                   },
                   onCategoryChanged: (index, category) {
-                    setState(() => _parsedTransactions![index]['category'] = category);
+                    setState(() {
+                      _parsedTransactions![index]['category'] = category;
+                      // Mirror the manual/scan tabs: a manual category edit
+                      // clears the row's AI-suggested flag (gold wash/dot).
+                      _aiSuggestions.remove(index);
+                    });
                   },
                   isAiLoading: _isAiCategorizing,
                   aiProgress: _aiProgress,
@@ -269,13 +266,12 @@ class _FileImportTabState extends ConsumerState<FileImportTab> {
                 onPressed: _importing || _selectedIndices.isEmpty ? null : _importSelected,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: AppColors.success,
                 ),
                 child: _importing
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(
-                        'Import Selected (${_selectedIndices.length})',
-                        style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w600),
+                        '${l10n.importSelected} (${_selectedIndices.length})',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
               ),
             ],

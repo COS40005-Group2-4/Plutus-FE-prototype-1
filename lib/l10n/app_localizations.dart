@@ -104,7 +104,25 @@ class AppLocalizations {
       'online': 'Online',
       'auto': 'Auto',
       'select_invoice_image': 'Choose a Receipt Photo',
-      
+      'import_from_file': 'Import from File',
+      'file_prefix': 'File: ',
+      'import_selected': 'Import Selected',
+      'imported_count': 'Imported',
+      'skipped_count': 'skipped',
+      'parse_error': 'Parse error: ',
+      'camera': 'Camera',
+      'processing_image': 'Processing image...',
+      'extracted_fields': 'Extracted Fields',
+      'items': 'Items',
+      'item': 'Item',
+      'confirm_and_save': 'Confirm & Save',
+      'could_not_read_image': 'Could not read text from image',
+      'ocr_error_prefix': 'OCR error: ',
+      'note': 'Note',
+      'new_category': 'New Category',
+      'category_name_hint': 'Category name',
+      'invalid_number': 'Invalid number',
+
       // Transaction History Page
       'transaction_history': 'Transaction History',
       'no_transactions_found': 'No transactions found',
@@ -990,7 +1008,25 @@ class AppLocalizations {
       'online': 'Trực tuyến',
       'auto': 'Tự động',
       'select_invoice_image': 'Chọn ảnh biên lai',
-      
+      'import_from_file': 'Nhập từ tệp',
+      'file_prefix': 'Tệp: ',
+      'import_selected': 'Nhập mục đã chọn',
+      'imported_count': 'Đã nhập',
+      'skipped_count': 'bị bỏ qua',
+      'parse_error': 'Lỗi phân tích: ',
+      'camera': 'Máy ảnh',
+      'processing_image': 'Đang xử lý ảnh...',
+      'extracted_fields': 'Trường đã trích xuất',
+      'items': 'Mục',
+      'item': 'Mục',
+      'confirm_and_save': 'Xác nhận & Lưu',
+      'could_not_read_image': 'Không thể đọc chữ từ ảnh',
+      'ocr_error_prefix': 'Lỗi OCR: ',
+      'note': 'Ghi chú',
+      'new_category': 'Danh mục mới',
+      'category_name_hint': 'Tên danh mục',
+      'invalid_number': 'Số không hợp lệ',
+
       // Transaction History Page
       'transaction_history': 'Lịch sử giao dịch',
       'no_transactions_found': 'Không tìm thấy giao dịch',
@@ -1880,6 +1916,24 @@ class AppLocalizations {
   String get online => translate('online');
   String get auto => translate('auto');
   String get selectInvoiceImage => translate('select_invoice_image');
+  String get importFromFile => translate('import_from_file');
+  String get filePrefix => translate('file_prefix');
+  String get importSelected => translate('import_selected');
+  String get importedCount => translate('imported_count');
+  String get skippedCount => translate('skipped_count');
+  String get parseError => translate('parse_error');
+  String get camera => translate('camera');
+  String get processingImage => translate('processing_image');
+  String get extractedFields => translate('extracted_fields');
+  String get items => translate('items');
+  String get item => translate('item');
+  String get confirmAndSave => translate('confirm_and_save');
+  String get couldNotReadImage => translate('could_not_read_image');
+  String get ocrErrorPrefix => translate('ocr_error_prefix');
+  String get note => translate('note');
+  String get newCategory => translate('new_category');
+  String get categoryNameHint => translate('category_name_hint');
+  String get invalidNumber => translate('invalid_number');
 
   // Transaction History Page
   String get transactionHistory => translate('transaction_history');
