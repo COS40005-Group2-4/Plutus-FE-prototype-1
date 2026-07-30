@@ -877,6 +877,26 @@ class AppLocalizations {
       'investment_sales_empty': 'No sales yet.',
       'investment_closed_on': 'Closed on {date}',
       'investment_select_cash_account': 'Select cash account',
+
+      // Auth surface (login + user selection)
+      'tagline': 'Where wealth gathers.',
+      'loginWelcome': 'Welcome to Plutus',
+      'loginSubtitle': 'Track spending, budgets, and investments in one place.',
+      'loginFailedGoogle': 'Sign-in failed. Please check your Google account and try again.',
+      'signInWithGoogle': 'Sign in with Google',
+      'createProfile': 'Create a Profile',
+      'usernameLabel': 'Username',
+      'usernameHint': 'Choose a username',
+      'displayNameLabel': 'Display Name',
+      'displayNameHint': 'Your display name',
+      'fillAllFields': 'Please fill in all fields to continue',
+      'usernameTaken': "Couldn't create your account. That username may already be taken.",
+      'switchProfile': 'Switch Profile',
+      'whosUsingPlutus': "Who's using Plutus?",
+      'noProfilesFound': 'No profiles found',
+      'createProfileToStart': 'Create a profile to get started',
+      'googleBadge': 'Google',
+      'guestBadge': 'Guest',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -1014,7 +1034,7 @@ class AppLocalizations {
       'please_fill_all_fields': 'Vui lòng điền vào tất cả các trường',
       'failed_create_user': 'Không thể tạo tài khoản. Tên người dùng này có thể đã được sử dụng.',
       'create': 'Tạo',
-      'continue_as_guest': 'Tiếp tục dưới dạng khách',
+      'continue_as_guest': 'Tiếp tục với tư cách Khách',
       
       // Login Screen
       'login_failed': 'Đăng nhập thất bại. Vui lòng thử lại.',
@@ -1743,6 +1763,26 @@ class AppLocalizations {
       'investment_sales_empty': 'Chưa có giao dịch bán.',
       'investment_closed_on': 'Đã đóng vào {date}',
       'investment_select_cash_account': 'Chọn tài khoản tiền',
+
+      // Auth surface (login + user selection)
+      'tagline': 'Nơi tài sản sinh sôi.',
+      'loginWelcome': 'Chào mừng đến với Plutus',
+      'loginSubtitle': 'Theo dõi chi tiêu, ngân sách và đầu tư ở cùng một nơi.',
+      'loginFailedGoogle': 'Đăng nhập thất bại. Vui lòng kiểm tra tài khoản Google và thử lại.',
+      'signInWithGoogle': 'Đăng nhập bằng Google',
+      'createProfile': 'Tạo hồ sơ',
+      'usernameLabel': 'Tên đăng nhập',
+      'usernameHint': 'Chọn tên đăng nhập',
+      'displayNameLabel': 'Tên hiển thị',
+      'displayNameHint': 'Tên hiển thị của bạn',
+      'fillAllFields': 'Vui lòng điền đầy đủ thông tin để tiếp tục',
+      'usernameTaken': 'Không thể tạo tài khoản. Tên đăng nhập có thể đã tồn tại.',
+      'switchProfile': 'Chuyển hồ sơ',
+      'whosUsingPlutus': 'Ai đang dùng Plutus?',
+      'noProfilesFound': 'Không tìm thấy hồ sơ nào',
+      'createProfileToStart': 'Tạo hồ sơ để bắt đầu',
+      'googleBadge': 'Google',
+      'guestBadge': 'Khách',
     },
   };
 
@@ -2329,6 +2369,26 @@ class AppLocalizations {
   String investmentClosedOn(String date) =>
       translate('investment_closed_on').replaceAll('{date}', date);
   String get investmentSelectCashAccount => translate('investment_select_cash_account');
+
+  // Auth surface (login + user selection)
+  String get tagline => translate('tagline');
+  String get loginWelcome => translate('loginWelcome');
+  String get loginSubtitle => translate('loginSubtitle');
+  String get loginFailedGoogle => translate('loginFailedGoogle');
+  String get signInWithGoogle => translate('signInWithGoogle');
+  String get createProfile => translate('createProfile');
+  String get usernameLabel => translate('usernameLabel');
+  String get usernameHint => translate('usernameHint');
+  String get displayNameLabel => translate('displayNameLabel');
+  String get displayNameHint => translate('displayNameHint');
+  String get fillAllFields => translate('fillAllFields');
+  String get usernameTaken => translate('usernameTaken');
+  String get switchProfile => translate('switchProfile');
+  String get whosUsingPlutus => translate('whosUsingPlutus');
+  String get noProfilesFound => translate('noProfilesFound');
+  String get createProfileToStart => translate('createProfileToStart');
+  String get googleBadge => translate('googleBadge');
+  String get guestBadge => translate('guestBadge');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
