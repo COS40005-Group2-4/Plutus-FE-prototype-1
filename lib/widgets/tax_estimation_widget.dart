@@ -199,11 +199,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                     return Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? (Theme.of(context).brightness == Brightness.dark
-                                ? Color.alphaBlend(t.goldWeak, t.surface)
-                                : t.goldWeak)
-                            : Colors.transparent,
+                        color: isSelected ? t.goldSelectedFill : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: isSelected ? Border.all(color: t.gold) : null,
                       ),
@@ -692,12 +688,12 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                             children: [
                               Expanded(
                                 flex: ((_annualIncome - _estimatedTax) * 100 / _annualIncome).round().clamp(1, 99),
-                                child: Container(color: t.success.text.withValues(alpha:0.7)),
+                                child: Container(color: t.success.dot),
                               ),
                               if (_estimatedTax > 0)
                                 Expanded(
                                   flex: (_estimatedTax * 100 / _annualIncome).round().clamp(1, 99),
-                                  child: Container(color: t.error.text.withValues(alpha:0.7)),
+                                  child: Container(color: t.error.dot),
                                 ),
                             ],
                           ),
@@ -710,7 +706,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.success.text.withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.success.dot, borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: AppSpacing.xs),
                               Text('Net', style: TextStyle(color: t.textSecondary, fontSize: 9)),
                             ],
@@ -718,7 +714,7 @@ class _TaxEstimationWidgetState extends ConsumerState<TaxEstimationWidget> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.error.text.withValues(alpha:0.7), borderRadius: BorderRadius.circular(2))),
+                              Container(width: 8, height: 8, decoration: BoxDecoration(color: t.error.dot, borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: AppSpacing.xs),
                               Text('Tax', style: TextStyle(color: t.textSecondary, fontSize: 9)),
                             ],

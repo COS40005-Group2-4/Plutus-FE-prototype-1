@@ -456,7 +456,7 @@ class _BillsContentState extends State<_BillsContent> {
     if (bill.isOverdue) {
       dateColor = t.error.text;
     } else if (daysUntilDue <= 3) {
-      dateColor = t.error.text;
+      dateColor = t.warning.text;
     } else {
       dateColor = t.brandNavy;
     }

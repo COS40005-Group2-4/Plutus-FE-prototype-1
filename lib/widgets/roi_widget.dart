@@ -77,7 +77,7 @@ class _RoiWidgetState extends State<RoiWidget> with AutomaticKeepAliveClientMixi
     final PlutusTokens t = context.tokens;
     final isPositive = _roiValue >= 0;
     final valueColor = _roiValue == 0
-        ? t.text
+        ? t.textSecondary
         : isPositive
             ? t.success.text
             : t.error.text;

@@ -241,7 +241,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
         child: Text(
           '${days}d',
           style: TextStyle(
-            color: t.text,
+            color: selected ? t.text : t.textMuted,
             fontSize: 11,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -375,7 +375,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
                   final label = _formatDate(dt);
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(label, style: TextStyle(color: t.textSecondary, fontSize: 9)),
+                    child: Text(label, style: TextStyle(color: t.textMuted, fontSize: 9)),
                   );
                 }
                 return const SizedBox.shrink();
@@ -389,7 +389,7 @@ class _MarketTrendingWidgetState extends State<MarketTrendingWidget> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   PlutusChartStyle.formatCompactCurrency(value),
-                  style: TextStyle(color: t.textSecondary, fontSize: 9),
+                  style: TextStyle(color: t.textMuted, fontSize: 9),
                 );
               },
             ),

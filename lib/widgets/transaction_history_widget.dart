@@ -161,7 +161,6 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsNotifierProvider);
-    final brightness = Theme.of(context).brightness;
     final PlutusTokens t = context.tokens;
     return AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -307,9 +306,7 @@ class _TransactionHistoryWidgetState extends ConsumerState<TransactionHistoryWid
                             padding: const EdgeInsets.all(8),
                             decoration: isSelected
                                 ? BoxDecoration(
-                                    color: brightness == Brightness.dark
-                                        ? Color.alphaBlend(t.goldWeak, t.surface)
-                                        : t.goldWeak,
+                                    color: t.goldSelectedFill,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: t.gold),
                                   )

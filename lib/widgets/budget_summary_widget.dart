@@ -225,15 +225,13 @@ class _BudgetSummaryWidgetState extends ConsumerState<BudgetSummaryWidget> {
                     _SummaryTile(
                       label: l10n.budgetSpent,
                       value: fmtCurrency(totalSpent),
-                      valueColor: t.error.text,
+                      valueColor: t.text,
                       labelColor: t.textMuted,
                     ),
                     _SummaryTile(
                       label: l10n.budgetLeft,
                       value: fmtCurrency(totalRemaining.abs()),
-                      valueColor: totalRemaining >= 0
-                          ? t.success.text
-                          : t.error.text,
+                      valueColor: t.text,
                       labelColor: t.textMuted,
                     ),
                   ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
@@ -15,8 +14,8 @@ class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
     final PlutusTokens t = isDark ? PlutusTokens.dark : PlutusTokens.light;
-    final Color textPrimary = AppColors.textPrimary(brightness);
-    final Color textSecondary = AppColors.textSecondary(brightness);
+    final Color textPrimary = t.text;
+    final Color textSecondary = t.textSecondary;
 
     final ColorScheme scheme = ColorScheme(
       brightness: brightness,
@@ -232,9 +231,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: t.surfaceSubtle,
-        selectedColor: isDark
-            ? Color.alphaBlend(t.goldWeak, t.surface)
-            : t.goldWeak,
+        selectedColor: t.goldSelectedFill,
         labelStyle: AppTextStyles.labelStyle.copyWith(color: t.text),
         secondaryLabelStyle:
             AppTextStyles.labelStyle.copyWith(color: t.goldText),

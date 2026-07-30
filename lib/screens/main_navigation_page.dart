@@ -118,11 +118,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                       vertical: AppSpacing.componentXs,
                     ),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? (Theme.of(context).brightness == Brightness.dark
-                              ? Color.alphaBlend(t.goldWeak, t.surface)
-                              : t.goldWeak)
-                          : Colors.transparent,
+                      color: isSelected ? t.goldSelectedFill : Colors.transparent,
                       borderRadius: AppRadius.borderPill,
                     ),
                     child: Icon(

@@ -77,7 +77,7 @@ class _IrrWidgetState extends State<IrrWidget> with AutomaticKeepAliveClientMixi
     final PlutusTokens t = context.tokens;
     final isPositive = _irrValue >= 0;
     final valueColor = _irrValue == 0
-        ? t.text
+        ? t.textSecondary
         : isPositive
             ? t.success.text
             : t.error.text;
