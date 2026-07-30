@@ -30,6 +30,10 @@ void main() {
       final PlutusTokens mid = PlutusTokens.light.lerp(PlutusTokens.dark, 0.5);
       expect(mid.bg, Color.lerp(PlutusTokens.light.bg, PlutusTokens.dark.bg, 0.5));
       expect(mid.gold, Color.lerp(PlutusTokens.light.gold, PlutusTokens.dark.gold, 0.5));
+      expect(
+          mid.chartCategorical.first,
+          Color.lerp(PlutusTokens.light.chartCategorical.first,
+              PlutusTokens.dark.chartCategorical.first, 0.5));
     });
 
     test('copyWith overrides a single field and keeps the rest', () {

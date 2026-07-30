@@ -330,8 +330,14 @@ class PlutusTokens extends ThemeExtension<PlutusTokens> {
       warning: StatusColors.lerp(warning, other.warning, t),
       info: StatusColors.lerp(info, other.info, t),
       error: StatusColors.lerp(error, other.error, t),
-      chartCategorical: t < 0.5 ? chartCategorical : other.chartCategorical,
-      heatmapRamp: t < 0.5 ? heatmapRamp : other.heatmapRamp,
+      chartCategorical: <Color>[
+        for (int i = 0; i < chartCategorical.length; i++)
+          Color.lerp(chartCategorical[i], other.chartCategorical[i], t)!,
+      ],
+      heatmapRamp: <Color>[
+        for (int i = 0; i < heatmapRamp.length; i++)
+          Color.lerp(heatmapRamp[i], other.heatmapRamp[i], t)!,
+      ],
       shadowLow: BoxShadow.lerpList(shadowLow, other.shadowLow, t) ?? shadowLow,
       shadowMedium:
           BoxShadow.lerpList(shadowMedium, other.shadowMedium, t) ?? shadowMedium,

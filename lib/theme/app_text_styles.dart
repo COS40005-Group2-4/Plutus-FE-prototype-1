@@ -234,7 +234,8 @@ class AppTextStyles {
   );
 
   /// Uppercase micro-label — table headers, group labels, hero-card
-  /// eyebrows. Callers pass text through `.toUpperCase()`.
+  /// eyebrows. Style does not transform case — call-sites uppercase their
+  /// text (see HeroCard).
   static final TextStyle overlineStyle = _base.copyWith(
     fontSize: 11,
     fontWeight: FontWeight.w600,

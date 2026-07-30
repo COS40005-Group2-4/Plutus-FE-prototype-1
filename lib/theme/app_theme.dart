@@ -239,7 +239,9 @@ class AppTheme {
         secondaryLabelStyle:
             AppTextStyles.labelStyle.copyWith(color: t.goldText),
         checkmarkColor: t.goldText,
-        side: BorderSide(color: t.border),
+        side: WidgetStateBorderSide.resolveWith((Set<WidgetState> s) =>
+            BorderSide(
+                color: s.contains(WidgetState.selected) ? t.gold : t.border)),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.componentMd,
           vertical: AppSpacing.componentXs,
