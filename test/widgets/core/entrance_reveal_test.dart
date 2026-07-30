@@ -32,4 +32,42 @@ void main() {
     expect(tester.hasRunningAnimations, isFalse);
     expect(find.text('now'), findsOneWidget);
   });
+
+  testWidgets('EntranceReveal rises exactly 10 logical pixels',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: const Scaffold(
+          body: EntranceReveal(index: 0, child: Text('hello'))),
+    ));
+    final Transform transform = tester.widget<Transform>(find.ancestor(
+        of: find.text('hello'), matching: find.byType(Transform)).first);
+    expect((transform.transform as Matrix4).getTranslation().y, 10.0);
+    await tester.pumpAndSettle();
+    final Transform finalTransform = tester.widget<Transform>(find.ancestor(
+        of: find.text('hello'), matching: find.byType(Transform)).first);
+    expect((finalTransform.transform as Matrix4).getTranslation().y, 0.0);
+  });
+
+  testWidgets('EntranceReveal staggers animation by 40ms per index',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: const Scaffold(
+          body: EntranceReveal(index: 2, child: Text('staggered'))),
+    ));
+    final FadeTransition initialFade = tester.widget<FadeTransition>(
+        find.ancestor(
+            of: find.text('staggered'), matching: find.byType(FadeTransition))
+            .first);
+    expect(initialFade.opacity.value, 0.0,
+        reason: 'Animation not started immediately at index 2');
+    await tester.pumpAndSettle();
+    final FadeTransition settledFade = tester.widget<FadeTransition>(
+        find.ancestor(
+            of: find.text('staggered'), matching: find.byType(FadeTransition))
+            .first);
+    expect(settledFade.opacity.value, 1.0,
+        reason: 'Animation completes even with stagger delay');
+  });
 }

@@ -22,9 +22,6 @@ class _EntranceRevealState extends State<EntranceReveal>
   );
   late final CurvedAnimation _curve =
       CurvedAnimation(parent: _controller, curve: AppMotion.emphasized);
-  late final Animation<Offset> _offset =
-      Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero)
-          .animate(_curve);
   bool _started = false;
 
   @override
@@ -52,7 +49,14 @@ class _EntranceRevealState extends State<EntranceReveal>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _curve,
-      child: SlideTransition(position: _offset, child: widget.child),
+      child: AnimatedBuilder(
+        animation: _curve,
+        builder: (BuildContext context, Widget? child) => Transform.translate(
+          offset: Offset(0, 10 * (1 - _curve.value)),
+          child: child,
+        ),
+        child: widget.child,
+      ),
     );
   }
 }
