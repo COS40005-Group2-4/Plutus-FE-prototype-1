@@ -1,35 +1,32 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 
 class ReportAiRecommendation extends StatelessWidget {
   final SectionRecommendation recommendation;
-  final Color accentColor;
+  final Color? accentColor;
 
   const ReportAiRecommendation({
     super.key,
     required this.recommendation,
-    this.accentColor = AppColors.primary,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
+    final Color accent = accentColor ?? doc.goldText;
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.md),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: <Color>[
-            accentColor.withValues(alpha: 0.08),
-            accentColor.withValues(alpha: 0.03),
-          ],
-        ),
+        color: doc.surfaceSubtle,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border(
-          left: BorderSide(color: accentColor, width: 4),
+          left: BorderSide(color: doc.goldText, width: 2),
         ),
       ),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -38,14 +35,14 @@ class ReportAiRecommendation extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(Icons.auto_awesome, size: 16, color: accentColor),
+              Icon(Icons.auto_awesome, size: 16, color: accent),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.translate('report_ai_insight'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: accentColor,
+                  color: accent,
                 ),
               ),
             ],
@@ -53,7 +50,7 @@ class ReportAiRecommendation extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             recommendation.oneLiner,
-            style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.5),
+            style: TextStyle(fontSize: 14, color: doc.text, height: 1.5),
           ),
           const SizedBox(height: AppSpacing.sm),
           Theme(
@@ -63,20 +60,21 @@ class ReportAiRecommendation extends StatelessWidget {
               childrenPadding: const EdgeInsets.only(top: 8),
               title: Text(
                 l10n.translate('report_show_analysis'),
-                style: TextStyle(fontSize: 12, color: accentColor, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 12, color: accent, fontWeight: FontWeight.w500),
               ),
-              iconColor: accentColor,
-              collapsedIconColor: accentColor,
+              iconColor: accent,
+              collapsedIconColor: accent,
               children: <Widget>[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: doc.surface,
                     borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: doc.border),
                   ),
                   child: Text(
                     recommendation.detailed,
-                    style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.6),
+                    style: TextStyle(fontSize: 13, color: doc.textSecondary, height: 1.6),
                   ),
                 ),
               ],
