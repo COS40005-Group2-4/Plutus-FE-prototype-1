@@ -41,6 +41,12 @@ palette regardless of app theme.
 | Web shell (splash/favicon/manifest) | Default Flutter splash/favicon, no theme-color | Navy-950 splash, centered logo + gold progress hairline, `theme-color` → navy | 4 |
 | Shim deletion + status-fill ink | Deprecated `AppColors`/`AppElevation`/`AppGradients`/`GlassContainer`/`GlassBackground` still live; ad hoc white-on-`.dot` ink at each call site | Shims deleted entirely; app runs on `PlutusTokens` + core primitives only; `AppMotion` extracted; new `onStatus` token consolidates status-fill ink | 4 |
 
-**Open item:** spec §5's web/wide top-bar navigation (full logo lockup + underline-active top
-bar) was never built — the retokenized bottom `NavigationBar` was kept at all widths through
-PR2–PR4; unassigned as of this doc.
+**Open items (spec-mandated, never shipped):**
+- Spec §5's web/wide top-bar navigation (full logo lockup + underline-active top bar) was
+  never built — the retokenized bottom `NavigationBar` was kept at all widths through PR2–PR4;
+  unassigned as of this doc.
+- Settings "About row = icon + version" (spec §7) was never shipped — anchor-guarded skip, no
+  version source / `package_info` dependency available.
+- The laurel motif on backup restore-success (spec §7, Backup history) was never shipped — same
+  missing-asset skip noted on the Report export row above; no laurel asset exists anywhere in
+  the app.
