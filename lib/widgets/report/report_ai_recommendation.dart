@@ -7,18 +7,16 @@ import '../../theme/plutus_tokens.dart';
 
 class ReportAiRecommendation extends StatelessWidget {
   final SectionRecommendation recommendation;
-  final Color? accentColor;
 
   const ReportAiRecommendation({
     super.key,
     required this.recommendation,
-    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     const PlutusTokens doc = PlutusTokens.dark;
-    final Color accent = accentColor ?? doc.goldText;
+    final Color accent = doc.goldText;
     final AppLocalizations l10n = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.md),

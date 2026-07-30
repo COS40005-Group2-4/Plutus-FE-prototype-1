@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
 import '../../models/transaction_model.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 
 class TransactionLogSection extends StatelessWidget {
@@ -14,6 +14,7 @@ class TransactionLogSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<Transaction>? transactions = data.transactions;
 
@@ -30,20 +31,20 @@ class TransactionLogSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
                 l10n.translate('report_no_transactions'),
-                style: const TextStyle(color: Colors.white38, fontSize: 14),
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else ...<Widget>[
-          _buildHeaderRow(l10n),
-          const Divider(height: 1, color: Colors.white12),
-          ...transactions.map((Transaction t) => _buildTransactionRow(t)),
+          _buildHeaderRow(l10n, doc),
+          Divider(height: 1, color: doc.border),
+          ...transactions.map((Transaction t) => _buildTransactionRow(t, doc)),
         ],
       ],
     );
   }
 
-  Widget _buildHeaderRow(AppLocalizations l10n) {
+  Widget _buildHeaderRow(AppLocalizations l10n, PlutusTokens doc) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -55,9 +56,9 @@ class TransactionLogSection extends StatelessWidget {
             flex: 2,
             child: Text(
               l10n.translate('report_col_date'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors.white38,
+                color: doc.textMuted,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w600,
               ),
@@ -67,9 +68,9 @@ class TransactionLogSection extends StatelessWidget {
             flex: 3,
             child: Text(
               l10n.translate('report_col_payee'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors.white38,
+                color: doc.textMuted,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w600,
               ),
@@ -79,9 +80,9 @@ class TransactionLogSection extends StatelessWidget {
             flex: 3,
             child: Text(
               l10n.translate('report_col_account'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors.white38,
+                color: doc.textMuted,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w600,
               ),
@@ -92,9 +93,9 @@ class TransactionLogSection extends StatelessWidget {
             child: Text(
               l10n.translate('report_col_amount'),
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors.white38,
+                color: doc.textMuted,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w600,
               ),
@@ -105,7 +106,7 @@ class TransactionLogSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionRow(Transaction t) {
+  Widget _buildTransactionRow(Transaction t, PlutusTokens doc) {
     final double amount =
         t.postings.isNotEmpty ? t.postings.first.amount : 0;
     final bool isPositive = amount >= 0;
@@ -122,7 +123,7 @@ class TransactionLogSection extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+          bottom: BorderSide(color: doc.border),
         ),
       ),
       child: Row(
@@ -131,14 +132,14 @@ class TransactionLogSection extends StatelessWidget {
             flex: 2,
             child: Text(
               dateFmt.format(t.dateTime),
-              style: const TextStyle(fontSize: 12, color: Colors.white54),
+              style: TextStyle(fontSize: 12, color: doc.textSecondary),
             ),
           ),
           Expanded(
             flex: 3,
             child: Text(
               t.payee.isNotEmpty ? t.payee : t.description,
-              style: const TextStyle(fontSize: 12, color: Colors.white),
+              style: TextStyle(fontSize: 12, color: doc.text),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -146,7 +147,7 @@ class TransactionLogSection extends StatelessWidget {
             flex: 3,
             child: Text(
               account,
-              style: const TextStyle(fontSize: 11, color: Colors.white38),
+              style: TextStyle(fontSize: 11, color: doc.textMuted),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -159,8 +160,8 @@ class TransactionLogSection extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: isPositive
-                    ? AppColors.incomeAccent
-                    : AppColors.expenseAccent,
+                    ? doc.success.text
+                    : doc.error.text,
               ),
             ),
           ),

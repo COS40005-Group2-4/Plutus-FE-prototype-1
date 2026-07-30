@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -15,6 +15,7 @@ class IncomeAnalysisSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<IncomeSourceData>? sources = data.incomeSources;
     final SectionRecommendation? rec =
@@ -37,10 +38,10 @@ class IncomeAnalysisSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.incomeAccent.withValues(alpha: 0.08),
+            color: doc.success.surface,
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(
-              color: AppColors.incomeAccent.withValues(alpha: 0.2),
+              color: doc.success.border,
             ),
           ),
           child: Row(
@@ -51,9 +52,9 @@ class IncomeAnalysisSection extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       l10n.translate('report_total_income'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: Colors.white38,
+                        color: doc.textMuted,
                         letterSpacing: 1,
                         fontWeight: FontWeight.w600,
                       ),
@@ -61,10 +62,10 @@ class IncomeAnalysisSection extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       data.formatAmount(data.totalIncome),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: doc.text,
                       ),
                     ),
                   ],
@@ -79,13 +80,13 @@ class IncomeAnalysisSection extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: incomeUp
-                          ? AppColors.incomeAccent
-                          : AppColors.expenseAccent,
+                          ? doc.success.text
+                          : doc.error.text,
                     ),
                   ),
                   Text(
                     l10n.translate('report_vs_prev_period'),
-                    style: const TextStyle(fontSize: 11, color: Colors.white38),
+                    style: TextStyle(fontSize: 11, color: doc.textMuted),
                   ),
                 ],
               ),
@@ -98,24 +99,23 @@ class IncomeAnalysisSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
               child: Text(
                 l10n.translate('report_no_income_data'),
-                style: const TextStyle(color: Colors.white38, fontSize: 14),
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else ...<Widget>[
           const SizedBox(height: AppSpacing.lg),
-          ...sources.map((IncomeSourceData src) => _buildSourceRow(src, data)),
+          ...sources.map((IncomeSourceData src) => _buildSourceRow(src, data, doc)),
         ],
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.incomeAccent,
           ),
       ],
     );
   }
 
-  Widget _buildSourceRow(IncomeSourceData src, ReportDataModel data) {
+  Widget _buildSourceRow(IncomeSourceData src, ReportDataModel data, PlutusTokens doc) {
     final bool varUp = src.variance >= 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -125,7 +125,7 @@ class IncomeAnalysisSection extends StatelessWidget {
             flex: 3,
             child: Text(
               src.source,
-              style: const TextStyle(fontSize: 13, color: Colors.white70),
+              style: TextStyle(fontSize: 13, color: doc.textSecondary),
             ),
           ),
           Expanded(
@@ -133,9 +133,9 @@ class IncomeAnalysisSection extends StatelessWidget {
             child: Text(
               data.formatAmount(src.amount),
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Colors.white,
+                color: doc.text,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -146,7 +146,7 @@ class IncomeAnalysisSection extends StatelessWidget {
               textAlign: TextAlign.end,
               style: TextStyle(
                 fontSize: 12,
-                color: varUp ? AppColors.incomeAccent : AppColors.expenseAccent,
+                color: varUp ? doc.success.text : doc.error.text,
               ),
             ),
           ),

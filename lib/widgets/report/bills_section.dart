@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -15,6 +16,8 @@ class BillsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final List<BillData>? bills = data.bills;
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.billsRecurring];
@@ -27,38 +30,36 @@ class BillsSection extends StatelessWidget {
           icon: Icons.repeat_rounded,
         ),
         if (bills != null && bills.isNotEmpty)
-          _buildSummaryBar(),
+          _buildSummaryBar(l10n, doc),
         if (bills == null || bills.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
-                'No recurring bills data available',
-                style: TextStyle(color: Colors.white38, fontSize: 14),
+                l10n.noRecurringBills,
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else ...<Widget>[
           const SizedBox(height: AppSpacing.lg),
-          ...bills.map((BillData bill) => _buildBillRow(bill)),
+          ...bills.map((BillData bill) => _buildBillRow(bill, doc)),
         ],
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.billsAccent,
           ),
       ],
     );
   }
 
-  Widget _buildSummaryBar() {
+  Widget _buildSummaryBar(AppLocalizations l10n, PlutusTokens doc) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.billsAccent.withValues(alpha: 0.07),
+        color: doc.info.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border:
-            Border.all(color: AppColors.billsAccent.withValues(alpha: 0.2)),
+        border: Border.all(color: doc.info.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -66,30 +67,30 @@ class BillsSection extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Text(
-                'MONTHLY RECURRING',
+              Text(
+                l10n.monthlyRecurring.toUpperCase(),
                 style: TextStyle(
                   fontSize: 10,
-                  color: Colors.white38,
+                  color: doc.textMuted,
                   letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 data.totalRecurring.toStringAsFixed(2),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: doc.text,
                 ),
               ),
             ],
           ),
           Text(
             '${data.activeBillCount} active',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.white54,
+              color: doc.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -98,7 +99,7 @@ class BillsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBillRow(BillData bill) {
+  Widget _buildBillRow(BillData bill, PlutusTokens doc) {
     final double? change = bill.changePercent;
     final bool changeUp = (change ?? 0) > 0;
     final DateFormat dateFmt = DateFormat('MMM d');
@@ -110,9 +111,9 @@ class BillsSection extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: doc.surfaceSubtle,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: doc.border),
       ),
       child: Row(
         children: <Widget>[
@@ -123,15 +124,15 @@ class BillsSection extends StatelessWidget {
               children: <Widget>[
                 Text(
                   bill.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white,
+                    color: doc.text,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   '${bill.category} • ${bill.frequency}',
-                  style: const TextStyle(fontSize: 11, color: Colors.white38),
+                  style: TextStyle(fontSize: 11, color: doc.textMuted),
                 ),
               ],
             ),
@@ -143,9 +144,9 @@ class BillsSection extends StatelessWidget {
               children: <Widget>[
                 Text(
                   bill.amount.toStringAsFixed(2),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white,
+                    color: doc.text,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -155,8 +156,8 @@ class BillsSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       color: changeUp
-                          ? AppColors.expenseAccent
-                          : AppColors.incomeAccent,
+                          ? doc.error.text
+                          : doc.success.text,
                     ),
                   ),
               ],
@@ -166,7 +167,7 @@ class BillsSection extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Text(
               dateFmt.format(bill.nextDue!),
-              style: const TextStyle(fontSize: 11, color: Colors.white38),
+              style: TextStyle(fontSize: 11, color: doc.textMuted),
             ),
           ],
         ],

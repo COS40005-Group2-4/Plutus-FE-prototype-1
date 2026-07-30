@@ -3,9 +3,9 @@ import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../models/ai/insight.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -16,6 +16,7 @@ class CoachingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<CoachingTip>? tips = data.coachingTips;
     final SectionRecommendation? rec =
@@ -34,36 +35,35 @@ class CoachingSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
                 l10n.translate('report_no_coaching'),
-                style: const TextStyle(color: Colors.white38, fontSize: 14),
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else
           Column(
             children: tips
-                .map((CoachingTip tip) => _buildTipCard(tip, l10n))
+                .map((CoachingTip tip) => _buildTipCard(tip, l10n, doc))
                 .toList(),
           ),
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.primary,
           ),
       ],
     );
   }
 
-  Widget _buildTipCard(CoachingTip tip, AppLocalizations l10n) {
-    final Color diffColor = _difficultyColor(tip.difficulty);
+  Widget _buildTipCard(CoachingTip tip, AppLocalizations l10n, PlutusTokens doc) {
+    final Color diffColor = _difficultyColor(tip.difficulty, doc);
     final String diffLabel = _difficultyLabel(tip.difficulty, l10n);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: doc.surfaceSubtle,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: doc.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,10 +73,10 @@ class CoachingSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   tip.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: doc.text,
                   ),
                 ),
               ),
@@ -103,9 +103,9 @@ class CoachingSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             tip.body,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Colors.white54,
+              color: doc.textSecondary,
               height: 1.5,
             ),
           ),
@@ -113,17 +113,17 @@ class CoachingSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Row(
               children: <Widget>[
-                const Icon(
+                Icon(
                   Icons.savings_outlined,
                   size: 14,
-                  color: AppColors.savingsAccent,
+                  color: doc.goldText,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '${l10n.translate('report_potential_savings')}${tip.savingsEstimate!.toStringAsFixed(0)}${l10n.translate('report_per_month')}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.savingsAccent,
+                    color: doc.goldText,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -135,14 +135,14 @@ class CoachingSection extends StatelessWidget {
     );
   }
 
-  Color _difficultyColor(CoachingDifficulty difficulty) {
+  Color _difficultyColor(CoachingDifficulty difficulty, PlutusTokens doc) {
     switch (difficulty) {
       case CoachingDifficulty.easy:
-        return AppColors.incomeAccent;
+        return doc.success.text;
       case CoachingDifficulty.medium:
-        return AppColors.warning;
+        return doc.warning.text;
       case CoachingDifficulty.hard:
-        return AppColors.expenseAccent;
+        return doc.error.text;
     }
   }
 

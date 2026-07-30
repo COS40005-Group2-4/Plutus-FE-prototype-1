@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_metric_card.dart';
 import 'report_ai_recommendation.dart';
@@ -15,6 +15,7 @@ class ExecutiveSummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final double netSavings = data.netSavings;
     final double compNetSavings = data.comparisonNetSavings;
@@ -52,7 +53,7 @@ class ExecutiveSummarySection extends StatelessWidget {
         ),
         Text(
           l10n.translate('report_summary_desc'),
-          style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.6),
+          style: TextStyle(fontSize: 14, color: doc.textSecondary, height: 1.6),
         ),
         const SizedBox(height: AppSpacing.lg),
         _buildMetricWithDescription(
@@ -60,8 +61,8 @@ class ExecutiveSummarySection extends StatelessWidget {
             label: l10n.translate('report_net_savings'),
             value: data.formatAmount(netSavings, compact: true),
             changeText: netChangePct.isNotEmpty ? netChangePct : null,
-            changeColor: netUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-            accentColor: AppColors.savingsAccent,
+            changeColor: netUp ? doc.success.text : doc.error.text,
+            accentColor: doc.goldText,
           ),
           description: l10n.translate('report_net_savings_desc'),
         ),
@@ -71,8 +72,8 @@ class ExecutiveSummarySection extends StatelessWidget {
             label: l10n.translate('report_savings_rate'),
             value: '${savingsRate.toStringAsFixed(1)}%',
             changeText: rateChange,
-            changeColor: rateUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-            accentColor: AppColors.primary,
+            changeColor: rateUp ? doc.success.text : doc.error.text,
+            accentColor: doc.goldText,
           ),
           description: l10n.translate('report_savings_rate_desc'),
         ),
@@ -82,8 +83,8 @@ class ExecutiveSummarySection extends StatelessWidget {
             label: l10n.translate('report_transactions'),
             value: txCount.toString(),
             changeText: txChange,
-            changeColor: Colors.white54,
-            accentColor: Colors.white70,
+            changeColor: doc.textSecondary,
+            accentColor: doc.textSecondary,
           ),
           description: l10n.translate('report_transactions_desc'),
         ),
@@ -93,15 +94,14 @@ class ExecutiveSummarySection extends StatelessWidget {
             label: l10n.translate('report_health_score'),
             value: score != null ? '$score/100' : 'N/A',
             changeText: scoreChange.isNotEmpty ? scoreChange : null,
-            changeColor: scoreUp ? AppColors.incomeAccent : AppColors.expenseAccent,
-            accentColor: AppColors.primary,
+            changeColor: scoreUp ? doc.success.text : doc.error.text,
+            accentColor: doc.goldText,
           ),
           description: l10n.translate('report_health_score_desc'),
         ),
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.primary,
           ),
       ],
     );
@@ -111,6 +111,7 @@ class ExecutiveSummarySection extends StatelessWidget {
     required ReportMetricCard card,
     required String description,
   }) {
+    const PlutusTokens doc = PlutusTokens.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -120,9 +121,9 @@ class ExecutiveSummarySection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Text(
             description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Colors.white38,
+              color: doc.textMuted,
               height: 1.5,
             ),
           ),

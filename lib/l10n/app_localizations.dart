@@ -810,7 +810,7 @@ class AppLocalizations {
       'report_total_value': 'TOTAL VALUE',
 
       // Report Content — Bills
-      'report_monthly_recurring': 'MONTHLY RECURRING',
+      'report_monthly_recurring': 'Monthly recurring',
       'report_active': 'active',
       'report_total_recurring': 'Total Recurring',
       'report_active_bills': 'Active Bills',
@@ -1725,7 +1725,7 @@ class AppLocalizations {
       'report_total_value': 'TỔNG GIÁ TRỊ',
 
       // Report Content — Bills
-      'report_monthly_recurring': 'ĐỊNH KỲ HÀNG THÁNG',
+      'report_monthly_recurring': 'Định kỳ hàng tháng',
       'report_active': 'hoạt động',
       'report_total_recurring': 'Tổng định kỳ',
       'report_active_bills': 'Hóa đơn đang hoạt động',
@@ -2477,6 +2477,8 @@ class AppLocalizations {
   String get guestBadge => translate('guestBadge');
 
   String get reportGeneratedPrefix => translate('report_generated_prefix');
+  String get noRecurringBills => translate('report_no_bills_data');
+  String get monthlyRecurring => translate('report_monthly_recurring');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
