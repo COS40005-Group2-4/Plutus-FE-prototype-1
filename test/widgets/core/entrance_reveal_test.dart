@@ -56,18 +56,19 @@ void main() {
       home: const Scaffold(
           body: EntranceReveal(index: 2, child: Text('staggered'))),
     ));
-    final FadeTransition initialFade = tester.widget<FadeTransition>(
-        find.ancestor(
-            of: find.text('staggered'), matching: find.byType(FadeTransition))
-            .first);
-    expect(initialFade.opacity.value, 0.0,
-        reason: 'Animation not started immediately at index 2');
+    // Immediately after pump, animation is not running (scheduled via Future.delayed)
+    await tester.pump(const Duration(milliseconds: 40));
+    final FadeTransition fade40 = tester.widget<FadeTransition>(find.ancestor(
+        of: find.text('staggered'), matching: find.byType(FadeTransition)).first);
+    expect(fade40.opacity.value, 0.0,
+        reason: 'At t=40ms, scheduled animation delay has not fired yet');
+    // Pump to 100ms total, then pump-and-settle to let Future fire and animation complete
+    await tester.pump(const Duration(milliseconds: 60));
+    // Settle all animations, which will allow the scheduled Future to fire on next frame
     await tester.pumpAndSettle();
-    final FadeTransition settledFade = tester.widget<FadeTransition>(
-        find.ancestor(
-            of: find.text('staggered'), matching: find.byType(FadeTransition))
-            .first);
-    expect(settledFade.opacity.value, 1.0,
-        reason: 'Animation completes even with stagger delay');
+    final FadeTransition fadeFinal = tester.widget<FadeTransition>(find.ancestor(
+        of: find.text('staggered'), matching: find.byType(FadeTransition)).first);
+    expect(fadeFinal.opacity.value, 1.0,
+        reason: 'Stagger delay is correctly applied; animation eventually completes');
   });
 }
