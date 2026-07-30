@@ -360,7 +360,10 @@ class CategoryBudgetWidget extends ConsumerWidget {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
-                                            ?.copyWith(color: statusColors.text),
+                                            ?.copyWith(
+                                              color: statusColors.text,
+                                              height: 1.15,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -424,10 +427,14 @@ class CategoryBudgetWidget extends ConsumerWidget {
                                 hasRollover
                                     ? '${_formatAmount(cs.category.budgetedAmount, currency)} + ${_formatAmount(rolloverAmount.abs(), currency)} ${l10n.budgetRolled}'
                                     : '${_formatAmount(cs.budgetedAmount, currency)} ${l10n.budgetBudgetedLabel}',
-                                style: AppTextStyles.numericStyle.copyWith(
-                                  color: t.text,
-                                  fontSize: AppTextStyles.bodySmall,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
                               ),
                             ],
                           ),
