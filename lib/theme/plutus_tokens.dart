@@ -352,6 +352,10 @@ class PlutusTokens extends ThemeExtension<PlutusTokens> {
       heroLabel: Color.lerp(heroLabel, other.heroLabel, t)!,
     );
   }
+
+  /// Selected-state fill: goldWeak composited over the surface so the dark
+  /// low-alpha goldWeak reads as a solid chip.
+  Color get goldSelectedFill => Color.alphaBlend(goldWeak, surface);
 }
 
 /// `context.tokens` — the single access point for brightness-dependent

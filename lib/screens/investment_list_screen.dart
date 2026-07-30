@@ -6,12 +6,14 @@ import '../models/investment_model.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../di/service_locator.dart';
 import '../providers/auth_notifier.dart';
-import '../widgets/glass_container.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/empty_state.dart';
+import '../widgets/core/metric_delta.dart';
 import '../widgets/add_investment_dialog.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Full screen view of all investments
 class InvestmentListScreen extends ConsumerStatefulWidget {
@@ -62,6 +64,8 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
   }
 
   void _showAddDialog() {
+    final PlutusTokens t = context.tokens;
+
     showDialog(
       context: context,
       builder: (context) => AddInvestmentDialog(
@@ -90,10 +94,11 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
             await service.saveInvestment(investment);
 
             if (context.mounted) {
+              final localizations = AppLocalizations.of(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('$assetName added to your portfolio'),
-                  backgroundColor: AppColors.success,
+                  content: Text('$assetName ${localizations.investmentAdded}'),
+                  backgroundColor: t.success.dot,
                 ),
               );
               await _loadData();
@@ -105,8 +110,8 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text("Couldn't add investment. Please try again."),
-                  backgroundColor: AppColors.error,
+                  content: Text(AppLocalizations.of(context).investmentAddFailed),
+                  backgroundColor: t.error.dot,
                 ),
               );
             }
@@ -119,8 +124,7 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final brightness = Theme.of(context).brightness;
-    final brand = AppColors.brand(brightness);
+    final PlutusTokens t = context.tokens;
 
     return Scaffold(
       appBar: AppBar(
@@ -134,6 +138,16 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
         length: 2,
         child: Column(
           children: [
+            if (_investments != null && _error == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: _buildPortfolioTotal(localizations, t),
+              ),
             TabBar(
               tabs: [
                 Tab(text: localizations.investmentTabActive),
@@ -143,8 +157,8 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildContent(localizations, brightness, closed: false),
-                  _buildContent(localizations, brightness, closed: true),
+                  _buildContent(localizations, t, closed: false),
+                  _buildContent(localizations, t, closed: true),
                 ],
               ),
             ),
@@ -153,21 +167,43 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddDialog,
-        backgroundColor: brand,
-        foregroundColor: brightness == Brightness.dark ? Colors.black : Colors.white,
         elevation: 2,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Add'),
+        label: Text(localizations.add),
       ),
     );
   }
 
-  Widget _buildContent(AppLocalizations localizations, Brightness brightness, {required bool closed}) {
-    final brand = AppColors.brand(brightness);
+  /// The gold moment of this screen (spec §7 + §3.4): current portfolio
+  /// value across active holdings, via the existing
+  /// [IInvestmentService.getTotalPortfolioValue] — no new computation.
+  Widget _buildPortfolioTotal(AppLocalizations localizations, PlutusTokens t) {
+    final activeInvestments =
+        (_investments ?? const <InvestmentModel>[]).where((i) => !i.isClosed).toList();
+    final total = _service.getTotalPortfolioValue(activeInvestments);
+    final symbol =
+        activeInvestments.isNotEmpty ? activeInvestments.first.getCurrencySymbol() : '\$';
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          localizations.portfolioTotal,
+          style: AppTextStyles.overlineStyle.copyWith(color: t.textSecondary),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$symbol${total.toStringAsFixed(2)}',
+          style: AppTextStyles.numericStyle.copyWith(color: t.goldText, fontSize: 24),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(AppLocalizations localizations, PlutusTokens t, {required bool closed}) {
     if (_isLoading) {
       return Center(
-        child: CircularProgressIndicator(color: brand),
+        child: CircularProgressIndicator(color: t.brandNavy),
       );
     }
 
@@ -178,18 +214,16 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 56, color: AppColors.error),
+              Icon(Icons.error_outline, size: 56, color: t.error.text),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 localizations.errorLoadingData,
-                style: AppTextStyles.subtitleStyle.copyWith(color: AppColors.error),
+                style: AppTextStyles.subtitleStyle.copyWith(color: t.error.text),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _error!,
-                style: AppTextStyles.bodyStyle.copyWith(
-                  color: AppColors.error.withValues(alpha: 0.7),
-                ),
+                style: AppTextStyles.bodyStyle.copyWith(color: t.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -207,38 +241,9 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
     final filtered = all.where((i) => i.isClosed == closed).toList();
 
     if (filtered.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: brand.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 36,
-                  color: brand,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                closed
-                    ? localizations.investmentNoClosed
-                    : localizations.noInvestmentsYet,
-                style: AppTextStyles.subtitleStyle.copyWith(
-                  color: AppColors.textSecondary(brightness),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        icon: Icons.savings_outlined,
+        title: closed ? localizations.investmentNoClosed : localizations.noInvestmentsYet,
       );
     }
 
@@ -254,105 +259,64 @@ class _InvestmentListScreenState extends ConsumerState<InvestmentListScreen> {
         itemCount: filtered.length,
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
         itemBuilder: (context, index) {
-          return _buildInvestmentCard(filtered[index], brightness);
+          return _buildInvestmentCard(filtered[index], t);
         },
       ),
     );
   }
 
-  Widget _buildInvestmentCard(InvestmentModel investment, Brightness brightness) {
-    final isPositive = investment.isPositiveReturn();
-    final changeColor = isPositive
-        ? AppColors.positive(brightness)
-        : AppColors.negative(brightness);
-    final textPrimary = AppColors.textPrimary(brightness);
-    final textSecondary = AppColors.textSecondary(brightness);
-    final brand = AppColors.brand(brightness);
-
-    return GlassContainer(
-      borderRadius: AppRadius.lg,
-      child: InkWell(
-        borderRadius: AppRadius.borderLg,
-        onTap: () async {
-          await context.push('/dashboard/investments/${investment.id}');
-          if (mounted) await _loadData();
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
+  Widget _buildInvestmentCard(InvestmentModel investment, PlutusTokens t) {
+    return AppCard(
+      onTap: () async {
+        await context.push('/dashboard/investments/${investment.id}');
+        if (mounted) await _loadData();
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: t.brandNavy.withValues(alpha: 0.10),
+              borderRadius: AppRadius.borderMd,
+            ),
+            child: Icon(
+              Icons.show_chart_rounded,
+              size: 22,
+              color: t.brandNavy,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  investment.assetName,
+                  style: AppTextStyles.bodyStrongStyle.copyWith(color: t.text),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${investment.assetType.name.toUpperCase()} · ${investment.quantity} units',
+                  style: AppTextStyles.captionStyle.copyWith(color: t.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: brand.withValues(alpha: 0.10),
-                  borderRadius: AppRadius.borderMd,
-                ),
-                child: Icon(
-                  Icons.show_chart_rounded,
-                  size: 22,
-                  color: brand,
-                ),
+              Text(
+                '${investment.getCurrencySymbol()}${investment.getCurrentValue().toStringAsFixed(2)}',
+                style: AppTextStyles.numericStyle.copyWith(fontSize: 18, color: t.text),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      investment.assetName,
-                      style: AppTextStyles.bodyStrongStyle.copyWith(
-                        color: textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${investment.assetType.name.toUpperCase()} · ${investment.quantity} units',
-                      style: AppTextStyles.captionStyle.copyWith(
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${investment.getCurrencySymbol()}${investment.getCurrentValue().toStringAsFixed(2)}',
-                    style: AppTextStyles.numericStyle.copyWith(
-                      fontSize: 18,
-                      color: textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isPositive
-                            ? Icons.arrow_upward_rounded
-                            : Icons.arrow_downward_rounded,
-                        size: 12,
-                        color: changeColor,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        investment.getFormattedGainLoss(),
-                        style: AppTextStyles.labelMediumStyle.copyWith(
-                          color: changeColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              const SizedBox(height: 2),
+              MetricDelta(percent: investment.getGainLossPercent(), decimals: 2),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

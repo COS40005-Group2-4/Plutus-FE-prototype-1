@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -15,6 +15,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<InvestmentHoldingData>? holdings = data.holdings;
     final SectionRecommendation? rec =
@@ -28,31 +29,30 @@ class InvestmentPortfolioSection extends StatelessWidget {
           icon: Icons.candlestick_chart_outlined,
         ),
         if (data.portfolioTotalValue != null)
-          _buildPortfolioSummary(l10n),
+          _buildPortfolioSummary(l10n, doc),
         if (holdings == null || holdings.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
                 l10n.translate('report_no_investment_data'),
-                style: const TextStyle(color: Colors.white38, fontSize: 14),
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else ...<Widget>[
           const SizedBox(height: AppSpacing.lg),
-          ...holdings.map((InvestmentHoldingData h) => _buildHoldingRow(h)),
+          ...holdings.map((InvestmentHoldingData h) => _buildHoldingRow(h, doc)),
         ],
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.marketAccent,
           ),
       ],
     );
   }
 
-  Widget _buildPortfolioSummary(AppLocalizations l10n) {
+  Widget _buildPortfolioSummary(AppLocalizations l10n, PlutusTokens doc) {
     final double? totalValue = data.portfolioTotalValue;
     final double? returnPct = data.portfolioReturnPercent;
     final double? totalGain = data.portfolioTotalGain;
@@ -61,9 +61,9 @@ class InvestmentPortfolioSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.marketAccent.withValues(alpha: 0.08),
+        color: doc.info.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.marketAccent.withValues(alpha: 0.2)),
+        border: Border.all(color: doc.info.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -73,19 +73,19 @@ class InvestmentPortfolioSection extends StatelessWidget {
             children: <Widget>[
               Text(
                 l10n.translate('report_total_value'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: Colors.white38,
+                  color: doc.textMuted,
                   letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 totalValue != null ? totalValue.toStringAsFixed(2) : 'N/A',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: doc.text,
                 ),
               ),
             ],
@@ -99,7 +99,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: gainPos ? AppColors.incomeAccent : AppColors.expenseAccent,
+                    color: gainPos ? doc.success.text : doc.error.text,
                   ),
                 ),
                 if (totalGain != null)
@@ -107,7 +107,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
                     '${gainPos ? '+' : ''}${totalGain.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 13,
-                      color: gainPos ? AppColors.incomeAccent : AppColors.expenseAccent,
+                      color: gainPos ? doc.success.text : doc.error.text,
                     ),
                   ),
               ],
@@ -117,7 +117,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHoldingRow(InvestmentHoldingData holding) {
+  Widget _buildHoldingRow(InvestmentHoldingData holding, PlutusTokens doc) {
     final bool returnPos = holding.returnPercent >= 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -130,16 +130,16 @@ class InvestmentPortfolioSection extends StatelessWidget {
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
+              color: doc.goldWeak,
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: Text(
               holding.ticker,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+                color: doc.goldText,
               ),
             ),
           ),
@@ -147,7 +147,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
           Expanded(
             child: Text(
               holding.name,
-              style: const TextStyle(fontSize: 13, color: Colors.white70),
+              style: TextStyle(fontSize: 13, color: doc.textSecondary),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -156,9 +156,9 @@ class InvestmentPortfolioSection extends StatelessWidget {
             children: <Widget>[
               Text(
                 holding.value.toStringAsFixed(0),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Colors.white,
+                  color: doc.text,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -166,7 +166,7 @@ class InvestmentPortfolioSection extends StatelessWidget {
                 '${returnPos ? '+' : ''}${holding.returnPercent.toStringAsFixed(1)}%',
                 style: TextStyle(
                   fontSize: 11,
-                  color: returnPos ? AppColors.incomeAccent : AppColors.expenseAccent,
+                  color: returnPos ? doc.success.text : doc.error.text,
                 ),
               ),
             ],

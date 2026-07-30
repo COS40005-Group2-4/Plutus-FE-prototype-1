@@ -4,11 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/insights_notifier.dart';
 import '../../models/ai/insight.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import '../chart_theme.dart';
-import '../glass_container.dart';
 
 class CoachingTipsWidget extends ConsumerStatefulWidget {
   const CoachingTipsWidget({super.key});
@@ -50,28 +49,33 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
   Widget build(BuildContext context) {
     final InsightsState provider = ref.watch(insightsNotifierProvider);
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     final List<CoachingTip> tips = provider.coachingTips;
 
     if (_currentIndex >= tips.length) {
       _currentIndex = 0;
     }
 
+    // Locked design call #2: coaching cards are always the info quartet.
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, '/insights'),
-      child: GlassContainer(
+      child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.card,
-        opacity: 0.08,
+        decoration: BoxDecoration(
+          color: t.info.surface,
+          borderRadius: AppRadius.borderCard,
+          border: Border.all(color: t.info.border),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.school, size: 20, color: AppColors.primary),
+                Icon(Icons.school, size: 20, color: t.info.text),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   l10n.translate('widget_label_coaching_tips'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: t.info.text),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Tooltip(
@@ -79,7 +83,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
                   child: Icon(
                     Icons.help_outline,
                     size: 14,
-                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                    color: t.textMuted,
                   ),
                 ),
                 const Spacer(),
@@ -88,7 +92,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
                     '${_currentIndex + 1}/${tips.length}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: t.textMuted,
                     ),
                   ),
               ],
@@ -103,7 +107,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
                             l10n.insightsCoachingEmpty,
                             style: TextStyle(
                               fontSize: 13,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: t.textMuted,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -117,6 +121,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
   }
 
   Widget _buildTipCard(BuildContext context, CoachingTip tip, InsightsState provider, AppLocalizations l10n) {
+    final PlutusTokens t = context.tokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,6 +130,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: (provider.insightsFontSize - 1).clamp(11.0, 18.0),
+            color: t.info.text,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -135,7 +141,7 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
             tip.body,
             style: TextStyle(
               fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: t.text,
             ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -146,11 +152,11 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
-                const Icon(Icons.savings_outlined, size: 14, color: AppColors.success),
+                Icon(Icons.savings_outlined, size: 14, color: t.success.text),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   PlutusChartStyle.formatCompactCurrency(tip.savingsEstimate!),
-                  style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 11, color: t.success.text, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -164,10 +170,10 @@ class _CoachingTipsWidgetState extends ConsumerState<CoachingTipsWidget> {
                 onPressed: () => ref.read(insightsNotifierProvider.notifier).saveCoachingTip(tip.id),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                color: AppColors.primary,
+                color: t.goldText,
               ),
             if (tip.isSaved)
-              const Icon(Icons.bookmark, size: 18, color: AppColors.primary),
+              Icon(Icons.bookmark, size: 18, color: t.goldText),
           ],
         ),
       ],

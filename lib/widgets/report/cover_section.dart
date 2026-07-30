@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_metric_card.dart';
 
 class CoverSection extends StatelessWidget {
@@ -14,6 +14,7 @@ class CoverSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final DateFormat rangeFmt = DateFormat('MMM d, yyyy');
     final String rangeText =
@@ -23,17 +24,9 @@ class CoverSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            Color(0xFF0A1828),
-            Color(0xFF1A3A4A),
-            Color(0xFF132D3F),
-          ],
-        ),
+        color: doc.heroSurface,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.borderDark, width: 1),
+        border: Border.all(color: doc.heroBorder, width: 1),
       ),
       padding: const EdgeInsets.all(AppSpacing.xxxl),
       child: Column(
@@ -45,7 +38,7 @@ class CoverSection extends StatelessWidget {
                 width: 4,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: doc.textSecondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -58,19 +51,19 @@ class CoverSection extends StatelessWidget {
                       data.config.audienceMode.name == 'professional'
                           ? l10n.translate('report_financial_report')
                           : l10n.translate('report_personal_finance_report'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: doc.text,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       rangeText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white54,
+                        color: doc.textMuted,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -82,14 +75,14 @@ class CoverSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             data.userName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.white70,
+              color: doc.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Divider(color: Colors.white12),
+          Divider(color: doc.border),
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: <Widget>[
@@ -97,7 +90,7 @@ class CoverSection extends StatelessWidget {
                 child: ReportMetricCard(
                   label: l10n.translate('report_total_income'),
                   value: data.formatAmount(data.totalIncome),
-                  accentColor: AppColors.incomeAccent,
+                  accentColor: doc.text,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -105,7 +98,7 @@ class CoverSection extends StatelessWidget {
                 child: ReportMetricCard(
                   label: l10n.translate('report_total_expenses'),
                   value: data.formatAmount(data.totalExpenses),
-                  accentColor: AppColors.expenseAccent,
+                  accentColor: doc.text,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -115,22 +108,21 @@ class CoverSection extends StatelessWidget {
                   value: data.healthScore != null
                       ? '${data.healthScore!.score}/100'
                       : 'N/A',
-                  accentColor: AppColors.primary,
+                  accentColor: doc.text,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
-            'Generated ${DateFormat('MMM d, yyyy • h:mm a').format(data.generatedAt)}',
-            style: const TextStyle(
+            '${l10n.reportGeneratedPrefix}${DateFormat('MMM d, yyyy • h:mm a').format(data.generatedAt)}',
+            style: TextStyle(
               fontSize: 11,
-              color: Colors.white38,
+              color: doc.textMuted,
             ),
           ),
         ],
       ),
     );
   }
-
 }

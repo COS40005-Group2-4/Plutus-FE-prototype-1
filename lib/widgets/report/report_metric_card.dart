@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
-import '../../widgets/glass_container.dart';
+import '../../theme/plutus_tokens.dart';
 
 class ReportMetricCard extends StatelessWidget {
   final String label;
   final String value;
   final String? changeText;
   final Color? changeColor;
-  final Color accentColor;
+  final Color? accentColor;
 
   const ReportMetricCard({
     super.key,
@@ -16,24 +16,28 @@ class ReportMetricCard extends StatelessWidget {
     required this.value,
     this.changeText,
     this.changeColor,
-    this.accentColor = Colors.white,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      color: Colors.white,
-      opacity: 0.05,
-      borderRadius: AppRadius.card,
+    const PlutusTokens doc = PlutusTokens.dark;
+    final Color accent = accentColor ?? doc.text;
+    return Container(
+      decoration: BoxDecoration(
+        color: doc.surfaceSubtle,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: doc.border),
+      ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: Colors.white54,
+              color: doc.textMuted,
               letterSpacing: 1,
               fontWeight: FontWeight.w500,
             ),
@@ -45,7 +49,7 @@ class ReportMetricCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: accentColor,
+              color: accent,
             ),
           ),
           if (changeText != null) ...<Widget>[
@@ -54,7 +58,7 @@ class ReportMetricCard extends StatelessWidget {
               changeText!,
               style: TextStyle(
                 fontSize: 11,
-                color: changeColor ?? Colors.white54,
+                color: changeColor ?? doc.textSecondary,
               ),
             ),
           ],

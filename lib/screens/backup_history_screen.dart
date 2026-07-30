@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
 import '../providers/backup_notifier.dart';
-import '../widgets/glass_container.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/status_badge.dart';
 
 class BackupHistoryScreen extends ConsumerStatefulWidget {
   const BackupHistoryScreen({super.key});
@@ -41,6 +41,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
 
   Future<void> _confirmRestore(BuildContext context, VersionEntry version) async {
     final l10n = AppLocalizations.of(context);
+    final t = context.tokens;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -53,6 +54,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: t.error.text),
             child: Text(l10n.confirm),
           ),
         ],
@@ -79,12 +81,12 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final t = context.tokens;
     final backupState = ref.watch(backupNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backupHistory),
-        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
       ),
       body: Builder(
         builder: (context) {
@@ -97,11 +99,11 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.cloud_off, size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                  Icon(Icons.cloud_off, size: 48, color: t.textMuted),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.backupNoVersions,
-                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                    style: TextStyle(fontSize: 16, color: t.textSecondary),
                   ),
                 ],
               ),
@@ -115,41 +117,38 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
               final version = backupState.versions[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: GlassContainer(
-                  borderRadius: AppRadius.md,
-                  opacity: 0.1,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: InkWell(
-                    onTap: () => _confirmRestore(context, version),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.cloud_done, color: AppColors.primary),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${l10n.backupVersionTimestamp}: ${_formatTimestamp(version.timestamp)}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                child: AppCard(
+                  onTap: () => _confirmRestore(context, version),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_done, color: t.brandNavy),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${l10n.backupVersionTimestamp}: ${_formatTimestamp(version.timestamp)}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                '${l10n.backupVersionSize}: ${_formatFileSize(version.fileSizeBytes)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                                ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '${l10n.backupVersionSize}: ${_formatFileSize(version.fileSizeBytes)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: t.textMuted,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            StatusBadge(kind: StatusKind.success, label: l10n.done),
+                          ],
                         ),
-                        Icon(Icons.restore, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                      ],
-                    ),
+                      ),
+                      Icon(Icons.restore, color: t.textSecondary),
+                    ],
                   ),
                 ),
               );

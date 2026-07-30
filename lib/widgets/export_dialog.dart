@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_spacing.dart';
 import 'package:intl/intl.dart';
-import '../services/export_service.dart';
-import '../theme/app_colors.dart';
-import 'glass_container.dart';
 import '../l10n/app_localizations.dart';
+import '../services/export_service.dart';
+import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 final _dateRangeFormatter = DateFormat('MMM dd, yyyy');
 
@@ -25,11 +25,10 @@ class _ExportDialogState extends State<ExportDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: GlassContainer(
-        borderRadius: 16,
-        opacity: 0.15,
+      child: AppCard(
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
           child: Column(
@@ -38,43 +37,44 @@ class _ExportDialogState extends State<ExportDialog> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.download, size: 28),
+                  Icon(Icons.download, size: 28, color: t.text),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.translate('export_data'),
-                      style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: t.text,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: t.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              const Divider(),
+              Divider(color: t.border),
               const SizedBox(height: AppSpacing.lg),
-              _buildSectionTitle(l10n.translate('export_format')),
+              _buildSectionTitle(l10n.translate('export_format'), t),
               const SizedBox(height: AppSpacing.sm),
-              _buildFormatSelector(),
+              _buildFormatSelector(t),
               const SizedBox(height: 20),
-              _buildSectionTitle(l10n.translate('export_content')),
+              _buildSectionTitle(l10n.translate('export_content'), t),
               const SizedBox(height: AppSpacing.sm),
-              _buildContentSelector(),
+              _buildContentSelector(t),
               const SizedBox(height: 20),
               if (_selectedContent != ExportContent.userData) ...[
-                _buildSectionTitle(l10n.translate('export_date_range_optional')),
+                _buildSectionTitle(l10n.translate('export_date_range_optional'), t),
                 const SizedBox(height: AppSpacing.sm),
-                _buildDateRangeSelector(),
+                _buildDateRangeSelector(t),
                 const SizedBox(height: 20),
               ],
-              const Divider(),
+              Divider(color: t.border),
               const SizedBox(height: AppSpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -93,7 +93,7 @@ class _ExportDialogState extends State<ExportDialog> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.file_download),
-                    label: Text(_isExporting ? AppLocalizations.of(context).exporting : AppLocalizations.of(context).export),
+                    label: Text(_isExporting ? l10n.exporting : l10n.export),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -110,23 +110,24 @@ class _ExportDialogState extends State<ExportDialog> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, PlutusTokens t) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.bold,
-        color: AppColors.textOnLightSecondary,
+        color: t.textSecondary,
       ),
     );
   }
 
-  Widget _buildFormatSelector() {
+  Widget _buildFormatSelector(PlutusTokens t) {
     final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: _buildOptionCard(
+            t: t,
             icon: Icons.picture_as_pdf,
             title: l10n.translate('export_pdf'),
             description: l10n.translate('export_pdf_desc'),
@@ -137,6 +138,7 @@ class _ExportDialogState extends State<ExportDialog> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildOptionCard(
+            t: t,
             icon: Icons.text_snippet,
             title: l10n.translate('export_txt'),
             description: l10n.translate('export_txt_desc'),
@@ -148,11 +150,12 @@ class _ExportDialogState extends State<ExportDialog> {
     );
   }
 
-  Widget _buildContentSelector() {
+  Widget _buildContentSelector(PlutusTokens t) {
     final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         _buildCheckOption(
+          t: t,
           icon: Icons.receipt_long,
           title: l10n.translate('export_transactions'),
           isSelected: _selectedContent == ExportContent.transactions,
@@ -160,6 +163,7 @@ class _ExportDialogState extends State<ExportDialog> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _buildCheckOption(
+          t: t,
           icon: Icons.person,
           title: l10n.translate('export_user_data'),
           isSelected: _selectedContent == ExportContent.userData,
@@ -167,6 +171,7 @@ class _ExportDialogState extends State<ExportDialog> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _buildCheckOption(
+          t: t,
           icon: Icons.select_all,
           title: l10n.translate('export_both'),
           isSelected: _selectedContent == ExportContent.both,
@@ -176,14 +181,16 @@ class _ExportDialogState extends State<ExportDialog> {
     );
   }
 
-  Widget _buildDateRangeSelector() {
+  Widget _buildDateRangeSelector(PlutusTokens t) {
     final l10n = AppLocalizations.of(context);
     final dateFormat = _dateRangeFormatter;
 
-    return GlassContainer(
-      borderRadius: 8,
-      opacity: 0.1,
+    return Container(
       padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: t.surfaceSubtle,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         children: [
           Row(
@@ -206,11 +213,11 @@ class _ExportDialogState extends State<ExportDialog> {
                         Expanded(
                           child: Text(
                             _startDate != null ? dateFormat.format(_startDate!) : l10n.translate('export_all'),
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: 14, color: t.text),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(Icons.calendar_today, size: 16),
+                        Icon(Icons.calendar_today, size: 16, color: t.textSecondary),
                       ],
                     ),
                   ),
@@ -235,11 +242,11 @@ class _ExportDialogState extends State<ExportDialog> {
                         Expanded(
                           child: Text(
                             _endDate != null ? dateFormat.format(_endDate!) : l10n.translate('export_all'),
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: 14, color: t.text),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(Icons.calendar_today, size: 16),
+                        Icon(Icons.calendar_today, size: 16, color: t.textSecondary),
                       ],
                     ),
                   ),
@@ -264,6 +271,7 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Widget _buildOptionCard({
+    required PlutusTokens t,
     required IconData icon,
     required String title,
     required String description,
@@ -277,18 +285,18 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.textOnLightTertiary.withValues(alpha:0.3),
+            color: isSelected ? t.gold : t.border,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? AppColors.primary.withValues(alpha:0.1) : Colors.transparent,
+          color: isSelected ? t.goldSelectedFill : t.surfaceSubtle,
         ),
         child: Column(
           children: [
             Icon(
               icon,
               size: 32,
-              color: isSelected ? AppColors.primary : AppColors.textOnLightSecondary,
+              color: isSelected ? t.goldText : t.textSecondary,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -297,7 +305,7 @@ class _ExportDialogState extends State<ExportDialog> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? AppColors.primary : null,
+                color: isSelected ? t.goldText : t.text,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -306,7 +314,7 @@ class _ExportDialogState extends State<ExportDialog> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textOnLightSecondary,
+                color: t.textSecondary,
               ),
             ),
           ],
@@ -316,6 +324,7 @@ class _ExportDialogState extends State<ExportDialog> {
   }
 
   Widget _buildCheckOption({
+    required PlutusTokens t,
     required IconData icon,
     required String title,
     required bool isSelected,
@@ -328,17 +337,17 @@ class _ExportDialogState extends State<ExportDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.textOnLightTertiary.withValues(alpha:0.3),
+            color: isSelected ? t.gold : t.border,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected ? AppColors.primary.withValues(alpha:0.1) : Colors.transparent,
+          color: isSelected ? t.goldSelectedFill : t.surfaceSubtle,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : AppColors.textOnLightSecondary,
+              color: isSelected ? t.goldText : t.textSecondary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -347,14 +356,14 @@ class _ExportDialogState extends State<ExportDialog> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : null,
+                  color: isSelected ? t.goldText : t.text,
                 ),
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: AppColors.primary,
+                color: t.gold,
               ),
           ],
         ),
@@ -406,10 +415,14 @@ class _ExportDialogState extends State<ExportDialog> {
       Navigator.of(context).pop(options);
     } catch (e) {
       if (!mounted) return;
+      final PlutusTokens t = context.tokens;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.translate('export_error')}: $e'),
-          backgroundColor: AppColors.error,
+          content: Text(
+            '${l10n.translate('export_error')}: $e',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: t.error.dot,
         ),
       );
       setState(() => _isExporting = false);

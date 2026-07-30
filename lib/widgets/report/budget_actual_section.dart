@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -15,6 +15,7 @@ class BudgetActualSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<BudgetCategoryData>? categories = data.budgetCategories;
     final SectionRecommendation? rec =
@@ -33,29 +34,28 @@ class BudgetActualSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
               child: Text(
                 l10n.translate('report_no_budget_data'),
-                style: const TextStyle(color: Colors.white38, fontSize: 14),
+                style: TextStyle(color: doc.textMuted, fontSize: 14),
               ),
             ),
           )
         else
           Column(
             children: categories
-                .map((BudgetCategoryData cat) => _buildBudgetRow(cat, l10n))
+                .map((BudgetCategoryData cat) => _buildBudgetRow(cat, l10n, doc))
                 .toList(),
           ),
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.budgetAccent,
           ),
       ],
     );
   }
 
-  Widget _buildBudgetRow(BudgetCategoryData cat, AppLocalizations l10n) {
+  Widget _buildBudgetRow(BudgetCategoryData cat, AppLocalizations l10n, PlutusTokens doc) {
     final double pct = cat.percentage.clamp(0.0, 100.0);
     final Color barColor =
-        cat.isOverBudget ? AppColors.expenseAccent : AppColors.incomeAccent;
+        cat.isOverBudget ? doc.error.dot : doc.success.dot;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
@@ -67,9 +67,9 @@ class BudgetActualSection extends StatelessWidget {
             children: <Widget>[
               Text(
                 cat.category,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Colors.white,
+                  color: doc.text,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -80,17 +80,17 @@ class BudgetActualSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       color: cat.isOverBudget
-                          ? AppColors.expenseAccent
-                          : Colors.white54,
+                          ? doc.error.text
+                          : doc.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   if (cat.isOverBudget) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
-                    const Icon(
+                    Icon(
                       Icons.warning_amber_rounded,
                       size: 14,
-                      color: AppColors.expenseAccent,
+                      color: doc.error.text,
                     ),
                   ],
                 ],
@@ -102,7 +102,7 @@ class BudgetActualSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.xs),
             child: LinearProgressIndicator(
               value: pct / 100,
-              backgroundColor: Colors.white12,
+              backgroundColor: doc.border,
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
               minHeight: 6,
             ),
@@ -110,7 +110,7 @@ class BudgetActualSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             '${pct.toStringAsFixed(0)}% ${l10n.translate('report_budget_used')}',
-            style: const TextStyle(fontSize: 11, color: Colors.white38),
+            style: TextStyle(fontSize: 11, color: doc.textMuted),
           ),
         ],
       ),

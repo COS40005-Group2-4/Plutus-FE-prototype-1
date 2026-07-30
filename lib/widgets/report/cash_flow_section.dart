@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -15,6 +15,7 @@ class CashFlowSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final SectionRecommendation? rec =
         data.recommendations[ReportSection.cashFlow];
@@ -36,7 +37,7 @@ class CashFlowSection extends StatelessWidget {
                 label: l10n.translate('report_inflow'),
                 value: data.totalIncome,
                 data: data,
-                color: AppColors.incomeAccent,
+                color: doc.success.text,
                 icon: Icons.arrow_downward_rounded,
               ),
             ),
@@ -46,7 +47,7 @@ class CashFlowSection extends StatelessWidget {
                 label: l10n.translate('report_outflow'),
                 value: data.totalExpenses,
                 data: data,
-                color: AppColors.expenseAccent,
+                color: doc.error.text,
                 icon: Icons.arrow_upward_rounded,
               ),
             ),
@@ -56,7 +57,7 @@ class CashFlowSection extends StatelessWidget {
                 label: l10n.translate('report_net'),
                 value: net,
                 data: data,
-                color: positive ? AppColors.incomeAccent : AppColors.expenseAccent,
+                color: positive ? doc.success.text : doc.error.text,
                 icon: positive
                     ? Icons.trending_up_rounded
                     : Icons.trending_down_rounded,
@@ -68,16 +69,16 @@ class CashFlowSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: doc.surfaceSubtle,
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: doc.border),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Icon(
                 positive ? Icons.check_circle_outline : Icons.info_outline,
-                color: positive ? AppColors.incomeAccent : AppColors.warning,
+                color: positive ? doc.success.text : doc.warning.text,
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -87,7 +88,7 @@ class CashFlowSection extends StatelessWidget {
                     : l10n.translate('report_negative_cashflow'),
                 style: TextStyle(
                   fontSize: 13,
-                  color: positive ? Colors.white70 : AppColors.warning,
+                  color: positive ? doc.textSecondary : doc.warning.text,
                 ),
               ),
             ],
@@ -96,7 +97,6 @@ class CashFlowSection extends StatelessWidget {
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.cashflowAccent,
           ),
       ],
     );

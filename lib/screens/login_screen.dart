@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/glass_container.dart';
+import '../widgets/core/app_card.dart';
 import '../providers/auth_notifier.dart';
 import '../router/app_router.dart';
-import '../theme/app_colors.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/plutus_tokens.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -71,7 +72,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildLoginUI(BuildContext context, AuthNotifier authNotifier) {
-    final brightness = Theme.of(context).brightness;
+    final PlutusTokens t = context.tokens;
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 400;
 
@@ -79,10 +81,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: GlassContainer(
+          child: AppCard(
             margin: EdgeInsets.all(isSmall ? AppSpacing.lg : AppSpacing.xl),
             padding: EdgeInsets.all(isSmall ? AppSpacing.xxl : AppSpacing.xxxl),
-            borderRadius: AppRadius.surface,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     height: 88,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.brandSoft(brightness),
+                      color: t.surfaceSubtle,
                       borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
                     child: Image.asset(
@@ -104,40 +105,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 Text(
-                  'Welcome to Plutus',
-                  style: AppTextStyles.headingStyle.copyWith(
-                    color: AppColors.textPrimary(brightness),
-                  ),
+                  l10n.loginWelcome,
+                  style: AppTextStyles.headingStyle.copyWith(color: t.text),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Track spending, budgets, and investments in one place.',
-                  style: AppTextStyles.bodyStyle.copyWith(
-                    color: AppColors.textSecondary(brightness),
-                  ),
+                  l10n.loginSubtitle,
+                  style: AppTextStyles.bodyStyle.copyWith(color: t.textSecondary),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppSpacing.xxxl),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  l10n.tagline,
+                  style: AppTextStyles.heroSerifStyle.copyWith(color: t.goldText),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xxl),
                 if (_errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.10),
+                      color: t.error.surface,
                       borderRadius: BorderRadius.circular(AppRadius.input),
+                      border: Border.all(color: t.error.border),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            size: 20, color: AppColors.error),
+                        Icon(Icons.error_outline, size: 20, color: t.error.text),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             _errorMessage!,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 5,
-                            style: AppTextStyles.bodyStyle
-                                .copyWith(color: AppColors.error),
+                            style: AppTextStyles.bodyStyle.copyWith(color: t.error.text),
                           ),
                         ),
                       ],
@@ -156,26 +158,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       if (success && context.mounted) {
                         context.go(AppRoutes.dashboard);
                       } else if (context.mounted) {
-                        setState(() => _errorMessage =
-                            'Sign-in failed. Please check your Google account and try again.');
+                        setState(() => _errorMessage = l10n.loginFailedGoogle);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Sign-in failed. Please try again.'),
-                          ),
+                          SnackBar(content: Text(l10n.loginFailed)),
                         );
                       }
                     },
                     icon: const Icon(Icons.login, size: 20),
-                    label: const Text('Sign in with Google'),
+                    label: Text(l10n.signInWithGoogle),
                   ),
                 const SizedBox(height: AppSpacing.md),
-                TextButton(
+                OutlinedButton(
                   onPressed: () async {
                     if (context.mounted) {
                       context.go(AppRoutes.userSelection);
                     }
                   },
-                  child: const Text('Continue as Guest'),
+                  child: Text(l10n.continueAsGuest),
                 ),
               ],
             ),

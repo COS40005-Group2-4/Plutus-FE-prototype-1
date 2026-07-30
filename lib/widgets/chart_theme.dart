@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../theme/app_colors.dart';
+import '../theme/plutus_tokens.dart';
 
-class PlutusChartColors {
-  static const List<Color> palette = AppColors.chartPalette;
-
-  static Color get(int index) => palette[index % palette.length];
-}
+PlutusTokens _tokensFor(Brightness b) =>
+    b == Brightness.dark ? PlutusTokens.dark : PlutusTokens.light;
 
 class PlutusChartStyle {
   static FlGridData defaultGridData({double? maxValue, required Brightness brightness}) {
@@ -16,7 +13,7 @@ class PlutusChartStyle {
       horizontalInterval: maxValue != null && maxValue > 0 ? maxValue / 4 : 1,
       getDrawingHorizontalLine: (value) {
         return FlLine(
-          color: AppColors.gridLine(brightness),
+          color: _tokensFor(brightness).border,
           strokeWidth: 1,
         );
       },
@@ -31,8 +28,8 @@ class PlutusChartStyle {
     return FlBorderData(
       show: true,
       border: Border(
-        bottom: BorderSide(color: AppColors.borderLine(brightness), width: 1),
-        left: BorderSide(color: AppColors.borderLine(brightness), width: 1),
+        bottom: BorderSide(color: _tokensFor(brightness).border, width: 1),
+        left: BorderSide(color: _tokensFor(brightness).border, width: 1),
       ),
     );
   }

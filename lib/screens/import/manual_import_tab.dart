@@ -1,6 +1,6 @@
 import 'dart:async';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/plutus_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -9,12 +9,12 @@ import '../../models/ai/category_context.dart';
 import '../../models/ai/category_suggestion.dart';
 import '../../services/interfaces/i_ai_category_pipeline.dart';
 import '../../services/interfaces/i_transaction_service.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/core/app_card.dart';
 import '../../widgets/import/ai_category_field.dart';
+import '../../widgets/import/import_feedback.dart';
 import '../../providers/auth_notifier.dart';
 import '../../providers/insights_notifier.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 
 class ManualImportTab extends ConsumerStatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -337,12 +337,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
 
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).transactionSavedSuccessfully),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        showResultSnackBar(context, AppLocalizations.of(context).transactionSavedSuccessfully, isError: false);
 
         if (context.mounted) {
           ref.read(insightsNotifierProvider.notifier).onTransactionsImported();
@@ -371,12 +366,12 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: GlassContainer(
+      child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        borderRadius: AppRadius.lg,
-        opacity: 0.1,
         child: Form(
         key: _formKey,
         child: Column(
@@ -386,10 +381,10 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
             InkWell(
               onTap: () => _selectDate(context),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
+                decoration: InputDecoration(
+                  labelText: l10n.date,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.calendar_today),
                 ),
                 child: Text(DateFormat('yyyy-MM-dd').format(_selectedDate)),
               ),
@@ -399,9 +394,9 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
             // Payee
             TextFormField(
               controller: _payeeController,
-              decoration: const InputDecoration(
-                labelText: 'Paid To',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.payee,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -413,14 +408,14 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                   flex: 2,
                   child: TextFormField(
                     controller: _amountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.amount,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (double.tryParse(value) == null) return 'Invalid number';
+                      if (value == null || value.isEmpty) return l10n.requiredField;
+                      if (double.tryParse(value) == null) return l10n.invalidNumber;
                       return null;
                     },
                   ),
@@ -429,14 +424,14 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _currency,
-                    decoration: const InputDecoration(
-                      labelText: 'Currency',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.currency,
+                      border: const OutlineInputBorder(),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'VND', child: Text(AppLocalizations.of(context).vnd)),
-                      DropdownMenuItem(value: 'USD', child: Text(AppLocalizations.of(context).usd)),
-                      DropdownMenuItem(value: 'EUR', child: Text(AppLocalizations.of(context).eur)),
+                      DropdownMenuItem(value: 'VND', child: Text(l10n.vnd)),
+                      DropdownMenuItem(value: 'USD', child: Text(l10n.usd)),
+                      DropdownMenuItem(value: 'EUR', child: Text(l10n.eur)),
                     ],
                     onChanged: (val) => setState(() => _currency = val!),
                   ),
@@ -448,13 +443,13 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
             // Type Dropdown
             DropdownButtonFormField<String>(
               initialValue: _type,
-              decoration: const InputDecoration(
-                labelText: 'Type',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.type,
+                border: const OutlineInputBorder(),
               ),
               items: [
-                DropdownMenuItem(value: 'income', child: Text(AppLocalizations.of(context).income)),
-                DropdownMenuItem(value: 'expense', child: Text(AppLocalizations.of(context).expense)),
+                DropdownMenuItem(value: 'income', child: Text(l10n.income)),
+                DropdownMenuItem(value: 'expense', child: Text(l10n.expense)),
               ],
               onChanged: (val) => setState(() {
                 _type = val!;
@@ -495,10 +490,10 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _customCategoryController,
-                decoration: const InputDecoration(
-                  labelText: 'New Category',
-                  border: OutlineInputBorder(),
-                  hintText: 'Category name',
+                decoration: InputDecoration(
+                  labelText: l10n.newCategory,
+                  border: const OutlineInputBorder(),
+                  hintText: l10n.categoryNameHint,
                 ),
                 onChanged: (val) {
                   _categoryController.text = val;
@@ -510,9 +505,9 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
             // Description
             TextFormField(
               controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Note',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.note,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -524,7 +519,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
               children: [
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context).itemsSplits,
+                    l10n.itemsSplits,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -532,7 +527,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                 IconButton(
                   onPressed: _addItem,
                   icon: const Icon(Icons.add_circle),
-                  color: AppColors.primary,
+                  color: t.goldText,
                 ),
               ],
             ),
@@ -552,10 +547,10 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                           flex: 3,
                           child: TextFormField(
                             initialValue: item['description'],
-                            decoration: const InputDecoration(
-                              labelText: 'Item',
+                            decoration: InputDecoration(
+                              labelText: l10n.item,
                               isDense: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
                             ),
                             onChanged: (val) => item['description'] = val,
                           ),
@@ -565,10 +560,10 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                           flex: 2,
                           child: TextFormField(
                             initialValue: item['amount'].toString(),
-                            decoration: const InputDecoration(
-                              labelText: 'Amount',
+                            decoration: InputDecoration(
+                              labelText: l10n.amount,
                               isDense: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
                             ),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onChanged: (val) {
@@ -581,7 +576,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
                           width: 48,
                           height: 48,
                           child: IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
+                            icon: Icon(Icons.remove_circle_outline, color: t.error.text),
                             onPressed: () => _removeItem(index),
                           ),
                         ),
@@ -601,7 +596,7 @@ class _ManualImportTabState extends ConsumerState<ManualImportTab> {
               ),
               child: _loading
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(AppLocalizations.of(context).saveTransaction),
+                  : Text(l10n.saveTransaction),
             ),
           ],
         ),

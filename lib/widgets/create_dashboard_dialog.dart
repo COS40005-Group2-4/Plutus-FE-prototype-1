@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_spacing.dart';
-import 'glass_container.dart';
+import 'core/app_card.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
+import '../theme/plutus_tokens.dart';
 
 class CreateDashboardResult {
   final String name;
@@ -49,23 +49,12 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? AppColors.textOnDark : AppColors.textOnLight;
-    final secondaryTextColor = isDark ? AppColors.textOnDarkSecondary : AppColors.textOnLightSecondary;
-    final tertiaryTextColor = isDark ? AppColors.textOnDarkTertiary : AppColors.textOnLightTertiary;
-    final containerColor = isDark ? AppColors.menuBackground : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.3)
-        : Colors.black.withValues(alpha: 0.15);
+    final PlutusTokens t = context.tokens;
 
     return AlertDialog(
       backgroundColor: Colors.transparent,
       contentPadding: EdgeInsets.zero,
-      content: GlassContainer(
-        color: containerColor,
-        opacity: isDark ? 0.85 : 0.9,
-        borderRadius: 16,
-        blur: 15,
+      content: AppCard(
         padding: const EdgeInsets.all(24),
         child: SizedBox(
           width: 320,
@@ -76,7 +65,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
               Text(
                 l10n.createDashboard,
                 style: TextStyle(
-                  color: textColor,
+                  color: t.text,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -85,28 +74,12 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
               TextField(
                 controller: _controller,
                 maxLength: 20,
-                style: TextStyle(color: textColor),
+                style: TextStyle(color: t.text),
                 decoration: InputDecoration(
                   labelText: l10n.dashboardName,
-                  labelStyle: TextStyle(color: secondaryTextColor),
+                  labelStyle: TextStyle(color: t.textSecondary),
                   errorText: _error,
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: borderColor),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.error),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.error),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  counterStyle: TextStyle(color: tertiaryTextColor),
+                  counterStyle: TextStyle(color: t.textMuted),
                 ),
                 onChanged: (_) {
                   if (_error != null) setState(() => _error = null);
@@ -120,8 +93,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 // ignore: deprecated_member_use
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startWithDefaults,
-                    style: TextStyle(color: textColor, fontSize: 14)),
-                activeColor: AppColors.primary,
+                    style: TextStyle(color: t.text, fontSize: 14)),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),
@@ -132,8 +104,7 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 // ignore: deprecated_member_use
                 onChanged: (v) => setState(() => _useDefaults = v!),
                 title: Text(l10n.startEmpty,
-                    style: TextStyle(color: textColor, fontSize: 14)),
-                activeColor: AppColors.primary,
+                    style: TextStyle(color: t.text, fontSize: 14)),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),
@@ -143,16 +114,11 @@ class _CreateDashboardDialogState extends State<CreateDashboardDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.cancel,
-                        style: TextStyle(color: secondaryTextColor)),
+                    child: Text(l10n.cancel),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  ElevatedButton(
+                  FilledButton(
                     onPressed: _validate,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textOnDark,
-                    ),
                     child: Text(l10n.create),
                   ),
                 ],

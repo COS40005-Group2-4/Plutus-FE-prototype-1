@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/insights_notifier.dart';
 import '../../models/ai/insight.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
-import '../../theme/app_radius.dart';
-import '../glass_container.dart';
+import '../../theme/plutus_tokens.dart';
+import '../core/app_card.dart';
 
 class HealthScoreWidget extends ConsumerStatefulWidget {
   const HealthScoreWidget({super.key});
@@ -58,6 +57,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
   Widget build(BuildContext context) {
     final InsightsState provider = ref.watch(insightsNotifierProvider);
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     final HealthScore? score = provider.healthScore;
 
     if (score != null) {
@@ -67,17 +67,14 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
       });
     }
 
-    return GestureDetector(
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => Navigator.pushNamed(context, '/insights'),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.card,
-        opacity: 0.08,
-        child: Column(
+      child: Column(
           children: [
             Row(
               children: [
-                const Icon(Icons.health_and_safety, size: 20, color: AppColors.primary),
+                Icon(Icons.health_and_safety, size: 20, color: t.brandNavy),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -92,7 +89,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
                   child: Icon(
                     Icons.help_outline,
                     size: 14,
-                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                    color: t.textMuted,
                   ),
                 ),
               ],
@@ -125,6 +122,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
                                   return CustomPaint(
                                     painter: _ScoreArcPainter(
                                       score: animatedScore,
+                                      scoreColor: _scoreDotColor(t, animatedScore),
                                       backgroundColor: Theme.of(context)
                                           .colorScheme
                                           .onSurface
@@ -139,7 +137,7 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
                                             style: TextStyle(
                                               fontSize: (provider.insightsFontSize + 14).clamp(20.0, 38.0),
                                               fontWeight: FontWeight.bold,
-                                              color: _scoreColor(animatedScore),
+                                              color: _scoreTextColor(t, animatedScore),
                                             ),
                                           ),
                                           if (score.previousScore != null)
@@ -152,16 +150,16 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
                                                       : Icons.arrow_downward,
                                                   size: 12,
                                                   color: score.score >= score.previousScore!
-                                                      ? AppColors.success
-                                                      : AppColors.error,
+                                                      ? t.success.text
+                                                      : t.error.text,
                                                 ),
                                                 Text(
                                                   '${(score.score - score.previousScore!).abs()}',
                                                   style: TextStyle(
                                                     fontSize: 11,
                                                     color: score.score >= score.previousScore!
-                                                        ? AppColors.success
-                                                        : AppColors.error,
+                                                        ? t.success.text
+                                                        : t.error.text,
                                                   ),
                                                 ),
                                               ],
@@ -188,22 +186,34 @@ class _HealthScoreWidgetState extends ConsumerState<HealthScoreWidget>
             ),
           ],
         ),
-      ),
     );
   }
 
-  static Color _scoreColor(int score) {
-    if (score >= 75) return AppColors.success;
-    if (score >= 50) return AppColors.warning;
-    return AppColors.error;
+  /// Score text ink — quartet `.text` arm.
+  static Color _scoreTextColor(PlutusTokens t, int score) {
+    if (score >= 75) return t.success.text;
+    if (score >= 50) return t.warning.text;
+    return t.error.text;
+  }
+
+  /// Gauge arc fill — quartet `.dot` arm (banding, spec §3.4).
+  static Color _scoreDotColor(PlutusTokens t, int score) {
+    if (score >= 75) return t.success.dot;
+    if (score >= 50) return t.warning.dot;
+    return t.error.dot;
   }
 }
 
 class _ScoreArcPainter extends CustomPainter {
   final int score;
+  final Color scoreColor;
   final Color backgroundColor;
 
-  _ScoreArcPainter({required this.score, required this.backgroundColor});
+  _ScoreArcPainter({
+    required this.score,
+    required this.scoreColor,
+    required this.backgroundColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -220,16 +230,7 @@ class _ScoreArcPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(rect.deflate(8), startAngle, fullSweep, false, bgPaint);
 
-    // Score arc
-    final Color scoreColor;
-    if (score >= 75) {
-      scoreColor = AppColors.success;
-    } else if (score >= 50) {
-      scoreColor = AppColors.warning;
-    } else {
-      scoreColor = AppColors.error;
-    }
-
+    // Score arc — quartet `.dot` arm, passed in from the widget
     final Paint scorePaint = Paint()
       ..color = scoreColor
       ..style = PaintingStyle.stroke
@@ -240,6 +241,8 @@ class _ScoreArcPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ScoreArcPainter oldDelegate) {
-    return oldDelegate.score != score;
+    return oldDelegate.score != score ||
+        oldDelegate.scoreColor != scoreColor ||
+        oldDelegate.backgroundColor != backgroundColor;
   }
 }

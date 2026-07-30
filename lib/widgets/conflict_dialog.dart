@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_spacing.dart';
 import '../l10n/app_localizations.dart';
 import '../models/backup_models.dart';
-import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Shows a glassmorphic conflict dialog with three radio options.
 /// Pre-selects "Keep local and upload" as default.
@@ -28,24 +29,17 @@ class _ConflictDialogContentState extends State<_ConflictDialogContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final t = context.tokens;
 
     return AlertDialog(
-      backgroundColor: isDark
-          ? AppColors.surfaceDark.withValues(alpha: 0.9)
-          : Colors.white.withValues(alpha: 0.9),
+      backgroundColor: t.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark
-              ? AppColors.borderDark.withValues(alpha: 0.3)
-              : Colors.black.withValues(alpha: 0.08),
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.sheet),
+        side: BorderSide(color: t.border),
       ),
       title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded,
-              color: isDark ? AppColors.accent : AppColors.warning),
+          Icon(Icons.warning_amber_rounded, color: t.warning.text),
           const SizedBox(width: AppSpacing.sm),
           Expanded(child: Text(l10n.backupConflictTitle)),
         ],

@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,12 +11,13 @@ import '../models/investment_price_point.dart';
 import '../models/investment_sale.dart';
 import '../services/interfaces/i_investment_service.dart';
 import '../services/investment_metrics_service.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_gradients.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
-import '../widgets/glass_container.dart';
+import '../theme/plutus_tokens.dart';
+import '../widgets/chart_theme.dart';
+import '../widgets/core/app_card.dart';
+import '../widgets/core/metric_delta.dart';
 import '../widgets/sell_investment_dialog.dart';
 
 /// Detail view for a single investment: header metrics, price-point history,
@@ -238,7 +240,6 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final inv = _investment;
 
     return Scaffold(
@@ -266,7 +267,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                 ],
               ),
             ),
-            Expanded(child: _buildBody(l, isDark)),
+            Expanded(child: _buildBody(l)),
           ],
         ),
       ),
@@ -284,8 +285,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                 FloatingActionButton.extended(
                   heroTag: 'inv_sell',
                   onPressed: _showSellDialog,
-                  backgroundColor:
-                      AppColors.brand(Theme.of(context).brightness),
+                  backgroundColor: context.tokens.brandNavy,
                   icon: const Icon(Icons.sell, color: Colors.white),
                   label: Text(l.investmentSell, style: const TextStyle(color: Colors.white)),
                 ),
@@ -295,15 +295,16 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
     );
   }
 
-  Widget _buildBody(AppLocalizations l, bool isDark) {
+  Widget _buildBody(AppLocalizations l) {
+    final PlutusTokens t = context.tokens;
     final brightness = Theme.of(context).brightness;
     if (_loading) {
       return Center(
-        child: CircularProgressIndicator(color: AppColors.brand(brightness)),
+        child: CircularProgressIndicator(color: t.brandNavy),
       );
     }
     if (_error != null) {
-      return Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)));
+      return Center(child: Text(_error!, style: TextStyle(color: t.error.text)));
     }
     final inv = _investment!;
     final symbol = inv.getCurrencySymbol();
@@ -316,74 +317,43 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
       currentValue: inv.getCurrentValue(),
       costBasis: inv.totalCostBasis,
     );
-    final positive = AppColors.positive(brightness);
-    final negative = AppColors.negative(brightness);
+    final positive = t.success.text;
+    final negative = t.error.text;
     final isUp = roi >= 0;
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        // Hero gradient card with current value + delta chip.
+        // Fixed-navy hero card (Locked call #4): current value + ROI chip.
         Container(
           padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
-            gradient: AppGradients.balanceCard(brightness),
+            color: t.heroSurface,
             borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: t.heroBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l.investmentCurrentValue,
-                style: AppTextStyles.labelStyle.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
+                l.investmentCurrentValue.toUpperCase(),
+                style: AppTextStyles.overlineStyle.copyWith(color: t.heroLabel),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 '$symbol${inv.getCurrentValue().toStringAsFixed(2)}',
                 style: AppTextStyles.numericStyle.copyWith(
-                  fontSize: 36,
-                  color: Colors.white,
+                  fontSize: AppTextStyles.displaySmall,
+                  color: const Color(0xFFEDF0F7),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isUp
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded,
-                      size: 14,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${(roi * 100).toStringAsFixed(2)}%',
-                      style: AppTextStyles.labelStyle.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              MetricDelta(percent: roi * 100, decimals: 2),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        GlassContainer(
-          borderRadius: AppRadius.card,
+        AppCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +365,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                     l.investmentClosedOn(
                       '${inv.closedAt?.year}-${inv.closedAt?.month.toString().padLeft(2, '0')}-${inv.closedAt?.day.toString().padLeft(2, '0')}',
                     ),
-                    style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: t.error.text, fontWeight: FontWeight.w600),
                   ),
                 ),
               _MetricRow(label: l.investmentQuantityHeld, value: inv.quantity.toString()),
@@ -433,25 +403,44 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
           style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSpacing.sm),
+        if (_pricePoints.length >= 2) ...[
+          AppCard(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: SizedBox(
+              height: 180,
+              child: _buildPriceChart(t, inv, brightness),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         _pricePoints.isEmpty
             ? Text(l.investmentPriceHistoryEmpty)
             : Column(
                 children: _pricePoints.reversed
-                    .map((p) => GlassContainer(
-                          borderRadius: AppRadius.md,
-                          opacity: isDark ? 0.25 : 0.08,
+                    .map((p) => Container(
                           margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,
                             vertical: AppSpacing.sm,
                           ),
+                          decoration: BoxDecoration(
+                            border: Border(bottom: BorderSide(color: t.border)),
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('${p.date.year}-${p.date.month.toString().padLeft(2, '0')}-${p.date.day.toString().padLeft(2, '0')}'),
+                              Text(
+                                '${p.date.year}-${p.date.month.toString().padLeft(2, '0')}-${p.date.day.toString().padLeft(2, '0')}',
+                                style: TextStyle(color: t.textSecondary),
+                              ),
                               Text(
                                 '$symbol${p.price.toStringAsFixed(2)}',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: TextStyle(fontWeight: FontWeight.w600, color: t.text),
                               ),
                             ],
                           ),
@@ -468,20 +457,25 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
             ? Text(l.investmentSalesEmpty)
             : Column(
                 children: _sales.reversed
-                    .map((s) => GlassContainer(
-                          borderRadius: AppRadius.md,
-                          opacity: isDark ? 0.25 : 0.08,
+                    .map((s) => Container(
                           margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                           padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            border: Border(bottom: BorderSide(color: t.border)),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('${s.date.year}-${s.date.month.toString().padLeft(2, '0')}-${s.date.day.toString().padLeft(2, '0')}'),
+                                  Text(
+                                    '${s.date.year}-${s.date.month.toString().padLeft(2, '0')}-${s.date.day.toString().padLeft(2, '0')}',
+                                    style: TextStyle(color: t.textSecondary),
+                                  ),
                                   Text(
                                     '${s.quantity} @ $symbol${s.pricePerUnit.toStringAsFixed(2)}',
+                                    style: TextStyle(color: t.text),
                                   ),
                                 ],
                               ),
@@ -489,7 +483,7 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
                               Text(
                                 '${s.realizedGain >= 0 ? l.investmentSellRealizedGain : l.investmentSellRealizedLoss}: $symbol${s.realizedGain.abs().toStringAsFixed(2)}',
                                 style: TextStyle(
-                                  color: s.realizedGain >= 0 ? AppColors.success : AppColors.error,
+                                  color: s.realizedGain >= 0 ? t.success.text : t.error.text,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -500,6 +494,122 @@ class _InvestmentDetailScreenState extends ConsumerState<InvestmentDetailScreen>
               ),
         const SizedBox(height: 80),
       ],
+    );
+  }
+
+  /// Price-history line chart (Locked call #5): the navy price line over
+  /// the same price points rendered as rows below, plus a dashed gold
+  /// reference line at the average unit cost. Only called when there are
+  /// >= 2 price points.
+  Widget _buildPriceChart(PlutusTokens t, InvestmentModel inv, Brightness brightness) {
+    final spots = <FlSpot>[
+      for (int i = 0; i < _pricePoints.length; i++)
+        FlSpot(i.toDouble(), _pricePoints[i].price),
+    ];
+
+    double minY = spots.first.y;
+    double maxY = spots.first.y;
+    for (final s in spots) {
+      if (s.y < minY) minY = s.y;
+      if (s.y > maxY) maxY = s.y;
+    }
+
+    // Average unit cost — matches the metrics card above (totalCostBasis /
+    // quantity, partial-sale-adjusted). The getter itself returns 0 when
+    // quantity <= 0 (fully closed positions), so the reference line is
+    // simply hidden in that case rather than dividing by zero.
+    final double avgUnitCost = inv.averageUnitCost;
+    final bool hasAvgUnitCost = avgUnitCost > 0;
+    if (hasAvgUnitCost) {
+      if (avgUnitCost < minY) minY = avgUnitCost;
+      if (avgUnitCost > maxY) maxY = avgUnitCost;
+    }
+    final double range = maxY - minY;
+    final double pad = range > 0 ? range * 0.1 : (maxY.abs() * 0.1 + 1);
+    final double lowY = minY >= 0 ? (minY - pad).clamp(0.0, double.infinity) : minY - pad;
+    final double highY = maxY + pad;
+
+    final Color lineColor = t.chartCategorical.first;
+
+    return LineChart(
+      LineChartData(
+        minY: lowY,
+        maxY: highY,
+        lineTouchData: const LineTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          topTitles: PlutusChartStyle.hiddenAxisTitles(),
+          rightTitles: PlutusChartStyle.hiddenAxisTitles(),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              getTitlesWidget: (value, meta) {
+                final int idx = value.toInt();
+                final int len = _pricePoints.length;
+                if (idx < 0 || idx >= len) return const SizedBox.shrink();
+                final int midIdx = len ~/ 2;
+                if (idx != 0 && idx != midIdx && idx != len - 1) {
+                  return const SizedBox.shrink();
+                }
+                final DateTime d = _pricePoints[idx].date;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}',
+                    style: TextStyle(color: t.textMuted, fontSize: 9),
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 44,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  PlutusChartStyle.formatCompactCurrency(value),
+                  style: TextStyle(color: t.textMuted, fontSize: 9),
+                );
+              },
+            ),
+          ),
+        ),
+        gridData: PlutusChartStyle.defaultGridData(maxValue: highY - lowY, brightness: brightness),
+        borderData: PlutusChartStyle.lineBorderData(brightness: brightness),
+        extraLinesData: !hasAvgUnitCost
+            ? null
+            : ExtraLinesData(
+                horizontalLines: [
+                  HorizontalLine(
+                    y: avgUnitCost,
+                    color: t.chartCategorical[1],
+                    strokeWidth: 1,
+                    dashArray: [6, 4],
+                  ),
+                ],
+              ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: false,
+            color: lineColor,
+            barWidth: 1.5,
+            dotData: FlDotData(
+              show: spots.length >= 30,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 2.5,
+                  color: lineColor,
+                  strokeWidth: 1,
+                  strokeColor: t.surface,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

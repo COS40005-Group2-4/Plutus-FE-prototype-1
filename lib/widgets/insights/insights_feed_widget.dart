@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/insights_notifier.dart';
 import '../../models/ai/insight.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
-import '../glass_container.dart';
+import '../../theme/plutus_tokens.dart';
+import '../core/app_card.dart';
 
 class InsightsFeedWidget extends ConsumerWidget {
   const InsightsFeedWidget({super.key});
@@ -15,20 +15,18 @@ class InsightsFeedWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final InsightsState provider = ref.watch(insightsNotifierProvider);
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     final List<SpendingInsight> insights = provider.spendingInsights.take(3).toList();
 
-    return GestureDetector(
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => Navigator.pushNamed(context, '/insights'),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        borderRadius: AppRadius.card,
-        opacity: 0.08,
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.lightbulb_outline, color: AppColors.primary, size: 20),
+                Icon(Icons.lightbulb_outline, color: t.brandNavy, size: 20),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   l10n.translate('widget_label_insights_feed'),
@@ -40,7 +38,7 @@ class InsightsFeedWidget extends ConsumerWidget {
                   child: Icon(
                     Icons.help_outline,
                     size: 14,
-                    color: AppColors.textTertiary(Theme.of(context).brightness),
+                    color: t.textMuted,
                   ),
                 ),
               ],
@@ -73,8 +71,9 @@ class InsightsFeedWidget extends ConsumerWidget {
                     return Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                        color: t.surfaceSubtle,
                         borderRadius: AppRadius.borderSm,
+                        border: Border.all(color: t.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +92,7 @@ class InsightsFeedWidget extends ConsumerWidget {
                             insight.body,
                             style: TextStyle(
                               fontSize: (provider.insightsFontSize - 2).clamp(10.0, 16.0),
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: t.textSecondary,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -110,17 +109,18 @@ class InsightsFeedWidget extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: t.info.surface,
                   borderRadius: AppRadius.borderSm,
+                  border: Border.all(color: t.info.border),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.new_releases, size: 14, color: AppColors.primary),
+                    Icon(Icons.new_releases, size: 14, color: t.info.text),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
                         l10n.insightsImportBannerAction,
-                        style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                        style: TextStyle(fontSize: 11, color: t.info.text),
                       ),
                     ),
                   ],
@@ -129,7 +129,6 @@ class InsightsFeedWidget extends ConsumerWidget {
             ],
           ],
         ),
-      ),
     );
   }
 }

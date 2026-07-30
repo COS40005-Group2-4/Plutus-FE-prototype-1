@@ -3,9 +3,9 @@ import '../../l10n/app_localizations.dart';
 import '../../models/report_config.dart';
 import '../../models/report_data.dart';
 import '../../models/ai/insight.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/plutus_tokens.dart';
 import 'report_section_header.dart';
 import 'report_ai_recommendation.dart';
 
@@ -16,6 +16,7 @@ class AlertsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const PlutusTokens doc = PlutusTokens.dark;
     final AppLocalizations l10n = AppLocalizations.of(context);
     final List<Alert>? alerts = data.alerts;
     final SectionRecommendation? rec =
@@ -32,19 +33,18 @@ class AlertsSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.incomeAccent.withValues(alpha: 0.06),
+              color: doc.success.surface,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                  color: AppColors.incomeAccent.withValues(alpha: 0.15)),
+              border: Border.all(color: doc.success.border),
             ),
             child: Row(
               children: <Widget>[
-                const Icon(Icons.check_circle_outline,
-                    color: AppColors.incomeAccent, size: 18),
+                Icon(Icons.check_circle_outline,
+                    color: doc.success.text, size: 18),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   l10n.translate('report_no_alerts'),
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                  style: TextStyle(fontSize: 14, color: doc.textSecondary),
                 ),
               ],
             ),
@@ -52,20 +52,19 @@ class AlertsSection extends StatelessWidget {
         else
           Column(
             children: alerts
-                .map((Alert alert) => _buildAlertCard(alert))
+                .map((Alert alert) => _buildAlertCard(alert, doc))
                 .toList(),
           ),
         if (rec != null)
           ReportAiRecommendation(
             recommendation: rec,
-            accentColor: AppColors.warning,
           ),
       ],
     );
   }
 
-  Widget _buildAlertCard(Alert alert) {
-    final Color color = _severityColor(alert.severity);
+  Widget _buildAlertCard(Alert alert, PlutusTokens doc) {
+    final Color color = _severityColor(alert.severity, doc);
     final IconData icon = _severityIcon(alert.severity);
 
     return Container(
@@ -87,18 +86,18 @@ class AlertsSection extends StatelessWidget {
               children: <Widget>[
                 Text(
                   alert.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: doc.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   alert.body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white54,
+                    color: doc.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -110,14 +109,14 @@ class AlertsSection extends StatelessWidget {
     );
   }
 
-  Color _severityColor(Severity severity) {
+  Color _severityColor(Severity severity, PlutusTokens doc) {
     switch (severity) {
       case Severity.warning:
-        return AppColors.warning;
+        return doc.warning.text;
       case Severity.positive:
-        return AppColors.incomeAccent;
+        return doc.success.text;
       case Severity.info:
-        return AppColors.primary;
+        return doc.info.text;
     }
   }
 

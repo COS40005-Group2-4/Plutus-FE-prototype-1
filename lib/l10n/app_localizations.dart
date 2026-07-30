@@ -54,7 +54,8 @@ class AppLocalizations {
       'cancel': 'Cancel',
       'confirm': 'Confirm',
       'save': 'Save',
-      
+      'add': 'Add',
+
       // Messages
       'guest_mode': 'Guest Mode',
       'local_account': 'Personal Account',
@@ -89,6 +90,7 @@ class AppLocalizations {
       'vnd': 'VND',
       'usd': 'USD',
       'eur': 'EUR',
+      'all': 'All',
       'income': 'Income',
       'expense': 'Expense',
       'items_splits': 'Split Between Accounts',
@@ -104,7 +106,25 @@ class AppLocalizations {
       'online': 'Online',
       'auto': 'Auto',
       'select_invoice_image': 'Choose a Receipt Photo',
-      
+      'import_from_file': 'Import from File',
+      'file_prefix': 'File: ',
+      'import_selected': 'Import Selected',
+      'imported_count': 'Imported',
+      'skipped_count': 'skipped',
+      'parse_error': 'Parse error: ',
+      'camera': 'Camera',
+      'processing_image': 'Processing image...',
+      'extracted_fields': 'Extracted Fields',
+      'items': 'Items',
+      'item': 'Item',
+      'confirm_and_save': 'Confirm & Save',
+      'could_not_read_image': 'Could not read text from image',
+      'ocr_error_prefix': 'OCR error: ',
+      'note': 'Note',
+      'new_category': 'New Category',
+      'category_name_hint': 'Category name',
+      'invalid_number': 'Invalid number',
+
       // Transaction History Page
       'transaction_history': 'Transaction History',
       'no_transactions_found': 'No transactions found',
@@ -131,7 +151,11 @@ class AppLocalizations {
       'open_in_external_app': 'Open in External App',
       'pdf_not_available': 'PDF document not available for preview',
       'text_not_available': 'Text content not available for preview',
-      
+
+      // Export Preview Dialog
+      'export_preview': 'Export Preview',
+      'file_location': 'File Location',
+
       // Data Widget
       'import': 'Import',
       'no_widgets_selected': 'Your dashboard is empty',
@@ -225,6 +249,7 @@ class AppLocalizations {
       // Investment Tracking Widget
       'investments': 'Investments',
       'portfolio': 'Portfolio',
+      'portfolio_total': 'Portfolio total',
       'add_investment': 'Add Investment',
       'edit_investment': 'Edit Investment',
       'delete_investment': 'Delete Investment',
@@ -271,7 +296,8 @@ class AppLocalizations {
       'invalid_exchange_rate': 'Please enter a valid exchange rate (must be greater than 0)',
       'invalid_date': "Please choose a date that isn't in the future",
       'required_field': 'This field is required',
-      'investment_added': 'Investment added successfully',
+      'investment_added': 'added to your portfolio',
+      'investment_add_failed': "Couldn't add investment. Please try again.",
       'investment_updated': 'Investment updated successfully',
       'investment_deleted': 'Investment deleted successfully',
       'error_adding_investment': 'Error adding investment',
@@ -412,6 +438,8 @@ class AppLocalizations {
       'budget_suggested': 'Suggested from Transactions',
       'budget_no_suggestions': 'No suggestions available.',
       'budget_pattern_hint': 'Matches transactions starting with this prefix',
+      'error_creating_budget': 'Error creating budget: ',
+      'in_three_months': 'in 3 months',
 
       // ── Category Budget Widget ──
       'category_budget_title': 'Category Budgets',
@@ -478,6 +506,8 @@ class AppLocalizations {
       'avatar_source_title': 'Choose Avatar Source',
       'avatar_camera': 'Camera',
       'avatar_gallery': 'Gallery',
+      'avatar_save_failed': 'Failed to save avatar: ',
+      'image_pick_error': 'Error picking image: ',
 
       // ── Cash Flow Widget ──
       'cashflow_select_year': 'Select Year',
@@ -595,6 +625,8 @@ class AppLocalizations {
       'insights_period_custom': 'Custom',
       'insights_period_custom_active': 'Custom Range',
       'insights_font_size_label': 'Text Size',
+      'textSizeIncrease': 'Increase text size',
+      'textSizeDecrease': 'Decrease text size',
 
       // Report Export
       'report_config_title': 'Generate Report',
@@ -603,6 +635,10 @@ class AppLocalizations {
       'report_sections': 'Sections',
       'report_audience': 'Audience',
       'report_ai_recommendations': 'AI Recommendations',
+      'report_section_template': 'Template',
+      'report_section_date_range': 'Date range',
+      'report_section_sections': 'Sections',
+      'report_section_audience': 'Audience',
       'report_generate': 'Generate Report',
       'report_generating': 'Generating...',
       'report_preview_title': 'Report Preview',
@@ -713,6 +749,7 @@ class AppLocalizations {
       'report_no_data_subtitle': 'Configure and generate a report first.',
       'report_pdf_saved': 'PDF saved to',
       'report_pdf_failed': 'PDF export failed',
+      'error_prefix': 'Error: ',
 
       // Report Content — Cover & Summary
       'report_financial_report': 'Financial Report',
@@ -720,6 +757,7 @@ class AppLocalizations {
       'report_key_metrics': 'KEY METRICS',
       'report_prepared_for': 'PREPARED FOR',
       'report_generated_on': 'Generated on',
+      'report_generated_prefix': 'Generated ',
       'report_metric': 'Metric',
       'report_value': 'Value',
       'report_total_income': 'Total Income',
@@ -781,7 +819,7 @@ class AppLocalizations {
       'report_total_value': 'TOTAL VALUE',
 
       // Report Content — Bills
-      'report_monthly_recurring': 'MONTHLY RECURRING',
+      'report_monthly_recurring': 'Monthly recurring',
       'report_active': 'active',
       'report_total_recurring': 'Total Recurring',
       'report_active_bills': 'Active Bills',
@@ -877,6 +915,26 @@ class AppLocalizations {
       'investment_sales_empty': 'No sales yet.',
       'investment_closed_on': 'Closed on {date}',
       'investment_select_cash_account': 'Select cash account',
+
+      // Auth surface (login + user selection)
+      'tagline': 'Where wealth gathers.',
+      'loginWelcome': 'Welcome to Plutus',
+      'loginSubtitle': 'Track spending, budgets, and investments in one place.',
+      'loginFailedGoogle': 'Sign-in failed. Please check your Google account and try again.',
+      'signInWithGoogle': 'Sign in with Google',
+      'createProfile': 'Create a Profile',
+      'usernameLabel': 'Username',
+      'usernameHint': 'Choose a username',
+      'displayNameLabel': 'Display Name',
+      'displayNameHint': 'Your display name',
+      'fillAllFields': 'Please fill in all fields to continue',
+      'usernameTaken': "Couldn't create your account. That username may already be taken.",
+      'switchProfile': 'Switch Profile',
+      'whosUsingPlutus': "Who's using Plutus?",
+      'noProfilesFound': 'No profiles found',
+      'createProfileToStart': 'Create a profile to get started',
+      'googleBadge': 'Google',
+      'guestBadge': 'Guest',
     },
     'vi': {
       'app_title': 'Plutus',
@@ -920,7 +978,8 @@ class AppLocalizations {
       'cancel': 'Hủy',
       'confirm': 'Xác nhận',
       'save': 'Lưu',
-      
+      'add': 'Thêm',
+
       // Messages
       'guest_mode': 'Chế độ khách',
       'local_account': 'Tài khoản cá nhân',
@@ -955,6 +1014,7 @@ class AppLocalizations {
       'vnd': 'VND',
       'usd': 'USD',
       'eur': 'EUR',
+      'all': 'Tất cả',
       'income': 'Thu nhập',
       'expense': 'Chi tiêu',
       'items_splits': 'Phân chia theo tài khoản',
@@ -970,7 +1030,25 @@ class AppLocalizations {
       'online': 'Trực tuyến',
       'auto': 'Tự động',
       'select_invoice_image': 'Chọn ảnh biên lai',
-      
+      'import_from_file': 'Nhập từ tệp',
+      'file_prefix': 'Tệp: ',
+      'import_selected': 'Nhập mục đã chọn',
+      'imported_count': 'Đã nhập',
+      'skipped_count': 'bị bỏ qua',
+      'parse_error': 'Lỗi phân tích: ',
+      'camera': 'Máy ảnh',
+      'processing_image': 'Đang xử lý ảnh...',
+      'extracted_fields': 'Trường đã trích xuất',
+      'items': 'Mục',
+      'item': 'Mục',
+      'confirm_and_save': 'Xác nhận & Lưu',
+      'could_not_read_image': 'Không thể đọc chữ từ ảnh',
+      'ocr_error_prefix': 'Lỗi OCR: ',
+      'note': 'Ghi chú',
+      'new_category': 'Danh mục mới',
+      'category_name_hint': 'Tên danh mục',
+      'invalid_number': 'Số không hợp lệ',
+
       // Transaction History Page
       'transaction_history': 'Lịch sử giao dịch',
       'no_transactions_found': 'Không tìm thấy giao dịch',
@@ -997,7 +1075,11 @@ class AppLocalizations {
       'open_in_external_app': 'Mở trong ứng dụng bên ngoài',
       'pdf_not_available': 'Tài liệu PDF không có sẵn để xem trước',
       'text_not_available': 'Nội dung văn bản không có sẵn để xem trước',
-      
+
+      // Export Preview Dialog
+      'export_preview': 'Xem trước bản xuất',
+      'file_location': 'Vị trí tệp',
+
       // Data Widget
       'import': 'Nhập',
       'no_widgets_selected': 'Bảng điều khiển của bạn trống',
@@ -1014,7 +1096,7 @@ class AppLocalizations {
       'please_fill_all_fields': 'Vui lòng điền vào tất cả các trường',
       'failed_create_user': 'Không thể tạo tài khoản. Tên người dùng này có thể đã được sử dụng.',
       'create': 'Tạo',
-      'continue_as_guest': 'Tiếp tục dưới dạng khách',
+      'continue_as_guest': 'Tiếp tục với tư cách Khách',
       
       // Login Screen
       'login_failed': 'Đăng nhập thất bại. Vui lòng thử lại.',
@@ -1091,6 +1173,7 @@ class AppLocalizations {
       // Investment Tracking Widget
       'investments': 'Đầu tư',
       'portfolio': 'Danh mục đầu tư',
+      'portfolio_total': 'Tổng danh mục',
       'add_investment': 'Thêm đầu tư',
       'edit_investment': 'Chỉnh sửa đầu tư',
       'delete_investment': 'Xóa đầu tư',
@@ -1137,7 +1220,8 @@ class AppLocalizations {
       'invalid_exchange_rate': 'Vui lòng nhập tỷ giá hợp lệ (phải lớn hơn 0)',
       'invalid_date': 'Vui lòng chọn ngày không phải là ngày trong tương lai',
       'required_field': 'Trường này là bắt buộc',
-      'investment_added': 'Đã thêm đầu tư thành công',
+      'investment_added': 'đã thêm vào danh mục của bạn',
+      'investment_add_failed': 'Không thể thêm khoản đầu tư. Vui lòng thử lại.',
       'investment_updated': 'Đã cập nhật đầu tư thành công',
       'investment_deleted': 'Đã xóa đầu tư thành công',
       'error_adding_investment': 'Lỗi thêm đầu tư',
@@ -1278,6 +1362,8 @@ class AppLocalizations {
       'budget_suggested': 'Gợi ý từ giao dịch',
       'budget_no_suggestions': 'Không có gợi ý.',
       'budget_pattern_hint': 'Khớp giao dịch bắt đầu bằng tiền tố này',
+      'error_creating_budget': 'Lỗi khi tạo ngân sách: ',
+      'in_three_months': 'trong 3 tháng',
 
       // ── Category Budget Widget ──
       'category_budget_title': 'Ngân sách theo danh mục',
@@ -1344,6 +1430,8 @@ class AppLocalizations {
       'avatar_source_title': 'Chọn nguồn ảnh đại diện',
       'avatar_camera': 'Máy ảnh',
       'avatar_gallery': 'Thư viện',
+      'avatar_save_failed': 'Không thể lưu ảnh đại diện: ',
+      'image_pick_error': 'Lỗi khi chọn ảnh: ',
 
       // ── Cash Flow Widget ──
       'cashflow_select_year': 'Chọn năm',
@@ -1461,6 +1549,8 @@ class AppLocalizations {
       'insights_period_custom': 'Tùy chỉnh',
       'insights_period_custom_active': 'Khoảng tùy chỉnh',
       'insights_font_size_label': 'Cỡ chữ',
+      'textSizeIncrease': 'Tăng cỡ chữ',
+      'textSizeDecrease': 'Giảm cỡ chữ',
 
       // Report Export
       'report_config_title': 'Tạo Báo Cáo',
@@ -1469,6 +1559,10 @@ class AppLocalizations {
       'report_sections': 'Các Phần',
       'report_audience': 'Đối Tượng',
       'report_ai_recommendations': 'Đề Xuất AI',
+      'report_section_template': 'Mẫu báo cáo',
+      'report_section_date_range': 'Khoảng thời gian',
+      'report_section_sections': 'Các mục',
+      'report_section_audience': 'Đối tượng',
       'report_generate': 'Tạo Báo Cáo',
       'report_generating': 'Đang tạo...',
       'report_preview_title': 'Xem Trước Báo Cáo',
@@ -1579,6 +1673,7 @@ class AppLocalizations {
       'report_no_data_subtitle': 'Cấu hình và tạo báo cáo trước.',
       'report_pdf_saved': 'PDF đã lưu tại',
       'report_pdf_failed': 'Xuất PDF thất bại',
+      'error_prefix': 'Lỗi: ',
 
       // Report Content — Cover & Summary
       'report_financial_report': 'Báo Cáo Tài Chính',
@@ -1586,6 +1681,7 @@ class AppLocalizations {
       'report_key_metrics': 'CHỈ SỐ CHÍNH',
       'report_prepared_for': 'CHUẨN BỊ CHO',
       'report_generated_on': 'Tạo ngày',
+      'report_generated_prefix': 'Tạo lúc ',
       'report_metric': 'Chỉ số',
       'report_value': 'Giá trị',
       'report_total_income': 'Tổng thu nhập',
@@ -1647,7 +1743,7 @@ class AppLocalizations {
       'report_total_value': 'TỔNG GIÁ TRỊ',
 
       // Report Content — Bills
-      'report_monthly_recurring': 'ĐỊNH KỲ HÀNG THÁNG',
+      'report_monthly_recurring': 'Định kỳ hàng tháng',
       'report_active': 'hoạt động',
       'report_total_recurring': 'Tổng định kỳ',
       'report_active_bills': 'Hóa đơn đang hoạt động',
@@ -1743,6 +1839,26 @@ class AppLocalizations {
       'investment_sales_empty': 'Chưa có giao dịch bán.',
       'investment_closed_on': 'Đã đóng vào {date}',
       'investment_select_cash_account': 'Chọn tài khoản tiền',
+
+      // Auth surface (login + user selection)
+      'tagline': 'Nơi tài sản sinh sôi.',
+      'loginWelcome': 'Chào mừng đến với Plutus',
+      'loginSubtitle': 'Theo dõi chi tiêu, ngân sách và đầu tư ở cùng một nơi.',
+      'loginFailedGoogle': 'Đăng nhập thất bại. Vui lòng kiểm tra tài khoản Google và thử lại.',
+      'signInWithGoogle': 'Đăng nhập bằng Google',
+      'createProfile': 'Tạo hồ sơ',
+      'usernameLabel': 'Tên đăng nhập',
+      'usernameHint': 'Chọn tên đăng nhập',
+      'displayNameLabel': 'Tên hiển thị',
+      'displayNameHint': 'Tên hiển thị của bạn',
+      'fillAllFields': 'Vui lòng điền đầy đủ thông tin để tiếp tục',
+      'usernameTaken': 'Không thể tạo tài khoản. Tên đăng nhập có thể đã tồn tại.',
+      'switchProfile': 'Chuyển hồ sơ',
+      'whosUsingPlutus': 'Ai đang dùng Plutus?',
+      'noProfilesFound': 'Không tìm thấy hồ sơ nào',
+      'createProfileToStart': 'Tạo hồ sơ để bắt đầu',
+      'googleBadge': 'Google',
+      'guestBadge': 'Khách',
     },
   };
 
@@ -1791,7 +1907,8 @@ class AppLocalizations {
   String get cancel => translate('cancel');
   String get confirm => translate('confirm');
   String get save => translate('save');
-  
+  String get add => translate('add');
+
   String get guestMode => translate('guest_mode');
   String get localAccount => translate('local_account');
   String get googleLinked => translate('google_linked');
@@ -1825,6 +1942,7 @@ class AppLocalizations {
   String get vnd => translate('vnd');
   String get usd => translate('usd');
   String get eur => translate('eur');
+  String get all => translate('all');
   String get income => translate('income');
   String get expense => translate('expense');
   String get itemsSplits => translate('items_splits');
@@ -1840,6 +1958,24 @@ class AppLocalizations {
   String get online => translate('online');
   String get auto => translate('auto');
   String get selectInvoiceImage => translate('select_invoice_image');
+  String get importFromFile => translate('import_from_file');
+  String get filePrefix => translate('file_prefix');
+  String get importSelected => translate('import_selected');
+  String get importedCount => translate('imported_count');
+  String get skippedCount => translate('skipped_count');
+  String get parseError => translate('parse_error');
+  String get camera => translate('camera');
+  String get processingImage => translate('processing_image');
+  String get extractedFields => translate('extracted_fields');
+  String get items => translate('items');
+  String get item => translate('item');
+  String get confirmAndSave => translate('confirm_and_save');
+  String get couldNotReadImage => translate('could_not_read_image');
+  String get ocrErrorPrefix => translate('ocr_error_prefix');
+  String get note => translate('note');
+  String get newCategory => translate('new_category');
+  String get categoryNameHint => translate('category_name_hint');
+  String get invalidNumber => translate('invalid_number');
 
   // Transaction History Page
   String get transactionHistory => translate('transaction_history');
@@ -1867,6 +2003,13 @@ class AppLocalizations {
   String get openInExternalApp => translate('open_in_external_app');
   String get pdfNotAvailable => translate('pdf_not_available');
   String get textNotAvailable => translate('text_not_available');
+
+  // Export Preview Dialog
+  String get exportPreview => translate('export_preview');
+  String get fileLocation => translate('file_location');
+
+  // Report Preview
+  String get errorPrefix => translate('error_prefix');
 
   // Data Widget
   String get import => translate('import');
@@ -1986,6 +2129,7 @@ class AppLocalizations {
   // Investment Tracking Widget
   String get investments => translate('investments');
   String get portfolio => translate('portfolio');
+  String get portfolioTotal => translate('portfolio_total');
   String get addInvestment => translate('add_investment');
   String get editInvestment => translate('edit_investment');
   String get deleteInvestment => translate('delete_investment');
@@ -2033,6 +2177,7 @@ class AppLocalizations {
   String get invalidDate => translate('invalid_date');
   String get requiredField => translate('required_field');
   String get investmentAdded => translate('investment_added');
+  String get investmentAddFailed => translate('investment_add_failed');
   String get investmentUpdated => translate('investment_updated');
   String get investmentDeleted => translate('investment_deleted');
   String get errorAddingInvestment => translate('error_adding_investment');
@@ -2177,6 +2322,8 @@ class AppLocalizations {
   String get budgetSuggested => translate('budget_suggested');
   String get budgetNoSuggestions => translate('budget_no_suggestions');
   String get budgetPatternHint => translate('budget_pattern_hint');
+  String get errorCreatingBudget => translate('error_creating_budget');
+  String get inThreeMonths => translate('in_three_months');
 
   // Category Budget Widget
   String get categoryBudgetTitle => translate('category_budget_title');
@@ -2243,6 +2390,8 @@ class AppLocalizations {
   String get avatarSourceTitle => translate('avatar_source_title');
   String get avatarCamera => translate('avatar_camera');
   String get avatarGallery => translate('avatar_gallery');
+  String get avatarSaveFailed => translate('avatar_save_failed');
+  String get imagePickError => translate('image_pick_error');
 
   // Cash Flow Widget
   String get cashflowSelectYear => translate('cashflow_select_year');
@@ -2288,6 +2437,8 @@ class AppLocalizations {
   String get insightsPeriodCustom => translate('insights_period_custom');
   String get insightsPeriodCustomActive => translate('insights_period_custom_active');
   String get insightsFontSizeLabel => translate('insights_font_size_label');
+  String get textSizeIncrease => translate('textSizeIncrease');
+  String get textSizeDecrease => translate('textSizeDecrease');
 
   // Investment tracking
   String get investmentTabActive => translate('investment_tab_active');
@@ -2329,6 +2480,30 @@ class AppLocalizations {
   String investmentClosedOn(String date) =>
       translate('investment_closed_on').replaceAll('{date}', date);
   String get investmentSelectCashAccount => translate('investment_select_cash_account');
+
+  // Auth surface (login + user selection)
+  String get tagline => translate('tagline');
+  String get loginWelcome => translate('loginWelcome');
+  String get loginSubtitle => translate('loginSubtitle');
+  String get loginFailedGoogle => translate('loginFailedGoogle');
+  String get signInWithGoogle => translate('signInWithGoogle');
+  String get createProfile => translate('createProfile');
+  String get usernameLabel => translate('usernameLabel');
+  String get usernameHint => translate('usernameHint');
+  String get displayNameLabel => translate('displayNameLabel');
+  String get displayNameHint => translate('displayNameHint');
+  String get fillAllFields => translate('fillAllFields');
+  String get usernameTaken => translate('usernameTaken');
+  String get switchProfile => translate('switchProfile');
+  String get whosUsingPlutus => translate('whosUsingPlutus');
+  String get noProfilesFound => translate('noProfilesFound');
+  String get createProfileToStart => translate('createProfileToStart');
+  String get googleBadge => translate('googleBadge');
+  String get guestBadge => translate('guestBadge');
+
+  String get reportGeneratedPrefix => translate('report_generated_prefix');
+  String get noRecurringBills => translate('report_no_bills_data');
+  String get monthlyRecurring => translate('report_monthly_recurring');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

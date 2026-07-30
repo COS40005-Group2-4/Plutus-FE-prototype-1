@@ -73,8 +73,6 @@ class _ProfileWidgetState extends ConsumerState<ProfileWidget> {
     showDialog(
       context: context,
       builder: (context) => AvatarPickerDialog(
-        currentAvatarPath: profile.avatarPath,
-        defaultAvatarAsset: widget.defaultAvatarAsset,
         onAvatarSelected: (file) {
           ref.read(profileNotifierProvider.notifier).updateAvatar(file);
         },

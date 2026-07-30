@@ -1,13 +1,14 @@
 import 'dart:io';
-import '../../theme/app_spacing.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_file/open_file.dart';
+import '../l10n/app_localizations.dart';
 import '../services/export_service.dart';
-import '../theme/app_colors.dart';
-import 'glass_container.dart';
+import '../theme/app_spacing.dart';
+import '../theme/plutus_tokens.dart';
+import 'core/app_card.dart';
 
 class ExportPreviewDialog extends StatefulWidget {
   final String filePath;
@@ -32,32 +33,32 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
-      child: GlassContainer(
-        borderRadius: 16,
-        opacity: 0.15,
-        padding: const EdgeInsets.all(0),
+      child: AppCard(
+        padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(),
-            const Divider(height: 1),
+            _buildHeader(t, l10n),
+            Divider(height: 1, color: t.border),
             Expanded(
               child: widget.format == ExportFormat.pdf
-                  ? _buildPdfPreview()
-                  : _buildTxtPreview(),
+                  ? _buildPdfPreview(t, l10n)
+                  : _buildTxtPreview(t, l10n),
             ),
-            const Divider(height: 1),
-            _buildFooter(),
+            Divider(height: 1, color: t.border),
+            _buildFooter(t, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(PlutusTokens t, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -68,35 +69,33 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                 : Icons.text_snippet,
             size: 28,
             color: widget.format == ExportFormat.pdf
-                ? AppColors.error
-                : AppColors.primary,
+                ? t.error.text
+                : t.brandNavy,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Export Preview',
+                Text(
+                  l10n.exportPreview,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: t.text,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   widget.filePath.split(Platform.pathSeparator).last,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textOnLightSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: t.textSecondary),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: Icon(Icons.close, color: t.textSecondary),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -104,10 +103,10 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
     );
   }
 
-  Widget _buildPdfPreview() {
+  Widget _buildPdfPreview(PlutusTokens t, AppLocalizations l10n) {
     if (widget.pdfDocument == null) {
-      return const Center(
-        child: Text('PDF document not available for preview'),
+      return Center(
+        child: Text(l10n.pdfNotAvailable, style: TextStyle(color: t.textSecondary)),
       );
     }
 
@@ -115,7 +114,7 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
       future: widget.pdfDocument!.save(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator(color: t.gold));
         }
 
         if (snapshot.hasError) {
@@ -125,13 +124,14 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                  Icon(Icons.error_outline, size: 48, color: t.error.text),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     'Error loading PDF preview: ${snapshot.error}',
                     textAlign: TextAlign.center,
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: t.textSecondary),
                   ),
                 ],
               ),
@@ -153,35 +153,41 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
     );
   }
 
-  Widget _buildTxtPreview() {
+  Widget _buildTxtPreview(PlutusTokens t, AppLocalizations l10n) {
     if (widget.txtContent == null) {
-      return const Center(
-        child: Text('Text content not available for preview'),
+      return Center(
+        child: Text(l10n.textNotAvailable, style: TextStyle(color: t.textSecondary)),
       );
     }
 
     return Container(
-      color: Colors.black.withValues(alpha:0.05),
+      // Faint backing tint behind the monospace text — not a scrim over
+      // rendered page content (the PDF branch above uses PdfPreview, a
+      // separate renderer/widget). t.surfaceSubtle is the token equivalent
+      // of the original low-alpha black wash used purely as a text-preview
+      // backing surface, so it stays theme-aware in both brightnesses.
+      color: t.surfaceSubtle,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: SelectableText(
           widget.txtContent!,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'monospace',
             fontSize: 12,
+            color: t.text,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(PlutusTokens t, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildFileLocationInfo(),
+          _buildFileLocationInfo(t, l10n),
           const SizedBox(height: AppSpacing.lg),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -195,13 +201,13 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.open_in_new),
-                label: const Text('Open in External App'),
+                label: Text(l10n.openInExternalApp),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).pop(true),
                 icon: const Icon(Icons.check_circle),
-                label: const Text('Done'),
+                label: Text(l10n.done),
               ),
             ],
           ),
@@ -210,23 +216,26 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
     );
   }
 
-  Widget _buildFileLocationInfo() {
-    return GlassContainer(
-      borderRadius: 8,
-      opacity: 0.1,
+  Widget _buildFileLocationInfo(PlutusTokens t, AppLocalizations l10n) {
+    return Container(
       padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: t.surfaceSubtle,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-              SizedBox(width: AppSpacing.sm),
+              Icon(Icons.info_outline, size: 16, color: t.brandNavy),
+              const SizedBox(width: AppSpacing.sm),
               Text(
-                'File Location',
+                l10n.fileLocation,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
+                  color: t.text,
                 ),
               ),
             ],
@@ -234,10 +243,10 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
           const SizedBox(height: AppSpacing.sm),
           SelectableText(
             widget.filePath,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontFamily: 'monospace',
-              color: AppColors.textOnLightSecondary,
+              color: t.textSecondary,
             ),
           ),
         ],
@@ -252,21 +261,31 @@ class _ExportPreviewDialogState extends State<ExportPreviewDialog> {
       final result = await OpenFile.open(widget.filePath);
 
       if (!mounted) return;
+      final AppLocalizations l10n = AppLocalizations.of(context);
+      final PlutusTokens t = context.tokens;
 
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open file: ${result.message}'),
-            backgroundColor: AppColors.warning,
+            content: Text(
+              '${l10n.couldNotOpenFile}${result.message}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: t.warning.dot,
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
+      final AppLocalizations l10n = AppLocalizations.of(context);
+      final PlutusTokens t = context.tokens;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error opening file: $e'),
-          backgroundColor: AppColors.error,
+          content: Text(
+            '${l10n.errorOpeningFile}$e',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: t.error.dot,
         ),
       );
     } finally {
