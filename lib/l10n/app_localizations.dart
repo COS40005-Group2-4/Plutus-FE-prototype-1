@@ -431,6 +431,8 @@ class AppLocalizations {
       'budget_suggested': 'Suggested from Transactions',
       'budget_no_suggestions': 'No suggestions available.',
       'budget_pattern_hint': 'Matches transactions starting with this prefix',
+      'error_creating_budget': 'Error creating budget: ',
+      'in_three_months': 'in 3 months',
 
       // ── Category Budget Widget ──
       'category_budget_title': 'Category Budgets',
@@ -497,6 +499,8 @@ class AppLocalizations {
       'avatar_source_title': 'Choose Avatar Source',
       'avatar_camera': 'Camera',
       'avatar_gallery': 'Gallery',
+      'avatar_save_failed': 'Failed to save avatar: ',
+      'image_pick_error': 'Error picking image: ',
 
       // ── Cash Flow Widget ──
       'cashflow_select_year': 'Select Year',
@@ -1336,6 +1340,8 @@ class AppLocalizations {
       'budget_suggested': 'Gợi ý từ giao dịch',
       'budget_no_suggestions': 'Không có gợi ý.',
       'budget_pattern_hint': 'Khớp giao dịch bắt đầu bằng tiền tố này',
+      'error_creating_budget': 'Lỗi khi tạo ngân sách: ',
+      'in_three_months': 'trong 3 tháng',
 
       // ── Category Budget Widget ──
       'category_budget_title': 'Ngân sách theo danh mục',
@@ -1402,6 +1408,8 @@ class AppLocalizations {
       'avatar_source_title': 'Chọn nguồn ảnh đại diện',
       'avatar_camera': 'Máy ảnh',
       'avatar_gallery': 'Thư viện',
+      'avatar_save_failed': 'Không thể lưu ảnh đại diện: ',
+      'image_pick_error': 'Lỗi khi chọn ảnh: ',
 
       // ── Cash Flow Widget ──
       'cashflow_select_year': 'Chọn năm',
@@ -2274,6 +2282,8 @@ class AppLocalizations {
   String get budgetSuggested => translate('budget_suggested');
   String get budgetNoSuggestions => translate('budget_no_suggestions');
   String get budgetPatternHint => translate('budget_pattern_hint');
+  String get errorCreatingBudget => translate('error_creating_budget');
+  String get inThreeMonths => translate('in_three_months');
 
   // Category Budget Widget
   String get categoryBudgetTitle => translate('category_budget_title');
@@ -2340,6 +2350,8 @@ class AppLocalizations {
   String get avatarSourceTitle => translate('avatar_source_title');
   String get avatarCamera => translate('avatar_camera');
   String get avatarGallery => translate('avatar_gallery');
+  String get avatarSaveFailed => translate('avatar_save_failed');
+  String get imagePickError => translate('image_pick_error');
 
   // Cash Flow Widget
   String get cashflowSelectYear => translate('cashflow_select_year');

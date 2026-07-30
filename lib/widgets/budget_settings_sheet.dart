@@ -11,7 +11,7 @@ import 'package:plutus_fe_prototype/services/interfaces/i_budget_service.dart';
 import 'package:plutus_fe_prototype/services/currency_service.dart';
 import 'package:plutus_fe_prototype/theme/app_spacing.dart';
 import 'package:plutus_fe_prototype/theme/app_radius.dart';
-import 'package:plutus_fe_prototype/theme/app_colors.dart';
+import 'package:plutus_fe_prototype/theme/plutus_tokens.dart';
 
 /// Common expense categories with their default account patterns and icons.
 class _DefaultCategory {
@@ -113,8 +113,9 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
       await _loadUserAccounts();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating budget: $e')),
+          SnackBar(content: Text('${l10n.errorCreatingBudget}$e')),
         );
       }
     }
@@ -441,13 +442,14 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
   // ---------------------------------------------------------------------------
 
   Widget _buildHandleBar() {
+    final PlutusTokens t = context.tokens;
     return Center(
       child: Container(
         width: 40,
         height: 4,
         margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.textOnLightTertiary,
+          color: t.borderStrong,
           borderRadius: AppRadius.borderSm,
         ),
       ),
@@ -530,12 +532,17 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
 
   Widget _buildCategoryCard(BudgetCategory cat, String currencyCode) {
     final patterns = cat.accountPatterns.join(', ');
+    final PlutusTokens t = context.tokens;
     return Card(
       margin: EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.xs,
       ),
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.borderMd),
+      color: t.surfaceSubtle,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.borderMd,
+        side: BorderSide(color: t.border),
+      ),
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -695,7 +702,7 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
                   ),
                   title: Text(suggestion.suggestedName),
                   subtitle: Text(
-                    '${suggestion.accountName} · ${_formatAmount(suggestion.recentSpending, budget.currencyCode)} in 3 months',
+                    '${suggestion.accountName} · ${_formatAmount(suggestion.recentSpending, budget.currencyCode)} ${AppLocalizations.of(context).inThreeMonths}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color:
                               Theme.of(context).colorScheme.onSurfaceVariant,
@@ -756,13 +763,15 @@ class _BudgetSettingsSheetState extends ConsumerState<BudgetSettingsSheet> {
         final isLoading = asyncBudget.isLoading;
         final provider = asyncBudget.valueOrNull;
         final budget = provider?.activeBudget;
+        final PlutusTokens t = context.tokens;
 
         return Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(AppRadius.lg),
+                  top: Radius.circular(AppRadius.sheet),
                 ),
+                boxShadow: t.shadowHigh,
               ),
               child: ListView(
                 controller: scrollController,

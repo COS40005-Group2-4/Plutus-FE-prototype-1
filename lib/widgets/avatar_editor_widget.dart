@@ -8,7 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../l10n/app_localizations.dart';
-import '../theme/app_colors.dart';
+import '../theme/plutus_tokens.dart';
 
 /// Callback for avatar selection
 typedef AvatarCallback = void Function(File imageFile);
@@ -87,12 +87,13 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final PlutusTokens t = context.tokens;
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
+          color: t.surface,
           borderRadius: BorderRadius.circular(16),
         ),
         child: SingleChildScrollView(
@@ -102,7 +103,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
               Text(
                 l10n.avatarEdit,
               style: TextStyle(
-                color: AppColors.textOnDark,
+                color: t.text,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -118,9 +119,9 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                     width: 300,
                     height: 300,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceMidDark,
+                      color: t.surfaceSubtle,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.borderDark, width: 2),
+                      border: Border.all(color: t.border, width: 2),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
@@ -202,8 +203,8 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                   icon: const Icon(Icons.close),
                   label: Text(l10n.cancel),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.borderDark,
-                    foregroundColor: AppColors.textOnDark,
+                    backgroundColor: t.border,
+                    foregroundColor: t.text,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
@@ -223,7 +224,7 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                           } catch (e) {
                             if (mounted) {
                               messenger.showSnackBar(
-                                SnackBar(content: Text('Failed to save avatar: $e')),
+                                SnackBar(content: Text('${l10n.avatarSaveFailed}$e')),
                               );
                             }
                           } finally {
@@ -233,19 +234,19 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
                           }
                         },
                   icon: _isProcessing
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: t.onGold,
                           ),
                         )
                       : const Icon(Icons.check),
                   label: Text(l10n.confirm),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.textOnDark,
+                    backgroundColor: t.gold,
+                    foregroundColor: t.onGold,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
@@ -266,18 +267,19 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
     required String label,
     required VoidCallback onPressed,
   }) {
+    final PlutusTokens t = context.tokens;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(icon, color: AppColors.primary),
+          icon: Icon(icon, color: t.goldText),
           onPressed: onPressed,
           tooltip: label,
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textOnDark,
+          style: TextStyle(
+            color: t.text,
             fontSize: 12,
           ),
           overflow: TextOverflow.ellipsis,
@@ -289,14 +291,10 @@ class _AvatarEditorWidgetState extends State<AvatarEditorWidget> {
 
 /// Avatar picker and editor dialog
 class AvatarPickerDialog extends StatefulWidget {
-  final String? currentAvatarPath;
-  final String defaultAvatarAsset;
   final AvatarCallback onAvatarSelected;
 
   const AvatarPickerDialog({
     super.key,
-    this.currentAvatarPath,
-    required this.defaultAvatarAsset,
     required this.onAvatarSelected,
   });
 
@@ -312,6 +310,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
     // Capture navigator before the async gap so we can close the picker
     // after confirming inside the editor dialog (two distinct routes to pop).
     final NavigatorState navigator = Navigator.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
     try {
       final XFile? pickedFile = await _imagePicker.pickImage(source: source);
       if (pickedFile != null) {
@@ -333,7 +332,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(content: Text('${l10n.imagePickError}$e')),
         );
       }
     }
@@ -388,6 +387,7 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
     required String label,
     required VoidCallback onPressed,
   }) {
+    final PlutusTokens t = context.tokens;
     return GestureDetector(
       onTap: onPressed,
       child: Column(
@@ -396,10 +396,10 @@ class _AvatarPickerDialogState extends State<AvatarPickerDialog> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: t.gold,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.textOnDark, size: 40),
+            child: Icon(icon, color: t.onGold, size: 40),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(label, overflow: TextOverflow.ellipsis),
@@ -417,7 +417,9 @@ class _CircleGuidePainter extends CustomPainter {
     final Offset center = Offset(size.width / 2, size.height / 2);
     final double radius = math.min(size.width, size.height) / 2 - 4;
 
-    // Dark overlay outside the circle
+    // Dark overlay outside the circle — hardcoded black by design: this
+    // paints over the user's own photo, not app chrome, so it stays fixed
+    // regardless of light/dark theme.
     final Paint overlayPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.55);
     final Path overlayPath = Path()
@@ -436,6 +438,8 @@ class _CircleGuidePainter extends CustomPainter {
         (dashLength / circumference) * 2 * math.pi;
     final double gapAngle =
         (gapLength / circumference) * 2 * math.pi;
+    // Hardcoded white by design: this paints over the user's own photo,
+    // not app chrome, so it stays fixed regardless of light/dark theme.
     final Paint dashPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
