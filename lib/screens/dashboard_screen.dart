@@ -9,7 +9,10 @@ import '../widgets/data_widget.dart';
 import '../widgets/sidebar_menu.dart';
 import '../services/storage_service.dart';
 import '../providers/dashboard_notifier.dart';
+import '../providers/backup_notifier.dart';
 import '../providers/budget_notifier.dart';
+import '../models/backup_models.dart';
+import '../widgets/backup_found_dialog.dart';
 import '../providers/settings_notifier.dart';
 import '../services/budget_notification_service.dart';
 import '../widgets/core/app_card.dart';
@@ -104,9 +107,22 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     );
   }
 
+  bool _backupPromptShown = false;
+
   @override
   void initState() {
     super.initState();
+    // Offer to restore a cloud backup once per session (was a TODO in main.dart:
+    // the auth listener there has no Navigator, this screen does).
+    ref.listenManual<BackupState>(backupNotifierProvider, (BackupState? prev, BackupState next) {
+      if (_backupPromptShown || !next.hasRemoteBackup || !next.hasConflict || next.isLoading) return;
+      _backupPromptShown = true;
+      showBackupFoundDialog(context).then((bool? restore) {
+        if (restore == true) {
+          ref.read(backupNotifierProvider.notifier).resolveConflict(ConflictChoice.overrideLocal);
+        }
+      });
+    }, fireImmediately: true);
     final dashState = ref.read(dashboardNotifierProvider);
     _lastDashboardId = dashState.activeDashboardId;
     _lastUserId = ref.read(dashboardNotifierProvider.notifier).currentUserId;
