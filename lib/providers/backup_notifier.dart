@@ -67,6 +67,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
   int? _userId;
   String? _backupKey;
+  int _initGeneration = 0;
 
   /// S3 partition currently in use (diagnostics).
   String? get backupKey => _backupKey;
@@ -96,6 +97,9 @@ class BackupNotifier extends Notifier<BackupState> {
 
   /// Initialize the notifier for a given user.
   Future<void> initialize(User user) async {
+    // On web OAuth callback the restored local profile initializes first and the
+    // Google user ~1s later; only the latest call may publish state.
+    final int gen = ++_initGeneration;
     final int userId = user.id;
     final String backupKey = backupKeyFor(user);
     _userId = userId;
@@ -126,6 +130,7 @@ class BackupNotifier extends Notifier<BackupState> {
         hasRemote = false;
       }
 
+      if (gen != _initGeneration) return;
       bool hasConflict = false;
       if (isEnabled) {
         // Run conflict check via SyncManager
