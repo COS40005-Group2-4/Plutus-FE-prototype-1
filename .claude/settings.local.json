@@ -15,7 +15,8 @@
       "Bash(terraform apply:*)",
       "Bash(go build:*)",
       "Bash(go vet:*)",
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(export *)"
     ]
   },
   "enabledPlugins": {
