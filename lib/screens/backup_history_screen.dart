@@ -95,6 +95,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
           }
 
           if (backupState.versions.isEmpty) {
+            final String? err = backupState.errorMessage;
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -102,7 +103,7 @@ class _BackupHistoryScreenState extends ConsumerState<BackupHistoryScreen> {
                   Icon(Icons.cloud_off, size: 48, color: t.textMuted),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    l10n.backupNoVersions,
+                    err != null ? l10n.translate(err) : l10n.backupNoVersions,
                     style: TextStyle(fontSize: 16, color: t.textSecondary),
                   ),
                 ],

@@ -739,6 +739,10 @@ class SettingsScreen extends ConsumerWidget {
               '${l10n.backupLastSync}: --',
               style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
             ),
+            Text(
+              'Cloud key: ${backupNotifier.backupKey?.substring(0, 8) ?? '-'} · remote: ${backupState.hasRemoteBackup ? 'found' : 'none'} · versions: ${backupState.versions.length}',
+              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
