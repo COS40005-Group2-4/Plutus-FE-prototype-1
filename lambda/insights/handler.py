@@ -36,12 +36,13 @@ def _check_auth(event: dict) -> bool:
     return secrets.compare_digest(provided, _get_bearer_token())
 
 
+# CORS headers are added by the Function URL config (terraform ai_lambda.tf);
+# returning them here too produces a duplicate header that browsers reject.
 def _response(status_code: int, body: dict) -> dict:
     return {
         "statusCode": status_code,
         "headers": {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
         },
         "body": json.dumps(body, ensure_ascii=False),
     }

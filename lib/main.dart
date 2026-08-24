@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 
+import 'models/user_model.dart';
 import 'providers/auth_notifier.dart';
 import 'providers/settings_notifier.dart';
 import 'providers/backup_notifier.dart';
@@ -65,7 +66,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     // Listen for auth state transitions to perform post-auth service setup.
     ref.listenManual<AuthState>(authNotifierProvider, (AuthState? previous, AuthState next) {
       if (next is AuthAuthenticated) {
-        _onAuthenticated(next.user.id);
+        _onAuthenticated(next.user);
       }
     });
   }
@@ -79,7 +80,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     });
   }
 
-  Future<void> _onAuthenticated(int userId) async {
+  Future<void> _onAuthenticated(User authUser) async {
+    final int userId = authUser.id;
     // Set current user on transaction and budget services.
     sl<ITransactionService>().setCurrentUser(userId);
     ref.read(budgetNotifierProvider.notifier).setCurrentUser(userId);
@@ -107,7 +109,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     });
 
     // Initialize backup for the authenticated user.
-    await backupNotifier.initialize(userId);
+    await backupNotifier.initialize(authUser);
 
     // Initialize the Go journal before the dashboard loads.
     await sl<JournalInitializer>().initialize();

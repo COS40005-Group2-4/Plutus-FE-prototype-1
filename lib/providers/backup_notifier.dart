@@ -5,6 +5,9 @@ import '../services/interfaces/i_settings_service.dart';
 import '../services/interfaces/i_sync_manager.dart';
 import '../services/database_service.dart';
 import '../di/service_locator.dart';
+import '../models/user_model.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 /// Callback invoked after a backup restore so providers can reload from DB.
 typedef PostRestoreCallback = Future<void> Function();
@@ -63,6 +66,12 @@ class BackupNotifier extends Notifier<BackupState> {
   final List<PostRestoreCallback> _postRestoreCallbacks = <PostRestoreCallback>[];
 
   int? _userId;
+  String? _backupKey;
+
+  /// Stable per-identity S3 partition. Local SQLite ids differ per device, so
+  /// hash the OAuth id (email) or, for local-only users, the username.
+  static String backupKeyFor(User user) =>
+      sha1.convert(utf8.encode(user.oauthId ?? user.username)).toString();
 
   @override
   BackupState build() {
@@ -83,8 +92,11 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   /// Initialize the notifier for a given user.
-  Future<void> initialize(int userId) async {
+  Future<void> initialize(User user) async {
+    final int userId = user.id;
+    final String backupKey = backupKeyFor(user);
     _userId = userId;
+    _backupKey = backupKey;
     state = state.copyWith(
       isLoading: true,
       clearError: true,
@@ -98,7 +110,7 @@ class BackupNotifier extends Notifier<BackupState> {
       // Check if remote backups exist for this user
       bool hasRemote = false;
       try {
-        final List<VersionEntry> backups = await _backupService.listBackups(userId);
+        final List<VersionEntry> backups = await _backupService.listBackups(backupKey);
         hasRemote = backups.isNotEmpty;
       } catch (_) {
         hasRemote = false;
@@ -108,11 +120,11 @@ class BackupNotifier extends Notifier<BackupState> {
       if (isEnabled) {
         // Run conflict check via SyncManager
         final ConflictResult conflictResult =
-            await _syncManager.checkConflictOnLaunch(userId);
+            await _syncManager.checkConflictOnLaunch(backupKey);
         hasConflict = conflictResult == ConflictResult.mismatch;
 
         // Start auto-sync if enabled
-        _syncManager.startAutoSync(userId);
+        _syncManager.startAutoSync(backupKey);
       } else if (hasRemote) {
         // Backup not enabled but remote data exists — flag for new device prompt
         hasConflict = true;
@@ -148,7 +160,7 @@ class BackupNotifier extends Notifier<BackupState> {
       await _settingsService.setAutoBackupEnabled(_userId!, enabled);
 
       if (enabled) {
-        _syncManager.startAutoSync(_userId!);
+        _syncManager.startAutoSync(_backupKey!);
       } else {
         _syncManager.stopAutoSync();
       }
@@ -174,7 +186,7 @@ class BackupNotifier extends Notifier<BackupState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      await _backupService.uploadBackup(_userId!);
+      await _backupService.uploadBackup(_backupKey!);
       await refreshVersions();
       state = state.copyWith(isLoading: false);
     } on BackupException catch (e) {
@@ -198,7 +210,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
     try {
       await _onPreRestore();
-      await _backupService.restoreBackup(_userId!, version.s3ObjectKey);
+      await _backupService.restoreBackup(_backupKey!, version.s3ObjectKey);
       await _onPostRestore();
       state = state.copyWith(isLoading: false);
     } on BackupException catch (e) {
@@ -224,16 +236,16 @@ class BackupNotifier extends Notifier<BackupState> {
       switch (choice) {
         case ConflictChoice.overrideLocal:
           // Download latest S3 version and replace local DB
-          final List<VersionEntry> backups = await _backupService.listBackups(_userId!);
+          final List<VersionEntry> backups = await _backupService.listBackups(_backupKey!);
           if (backups.isNotEmpty) {
             await _onPreRestore();
-            await _backupService.restoreBackup(_userId!, backups.first.s3ObjectKey);
+            await _backupService.restoreBackup(_backupKey!, backups.first.s3ObjectKey);
             await _onPostRestore();
           }
           break;
         case ConflictChoice.keepLocal:
           // Upload local DB as new version
-          await _backupService.uploadBackup(_userId!);
+          await _backupService.uploadBackup(_backupKey!);
           break;
         case ConflictChoice.cancel:
           // Do nothing
@@ -259,7 +271,7 @@ class BackupNotifier extends Notifier<BackupState> {
     if (_userId == null) return;
 
     try {
-      final List<VersionEntry> versions = await _backupService.listBackups(_userId!);
+      final List<VersionEntry> versions = await _backupService.listBackups(_backupKey!);
       state = state.copyWith(versions: versions);
     } on BackupException catch (e) {
       state = state.copyWith(errorMessage: _mapErrorCode(e.code));

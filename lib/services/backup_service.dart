@@ -59,7 +59,7 @@ class BackupService implements IBackupService {
   /// Upload local DB file to S3 as a new version.
   /// Returns the S3 object key on success.
   @override
-  Future<String> uploadBackup(int userId) async {
+  Future<String> uploadBackup(String backupKey) async {
     _validateCredentials();
 
     final dbPath = await getDatabasePath();
@@ -77,10 +77,10 @@ class BackupService implements IBackupService {
     }
 
     // Enforce version limit before uploading
-    await enforceVersionLimit(userId);
+    await enforceVersionLimit(backupKey);
     final checksum = md5.convert(bytes).toString();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final s3Key = 'backups/$userId/$timestamp.db';
+    final s3Key = 'backups/$backupKey/$timestamp.db';
 
     try {
       final uri = Uri.https(_s3Host, '/$s3Key');
@@ -126,7 +126,7 @@ class BackupService implements IBackupService {
   /// Download a specific backup version and overwrite local DB.
   /// Uses a temp file for rollback on failure (native only).
   @override
-  Future<void> restoreBackup(int userId, String s3ObjectKey) async {
+  Future<void> restoreBackup(String backupKey, String s3ObjectKey) async {
     _validateCredentials();
 
     final dbPath = await getDatabasePath();
@@ -214,10 +214,10 @@ class BackupService implements IBackupService {
 
   /// List all backup versions for a user, sorted by timestamp descending.
   @override
-  Future<List<VersionEntry>> listBackups(int userId) async {
+  Future<List<VersionEntry>> listBackups(String backupKey) async {
     _validateCredentials();
 
-    final prefix = 'backups/$userId/';
+    final prefix = 'backups/$backupKey/';
 
     try {
       final uri = Uri.https(_s3Host, '/', {
@@ -340,8 +340,8 @@ class BackupService implements IBackupService {
   /// Get the MD5 checksum (ETag) of the latest backup on S3.
   /// Returns null if no backups exist.
   @override
-  Future<String?> getLatestBackupChecksum(int userId) async {
-    final backups = await listBackups(userId);
+  Future<String?> getLatestBackupChecksum(String backupKey) async {
+    final backups = await listBackups(backupKey);
     if (backups.isEmpty) return null;
 
     // backups are already sorted descending, first is latest
@@ -402,8 +402,8 @@ class BackupService implements IBackupService {
 
   /// Enforce the 10-version limit by deleting oldest backups.
   @override
-  Future<void> enforceVersionLimit(int userId) async {
-    final backups = await listBackups(userId);
+  Future<void> enforceVersionLimit(String backupKey) async {
+    final backups = await listBackups(backupKey);
     // backups sorted descending — delete from the end (oldest)
     while (backups.length >= 10) {
       final oldest = backups.removeLast();
