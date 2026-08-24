@@ -15,9 +15,13 @@ class AWSConfig {
         defaultValue: 'YOUR_SECRET_ACCESS_KEY',
       );
   
+  // Empty must become null: the signer adds an x-amz-security-token header for
+  // any non-null token, and AWS rejects requests carrying an empty one
+  // (amplify.yml writes PLUTUS_AWS_SESSION_TOKEN= with no value into app.env).
   static String? get sessionToken =>
-      dotenv.env['PLUTUS_AWS_SESSION_TOKEN'] ??
-      const String.fromEnvironment('PLUTUS_AWS_SESSION_TOKEN').ifEmpty(null);
+      (dotenv.env['PLUTUS_AWS_SESSION_TOKEN'] ??
+              const String.fromEnvironment('PLUTUS_AWS_SESSION_TOKEN'))
+          .ifEmpty(null);
 
   static String get region =>
       dotenv.env['PLUTUS_AWS_REGION'] ??
