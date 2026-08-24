@@ -117,10 +117,14 @@ class _DashboardWidgetState extends ConsumerState<DashboardWidget>
     ref.listenManual<BackupState>(backupNotifierProvider, (BackupState? prev, BackupState next) {
       if (_backupPromptShown || !next.hasRemoteBackup || !next.hasConflict || next.isLoading) return;
       _backupPromptShown = true;
-      showBackupFoundDialog(context).then((bool? restore) {
-        if (restore == true) {
-          ref.read(backupNotifierProvider.notifier).resolveConflict(ConflictChoice.overrideLocal);
-        }
+      // Defer: listener may fire during initState (fireImmediately) where showDialog throws.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showBackupFoundDialog(context).then((bool? restore) {
+          if (restore == true) {
+            ref.read(backupNotifierProvider.notifier).resolveConflict(ConflictChoice.overrideLocal);
+          }
+        });
       });
     }, fireImmediately: true);
     final dashState = ref.read(dashboardNotifierProvider);
