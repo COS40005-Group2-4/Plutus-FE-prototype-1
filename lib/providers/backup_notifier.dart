@@ -113,11 +113,16 @@ class BackupNotifier extends Notifier<BackupState> {
       // Check if remote backups exist for this user
       bool hasRemote = false;
       List<VersionEntry> remote = const <VersionEntry>[];
+      String? listError;
       try {
         final List<VersionEntry> backups = await _backupService.listBackups(backupKey);
         hasRemote = backups.isNotEmpty;
         remote = backups;
-      } catch (_) {
+      } on BackupException catch (e) {
+        listError = _mapErrorCode(e.code);
+        hasRemote = false;
+      } catch (e) {
+        listError = "backup_failed: $e";
         hasRemote = false;
       }
 
@@ -139,6 +144,7 @@ class BackupNotifier extends Notifier<BackupState> {
         isBackupEnabled: isEnabled,
         hasRemoteBackup: hasRemote,
         versions: remote,
+        errorMessage: listError,
         hasConflict: hasConflict,
         isLoading: false,
       );
