@@ -36,7 +36,7 @@ variable "s3_bucket_name" {
 variable "cors_allow_origins" {
   description = "Allowed origins for CORS"
   type        = list(string)
-  default     = ["https://main.d3eqrozysqvds5.amplifyapp.com", "http://localhost:8080"]
+  default     = ["https://plutus.aidendinh.me", "https://main.d3eqrozysqvds5.amplifyapp.com", "http://localhost:8080"]
 }
 
 # AI Lambda variables

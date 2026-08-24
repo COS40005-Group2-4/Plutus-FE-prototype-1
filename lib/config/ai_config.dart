@@ -22,7 +22,7 @@ class AIConfig {
       const String.fromEnvironment(
         'INSIGHTS_FUNCTION_URL',
         defaultValue: '',
-      );
+      ).trim();
 
   /// Bearer token for the insights Lambda Function URL.
   /// Managed in AWS Secrets Manager under plutus/secrets > INSIGHTS_BEARER_TOKEN.

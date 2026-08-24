@@ -23,6 +23,8 @@ frontend:
         - echo "ALPHA_VANTAGE_API_KEY=$ALPHA_VANTAGE_API_KEY" >> app.env
         - echo "AI_API_GATEWAY_URL=$AI_API_GATEWAY_URL" >> app.env
         - echo "AI_API_KEY=$AI_API_KEY" >> app.env
+        - echo "INSIGHTS_FUNCTION_URL=$INSIGHTS_FUNCTION_URL" >> app.env
+        - echo "INSIGHTS_BEARER_TOKEN=$INSIGHTS_BEARER_TOKEN" >> app.env
         - flutter clean
         - flutter pub get
         - flutter pub upgrade

@@ -1129,31 +1129,31 @@ class MockIBackupService extends _i1.Mock implements _i15.IBackupService {
           as _i10.Future<String>);
 
   @override
-  _i10.Future<String> uploadBackup(int? userId) =>
+  _i10.Future<String> uploadBackup(String? backupKey) =>
       (super.noSuchMethod(
-            Invocation.method(#uploadBackup, [userId]),
+            Invocation.method(#uploadBackup, [backupKey]),
             returnValue: _i10.Future<String>.value(
               _i12.dummyValue<String>(
                 this,
-                Invocation.method(#uploadBackup, [userId]),
+                Invocation.method(#uploadBackup, [backupKey]),
               ),
             ),
           )
           as _i10.Future<String>);
 
   @override
-  _i10.Future<void> restoreBackup(int? userId, String? s3ObjectKey) =>
+  _i10.Future<void> restoreBackup(String? backupKey, String? s3ObjectKey) =>
       (super.noSuchMethod(
-            Invocation.method(#restoreBackup, [userId, s3ObjectKey]),
+            Invocation.method(#restoreBackup, [backupKey, s3ObjectKey]),
             returnValue: _i10.Future<void>.value(),
             returnValueForMissingStub: _i10.Future<void>.value(),
           )
           as _i10.Future<void>);
 
   @override
-  _i10.Future<List<_i16.VersionEntry>> listBackups(int? userId) =>
+  _i10.Future<List<_i16.VersionEntry>> listBackups(String? backupKey) =>
       (super.noSuchMethod(
-            Invocation.method(#listBackups, [userId]),
+            Invocation.method(#listBackups, [backupKey]),
             returnValue: _i10.Future<List<_i16.VersionEntry>>.value(
               <_i16.VersionEntry>[],
             ),
@@ -1170,9 +1170,9 @@ class MockIBackupService extends _i1.Mock implements _i15.IBackupService {
           as _i10.Future<void>);
 
   @override
-  _i10.Future<String?> getLatestBackupChecksum(int? userId) =>
+  _i10.Future<String?> getLatestBackupChecksum(String? backupKey) =>
       (super.noSuchMethod(
-            Invocation.method(#getLatestBackupChecksum, [userId]),
+            Invocation.method(#getLatestBackupChecksum, [backupKey]),
             returnValue: _i10.Future<String?>.value(),
           )
           as _i10.Future<String?>);
@@ -1191,9 +1191,9 @@ class MockIBackupService extends _i1.Mock implements _i15.IBackupService {
           as _i10.Future<String>);
 
   @override
-  _i10.Future<void> enforceVersionLimit(int? userId) =>
+  _i10.Future<void> enforceVersionLimit(String? backupKey) =>
       (super.noSuchMethod(
-            Invocation.method(#enforceVersionLimit, [userId]),
+            Invocation.method(#enforceVersionLimit, [backupKey]),
             returnValue: _i10.Future<void>.value(),
             returnValueForMissingStub: _i10.Future<void>.value(),
           )
@@ -2183,9 +2183,9 @@ class MockISyncManager extends _i1.Mock implements _i27.ISyncManager {
           as bool);
 
   @override
-  _i10.Future<_i16.ConflictResult> checkConflictOnLaunch(int? userId) =>
+  _i10.Future<_i16.ConflictResult> checkConflictOnLaunch(String? backupKey) =>
       (super.noSuchMethod(
-            Invocation.method(#checkConflictOnLaunch, [userId]),
+            Invocation.method(#checkConflictOnLaunch, [backupKey]),
             returnValue: _i10.Future<_i16.ConflictResult>.value(
               _i16.ConflictResult.match,
             ),
@@ -2193,8 +2193,8 @@ class MockISyncManager extends _i1.Mock implements _i27.ISyncManager {
           as _i10.Future<_i16.ConflictResult>);
 
   @override
-  void startAutoSync(int? userId) => super.noSuchMethod(
-    Invocation.method(#startAutoSync, [userId]),
+  void startAutoSync(String? backupKey) => super.noSuchMethod(
+    Invocation.method(#startAutoSync, [backupKey]),
     returnValueForMissingStub: null,
   );
 
